@@ -1,0 +1,212 @@
+/* ===== TUTOR SEARCH PAGE STYLES ===== */
+
+/* Page Container */
+.tutor-search-page {
+    width: 100%;
+    min-height: 100vh;
+    background-color: var(--color-cream);
+    display: flex;
+    flex-direction: column;
+}
+
+/* ===== HERO SEARCH SECTION ===== */
+.search-hero {
+    width: 100%;
+    background-color: var(--color-navy);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 167px 326px 84px;
+    box-sizing: border-box;
+    position: relative;
+    isolation: isolate;
+}
+
+.search-hero-gradient {
+    width: 50%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: linear-gradient(-90deg, rgba(99, 27, 27, 0.1), rgba(99, 27, 27, 0));
+    z-index: 0;
+}
+
+.search-hero-content {
+    width: 100%;
+    max-width: 784px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 42px;
+    z-index: 1;
+}
+
+.search-hero-text {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 13px;
+}
+
+.search-hero-title {
+    align-self: stretch;
+    text-align: center;
+    font-size: 62.8px;
+    letter-spacing: -1.58px;
+    line-height: 63px;
+    color: var(--color-white);
+    font-weight: 300;
+    margin: 0;
+}
+
+.search-hero-title .highlight {
+    font-weight: 500;
+    color: var(--color-gold);
+}
+
+.search-hero-subtitle {
+    max-width: 588px;
+    text-align: center;
+    font-size: 17.5px;
+    line-height: 24.5px;
+    color: rgba(242, 240, 228, 0.6);
+    font-family: var(--font-serif);
+    font-style: italic;
+    margin: 0;
+}
+
+/* ===== RESULTS SECTION ===== */
+.results-section {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 35px 42px;
+    box-sizing: border-box;
+}
+
+.results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 19px;
+    margin-bottom: 42px;
+    border-bottom: 1.2px solid rgba(62, 47, 40, 0.05);
+    gap: 20px;
+}
+
+.results-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.results-label {
+    font-size: 13px;
+    letter-spacing: 2.5px;
+    line-height: 15px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--color-gold);
+}
+
+.results-title {
+    font-size: 26.2px;
+    line-height: 31.5px;
+    color: var(--color-navy);
+    font-weight: 400;
+    margin: 0;
+}
+
+.results-count {
+    font-size: 14px;
+    letter-spacing: 2px;
+    line-height: 15px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: rgba(26, 34, 56, 0.3);
+}
+
+/* Tutor Grid */
+.tutor-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+}
+
+.tutor-row {
+    display: flex;
+    gap: 24px;
+    width: 100%;
+}
+
+/* Load More Button */
+.load-more-container {
+    display: flex;
+    justify-content: center;
+    padding-top: 70px;
+}
+
+.btn-load-more {
+    box-shadow: 0px 12px 30px -10px rgba(62, 47, 40, 0.08);
+    border-radius: 100px;
+    background-color: transparent;
+    border: 1px solid rgba(26, 34, 56, 0.1);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 21.2px 70.2px;
+    font-size: 12px;
+    letter-spacing: 4.8px;
+    line-height: 18px;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--color-navy);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-load-more:hover {
+    background-color: var(--color-navy);
+    color: var(--color-white);
+    border-color: var(--color-navy);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1200px) {
+    .search-hero {
+        padding: 120px 100px 60px;
+    }
+
+    .tutor-row {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 768px) {
+    .search-hero {
+        padding: 100px 20px 50px;
+    }
+
+    .search-hero-title {
+        font-size: 36px;
+        line-height: 40px;
+    }
+
+    .search-hero-subtitle {
+        font-size: 14px;
+        line-height: 20px;
+    }
+
+    .results-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .tutor-grid {
+        flex-direction: column;
+    }
+}

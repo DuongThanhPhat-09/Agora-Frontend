@@ -1,73 +1,12 @@
-import { useState } from "react";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
+
 // Star icon component for ratings
 const StarIcon = () => (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M7 0L8.5716 4.83688H13.6574L9.5429 7.82624L11.1145 12.6631L7 9.67376L2.8855 12.6631L4.4571 7.82624L0.342604 4.83688H5.4284L7 0Z" fill="#D4B483" />
     </svg>
 );
-
-// Header Component
-const Header = () => {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-    return (
-        <header className="header">
-            <div className="header-content">
-                {/* Logo */}
-                <a href="/" className="logo-link">
-                    <div className="logo-icon">
-                        <span className="logo-letter">A</span>
-                    </div>
-                    <div className="logo-text">
-                        <span className="logo-name">AGORA</span>
-                        <span className="logo-tagline">Academic Heritage</span>
-                    </div>
-                </a>
-
-                {/* Navigation */}
-                <nav className="main-nav">
-                    <a href="#find-tutor" className="nav-link">TÌM GIA SƯ</a>
-                    <a href="#learning-path" className="nav-link">LỘ TRÌNH HỌC</a>
-                    <a href="#lms" className="nav-link">LMS ENGINE</a>
-                    <a href="#about" className="nav-link">VỀ CHÚNG TÔI</a>
-                </nav>
-
-                {/* Auth Buttons */}
-                <div className="auth-buttons">
-                    <button className="btn-login">LOG IN</button>
-                    <button className="btn-signup">SIGN UP</button>
-                </div>
-
-                {/* Mobile Menu Button */}
-                <button
-                    className="mobile-menu-btn"
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    aria-label="Toggle menu"
-                >
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
-            </div>
-
-            {/* Mobile Menu */}
-            {isMenuOpen && (
-                <div className="mobile-menu">
-                    <nav className="mobile-nav">
-                        <a href="#find-tutor" className="mobile-nav-link">TÌM GIA SƯ</a>
-                        <a href="#learning-path" className="mobile-nav-link">LỘ TRÌNH HỌC</a>
-                        <a href="#lms" className="mobile-nav-link">LMS ENGINE</a>
-                        <a href="#about" className="mobile-nav-link">VỀ CHÚNG TÔI</a>
-                    </nav>
-                    <div className="mobile-auth">
-                        <button className="btn-login">LOG IN</button>
-                        <button className="btn-signup">SIGN UP</button>
-                    </div>
-                </div>
-            )}
-        </header>
-    );
-};
 
 // Trusted Universities Banner
 const TrustedBanner = () => {
@@ -335,89 +274,6 @@ const TestimonialsSection = () => {
                 </div>
             </div>
         </section>
-    );
-};
-
-// Footer Component
-const Footer = () => {
-    const footerLinks = {
-        academic: [
-            "Danh sách Gia sư",
-            "Học thử đánh giá",
-            "Gia sư Elite",
-            "Lớp học nhóm",
-        ],
-        platform: [
-            "LMS Dashboard",
-            "Báo cáo tiến độ",
-            "Lộ trình cá nhân",
-            "Thư viện số",
-        ],
-        resources: [
-            "Trở thành Gia sư",
-            "Đối tác giáo dục",
-            "Hỗ trợ 24/7",
-            "Cộng đồng",
-        ],
-    };
-
-    return (
-        <footer className="footer">
-            <div className="footer-container">
-                <div className="footer-main">
-                    {/* Brand Column */}
-                    <div className="footer-brand">
-                        <div className="footer-logo">
-                            <div className="footer-logo-icon">
-                                <span>A</span>
-                            </div>
-                            <span className="footer-logo-text">AGORA.</span>
-                        </div>
-                        <p className="footer-tagline">
-                            "Elevating educational standards through verified elite expertise."
-                        </p>
-                    </div>
-
-                    {/* Links Columns */}
-                    <div className="footer-links-column">
-                        <h4 className="footer-links-title">HỌC THUẬT</h4>
-                        <ul className="footer-links">
-                            {footerLinks.academic.map((link, index) => (
-                                <li key={index}><a href="#">{link}</a></li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    <div className="footer-links-column">
-                        <h4 className="footer-links-title">NỀN TẢNG</h4>
-                        <ul className="footer-links">
-                            {footerLinks.platform.map((link, index) => (
-                                <li key={index}><a href="#">{link}</a></li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    <div className="footer-links-column">
-                        <h4 className="footer-links-title">TÀI NGUYÊN</h4>
-                        <ul className="footer-links">
-                            {footerLinks.resources.map((link, index) => (
-                                <li key={index}><a href="#">{link}</a></li>
-                            ))}
-                        </ul>
-                    </div>
-                </div>
-
-                {/* Footer Bottom */}
-                <div className="footer-bottom">
-                    <span className="copyright">© 2024 AGORA ACADEMIC SYSTEM. ALL RIGHTS RESERVED.</span>
-                    <div className="footer-legal">
-                        <a href="#">Privacy</a>
-                        <a href="#">Terms</a>
-                        <a href="#">Cookies</a>
-                    </div>
-                </div>
-            </div>
-        </footer>
     );
 };
 
