@@ -26,12 +26,13 @@
   --color-cream-light-10: rgba(242, 240, 228, 0.1);
 
   /* Typography */
-  --font-primary: 'Bricolage Grotesque', system-ui, sans-serif;
-  --font-serif: 'IBM Plex Serif', Georgia, serif;
+  --font-primary: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-serif: "IBM Plex Serif", Georgia, serif;
 
   /* Shadows */
   --shadow-soft: 0px 20px 50px -12px rgba(26, 34, 56, 0.08);
-  --shadow-medium: 0px 20px 25px -5px rgba(0, 0, 0, 0.1), 0px 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0px 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0px 8px 10px -6px rgba(0, 0, 0, 0.1);
 
   /* Border Radius */
   --radius-sm: 10.5px;
@@ -499,7 +500,11 @@ button {
   left: 0;
   right: 0;
   height: 50%;
-  background: linear-gradient(0deg, rgba(26, 34, 56, 0.6), rgba(26, 34, 56, 0) 100%);
+  background: linear-gradient(
+    0deg,
+    rgba(26, 34, 56, 0.6),
+    rgba(26, 34, 56, 0) 100%
+  );
   border-radius: 0 0 23px 24px;
   pointer-events: none;
 }
@@ -583,7 +588,11 @@ button {
   right: 0;
   bottom: 0;
   width: 33.33%;
-  background: linear-gradient(-90deg, rgba(99, 27, 27, 0.1), rgba(99, 27, 27, 0));
+  background: linear-gradient(
+    -90deg,
+    rgba(99, 27, 27, 0.1),
+    rgba(99, 27, 27, 0)
+  );
   pointer-events: none;
 }
 
