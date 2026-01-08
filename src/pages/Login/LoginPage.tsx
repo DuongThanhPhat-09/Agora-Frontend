@@ -3,6 +3,7 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import LoginForm from './LoginForm';
 import '../../styles/pages/login.css';
+import HeroSection from './HeroSection';
 
 const LoginPage: React.FC = () => {
     return (
@@ -16,8 +17,18 @@ const LoginPage: React.FC = () => {
                     <div className="login-page__blob login-page__blob--green"></div>
                 </div>
 
-                {/* Login Form */}
-                <LoginForm />
+                {/* Content Grid */}
+                <div className="login-page__content">
+                    {/* Hero Section - Desktop Only */}
+                    <div className="login-page__hero">
+                        <HeroSection />
+                    </div>
+
+                    {/* Login Form */}
+                    <div className="login-page__form-wrapper">
+                        <LoginForm />
+                    </div>
+                </div>
             </main>
 
             <Footer />
