@@ -1,7 +1,7 @@
-/* ===== LOGIN PAGE STYLES ===== */
+/* ===== REGISTER PAGE STYLES ===== */
 
-/* Page Container */
-.login-page {
+/* Page Container (Copied structure from login.css) */
+.register-page {
     width: 100%;
     min-height: 100vh;
     min-height: 100dvh;
@@ -12,18 +12,19 @@
 }
 
 /* Main Content Area */
-.login-page__main {
+.register-page__main {
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
+    /* Using exact clamp values from login.css for consistency */
     padding: clamp(100px, 15vh, 120px) clamp(16px, 4vw, 40px) clamp(60px, 8vh, 80px);
     position: relative;
     z-index: 1;
 }
 
 /* Background Decorations */
-.login-page__bg-decoration {
+.register-page__bg-decoration {
     position: absolute;
     top: 0;
     left: 0;
@@ -34,14 +35,14 @@
     pointer-events: none;
 }
 
-.login-page__blob {
+.register-page__blob {
     position: absolute;
     border-radius: 50%;
     filter: blur(100px);
     opacity: 0.15;
 }
 
-.login-page__blob--gold {
+.register-page__blob--gold {
     width: clamp(200px, 30vw, 500px);
     height: clamp(200px, 30vw, 500px);
     background-color: var(--color-gold);
@@ -49,7 +50,7 @@
     right: -5%;
 }
 
-.login-page__blob--green {
+.register-page__blob--green {
     width: clamp(150px, 25vw, 400px);
     height: clamp(150px, 25vw, 400px);
     background-color: var(--color-green);
@@ -58,7 +59,7 @@
 }
 
 /* Content Grid */
-.login-page__content {
+.register-page__content {
     width: 100%;
     max-width: 1280px;
     display: grid;
@@ -68,28 +69,28 @@
 }
 
 /* Hero Section Container */
-.login-page__hero {
+.register-page__hero {
     display: block;
 }
 
 /* Form Wrapper */
-.login-page__form-wrapper {
+.register-page__form-wrapper {
     display: flex;
     justify-content: flex-end;
 }
 
 /* ===== HERO SECTION STYLES ===== */
 
-.login-hero {
+.register-hero {
     padding-right: clamp(16px, 2vw, 40px);
 }
 
-.login-hero__content {
+.register-hero__content {
     margin-bottom: clamp(32px, 5vh, 56px);
 }
 
 /* Badge */
-.login-hero__badge {
+.register-hero__badge {
     display: inline-block;
     padding: 8px 16px;
     border-radius: var(--radius-full);
@@ -104,7 +105,7 @@
 }
 
 /* Title */
-.login-hero__title {
+.register-hero__title {
     font-family: var(--font-primary);
     font-size: clamp(36px, 5vw, 64px);
     font-weight: 700;
@@ -114,7 +115,7 @@
     margin-bottom: 24px;
 }
 
-.login-hero__title-accent {
+.register-hero__title-accent {
     font-family: var(--font-serif);
     font-style: italic;
     font-weight: 600;
@@ -122,7 +123,7 @@
 }
 
 /* Description */
-.login-hero__description {
+.register-hero__description {
     font-size: clamp(14px, 1.2vw, 18px);
     color: var(--color-navy-60);
     line-height: 1.7;
@@ -131,26 +132,26 @@
 }
 
 /* Stats Section */
-.login-hero__stats-section {
+.register-hero__stats-section {
     padding-top: clamp(24px, 4vh, 40px);
     border-top: 1px solid var(--color-navy-05);
 }
 
-.login-hero__stats-grid {
+.register-hero__stats-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: clamp(24px, 4vw, 48px);
     margin-bottom: clamp(24px, 4vh, 40px);
 }
 
-.login-hero__stat-value {
+.register-hero__stat-value {
     font-size: clamp(24px, 3vw, 36px);
     font-weight: 700;
     color: var(--color-navy);
     margin-bottom: 4px;
 }
 
-.login-hero__stat-label {
+.register-hero__stat-label {
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
@@ -159,17 +160,17 @@
 }
 
 /* Trust Indicators */
-.login-hero__trust {
+.register-hero__trust {
     display: flex;
     align-items: center;
     gap: 16px;
 }
 
-.login-hero__avatars {
+.register-hero__avatars {
     display: flex;
 }
 
-.login-hero__avatar {
+.register-hero__avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -180,26 +181,26 @@
     cursor: pointer;
 }
 
-.login-hero__avatar:first-child {
+.register-hero__avatar:first-child {
     margin-left: 0;
 }
 
-.login-hero__avatar:hover {
+.register-hero__avatar:hover {
     transform: scale(1.1);
     z-index: 10;
 }
 
-.login-hero__trust-text {
+.register-hero__trust-text {
     font-size: 14px;
     color: var(--color-navy-60);
 }
 
-.login-hero__trust-count {
+.register-hero__trust-count {
     font-weight: 700;
     color: var(--color-navy);
 }
 
-/* ===== LOGIN FORM COMPONENT ===== */
+/* ===== REGISTER FORM STYLES ===== */
 
 /* Animations */
 @keyframes fadeInUp {
@@ -231,60 +232,109 @@
     animation-delay: 300ms;
 }
 
-/* Form Container */
-.login-form {
-    width: clamp(280px, 90vw, 440px);
-    max-height: calc(100vh - 180px);
-    max-height: calc(100dvh - 180px);
+/* Form Container - STRICTLY FOLLOWING LOGIN.CSS STRUCTURE */
+.register-form {
+    width: clamp(280px, 90vw, 480px);
     background-color: var(--color-white);
     border-radius: var(--radius-2xl);
     box-shadow: var(--shadow-medium);
     overflow: hidden;
+    /* Clips the bottom gradient to the rounded corners */
     position: relative;
     z-index: 10;
 }
 
 /* Header Section */
-.login-form__header {
-    padding: clamp(20px, 4vh, 48px) clamp(20px, 5vw, 40px) clamp(12px, 2.5vh, 32px);
+.register-form__header {
+    padding: clamp(20px, 3vh, 40px) clamp(20px, 5vw, 40px) clamp(12px, 2vh, 24px);
     text-align: center;
 }
 
-.login-form__title {
+.register-form__title {
     font-family: var(--font-serif);
-    font-size: clamp(20px, 4vw, 32px);
+    font-size: clamp(20px, 3.5vw, 28px);
     font-weight: 600;
     color: var(--color-navy);
     margin-bottom: clamp(4px, 0.8vh, 8px);
     line-height: 1.2;
 }
 
-.login-form__subtitle {
-    font-size: clamp(12px, 1.8vw, 15px);
+.register-form__subtitle {
+    font-size: clamp(12px, 1.6vw, 14px);
     color: var(--color-navy-60);
     line-height: 1.5;
 }
 
 /* Form Body */
-.login-form__body {
-    padding: 0 clamp(20px, 5vw, 40px) clamp(20px, 4vh, 48px);
+.register-form__body {
+    padding: 0 clamp(20px, 5vw, 40px) clamp(20px, 3vh, 40px);
 }
 
-.login-form__form {
+.register-form__form {
     display: flex;
     flex-direction: column;
-    gap: clamp(12px, 2vh, 24px);
+    gap: clamp(10px, 1.5vh, 18px);
+}
+
+/* Password Hint */
+.register-form__password-hint {
+    font-size: 10px;
+    color: var(--color-navy-40);
+    font-style: italic;
+    margin-top: 6px;
+    margin-left: 2px;
+}
+
+/* Terms Checkbox */
+.register-form__terms {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding-top: 4px;
+}
+
+.register-form__checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.register-form__checkbox {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-green);
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.register-form__terms-label {
+    font-size: clamp(11px, 1.4vw, 13px);
+    color: var(--color-navy-60);
+    line-height: 1.5;
+}
+
+.register-form__terms-link {
+    color: var(--color-burgundy);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.2s ease;
+}
+
+.register-form__terms-link:hover {
+    color: var(--color-gold);
 }
 
 /* Submit Button */
-.login-form__submit {
+.register-form__submit {
     padding-top: clamp(4px, 0.8vh, 8px);
 }
 
-.login-form__button {
+.register-form__button {
     width: 100%;
-    padding: clamp(10px, 1.8vh, 16px) clamp(16px, 3vw, 24px);
-    font-size: clamp(11px, 1.6vw, 14px);
+    padding: clamp(10px, 1.6vh, 14px) clamp(16px, 3vw, 24px);
+    font-size: clamp(11px, 1.5vw, 13px);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -296,56 +346,55 @@
     transition: all 0.2s ease;
 }
 
-.login-form__button:hover {
+.register-form__button:hover {
     background-color: var(--color-burgundy);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(99, 27, 27, 0.25);
 }
 
-.login-form__button:active {
+.register-form__button:active {
     transform: translateY(0) scale(0.99);
 }
 
-.login-form__button:focus {
+.register-form__button:focus {
     outline: none;
     box-shadow: 0 0 0 4px rgba(99, 27, 27, 0.2);
 }
 
 /* Divider */
-.login-form__divider {
+.register-form__divider {
     display: flex;
     align-items: center;
     gap: clamp(8px, 2vw, 16px);
 }
 
-.login-form__divider-line {
+.register-form__divider-line {
     flex: 1;
     height: 1px;
     background-color: var(--color-navy-05);
 }
 
-.login-form__divider-text {
-    font-size: clamp(10px, 1.4vw, 13px);
+.register-form__divider-text {
+    font-size: clamp(10px, 1.3vw, 12px);
     color: var(--color-navy-40);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
 /* Social Login */
-.login-form__social {
-    display: flex;
-    flex-direction: column;
-    gap: clamp(8px, 1.2vh, 12px);
+.register-form__social {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(8px, 2vw, 16px);
 }
 
-.login-form__social-btn {
-    width: 100%;
+.register-form__social-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    padding: clamp(10px, 1.6vh, 14px) clamp(16px, 3vw, 24px);
-    font-size: clamp(11px, 1.6vw, 14px);
+    gap: 8px;
+    padding: clamp(10px, 1.4vh, 12px) clamp(12px, 2vw, 20px);
+    font-size: clamp(11px, 1.4vw, 13px);
     font-weight: 500;
     color: var(--color-navy);
     background-color: var(--color-cream-light);
@@ -355,35 +404,39 @@
     transition: all 0.2s ease;
 }
 
-.login-form__social-btn:hover {
+.register-form__social-btn:hover {
     background-color: var(--color-white);
     border-color: var(--color-navy-05);
     transform: translateY(-1px);
 }
 
-.login-form__social-btn:active {
+.register-form__social-btn:active {
     transform: translateY(0);
 }
 
-/* Register Link */
-.login-form__register {
+.register-form__social-btn svg {
+    flex-shrink: 0;
+}
+
+/* Login Link */
+.register-form__login {
     text-align: center;
 }
 
-.login-form__register p {
-    font-size: clamp(11px, 1.6vw, 14px);
+.register-form__login p {
+    font-size: clamp(11px, 1.5vw, 13px);
     color: var(--color-navy-60);
 }
 
-.login-form__register-link {
-    font-weight: 600;
+.register-form__login-link {
+    font-weight: 700;
     color: var(--color-burgundy);
     text-decoration: none;
     transition: all 0.2s ease;
     position: relative;
 }
 
-.login-form__register-link::after {
+.register-form__login-link::after {
     content: '';
     position: absolute;
     bottom: -2px;
@@ -394,12 +447,12 @@
     transition: width 0.2s ease;
 }
 
-.login-form__register-link:hover::after {
+.register-form__login-link:hover::after {
     width: 100%;
 }
 
 /* Decorative Accent Line */
-.login-form__accent {
+.register-form__accent {
     height: clamp(4px, 0.8vh, 8px);
     width: 100%;
     background: linear-gradient(90deg,
@@ -409,21 +462,21 @@
     flex-shrink: 0;
 }
 
-/* ===== RESPONSIVE ===== */
+/* ===== RESPONSIVE STYLES (Copied Breakpoints from login.css) ===== */
 
 /* Tablet and below - Hide hero, center form */
 @media (max-width: 960px) {
-    .login-page__content {
+    .register-page__content {
         grid-template-columns: 1fr;
         justify-items: center;
         gap: 0;
     }
 
-    .login-page__hero {
+    .register-page__hero {
         display: none;
     }
 
-    .login-page__form-wrapper {
+    .register-page__form-wrapper {
         justify-content: center;
         width: 100%;
     }
@@ -431,103 +484,111 @@
 
 /* Mid-size screens - Adjust typography and spacing */
 @media (min-width: 961px) and (max-width: 1200px) {
-    .login-page__content {
+    .register-page__content {
         gap: 40px;
     }
 
-    .login-hero__title {
+    .register-hero__title {
         font-size: 36px;
     }
 
-    .login-hero__description {
+    .register-hero__description {
         font-size: 14px;
     }
 }
 
+/* 2. Short Height Screens (Laptop) - Matches login.css @media (max-height: 700px) */
 @media (max-height: 700px) {
-    .login-page__main {
+    .register-page__main {
         padding-top: 80px;
         padding-bottom: 24px;
     }
 
-    .login-form__header {
-        padding: 16px 24px 10px;
-    }
-
-    .login-form__title {
+    .register-form__title {
         font-size: 20px;
     }
 
-    .login-form__subtitle {
+    .register-form__subtitle {
         font-size: 12px;
     }
 
-    .login-form__body {
+    .register-form__body {
         padding: 0 24px 16px;
     }
 
-    .login-form__form {
+    .register-form__form {
         gap: 10px;
     }
 
-    .login-form__button,
-    .login-form__social-btn {
+    .register-form__button,
+    .register-form__social-btn {
         padding: 10px 16px;
         font-size: 12px;
     }
+
+    .register-form__password-hint {
+        margin-top: 4px;
+    }
 }
 
+/* 3. Very Short Height Screens - Matches login.css @media (max-height: 550px) */
 @media (max-height: 550px) {
-    .login-page__main {
+    .register-page__main {
         padding-top: 60px;
     }
 
-    .login-form {
+    .register-form {
         border-radius: var(--radius-xl);
     }
 
-    .login-form__header {
-        padding: 12px 20px 8px;
-    }
-
-    .login-form__title {
+    .register-form__title {
         font-size: 18px;
         margin-bottom: 2px;
     }
 
-    .login-form__subtitle {
+    .register-form__subtitle {
         font-size: 11px;
     }
 
-    .login-form__body {
+    .register-form__body {
         padding: 0 20px 12px;
     }
 
-    .login-form__form {
+    .register-form__form {
         gap: 8px;
     }
 
-    .login-form__button,
-    .login-form__social-btn {
+    .register-form__button,
+    .register-form__social-btn {
         padding: 8px 12px;
         font-size: 11px;
     }
 
-    .login-form__divider {
+    .register-form__divider {
         gap: 8px;
     }
 
-    .login-form__divider-text {
+    .register-form__divider-text {
+        font-size: 10px;
+    }
+
+    .register-form__terms-label {
         font-size: 10px;
     }
 }
 
+/* 4. Small Mobile Screens - Matches login.css @media (max-width: 400px) */
 @media (max-width: 400px) {
-    .login-form {
+    .register-form {
         border-radius: var(--radius-xl);
     }
 
-    .login-form__social-btn {
+    .register-form__social {
+        grid-template-columns: 1fr;
         gap: 8px;
+    }
+
+    .register-form__social-btn {
+        gap: 10px;
     }
 }

@@ -16,6 +16,7 @@
 /* ===== PAGE STYLES ===== */
 @import "./styles/pages/home.css";
 @import "./styles/pages/tutor-search.css";
+@import "./styles/pages/register.css";
 
 /* ===== TUTOR SEARCH COMPONENTS ===== */
 @import "./styles/components/search-bar.css";

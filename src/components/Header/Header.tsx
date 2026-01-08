@@ -30,7 +30,7 @@ const Header = () => {
                 {/* Auth Buttons */}
                 <div className="auth-buttons">
                     <Link to="/login" className="btn-login">LOG IN</Link>
-                    <button className="btn-signup">SIGN UP</button>
+                    <Link to="/register" className="btn-signup">SIGN UP</Link>
                 </div>
 
                 {/* Mobile Menu Button */}
@@ -56,7 +56,7 @@ const Header = () => {
                     </nav>
                     <div className="mobile-auth">
                         <Link to="/login" className="btn-login" onClick={() => setIsMenuOpen(false)}>LOG IN</Link>
-                        <button className="btn-signup">SIGN UP</button>
+                        <Link to="/register" className="btn-signup" onClick={() => setIsMenuOpen(false)}>SIGN UP</Link>
                     </div>
                 </div>
             )}
