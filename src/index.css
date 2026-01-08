@@ -6,8 +6,7 @@
 @import "./styles/base/global.css";
 
 /* ===== COMPONENT STYLES ===== */
-@import "./styles/components/header.css";
-@import "./styles/components/footer.css";
+/* Header and Footer are imported directly in their components */
 @import "./styles/components/buttons.css";
 @import "./styles/components/trusted-banner.css";
 @import "./styles/components/testimonials.css";
@@ -16,3 +15,10 @@
 
 /* ===== PAGE STYLES ===== */
 @import "./styles/pages/home.css";
+@import "./styles/pages/tutor-search.css";
+
+/* ===== TUTOR SEARCH COMPONENTS ===== */
+@import "./styles/components/search-bar.css";
+@import "./styles/components/category-tabs.css";
+@import "./styles/components/filter-bar.css";
+@import "./styles/components/tutor-card.css";

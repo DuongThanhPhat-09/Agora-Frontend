@@ -1,0 +1,246 @@
+/* ===== FILTER BAR COMPONENT ===== */
+
+.filter-section {
+    width: 100%;
+    box-shadow: 0px 2px 0.6px rgba(0, 0, 0, 0.1), 0px 1px 2px rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(24px);
+    background-color: rgba(255, 255, 255, 0.95);
+    border-bottom: 1.2px solid rgba(62, 47, 40, 0.1);
+    padding: 17.5px 35px;
+    box-sizing: border-box;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.filter-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 51px;
+}
+
+/* Filter Groups */
+.filter-groups {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex: 1;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0.6px 0 1.5px;
+}
+
+.filter-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    line-height: 15px;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: rgba(62, 47, 40, 0.9);
+    white-space: nowrap;
+}
+
+.filter-select {
+    width: 143px;
+    border-radius: 2px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 7px 9px;
+    font-size: 15px;
+    letter-spacing: 1px;
+    line-height: 15px;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: #000;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    appearance: none;
+    font-family: var(--font-primary);
+}
+
+.filter-select-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.filter-select-wrapper::after {
+    content: '';
+    width: 10px;
+    height: 6px;
+    position: absolute;
+    right: 9px;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 10 6'%3E%3Cpath stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m1 1 4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+/* Vertical Divider */
+.filter-divider {
+    width: 1px;
+    height: 21px;
+    background-color: rgba(62, 47, 40, 0.5);
+    flex-shrink: 0;
+}
+
+/* Sort & Filter Actions */
+.filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sort-group {
+    display: flex;
+    align-items: center;
+    padding: 8.1px 14px 9.1px 0;
+    gap: 16px;
+}
+
+.sort-label {
+    font-size: 13px;
+    letter-spacing: 2px;
+    line-height: 15px;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: rgba(26, 34, 56, 0.9);
+    white-space: nowrap;
+}
+
+.sort-select {
+    border-radius: 16px;
+    background-color: rgba(245, 245, 245, 0.67);
+    border: 1px solid rgba(26, 34, 56, 0.26);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 8px 24px;
+    gap: 16px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    line-height: 15px;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: #000;
+    cursor: pointer;
+    appearance: none;
+    font-family: var(--font-primary);
+}
+
+.sort-select-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.sort-select-wrapper::after {
+    content: '';
+    width: 10px;
+    height: 6px;
+    position: absolute;
+    right: 12px;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 10 6'%3E%3Cpath stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m1 1 4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+/* Filter Button */
+.btn-filter {
+    filter: drop-shadow(0px 1px 0.8px rgba(0, 0, 0, 0.12));
+    border-radius: 100px;
+    border: 1px solid rgba(26, 34, 56, 0.05);
+    display: flex;
+    align-items: center;
+    padding: 8px 17.7px 8.9px;
+    gap: 10.5px;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-filter:hover {
+    border-color: rgba(26, 34, 56, 0.2);
+}
+
+.btn-filter-icon {
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-navy);
+}
+
+.btn-filter-icon svg {
+    width: 9px;
+    height: 9px;
+}
+
+.btn-filter-text {
+    font-size: 10px;
+    letter-spacing: 3px;
+    line-height: 15px;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--color-navy);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1200px) {
+    .filter-container {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .filter-groups {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+
+    .filter-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 768px) {
+    .filter-section {
+        padding: 12px 16px;
+    }
+
+    .filter-groups {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .filter-divider {
+        display: none;
+    }
+
+    .filter-group {
+        width: 100%;
+    }
+
+    .filter-select {
+        flex: 1;
+    }
+
+    .sort-group {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 0;
+    }
+}
