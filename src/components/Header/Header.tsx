@@ -1,67 +1,247 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./Header.css";
+// Import Supabase và kiểu dữ liệu User
+import { supabase } from "../../lib/supabase";
+import { type User } from "@supabase/supabase-js";
+import { loginToBackend } from "../../services/auth.service";
 
 const Header = () => {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
 
-    return (
-        <header className="header">
-            <div className="header-content">
-                {/* Logo */}
-                <Link to="/" className="logo-link">
-                    <div className="logo-icon">
-                        <span className="logo-letter">A</span>
-                    </div>
-                    <div className="logo-text">
-                        <span className="logo-name">AGORA</span>
-                        <span className="logo-tagline">Academic Heritage</span>
-                    </div>
-                </Link>
+  useEffect(() => {
+    // 1. Kiểm tra session hiện tại (Cho trường hợp F5 lại trang)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      // Nếu đã có session (F5 lại), cũng cần gửi token xuống backend để sync/verify lại nếu cần
+      if (session?.access_token) {
+        // Lưu ý: Có thể bạn muốn check xem đã login backend chưa để tránh spam API
+        console.log("Restoring session, verifying with backend...");
+        loginToBackend(session.access_token);
+      }
+    });
 
-                {/* Navigation */}
-                <nav className="main-nav">
-                    <Link to="/tutor-search" className="nav-link">TÌM GIA SƯ</Link>
-                    <a href="#learning-path" className="nav-link">LỘ TRÌNH HỌC</a>
-                    <a href="#lms" className="nav-link">LMS ENGINE</a>
-                    <a href="#about" className="nav-link">VỀ CHÚNG TÔI</a>
-                </nav>
+    // 2. Lắng nghe sự kiện thay đổi auth (Login/Logout)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setUser(session?.user ?? null);
 
-                {/* Auth Buttons */}
-                <div className="auth-buttons">
-                    <Link to="/login" className="btn-login">LOG IN</Link>
-                    <Link to="/register" className="btn-signup">SIGN UP</Link>
-                </div>
+      // --- LOGIC GỌI API BACKEND ---
+      if (event === "SIGNED_IN" && session) {
+        console.log("User signed in via Supabase! Sending token to backend...");
+        await loginToBackend(session.access_token);
+      }
+      // -----------------------------
 
-                {/* Mobile Menu Button */}
-                <button
-                    className="mobile-menu-btn"
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    aria-label="Toggle menu"
-                >
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
+      if (event === "SIGNED_OUT") {
+        // Xóa token backend nếu logout
+        // localStorage.removeItem('app_token');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsMenuOpen(false);
+  };
+
+  return (
+    <header className="header">
+      <div className="header-content">
+        <Link to="/" className="logo-link">
+          <div className="logo-icon">
+            <span className="logo-letter">A</span>
+          </div>
+          <div className="logo-text">
+            <span className="logo-name">AGORA</span>
+            <span className="logo-tagline">Academic Heritage</span>
+          </div>
+        </Link>
+        <nav className="main-nav">
+          <Link to="/tutor-search" className="nav-link">
+            TÌM GIA SƯ
+          </Link>
+          <a href="/#learning-path" className="nav-link">
+            LỘ TRÌNH HỌC
+          </a>
+          <a href="/#lms" className="nav-link">
+            LMS ENGINE
+          </a>
+          <a href="/#about" className="nav-link">
+            VỀ CHÚNG TÔI
+          </a>
+        </nav>
+
+        {/* Auth Buttons - Xử lý điều kiện hiển thị */}
+        <div className="auth-buttons">
+          {user ? (
+            // --- GIAO DIỆN KHI ĐÃ ĐĂNG NHẬP ---
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+              {/* Avatar User */}
+              <img
+                src={user.user_metadata.avatar_url}
+                alt="User Avatar"
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  border: "1px solid #ddd",
+                }}
+              />
+              {/* Tên User */}
+              <span
+                style={{
+                  fontWeight: 600,
+                  fontSize: "0.95rem",
+                  color: "var(--color-navy)",
+                }}
+              >
+                {user.user_metadata.full_name || "User"}
+              </span>
+              {/* Nút Đăng xuất */}
+              <button
+                onClick={handleLogout}
+                className="btn-login"
+                style={{
+                  border: "1px solid #ef4444",
+                  color: "#ef4444",
+                  padding: "0.5rem 1rem",
+                  marginLeft: "0.5rem",
+                }}
+              >
+                LOG OUT
+              </button>
             </div>
+          ) : (
+            <>
+              <Link to="/login" className="btn-login">
+                LOG IN
+              </Link>
+              <Link to="/register" className="btn-signup">
+                SIGN UP
+              </Link>
+            </>
+          )}
+        </div>
 
-            {/* Mobile Menu */}
-            {isMenuOpen && (
-                <div className="mobile-menu">
-                    <nav className="mobile-nav">
-                        <Link to="/tutor-search" className="mobile-nav-link" onClick={() => setIsMenuOpen(false)}>TÌM GIA SƯ</Link>
-                        <a href="#learning-path" className="mobile-nav-link">LỘ TRÌNH HỌC</a>
-                        <a href="#lms" className="mobile-nav-link">LMS ENGINE</a>
-                        <a href="#about" className="mobile-nav-link">VỀ CHÚNG TÔI</a>
-                    </nav>
-                    <div className="mobile-auth">
-                        <Link to="/login" className="btn-login" onClick={() => setIsMenuOpen(false)}>LOG IN</Link>
-                        <Link to="/register" className="btn-signup" onClick={() => setIsMenuOpen(false)}>SIGN UP</Link>
-                    </div>
+        {/* Mobile Menu Button */}
+        <button
+          className="mobile-menu-btn"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label="Toggle menu"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="mobile-menu">
+          <nav className="mobile-nav">
+            <Link
+              to="/tutor-search"
+              className="mobile-nav-link"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              TÌM GIA SƯ
+            </Link>
+            <a
+              href="/#learning-path"
+              className="mobile-nav-link"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              LỘ TRÌNH HỌC
+            </a>
+            <a
+              href="/#lms"
+              className="mobile-nav-link"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              LMS ENGINE
+            </a>
+            <a
+              href="/#about"
+              className="mobile-nav-link"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              VỀ CHÚNG TÔI
+            </a>
+          </nav>
+
+          {/* Mobile Auth Section */}
+          <div className="mobile-auth">
+            {user ? (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "1rem",
+                  width: "100%",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
+                  <img
+                    src={user.user_metadata.avatar_url}
+                    alt="Avatar"
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "50%",
+                    }}
+                  />
+                  <span style={{ fontWeight: 600 }}>
+                    {user.user_metadata.full_name}
+                  </span>
                 </div>
+                <button
+                  onClick={handleLogout}
+                  className="btn-login"
+                  style={{
+                    width: "100%",
+                    border: "1px solid #ef4444",
+                    color: "#ef4444",
+                  }}
+                >
+                  LOG OUT
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="btn-login"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  LOG IN
+                </Link>
+                <Link
+                  to="/register"
+                  className="btn-signup"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  SIGN UP
+                </Link>
+              </>
             )}
-        </header>
-    );
+          </div>
+        </div>
+      )}
+    </header>
+  );
 };
 
 export default Header;
