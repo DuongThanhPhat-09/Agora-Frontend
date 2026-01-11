@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 
@@ -321,95 +322,108 @@ interface TutorCardProps {
     tutor: Tutor;
 }
 
-const TutorCard = ({ tutor }: TutorCardProps) => (
-    <div className="tutor-card">
-        <div className="tutor-card-body">
-            {/* Header Row */}
-            <div className="tutor-card-header">
-                <div className="tutor-profile">
-                    <div className="tutor-avatar-container">
-                        <img src={tutor.avatar} alt={tutor.name} className="tutor-avatar" />
-                        <div className="tutor-verified-badge">
-                            <VerifiedIcon />
+const TutorCard = ({ tutor }: TutorCardProps) => {
+    const navigate = useNavigate();
+
+    const handleCardClick = () => {
+        navigate(`/tutor-detail/${tutor.id}`);
+    };
+
+    const handleButtonClick = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent card click from firing
+        navigate(`/tutor-detail/${tutor.id}`);
+    };
+
+    return (
+        <div className="tutor-card" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
+            <div className="tutor-card-body">
+                {/* Header Row */}
+                <div className="tutor-card-header">
+                    <div className="tutor-profile">
+                        <div className="tutor-avatar-container">
+                            <img src={tutor.avatar} alt={tutor.name} className="tutor-avatar" />
+                            <div className="tutor-verified-badge">
+                                <VerifiedIcon />
+                            </div>
+                        </div>
+                        <div className="tutor-info">
+                            <h3 className="tutor-name">{tutor.name}</h3>
+                            <div className="tutor-badges">
+                                <span className={`tutor-type-badge ${tutor.type}`}>
+                                    {typeLabels[tutor.type]}
+                                </span>
+                                <span className="tutor-credential">{tutor.credential}</span>
+                            </div>
                         </div>
                     </div>
-                    <div className="tutor-info">
-                        <h3 className="tutor-name">{tutor.name}</h3>
-                        <div className="tutor-badges">
-                            <span className={`tutor-type-badge ${tutor.type}`}>
-                                {typeLabels[tutor.type]}
-                            </span>
-                            <span className="tutor-credential">{tutor.credential}</span>
+                    <div className="tutor-rating">
+                        <span className="rating-star">★</span>
+                        <span className="rating-value">{tutor.rating.toFixed(1)}</span>
+                    </div>
+                </div>
+
+                {/* University Row */}
+                <div className="tutor-university-row">
+                    <span className="university-icon"><UniversityIcon /></span>
+                    <span className="university-name">{tutor.university}</span>
+                    <div className="class-type-badge">
+                        <span className="class-type-label">Loại lớp:</span>
+                        <span className={`class-type-value ${tutor.type}`}>
+                            {tutor.type.toUpperCase()}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Subject Tags */}
+                <div className="tutor-subjects">
+                    {tutor.subjects.map((subject, index) => (
+                        <span key={index} className="subject-tag">{subject}</span>
+                    ))}
+                </div>
+
+                {/* Stats Row */}
+                <div className="tutor-stats">
+                    <div className="stat-item">
+                        <span className="stat-label">{statsLabels[tutor.type].experience}</span>
+                        <span className="stat-value">{tutor.experience}</span>
+                    </div>
+                    <div className="stat-item">
+                        <span className="stat-label">{statsLabels[tutor.type].result}</span>
+                        <span className={`stat-value ${tutor.resultType}`}>{tutor.result}</span>
+                    </div>
+                </div>
+
+                {/* Highlights */}
+                <div className="tutor-highlights">
+                    {tutor.highlights.map((highlight, index) => (
+                        <div key={index} className="highlight-item">
+                            <span className="highlight-icon"><CheckIcon /></span>
+                            <span className="highlight-text">{highlight}</span>
                         </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Card Footer */}
+            <div className="tutor-card-footer">
+                <div className="tutor-pricing">
+                    <span className="pricing-label">HỌC PHÍ CHUẨN</span>
+                    <div className="pricing-value">
+                        <span className="price-amount">${tutor.price}</span>
+                        <span className="price-unit">/h</span>
                     </div>
                 </div>
-                <div className="tutor-rating">
-                    <span className="rating-star">★</span>
-                    <span className="rating-value">{tutor.rating.toFixed(1)}</span>
+                <div className="tutor-actions">
+                    <button className="btn-details" onClick={handleButtonClick}>Chi tiết</button>
+                    <button className="btn-start-plan" onClick={handleButtonClick}>
+                        <span className="btn-start-plan-text">BẮT ĐẦU KẾ HOẠCH</span>
+                        <span className="btn-start-plan-icon"><ArrowIcon /></span>
+                    </button>
                 </div>
-            </div>
-
-            {/* University Row */}
-            <div className="tutor-university-row">
-                <span className="university-icon"><UniversityIcon /></span>
-                <span className="university-name">{tutor.university}</span>
-                <div className="class-type-badge">
-                    <span className="class-type-label">Loại lớp:</span>
-                    <span className={`class-type-value ${tutor.type}`}>
-                        {tutor.type.toUpperCase()}
-                    </span>
-                </div>
-            </div>
-
-            {/* Subject Tags */}
-            <div className="tutor-subjects">
-                {tutor.subjects.map((subject, index) => (
-                    <span key={index} className="subject-tag">{subject}</span>
-                ))}
-            </div>
-
-            {/* Stats Row */}
-            <div className="tutor-stats">
-                <div className="stat-item">
-                    <span className="stat-label">{statsLabels[tutor.type].experience}</span>
-                    <span className="stat-value">{tutor.experience}</span>
-                </div>
-                <div className="stat-item">
-                    <span className="stat-label">{statsLabels[tutor.type].result}</span>
-                    <span className={`stat-value ${tutor.resultType}`}>{tutor.result}</span>
-                </div>
-            </div>
-
-            {/* Highlights */}
-            <div className="tutor-highlights">
-                {tutor.highlights.map((highlight, index) => (
-                    <div key={index} className="highlight-item">
-                        <span className="highlight-icon"><CheckIcon /></span>
-                        <span className="highlight-text">{highlight}</span>
-                    </div>
-                ))}
             </div>
         </div>
-
-        {/* Card Footer */}
-        <div className="tutor-card-footer">
-            <div className="tutor-pricing">
-                <span className="pricing-label">HỌC PHÍ CHUẨN</span>
-                <div className="pricing-value">
-                    <span className="price-amount">${tutor.price}</span>
-                    <span className="price-unit">/h</span>
-                </div>
-            </div>
-            <div className="tutor-actions">
-                <button className="btn-details">Chi tiết</button>
-                <button className="btn-start-plan">
-                    <span className="btn-start-plan-text">BẮT ĐẦU KẾ HOẠCH</span>
-                    <span className="btn-start-plan-icon"><ArrowIcon /></span>
-                </button>
-            </div>
-        </div>
-    </div>
-);
+    );
+};
 
 // Results Section
 const ResultsSection = () => {
