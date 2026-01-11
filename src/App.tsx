@@ -5,9 +5,15 @@ import LoginPage from "./pages/Login/LoginPage";
 import RegisterPage from "./pages/Register/RegisterPage";
 import { TutorDetailPage } from "./pages/TutorDetail";
 
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+// ---------------------
+
 function App() {
   return (
     <div>
+      <ToastContainer position="top-right" autoClose={5000} />
+
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/tutor-search" element={<TutorSearchPage />} />
