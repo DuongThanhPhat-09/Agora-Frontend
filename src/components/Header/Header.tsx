@@ -4,7 +4,10 @@ import "./Header.css";
 // Import Supabase và kiểu dữ liệu User
 import { supabase } from "../../lib/supabase";
 import { type User } from "@supabase/supabase-js";
-import { loginToBackend } from "../../services/auth.service";
+import {
+  clearUserFromStorage,
+  loginToBackend,
+} from "../../services/auth.service";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -14,11 +17,12 @@ const Header = () => {
     // 1. Kiểm tra session hiện tại (Cho trường hợp F5 lại trang)
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      // Nếu đã có session (F5 lại), cũng cần gửi token xuống backend để sync/verify lại nếu cần
-      if (session?.access_token) {
-        // Lưu ý: Có thể bạn muốn check xem đã login backend chưa để tránh spam API
-        console.log("Restoring session, verifying with backend...");
-        loginToBackend(session.access_token);
+
+      // SỬA Ở ĐÂY: Kiểm tra cả access_token và email
+      if (session?.access_token && session?.user?.email) {
+        console.log("Restoring session...");
+        // Truyền đủ 2 tham số: Token và Email
+        loginToBackend(session.access_token, session.user.email);
       }
     });
 
@@ -28,16 +32,15 @@ const Header = () => {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
 
-      // --- LOGIC GỌI API BACKEND ---
-      if (event === "SIGNED_IN" && session) {
+      if (event === "SIGNED_IN" && session && session.user.email) {
         console.log("User signed in via Supabase! Sending token to backend...");
-        await loginToBackend(session.access_token);
+        // Truyền đủ 2 tham số
+        await loginToBackend(session.access_token, session.user.email);
       }
-      // -----------------------------
+  
 
       if (event === "SIGNED_OUT") {
-        // Xóa token backend nếu logout
-        // localStorage.removeItem('app_token');
+        // Logic logout (nếu cần)
       }
     });
 
@@ -46,6 +49,8 @@ const Header = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    clearUserFromStorage();
+    setUser(null);
     setIsMenuOpen(false);
   };
 

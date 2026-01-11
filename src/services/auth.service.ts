@@ -1,34 +1,68 @@
-// src/services/auth.service.ts
-const API_URL = "/api/auth/login-supabase";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-useless-catch */
+import axios from "axios";
 
-export const loginToBackend = async (accessToken: string) => {
+const API_BASE_URL = "http://localhost:5166/api";
+const USER_LOCAL_STORAGE_KEY = "agora_user_data"; // Key để lưu thông tin user
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// --- CÁC HÀM TIỆN ÍCH LOCAL STORAGE ---
+
+/**
+ * Lưu thông tin user vào LocalStorage
+ */
+export const saveUserToStorage = (userData: any) => {
+  if (userData) {
+    localStorage.setItem(USER_LOCAL_STORAGE_KEY, JSON.stringify(userData));
+  }
+};
+
+/**
+ * Lấy thông tin user hiện tại từ LocalStorage
+ */
+export const getCurrentUser = () => {
+  const data = localStorage.getItem(USER_LOCAL_STORAGE_KEY);
+  return data ? JSON.parse(data) : null;
+};
+
+/**
+ * Xóa thông tin user (Dùng khi Logout)
+ */
+export const clearUserFromStorage = () => {
+  localStorage.removeItem(USER_LOCAL_STORAGE_KEY);
+};
+
+// --- CÁC HÀM API ---
+
+export const checkEmailExists = async (email: string) => {
   try {
-    console.log("🔵 Đang gửi Token xuống Backend:", accessToken); // Log để kiểm tra
+    const response = await api.get(`/users/by-email/${email}`);
+    return response.data;
+  } catch (error: any) {
+    if (error.response && error.response.status === 404) {
+      return null;
+    }
+    throw error;
+  }
+};
 
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json", // Bắt buộc phải có dòng này
-      },
-      body: JSON.stringify({
-        // 👇 Kiểm tra kỹ xem Backend của bạn tên biến là 'accessToken' hay 'token' hay 'idToken'
-        accessToken: accessToken,
-      }),
+export const loginToBackend = async (accessToken: string, email: string) => {
+  try {
+    console.log("Gửi yêu cầu đăng nhập Backend...");
+
+    const response = await api.post("/auth/login-supabase", {
+      accessToken: accessToken,
+      email: email,
     });
 
-    if (!response.ok) {
-      // Đọc lỗi chi tiết từ Backend trả về
-      const errorData = await response.json().catch(() => ({}));
-      console.error("🔴 Backend từ chối:", response.status, errorData);
-      throw new Error(
-        errorData.message || `Backend login failed: ${response.statusText}`
-      );
-    }
-
-    const data = await response.json();
-    return data;
+    return response.data;
   } catch (error) {
-    console.error("Error logging in to backend:", error);
     throw error;
   }
 };
