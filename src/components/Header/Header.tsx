@@ -8,6 +8,7 @@ import {
   clearUserFromStorage,
   loginToBackend,
 } from "../../services/auth.service";
+import { Popconfirm } from "antd";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -37,7 +38,6 @@ const Header = () => {
         // Truyền đủ 2 tham số
         await loginToBackend(session.access_token, session.user.email);
       }
-  
 
       if (event === "SIGNED_OUT") {
         // Logic logout (nếu cần)
@@ -47,13 +47,12 @@ const Header = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleLogout = async () => {
+  const confirmLogout = async () => {
     await supabase.auth.signOut();
     clearUserFromStorage();
     setUser(null);
     setIsMenuOpen(false);
   };
-
   return (
     <header className="header">
       <div className="header-content">
@@ -109,18 +108,27 @@ const Header = () => {
                 {user.user_metadata.full_name || "User"}
               </span>
               {/* Nút Đăng xuất */}
-              <button
-                onClick={handleLogout}
-                className="btn-login"
-                style={{
-                  border: "1px solid #ef4444",
-                  color: "#ef4444",
-                  padding: "0.5rem 1rem",
-                  marginLeft: "0.5rem",
-                }}
+              <Popconfirm
+                title="Đăng xuất"
+                description="Bạn có chắc chắn muốn đăng xuất?"
+                onConfirm={confirmLogout} // Gọi hàm logout khi bấm Đồng ý
+                okText="Đồng ý"
+                cancelText="Hủy"
+                placement="bottomRight"
               >
-                LOG OUT
-              </button>
+                <button
+                  className="btn-login"
+                  style={{
+                    border: "1px solid #ef4444",
+                    color: "#ef4444",
+                    padding: "0.5rem 1rem",
+                    marginLeft: "0.5rem",
+                    cursor: "pointer",
+                  }}
+                >
+                  LOG OUT
+                </button>
+              </Popconfirm>
             </div>
           ) : (
             <>
@@ -212,17 +220,25 @@ const Header = () => {
                     {user.user_metadata.full_name}
                   </span>
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="btn-login"
-                  style={{
-                    width: "100%",
-                    border: "1px solid #ef4444",
-                    color: "#ef4444",
-                  }}
+                <Popconfirm
+                  title="Đăng xuất"
+                  description="Bạn có muốn đăng xuất không?"
+                  onConfirm={confirmLogout}
+                  okText="Có"
+                  cancelText="Không"
                 >
-                  LOG OUT
-                </button>
+                  <button
+                    className="btn-login"
+                    style={{
+                      width: "100%",
+                      border: "1px solid #ef4444",
+                      color: "#ef4444",
+                      cursor: "pointer",
+                    }}
+                  >
+                    LOG OUT
+                  </button>
+                </Popconfirm>
               </div>
             ) : (
               <>
