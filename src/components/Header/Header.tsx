@@ -4,10 +4,7 @@ import "./Header.css";
 // Import Supabase và kiểu dữ liệu User
 import { supabase } from "../../lib/supabase";
 import { type User } from "@supabase/supabase-js";
-import {
-  clearUserFromStorage,
-  loginToBackend,
-} from "../../services/auth.service";
+import { clearUserFromStorage } from "../../services/auth.service";
 import { Popconfirm } from "antd";
 
 const Header = () => {
@@ -18,30 +15,16 @@ const Header = () => {
     // 1. Kiểm tra session hiện tại (Cho trường hợp F5 lại trang)
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-
-      // SỬA Ở ĐÂY: Kiểm tra cả access_token và email
-      if (session?.access_token && session?.user?.email) {
-        console.log("Restoring session...");
-        // Truyền đủ 2 tham số: Token và Email
-        loginToBackend(session.access_token, session.user.email);
-      }
+      // Session được Supabase tự động quản lý, không cần gọi backend mỗi lần restore
     });
 
     // 2. Lắng nghe sự kiện thay đổi auth (Login/Logout)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
-
-      if (event === "SIGNED_IN" && session && session.user.email) {
-        console.log("User signed in via Supabase! Sending token to backend...");
-        // Truyền đủ 2 tham số
-        await loginToBackend(session.access_token, session.user.email);
-      }
-
-      if (event === "SIGNED_OUT") {
-        // Logic logout (nếu cần)
-      }
+      // Backend sync được xử lý trong LoginForm và RegisterForm
+      // Không cần gọi lại ở đây để tránh duplicate requests
     });
 
     return () => subscription.unsubscribe();

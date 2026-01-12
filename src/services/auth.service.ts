@@ -66,3 +66,42 @@ export const loginToBackend = async (accessToken: string, email: string) => {
     throw error;
   }
 };
+
+export const loginManual = async (accessToken: string, password: string) => {
+  try {
+    console.log("Gửi yêu cầu đăng nhập thủ công tới Backend...");
+
+    const payload = {
+      accessToken: accessToken,
+      password: password
+    };
+
+    const response = await api.post("/auth/login-supabase", payload);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const registerUserToBackend = async (supabaseToken: string, password: string) => {
+  try {
+    console.log("🔐 Gửi yêu cầu đăng ký tới Backend...");
+    console.log("📋 Token length:", supabaseToken?.length);
+    console.log("📋 Token preview:", supabaseToken?.substring(0, 50) + "...");
+
+    const payload = {
+      supabaseToken: supabaseToken,
+      password: password
+    };
+
+    const response = await api.post("/registrations/register-supabase", payload);
+    console.log("✅ Backend registration successful:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("❌ Backend registration error:");
+    console.error("Status:", error.response?.status);
+    console.error("Data:", error.response?.data);
+    console.error("Full error:", error);
+    throw error;
+  }
+};
