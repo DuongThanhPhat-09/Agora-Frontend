@@ -1,6 +1,6 @@
-/* ===== FILTER BAR COMPONENT ===== */
+/* ===== FILTER BAR COMPONENT (Tutor Search Page) ===== */
 
-.filter-section {
+.tutor-search-page .filter-section {
     width: 100%;
     box-shadow: 0px 2px 0.6px rgba(0, 0, 0, 0.1), 0px 1px 2px rgba(0, 0, 0, 0.05);
     backdrop-filter: blur(24px);
@@ -13,7 +13,7 @@
     z-index: 100;
 }
 
-.filter-container {
+.tutor-search-page .filter-container {
     width: 100%;
     max-width: 1400px;
     margin: 0 auto;
@@ -23,21 +23,21 @@
 }
 
 /* Filter Groups */
-.filter-groups {
+.tutor-search-page .filter-groups {
     display: flex;
     align-items: center;
     gap: 24px;
     flex: 1;
 }
 
-.filter-group {
+.tutor-search-page .filter-group {
     display: flex;
     align-items: center;
     gap: 16px;
     padding: 0.6px 0 1.5px;
 }
 
-.filter-label {
+.tutor-search-page .filter-label {
     font-size: 10px;
     letter-spacing: 3px;
     line-height: 15px;
@@ -47,7 +47,7 @@
     white-space: nowrap;
 }
 
-.filter-select {
+.tutor-search-page .filter-select {
     width: 143px;
     border-radius: 2px;
     overflow: hidden;
@@ -67,13 +67,13 @@
     font-family: var(--font-primary);
 }
 
-.filter-select-wrapper {
+.tutor-search-page .filter-select-wrapper {
     position: relative;
     display: flex;
     align-items: center;
 }
 
-.filter-select-wrapper::after {
+.tutor-search-page .filter-select-wrapper::after {
     content: '';
     width: 10px;
     height: 6px;
@@ -86,7 +86,7 @@
 }
 
 /* Vertical Divider */
-.filter-divider {
+.tutor-search-page .filter-divider {
     width: 1px;
     height: 21px;
     background-color: rgba(62, 47, 40, 0.5);
@@ -94,20 +94,20 @@
 }
 
 /* Sort & Filter Actions */
-.filter-actions {
+.tutor-search-page .filter-actions {
     display: flex;
     align-items: center;
     gap: 6px;
 }
 
-.sort-group {
+.tutor-search-page .sort-group {
     display: flex;
     align-items: center;
     padding: 8.1px 14px 9.1px 0;
     gap: 16px;
 }
 
-.sort-label {
+.tutor-search-page .sort-label {
     font-size: 13px;
     letter-spacing: 2px;
     line-height: 15px;
@@ -117,7 +117,7 @@
     white-space: nowrap;
 }
 
-.sort-select {
+.tutor-search-page .sort-select {
     border-radius: 16px;
     background-color: rgba(245, 245, 245, 0.67);
     border: 1px solid rgba(26, 34, 56, 0.26);
@@ -137,13 +137,13 @@
     font-family: var(--font-primary);
 }
 
-.sort-select-wrapper {
+.tutor-search-page .sort-select-wrapper {
     position: relative;
     display: flex;
     align-items: center;
 }
 
-.sort-select-wrapper::after {
+.tutor-search-page .sort-select-wrapper::after {
     content: '';
     width: 10px;
     height: 6px;
@@ -156,7 +156,7 @@
 }
 
 /* Filter Button */
-.btn-filter {
+.tutor-search-page .btn-filter {
     filter: drop-shadow(0px 1px 0.8px rgba(0, 0, 0, 0.12));
     border-radius: 100px;
     border: 1px solid rgba(26, 34, 56, 0.05);
@@ -169,11 +169,11 @@
     transition: all 0.2s ease;
 }
 
-.btn-filter:hover {
+.tutor-search-page .btn-filter:hover {
     border-color: rgba(26, 34, 56, 0.2);
 }
 
-.btn-filter-icon {
+.tutor-search-page .btn-filter-icon {
     width: 14px;
     height: 14px;
     display: flex;
@@ -182,12 +182,12 @@
     color: var(--color-navy);
 }
 
-.btn-filter-icon svg {
+.tutor-search-page .btn-filter-icon svg {
     width: 9px;
     height: 9px;
 }
 
-.btn-filter-text {
+.tutor-search-page .btn-filter-text {
     font-size: 10px;
     letter-spacing: 3px;
     line-height: 15px;
@@ -198,46 +198,46 @@
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1200px) {
-    .filter-container {
+    .tutor-search-page .filter-container {
         flex-direction: column;
         gap: 16px;
     }
 
-    .filter-groups {
+    .tutor-search-page .filter-groups {
         flex-wrap: wrap;
         justify-content: flex-start;
     }
 
-    .filter-actions {
+    .tutor-search-page .filter-actions {
         width: 100%;
         justify-content: flex-end;
     }
 }
 
 @media (max-width: 768px) {
-    .filter-section {
+    .tutor-search-page .filter-section {
         padding: 12px 16px;
     }
 
-    .filter-groups {
+    .tutor-search-page .filter-groups {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
     }
 
-    .filter-divider {
+    .tutor-search-page .filter-divider {
         display: none;
     }
 
-    .filter-group {
+    .tutor-search-page .filter-group {
         width: 100%;
     }
 
-    .filter-select {
+    .tutor-search-page .filter-select {
         flex: 1;
     }
 
-    .sort-group {
+    .tutor-search-page .sort-group {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;

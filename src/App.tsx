@@ -10,6 +10,13 @@ import MessagesPage from "./pages/TutorMessages";
 import { TutorWalletPage } from "./pages/TutorWallet";
 import { TutorClassesPage } from "./pages/TutorClasses";
 import { TutorProfilePage } from "./pages/TutorProfile";
+import { AdminDashboardPage } from "./pages/AdminDashboard";
+import { UserManagementPage } from "./pages/AdminUserManagement";
+import { AdminVettingPage } from "./pages/AdminVetting";
+import { AdminDisputesPage } from "./pages/AdminDisputes";
+import AdminDisputeDetailPage from "./pages/AdminDisputes/AdminDisputeDetailPage";
+import { AdminFinancialsPage } from "./pages/AdminFinancials";
+import { AdminSettingsPage } from "./pages/AdminSettings";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -31,6 +38,13 @@ function App() {
         <Route path="/tutor-messages" element={<MessagesPage />} />
         <Route path="/tutor-wallet" element={<TutorWalletPage />} />
         <Route path="/tutor-profile" element={<TutorProfilePage />} />
+        <Route path="/admin-dashboard" element={<AdminDashboardPage />} />
+        <Route path="/admin-user-management" element={<UserManagementPage />} />
+        <Route path="/admin-vetting" element={<AdminVettingPage />} />
+        <Route path="/admin-disputes" element={<AdminDisputesPage />} />
+        <Route path="/admin-disputes/:id" element={<AdminDisputeDetailPage />} />
+        <Route path="/admin-financials" element={<AdminFinancialsPage />} />
+        <Route path="/admin-settings" element={<AdminSettingsPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
       </Routes>

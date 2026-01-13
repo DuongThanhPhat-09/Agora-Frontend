@@ -17,7 +17,11 @@
 @import "./styles/pages/home.css";
 @import "./styles/pages/tutor-search.css";
 @import "./styles/pages/register.css";
+@import "./styles/pages/tutor-detail.css";
 @import "./styles/pages/tutor-workspace.css";
+@import "./styles/pages/admin-vetting.css";
+@import "./styles/pages/admin-dispute.css";
+@import "./styles/pages/admin-dispute-detail.css";
 
 /* ===== TUTOR SEARCH COMPONENTS ===== */
 @import "./styles/components/search-bar.css";
