@@ -9,6 +9,7 @@ import { supabase } from "../../lib/supabase";
 import {
   checkEmailExists,
   loginToBackend,
+  loginWithOAuth,
   saveUserToStorage,
 } from "../../services/auth.service";
 
@@ -16,6 +17,9 @@ const LoginForm: React.FC = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({ email: "", password: "" });
+
+  // Ref để track manual login (tránh double call API)
+  const isManualLoginRef = React.useRef(false);
 
   // State hiển thị Overlay (Màn hình che toàn bộ)
   const [showOverlay, setShowOverlay] = useState(false);
@@ -38,8 +42,10 @@ const LoginForm: React.FC = () => {
           const accessToken = session.access_token;
 
           if (userEmail && accessToken) {
-            // Có session -> Bắt đầu luồng xử lý
-            await handleAuthFlow(userEmail, accessToken);
+            // Chỉ xử lý OAuth flow, bỏ qua nếu đang manual login
+            if (!isManualLoginRef.current) {
+              await handleAuthFlow(userEmail, accessToken);
+            }
           }
         }
         // Không xử lý SIGNED_OUT ở đây để tránh tắt overlay quá sớm
@@ -56,6 +62,7 @@ const LoginForm: React.FC = () => {
       setShowOverlay(true);
       setOverlayText("Đang kiểm tra thông tin tài khoản...");
       console.log("🔍 Checking email:", email);
+      console.log("🎫 Access token (first 50 chars):", token?.substring(0, 50));
 
       // BƯỚC 1: Gọi API Check Email
       const userCheck = await checkEmailExists(email);
@@ -63,10 +70,12 @@ const LoginForm: React.FC = () => {
       if (userCheck && userCheck.content) {
         setOverlayText("Đang đăng nhập vào hệ thống...");
 
-        // BƯỚC 2: Lấy Token đăng nhập
-        const loginResponse = await loginToBackend(token, email);
+        // BƯỚC 2: Gọi API đăng nhập với OAuth (không có password)
+        console.log("🌐 Calling loginWithOAuth with:", { email, tokenLength: token?.length });
+        const loginResponse = await loginWithOAuth(token, email);
+        console.log("✅ Login response:", loginResponse);
 
-        // 🔥 BƯỚC 3 (MỚI): GHÉP DỮ LIỆU & LƯU LOCAL STORAGE 🔥
+        // 🔥 BƯỚC 3: GHÉP DỮ LIỆU & LƯU LOCAL STORAGE 🔥
         // Chúng ta lấy Profile từ Bước 1 + Token từ Bước 2
         const fullUserData = {
           ...userCheck.content, // Toàn bộ info: userid, fullname, role...
@@ -85,14 +94,20 @@ const LoginForm: React.FC = () => {
     } catch (error: any) {
       // === XỬ LÝ LỖI ===
 
-      // Force Logout Supabase ngay lập tức để xóa session ảo
-      await supabase.auth.signOut();
+      console.error("❌ OAuth Login Error Details:");
+      console.error("Error message:", error.message);
+      console.error("Error response status:", error.response?.status);
+      console.error("Error response data:", error.response?.data);
+      console.error("Full error:", error);
 
       const isUserNotFound =
         error.message === "USER_NOT_FOUND" ||
         (error.response && error.response.status === 404);
 
       if (isUserNotFound) {
+        // 🔥 KHÔNG signOut vì RegisterForm cần dùng OAuth session!
+        console.log("⚠️ USER_NOT_FOUND - Keeping OAuth session for registration");
+
         // Xử lý chuyển hướng mượt mà
         setOverlayText(
           "Tài khoản chưa tồn tại. Đang chuyển sang trang Đăng ký..."
@@ -104,7 +119,10 @@ const LoginForm: React.FC = () => {
           navigate("/register", { state: { email: email } });
         }, 1500);
       } else {
-        // Các lỗi kỹ thuật khác -> Tắt overlay để người dùng thử lại
+        // Các lỗi kỹ thuật khác -> Sign out và tắt overlay
+        console.log("❌ Other error - Signing out");
+        await supabase.auth.signOut();
+
         console.error("Login Error:", error);
         toast.error("Đăng nhập thất bại. Vui lòng thử lại.");
         setShowOverlay(false);
@@ -118,9 +136,72 @@ const LoginForm: React.FC = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login attempt:", formData);
+
+    // Validate
+    if (!formData.email || !formData.password) {
+      toast.warning("Vui lòng nhập đầy đủ email/SĐT và mật khẩu!");
+      return;
+    }
+
+    try {
+      setShowOverlay(true);
+      setOverlayText("Đang xác thực...");
+
+      // Đánh dấu đang manual login để tránh trigger OAuth flow
+      isManualLoginRef.current = true;
+
+      // BƯỚC 1: Đăng nhập với Supabase để lấy accessToken
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (error) throw error;
+
+      if (data.session) {
+        const accessToken = data.session.access_token;
+        console.log("🎫 Supabase login successful, token length:", accessToken?.length);
+
+        // BƯỚC 2: Gọi Backend API với {accessToken, password}
+        setOverlayText("Đang đồng bộ với hệ thống...");
+
+        const backendResponse = await loginToBackend(accessToken, formData.password);
+        console.log("✅ Backend login successful:", backendResponse);
+
+        // BƯỚC 3: Lưu thông tin user
+        saveUserToStorage(backendResponse);
+
+        toast.success(`Chào mừng bạn quay lại!`);
+        setTimeout(() => {
+          navigate("/");
+        }, 1000);
+      }
+    } catch (error: any) {
+      console.error("Login Error:", error);
+
+      // Reset flag để cho phép OAuth flow hoạt động lại
+      isManualLoginRef.current = false;
+
+      // Xử lý lỗi cụ thể
+      if (error.message?.includes("Invalid login credentials")) {
+        toast.error("Sai email/SĐT hoặc mật khẩu. Vui lòng thử lại.");
+      } else if (error.response?.status === 404) {
+        toast.info("Tài khoản chưa tồn tại. Vui lòng đăng ký.");
+        setTimeout(() => {
+          navigate("/register");
+        }, 1500);
+      } else {
+        const errorMessage = error.response?.data?.message?.errorMessage
+          || error.response?.data?.message
+          || error.message
+          || "Đăng nhập thất bại";
+        toast.error(errorMessage);
+      }
+
+      setShowOverlay(false);
+    }
   };
 
   const handleGoogleLogin = async () => {
@@ -203,6 +284,7 @@ const LoginForm: React.FC = () => {
               value={formData.password}
               onChange={handleChange}
               rightLink={{ text: "Quên mật khẩu?", href: "#" }}
+              showPasswordToggle={true}
             />
           </div>
 

@@ -1,30 +1,63 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import "./Header.css";
 // Import Supabase và kiểu dữ liệu User
 import { supabase } from "../../lib/supabase";
 import { type User } from "@supabase/supabase-js";
-import { clearUserFromStorage } from "../../services/auth.service";
+import { clearUserFromStorage, getCurrentUser } from "../../services/auth.service";
 import { Popconfirm } from "antd";
 
 const Header = () => {
+  const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [userDisplayName, setUserDisplayName] = useState<string>("User");
+  const [userAvatar, setUserAvatar] = useState<string>("");
+
+  // Ẩn user info trên trang đăng ký/đăng nhập (vì có thể có OAuth session chưa complete)
+  const isAuthPage = location.pathname === "/register" || location.pathname === "/login";
+
+  // Helper function to generate avatar from name
+  const generateAvatarFromName = (name: string) => {
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=631b1b&color=fff&size=128`;
+  };
 
   useEffect(() => {
     // 1. Kiểm tra session hiện tại (Cho trường hợp F5 lại trang)
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      // Session được Supabase tự động quản lý, không cần gọi backend mỗi lần restore
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        // Lấy thông tin từ localStorage (backend đã lưu)
+        const userData = getCurrentUser();
+
+        // Ưu tiên: localStorage > user_metadata > email
+        const displayName = userData?.fullname || currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || "User";
+        setUserDisplayName(displayName);
+
+        // Avatar: Ưu tiên từ Backend (localStorage) → Supabase OAuth → Generate từ tên
+        const avatarUrl = userData?.avatar_url || userData?.imageUrl || currentUser.user_metadata?.avatar_url || generateAvatarFromName(displayName);
+        setUserAvatar(avatarUrl);
+      }
     });
 
     // 2. Lắng nghe sự kiện thay đổi auth (Login/Logout)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null);
-      // Backend sync được xử lý trong LoginForm và RegisterForm
-      // Không cần gọi lại ở đây để tránh duplicate requests
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        const userData = getCurrentUser();
+        const displayName = userData?.fullname || currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || "User";
+        setUserDisplayName(displayName);
+
+        // Avatar: Ưu tiên từ Backend (localStorage) → Supabase OAuth → Generate từ tên
+        const avatarUrl = userData?.avatar_url || userData?.imageUrl || currentUser.user_metadata?.avatar_url || generateAvatarFromName(displayName);
+        setUserAvatar(avatarUrl);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -65,19 +98,19 @@ const Header = () => {
 
         {/* Auth Buttons - Xử lý điều kiện hiển thị */}
         <div className="auth-buttons">
-          {user ? (
+          {user && !isAuthPage ? (
             // --- GIAO DIỆN KHI ĐÃ ĐĂNG NHẬP ---
             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
               {/* Avatar User */}
               <img
-                src={user.user_metadata.avatar_url}
+                src={userAvatar}
                 alt="User Avatar"
                 style={{
                   width: "32px",
                   height: "32px",
                   borderRadius: "50%",
                   objectFit: "cover",
-                  border: "1px solid #ddd",
+                  border: "2px solid #d4b483",
                 }}
               />
               {/* Tên User */}
@@ -88,7 +121,7 @@ const Header = () => {
                   color: "var(--color-navy)",
                 }}
               >
-                {user.user_metadata.full_name || "User"}
+                {userDisplayName}
               </span>
               {/* Nút Đăng xuất */}
               <Popconfirm
@@ -173,7 +206,7 @@ const Header = () => {
 
           {/* Mobile Auth Section */}
           <div className="mobile-auth">
-            {user ? (
+            {user && !isAuthPage ? (
               <div
                 style={{
                   display: "flex",
@@ -191,16 +224,17 @@ const Header = () => {
                   }}
                 >
                   <img
-                    src={user.user_metadata.avatar_url}
+                    src={userAvatar}
                     alt="Avatar"
                     style={{
                       width: "32px",
                       height: "32px",
                       borderRadius: "50%",
+                      border: "2px solid #d4b483",
                     }}
                   />
                   <span style={{ fontWeight: 600 }}>
-                    {user.user_metadata.full_name}
+                    {userDisplayName}
                   </span>
                 </div>
                 <Popconfirm

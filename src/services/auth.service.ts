@@ -52,9 +52,24 @@ export const checkEmailExists = async (email: string) => {
   }
 };
 
-export const loginToBackend = async (accessToken: string, email: string) => {
+export const loginToBackend = async (accessToken: string, password: string) => {
   try {
-    console.log("Gửi yêu cầu đăng nhập Backend...");
+    console.log("Gửi yêu cầu đăng nhập thủ công Backend...");
+
+    const response = await api.post("/auth/login-supabase", {
+      accessToken: accessToken,
+      password: password,
+    });
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const loginWithOAuth = async (accessToken: string, email: string) => {
+  try {
+    console.log("Gửi yêu cầu đăng nhập OAuth Backend...");
 
     const response = await api.post("/auth/login-supabase", {
       accessToken: accessToken,
