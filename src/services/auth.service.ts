@@ -52,9 +52,24 @@ export const checkEmailExists = async (email: string) => {
   }
 };
 
-export const loginToBackend = async (accessToken: string, email: string) => {
+export const loginToBackend = async (accessToken: string, password: string) => {
   try {
-    console.log("Gửi yêu cầu đăng nhập Backend...");
+    console.log("Gửi yêu cầu đăng nhập thủ công Backend...");
+
+    const response = await api.post("/auth/login-supabase", {
+      accessToken: accessToken,
+      password: password,
+    });
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const loginWithOAuth = async (accessToken: string, email: string) => {
+  try {
+    console.log("Gửi yêu cầu đăng nhập OAuth Backend...");
 
     const response = await api.post("/auth/login-supabase", {
       accessToken: accessToken,
@@ -63,6 +78,45 @@ export const loginToBackend = async (accessToken: string, email: string) => {
 
     return response.data;
   } catch (error) {
+    throw error;
+  }
+};
+
+export const loginManual = async (accessToken: string, password: string) => {
+  try {
+    console.log("Gửi yêu cầu đăng nhập thủ công tới Backend...");
+
+    const payload = {
+      accessToken: accessToken,
+      password: password
+    };
+
+    const response = await api.post("/auth/login-supabase", payload);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const registerUserToBackend = async (supabaseToken: string, password: string) => {
+  try {
+    console.log("🔐 Gửi yêu cầu đăng ký tới Backend...");
+    console.log("📋 Token length:", supabaseToken?.length);
+    console.log("📋 Token preview:", supabaseToken?.substring(0, 50) + "...");
+
+    const payload = {
+      supabaseToken: supabaseToken,
+      password: password
+    };
+
+    const response = await api.post("/registrations/register-supabase", payload);
+    console.log("✅ Backend registration successful:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("❌ Backend registration error:");
+    console.error("Status:", error.response?.status);
+    console.error("Data:", error.response?.data);
+    console.error("Full error:", error);
     throw error;
   }
 };
