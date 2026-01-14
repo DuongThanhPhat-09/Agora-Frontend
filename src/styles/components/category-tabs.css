@@ -1,6 +1,6 @@
-/* ===== CATEGORY TABS COMPONENT ===== */
+/* ===== CATEGORY TABS COMPONENT (Tutor Search Page) ===== */
 
-.category-section {
+.tutor-search-page .category-section {
     width: 100%;
     background-color: var(--color-white);
     border-bottom: 1.2px solid rgba(62, 47, 40, 0.05);
@@ -8,7 +8,7 @@
     box-sizing: border-box;
 }
 
-.category-tabs {
+.tutor-search-page .category-tabs {
     display: flex;
     align-items: center;
     gap: 17.5px;
@@ -17,18 +17,18 @@
 }
 
 /* Hide scrollbar but keep functionality */
-.category-tabs::-webkit-scrollbar {
+.tutor-search-page .category-tabs::-webkit-scrollbar {
     height: 0;
     display: none;
 }
 
-.category-tabs {
+.tutor-search-page .category-tabs {
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
 
 /* Tab Item Base */
-.category-tab {
+.tutor-search-page .category-tab {
     display: flex;
     align-items: flex-end;
     padding: 13.4px 28.2px 14.2px;
@@ -43,27 +43,27 @@
     box-shadow: 0px 2px 1px rgba(0, 0, 0, 0.04);
 }
 
-.category-tab:hover {
+.tutor-search-page .category-tab:hover {
     border-color: rgba(62, 47, 40, 0.15);
 }
 
 /* Active Tab */
-.category-tab.active {
+.tutor-search-page .category-tab.active {
     box-shadow: 0px 4px 6px -1px rgba(0, 0, 0, 0.1), 0px 2px 4px -2px rgba(0, 0, 0, 0.1);
     background-color: var(--color-green);
     border-color: var(--color-green);
 }
 
-.category-tab.active .category-tab-text {
+.tutor-search-page .category-tab.active .category-tab-text {
     color: var(--color-white);
 }
 
-.category-tab.active .category-tab-icon {
+.tutor-search-page .category-tab.active .category-tab-icon {
     color: var(--color-white);
 }
 
 /* Tab Icon */
-.category-tab-icon {
+.tutor-search-page .category-tab-icon {
     width: 17.5px;
     height: 17.5px;
     display: flex;
@@ -72,13 +72,13 @@
     color: rgba(26, 34, 56, 0.4);
 }
 
-.category-tab-icon svg {
+.tutor-search-page .category-tab-icon svg {
     width: 13px;
     height: 13px;
 }
 
 /* Tab Text */
-.category-tab-text {
+.tutor-search-page .category-tab-text {
     font-size: 13px;
     letter-spacing: 2.2px;
     line-height: 16.5px;
@@ -89,15 +89,15 @@
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-    .category-section {
+    .tutor-search-page .category-section {
         padding: 24px 16px;
     }
 
-    .category-tab {
+    .tutor-search-page .category-tab {
         padding: 10px 20px;
     }
 
-    .category-tab-text {
+    .tutor-search-page .category-tab-text {
         font-size: 11px;
         letter-spacing: 1.5px;
     }

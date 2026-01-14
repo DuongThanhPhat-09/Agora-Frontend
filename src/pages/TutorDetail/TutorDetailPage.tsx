@@ -1,6 +1,6 @@
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
-import "./TutorDetailPage.css";
+import "../../styles/pages/tutor-detail.css";
 
 // SVG Icons
 const PlayIcon = () => (
@@ -368,60 +368,75 @@ const StatsSection = () => (
 
 // Testimonials Section
 const TestimonialsSection = () => (
-    <section className="testimonials-section">
-        <h2 className="section-title">Nhật ký thành công</h2>
-        <div className="testimonials-list">
+    <section className="section5">
+        <div className="heading-24">
+            <h2 className="nht-k-thnh">Nhật ký thành công</h2>
+        </div>
+        <div className="container84">
             {tutorData.testimonials.map((testimonial) => (
-                <div key={testimonial.id} className="testimonial-card">
+                <div key={testimonial.id} className="component-8">
                     {/* Quote Icon - positioned at top-right of card */}
-                    <div className="quote-icon-wrapper">
-                        <QuoteIcon />
+                    <div className="container85">
+                        <div className="component-122">
+                            <QuoteIcon />
+                        </div>
                     </div>
-                    <div className="testimonial-content">
-                        <div className="testimonial-main">
+                    <div className="container86">
+                        <div className="container87">
                             {/* User Info */}
-                            <div className="testimonial-user">
-                                <div className="user-avatar">
-                                    <b>{testimonial.initial}</b>
+                            <div className="container88">
+                                <div className="background7">
+                                    <b className="l">{testimonial.initial}</b>
                                 </div>
-                                <div className="user-info">
-                                    <b className="user-name">{testimonial.name}</b>
-                                    <span className="user-role">{testimonial.role}</span>
+                                <div className="container89">
+                                    <div className="heading-47">
+                                        <b className="l-minh-anh">{testimonial.name}</b>
+                                    </div>
+                                    <div className="container90">
+                                        <span className="hc-sinh-year">{testimonial.role}</span>
+                                    </div>
                                 </div>
                             </div>
                             {/* Quote */}
-                            <i className="testimonial-quote">{testimonial.quote}</i>
+                            <div className="container91">
+                                <i className="chuyn-mn-ca">{testimonial.quote}</i>
+                            </div>
                             {/* Badges */}
-                            <div className="testimonial-badges">
-                                <div className="testimonial-badge">
-                                    <b>Xác thực bởi Agora LMS</b>
+                            <div className="container92">
+                                <div className="border2">
+                                    <b className="xc-thc-bi">Xác thực bởi Agora LMS</b>
                                 </div>
-                                <div className="testimonial-badge">
-                                    <b>Học trong {testimonial.duration}</b>
+                                <div className="border2">
+                                    <b className="xc-thc-bi">Học trong {testimonial.duration}</b>
                                 </div>
                             </div>
                         </div>
                         {/* Result Card */}
-                        <div className="result-card">
-                            <div className="result-item">
-                                <span className="result-label">Mục tiêu ban đầu</span>
-                                <b className="result-goal">{testimonial.goal}</b>
+                        <div className="background8">
+                            <div className="container93">
+                                <span className="mc-tiu-ban">Mục tiêu ban đầu</span>
+                                <div className="container95">
+                                    <b className="thi-y">{testimonial.goal}</b>
+                                </div>
                             </div>
-                            <div className="result-divider"></div>
-                            <div className="result-item">
-                                <span className="result-label">Kết quả thực tế</span>
-                                <b className="result-achievement">{testimonial.result}</b>
+                            <div className="horizontal-divider3"></div>
+                            <div className="container96">
+                                <span className="mc-tiu-ban">Kết quả thực tế</span>
+                                <div className="container98">
+                                    <b className="t-a-biology">{testimonial.result}</b>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             ))}
         </div>
-        <button className="view-all-btn">
-            <b>Xem tất cả lộ trình thành công (124)</b>
+        <button className="component-9">
+            <b className="xem-tt-c">Xem tất cả lộ trình thành công (124)</b>
         </button>
     </section>
 );
+
 
 // Booking Sidebar
 const BookingSidebar = () => (
