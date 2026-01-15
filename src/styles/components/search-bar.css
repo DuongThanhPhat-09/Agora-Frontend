@@ -1,6 +1,6 @@
-/* ===== SEARCH BAR COMPONENT ===== */
+/* ===== SEARCH BAR COMPONENT (Tutor Search Page) ===== */
 
-.search-container {
+.tutor-search-page .search-container {
     width: 100%;
     max-width: 588px;
     display: flex;
@@ -10,7 +10,7 @@
 }
 
 /* Main Search Bar */
-.search-bar {
+.tutor-search-page .search-bar {
     width: 100%;
     box-shadow: 0px 25px 50px -12px rgba(0, 0, 0, 0.25);
     border-radius: 100px;
@@ -22,7 +22,7 @@
     gap: 9px;
 }
 
-.search-icon {
+.tutor-search-page .search-icon {
     width: 21px;
     height: 21px;
     flex-shrink: 0;
@@ -32,12 +32,12 @@
     color: rgba(26, 34, 56, 0.4);
 }
 
-.search-icon svg {
+.tutor-search-page .search-icon svg {
     width: 16px;
     height: 16px;
 }
 
-.search-input {
+.tutor-search-page .search-input {
     flex: 1;
     height: 23px;
     font-size: 16px;
@@ -51,11 +51,11 @@
     font-family: var(--font-primary);
 }
 
-.search-input::placeholder {
+.tutor-search-page .search-input::placeholder {
     color: rgba(26, 34, 56, 0.5);
 }
 
-.btn-search {
+.tutor-search-page .btn-search {
     height: 49px;
     box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1), 0px 4px 6px -4px rgba(0, 0, 0, 0.1);
     border-radius: 100px;
@@ -77,13 +77,13 @@
     flex-shrink: 0;
 }
 
-.btn-search:hover {
+.tutor-search-page .btn-search:hover {
     background-color: #7a2323;
     transform: translateY(-1px);
 }
 
 /* Trending Tags */
-.trending-container {
+.tutor-search-page .trending-container {
     width: 100%;
     display: flex;
     align-items: center;
@@ -92,7 +92,7 @@
     gap: 14px;
 }
 
-.trending-label {
+.tutor-search-page .trending-label {
     font-size: 10px;
     letter-spacing: 3px;
     line-height: 15px;
@@ -101,7 +101,7 @@
     color: rgba(204, 204, 204, 0.7);
 }
 
-.trending-tag {
+.tutor-search-page .trending-tag {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -118,33 +118,33 @@
     border: none;
 }
 
-.trending-tag:hover {
+.tutor-search-page .trending-tag:hover {
     opacity: 0.8;
 }
 
-.trending-tag.muted {
+.tutor-search-page .trending-tag.muted {
     color: rgba(242, 240, 228, 0.5);
 }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-    .search-bar {
+    .tutor-search-page .search-bar {
         flex-direction: column;
         border-radius: 24px;
         padding: 16px;
         gap: 12px;
     }
 
-    .search-input {
+    .tutor-search-page .search-input {
         width: 100%;
         text-align: center;
     }
 
-    .btn-search {
+    .tutor-search-page .btn-search {
         width: 100%;
     }
 
-    .trending-container {
+    .tutor-search-page .trending-container {
         flex-direction: column;
         gap: 8px;
     }
