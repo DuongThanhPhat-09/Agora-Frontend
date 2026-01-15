@@ -18,6 +18,7 @@ import { AdminDisputesPage } from "./pages/AdminDisputes";
 import AdminDisputeDetailPage from "./pages/AdminDisputes/AdminDisputeDetailPage";
 import { AdminFinancialsPage } from "./pages/AdminFinancials";
 import { AdminSettingsPage } from "./pages/AdminSettings";
+import AdminLayout from "./layouts/AdminLayout";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -52,13 +53,18 @@ function App() {
           <Route path="profile" element={<TutorProfilePage />} />
         </Route>
 
-        <Route path="/admin-dashboard" element={<AdminDashboardPage />} />
-        <Route path="/admin-user-management" element={<UserManagementPage />} />
-        <Route path="/admin-vetting" element={<AdminVettingPage />} />
-        <Route path="/admin-disputes" element={<AdminDisputesPage />} />
-        <Route path="/admin-disputes/:id" element={<AdminDisputeDetailPage />} />
-        <Route path="/admin-financials" element={<AdminFinancialsPage />} />
-        <Route path="/admin-settings" element={<AdminSettingsPage />} />
+        {/* Admin Layout */}
+        {/* Admin Layout */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboardPage />} />
+          <Route path="users" element={<UserManagementPage />} />
+          <Route path="vetting" element={<AdminVettingPage />} />
+          <Route path="disputes" element={<AdminDisputesPage />} />
+          <Route path="disputes/:id" element={<AdminDisputeDetailPage />} />
+          <Route path="financials" element={<AdminFinancialsPage />} />
+          <Route path="settings" element={<AdminSettingsPage />} />
+        </Route>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
       </Routes>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AdminSidebar } from '../../components/AdminSidebar';
+
 import '../../styles/pages/admin-settings.css';
 
 export const AdminSettingsPage = () => {
@@ -34,9 +34,8 @@ export const AdminSettingsPage = () => {
     };
 
     return (
-        <div className="admin-settings-page">
-            {/* SIDEBAR */}
-            <AdminSidebar />
+        <>
+            {/* MAIN CONTENT */}
 
             {/* MAIN CONTENT */}
             <main className="settings-main">
@@ -294,6 +293,6 @@ export const AdminSettingsPage = () => {
                     </div>
                 </div>
             </main>
-        </div>
+        </>
     );
 };

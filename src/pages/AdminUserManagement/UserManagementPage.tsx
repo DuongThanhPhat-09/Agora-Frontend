@@ -1,11 +1,9 @@
-import { AdminSidebar } from '../../components/AdminSidebar';
 import '../../styles/pages/admin-user-management.css';
 
 const UserManagementPage = () => {
     return (
-        <div className="admin-dashboard">
-            {/* SIDEBAR */}
-            <AdminSidebar />
+        <>
+            {/* MAIN CONTENT */}
 
             {/* MAIN CONTENT */}
             <main className="user-mgmt-main">
@@ -315,7 +313,7 @@ const UserManagementPage = () => {
                     </div>
                 </div>
             </main>
-        </div>
+        </>
     );
 };
 
