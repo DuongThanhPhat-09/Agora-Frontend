@@ -19,9 +19,14 @@ import AdminDisputeDetailPage from "./pages/AdminDisputes/AdminDisputeDetailPage
 import { AdminFinancialsPage } from "./pages/AdminFinancials";
 import { AdminSettingsPage } from "./pages/AdminSettings";
 import AdminLayout from "./layouts/AdminLayout";
+import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
+import NotFoundPage from "./pages/Error/NotFoundPage";
+import UnauthorizedPage from "./pages/Error/UnauthorizedPage";
+import ForbiddenPage from "./pages/Error/ForbiddenPage";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 // ---------------------
 
 function App() {
@@ -30,6 +35,7 @@ function App() {
       <ToastContainer position="top-right" autoClose={5000} />
 
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/tutor-search" element={<TutorSearchPage />} />
         <Route path="/tutor-detail" element={<TutorDetailPage />} />
@@ -43,8 +49,15 @@ function App() {
         <Route path="/tutor-wallet" element={<Navigate to="/tutor/wallet" replace />} />
         <Route path="/tutor-profile" element={<Navigate to="/tutor/profile" replace />} />
 
-        {/* Tutor Layout with nested routes */}
-        <Route path="/tutor" element={<TutorLayout />}>
+        {/* Tutor Layout with nested routes - PROTECTED */}
+        <Route
+          path="/tutor"
+          element={
+            <ProtectedRoute allowedRoles={["Tutor"]}>
+              <TutorLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route path="workspace" element={<TutorDashboard />} />
           <Route path="schedule" element={<TutorSchedulePage />} />
           <Route path="classes" element={<TutorClassesPage />} />
@@ -53,9 +66,15 @@ function App() {
           <Route path="profile" element={<TutorProfilePage />} />
         </Route>
 
-        {/* Admin Layout */}
-        {/* Admin Layout */}
-        <Route path="/admin" element={<AdminLayout />}>
+        {/* Admin Layout - PROTECTED */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={["Admin"]}>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboardPage />} />
           <Route path="users" element={<UserManagementPage />} />
@@ -65,8 +84,17 @@ function App() {
           <Route path="financials" element={<AdminFinancialsPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
+
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+
+        {/* Error Pages */}
+        <Route path="/401" element={<UnauthorizedPage />} />
+        <Route path="/403" element={<ForbiddenPage />} />
+        <Route path="/404" element={<NotFoundPage />} />
+
+        {/* Catch-all Route - Must be last */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </div>
   );
