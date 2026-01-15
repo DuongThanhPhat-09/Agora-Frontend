@@ -455,6 +455,8 @@
 }
 
 .toggle-container {
+    position: relative;
+    /* Fix: Create positioning context to prevent .toggle-label from expanding */
     height: 46px;
     border: 1px solid #e4ded5;
     border-radius: 18px;
@@ -466,7 +468,8 @@
     box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1), 0px 1px 2px -1px rgba(0, 0, 0, 0.1);
 }
 
-.toggle-label {
+/* Scoped to prevent global CSS override from admin-settings.css */
+.tutor-profile-page .toggle-label {
     font-size: 14px;
     font-weight: 600;
     line-height: 20px;
@@ -518,8 +521,8 @@
     gap: 24px;
 }
 
-/* Profile Card */
-.profile-card {
+/* Profile Card - Scoped to prevent width conflicts with other pages */
+.tutor-profile-page .profile-card {
     background-color: var(--color-white);
     border: 1px solid #e4ded5;
     border-radius: 20px;
