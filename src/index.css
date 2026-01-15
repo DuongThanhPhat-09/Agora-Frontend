@@ -5,6 +5,9 @@
 @import "./styles/base/variables.css";
 @import "./styles/base/global.css";
 
+/* ===== LAYOUT STYLES ===== */
+@import "./styles/layouts/tutor-layout.css";
+
 /* ===== COMPONENT STYLES ===== */
 /* Header and Footer are imported directly in their components */
 @import "./styles/components/buttons.css";

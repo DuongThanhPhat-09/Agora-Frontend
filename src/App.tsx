@@ -1,10 +1,11 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "./pages/Home/HomePage";
 import TutorSearchPage from "./pages/TutorSearch/TutorSearchPage";
 import LoginPage from "./pages/Login/LoginPage";
 import RegisterPage from "./pages/Register/RegisterPage";
 import { TutorDetailPage } from "./pages/TutorDetail";
-import { TutorWorkspacePage } from "./pages/TutorWorkspace";
+import TutorLayout from "./layouts/TutorLayout";
+import TutorDashboard from "./pages/TutorWorkspace/TutorDashboard";
 import TutorSchedulePage from "./pages/TutorSchedule";
 import MessagesPage from "./pages/TutorMessages";
 import { TutorWalletPage } from "./pages/TutorWallet";
@@ -32,12 +33,25 @@ function App() {
         <Route path="/tutor-search" element={<TutorSearchPage />} />
         <Route path="/tutor-detail" element={<TutorDetailPage />} />
         <Route path="/tutor-detail/:id" element={<TutorDetailPage />} />
-        <Route path="/tutor-workspace" element={<TutorWorkspacePage />} />
-        <Route path="/tutor-schedule" element={<TutorSchedulePage />} />
-        <Route path="/tutor-classes" element={<TutorClassesPage />} />
-        <Route path="/tutor-messages" element={<MessagesPage />} />
-        <Route path="/tutor-wallet" element={<TutorWalletPage />} />
-        <Route path="/tutor-profile" element={<TutorProfilePage />} />
+
+        {/* Redirect old tutor URLs to new structure */}
+        <Route path="/tutor-workspace" element={<Navigate to="/tutor/workspace" replace />} />
+        <Route path="/tutor-schedule" element={<Navigate to="/tutor/schedule" replace />} />
+        <Route path="/tutor-classes" element={<Navigate to="/tutor/classes" replace />} />
+        <Route path="/tutor-messages" element={<Navigate to="/tutor/messages" replace />} />
+        <Route path="/tutor-wallet" element={<Navigate to="/tutor/wallet" replace />} />
+        <Route path="/tutor-profile" element={<Navigate to="/tutor/profile" replace />} />
+
+        {/* Tutor Layout with nested routes */}
+        <Route path="/tutor" element={<TutorLayout />}>
+          <Route path="workspace" element={<TutorDashboard />} />
+          <Route path="schedule" element={<TutorSchedulePage />} />
+          <Route path="classes" element={<TutorClassesPage />} />
+          <Route path="messages" element={<MessagesPage />} />
+          <Route path="wallet" element={<TutorWalletPage />} />
+          <Route path="profile" element={<TutorProfilePage />} />
+        </Route>
+
         <Route path="/admin-dashboard" element={<AdminDashboardPage />} />
         <Route path="/admin-user-management" element={<UserManagementPage />} />
         <Route path="/admin-vetting" element={<AdminVettingPage />} />
