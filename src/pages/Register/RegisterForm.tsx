@@ -21,6 +21,7 @@ const RegisterForm: React.FC = () => {
         phone: "",
         password: "",
         confirmPassword: "",
+        role: "Student", // Default role
         terms: false,
     });
 
@@ -54,7 +55,8 @@ const RegisterForm: React.FC = () => {
                         const accessToken = session.access_token;
                         const backendResponse = await registerUserToBackend(
                             accessToken,
-                            pendingUserData?.password || ""
+                            pendingUserData?.password || "",
+                            pendingUserData?.role || "Student"
                         );
 
                         let fullUserData = backendResponse;
@@ -138,6 +140,7 @@ const RegisterForm: React.FC = () => {
                     data: {
                         full_name: formData.fullname,
                         phone: formData.phone,
+                        app_role: formData.role, // Application role: Admin/Tutor/Student/Parent
                     },
                 },
             });
@@ -160,7 +163,8 @@ const RegisterForm: React.FC = () => {
                     fullname: formData.fullname,
                     email: formData.email,
                     phone: formData.phone,
-                    password: formData.password
+                    password: formData.password,
+                    role: formData.role
                 });
                 setWaitingForEmailVerification(true);
                 setShowOverlay(false);
@@ -177,7 +181,7 @@ const RegisterForm: React.FC = () => {
     const handleInstantRegistration = async (token: string) => {
         try {
             setOverlayText("Đang đồng bộ...");
-            const backendResponse = await registerUserToBackend(token, formData.password);
+            const backendResponse = await registerUserToBackend(token, formData.password, formData.role);
             let fullUserData = backendResponse;
             if (!fullUserData.id || !fullUserData.fullname) {
                 const userProfile = await checkEmailExists(formData.email);
@@ -329,6 +333,58 @@ const RegisterForm: React.FC = () => {
                                 </div>
                             </div>
 
+                            {/* Role Selection */}
+                            <div className="animate-fade-in-up delay-175">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Tôi là <span className="text-red-500">*</span>
+                                </label>
+                                <div className="flex gap-3">
+                                    <label className="flex-1 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="role"
+                                            value="Student"
+                                            checked={formData.role === "Student"}
+                                            onChange={handleChange}
+                                            className="peer hidden"
+                                        />
+                                        <div className="border-2 border-gray-300 rounded-lg p-3 text-center transition-all peer-checked:border-blue-600 peer-checked:bg-blue-50 hover:border-blue-400">
+                                            <div className="text-2xl mb-1">🎓</div>
+                                            <div className="text-sm font-medium text-gray-700 peer-checked:text-blue-600">Học sinh</div>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex-1 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="role"
+                                            value="Parent"
+                                            checked={formData.role === "Parent"}
+                                            onChange={handleChange}
+                                            className="peer hidden"
+                                        />
+                                        <div className="border-2 border-gray-300 rounded-lg p-3 text-center transition-all peer-checked:border-green-600 peer-checked:bg-green-50 hover:border-green-400">
+                                            <div className="text-2xl mb-1">👨‍👩‍👧</div>
+                                            <div className="text-sm font-medium text-gray-700 peer-checked:text-green-600">Phụ huynh</div>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex-1 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="role"
+                                            value="Tutor"
+                                            checked={formData.role === "Tutor"}
+                                            onChange={handleChange}
+                                            className="peer hidden"
+                                        />
+                                        <div className="border-2 border-gray-300 rounded-lg p-3 text-center transition-all peer-checked:border-purple-600 peer-checked:bg-purple-50 hover:border-purple-400">
+                                            <div className="text-2xl mb-1">👨‍🏫</div>
+                                            <div className="text-sm font-medium text-gray-700 peer-checked:text-purple-600">Gia sư</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
                             <div className="register-form__terms animate-fade-in-up delay-300 mt-3">
                                 <div className="register-form__checkbox-wrapper">
                                     <input id="terms" name="terms" type="checkbox" checked={formData.terms} onChange={handleChange} className="register-form__checkbox" />
