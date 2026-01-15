@@ -38,6 +38,78 @@ export const clearUserFromStorage = () => {
   localStorage.removeItem(USER_LOCAL_STORAGE_KEY);
 };
 
+// --- ROLE MANAGEMENT FUNCTIONS ---
+
+/**
+ * Decode JWT token để lấy payload
+ */
+const decodeJWT = (token: string): any => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error('Error decoding JWT:', error);
+    return null;
+  }
+};
+
+/**
+ * Lấy role từ Backend JWT token
+ */
+export const getRoleFromToken = (token: string): string | null => {
+  const payload = decodeJWT(token);
+  if (!payload) return null;
+
+  // Backend sử dụng Microsoft claim format
+  const roleClaimKey = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
+  return payload[roleClaimKey] || null;
+};
+
+/**
+ * Lấy role của user hiện tại từ JWT accessToken
+ */
+export const getCurrentUserRole = (): string | null => {
+  const user = getCurrentUser();
+  if (!user) return null;
+
+  // Decode từ Backend JWT token
+  if (user.accessToken) {
+    return getRoleFromToken(user.accessToken);
+  }
+
+  return null;
+};
+
+/**
+ * Kiểm tra user có role cụ thể không
+ */
+export const hasRole = (requiredRole: string): boolean => {
+  const userRole = getCurrentUserRole();
+  return userRole === requiredRole;
+};
+
+/**
+ * Kiểm tra user có một trong các role được phép không
+ */
+export const hasAnyRole = (allowedRoles: string[]): boolean => {
+  const userRole = getCurrentUserRole();
+  return userRole ? allowedRoles.includes(userRole) : false;
+};
+
+/**
+ * Kiểm tra user đã đăng nhập chưa
+ */
+export const isAuthenticated = (): boolean => {
+  return getCurrentUser() !== null;
+};
+
 // --- CÁC HÀM API ---
 
 export const checkEmailExists = async (email: string) => {
@@ -98,15 +170,17 @@ export const loginManual = async (accessToken: string, password: string) => {
   }
 };
 
-export const registerUserToBackend = async (supabaseToken: string, password: string) => {
+export const registerUserToBackend = async (supabaseToken: string, password: string, role: string) => {
   try {
     console.log("🔐 Gửi yêu cầu đăng ký tới Backend...");
     console.log("📋 Token length:", supabaseToken?.length);
     console.log("📋 Token preview:", supabaseToken?.substring(0, 50) + "...");
+    console.log("👤 Role:", role);
 
     const payload = {
       supabaseToken: supabaseToken,
-      password: password
+      password: password,
+      role: role
     };
 
     const response = await api.post("/registrations/register-supabase", payload);
