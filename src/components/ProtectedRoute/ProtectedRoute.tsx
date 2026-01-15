@@ -1,11 +1,10 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { isAuthenticated, hasAnyRole } from '../services/auth.service';
+import { isAuthenticated, hasAnyRole } from '../../services/auth.service';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
     allowedRoles?: string[]; // Nếu không truyền = cho phép tất cả user đã login
-    redirectTo?: string; // Trang redirect khi không đủ quyền
 }
 
 /**
@@ -32,18 +31,18 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     children,
     allowedRoles,
-    redirectTo = "/login"
 }) => {
     // Kiểm tra đăng nhập
     if (!isAuthenticated()) {
-        return <Navigate to={redirectTo} replace />;
+        // Redirect đến trang 401 Unauthorized
+        return <Navigate to="/401" replace />;
     }
 
     // Kiểm tra role (nếu được chỉ định)
     if (allowedRoles && allowedRoles.length > 0) {
         if (!hasAnyRole(allowedRoles)) {
-            // User không có quyền → redirect về trang chủ
-            return <Navigate to="/" replace />;
+            // User không có quyền → redirect đến trang 403 Forbidden
+            return <Navigate to="/403" replace />;
         }
     }
 

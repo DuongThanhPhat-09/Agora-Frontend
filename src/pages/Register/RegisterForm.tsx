@@ -140,6 +140,7 @@ const RegisterForm: React.FC = () => {
                     data: {
                         full_name: formData.fullname,
                         phone: formData.phone,
+                        app_role: formData.role, // Application role: Admin/Tutor/Student/Parent
                     },
                 },
             });
