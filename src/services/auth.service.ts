@@ -88,6 +88,21 @@ export const getCurrentUserRole = (): string | null => {
 };
 
 /**
+ * Lấy userId từ JWT token
+ */
+export const getUserIdFromToken = (): string | null => {
+  const user = getCurrentUser();
+  if (!user || !user.accessToken) return null;
+
+  const payload = decodeJWT(user.accessToken);
+  if (!payload) return null;
+
+  // Backend sử dụng Microsoft claim format cho NameIdentifier (userId)
+  const userIdClaimKey = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
+  return payload[userIdClaimKey] || payload.sub || payload.userId || null;
+};
+
+/**
  * Kiểm tra user có role cụ thể không
  */
 export const hasRole = (requiredRole: string): boolean => {
@@ -192,5 +207,24 @@ export const registerUserToBackend = async (supabaseToken: string, password: str
     console.error("Data:", error.response?.data);
     console.error("Full error:", error);
     throw error;
+  }
+};
+
+// --- USER PROFILE WITH EKYC ---
+
+export const getUserProfile = async (userId: string) => {
+  const user = getCurrentUser();
+  const response = await api.get(`/users/${userId}`, {
+    headers: { Authorization: `Bearer ${user?.accessToken}` }
+  });
+  return response.data;
+};
+
+export const parseEKYCData = (ekycRawData: string | null) => {
+  if (!ekycRawData) return null;
+  try {
+    return JSON.parse(ekycRawData);
+  } catch (error) {
+    return null;
   }
 };
