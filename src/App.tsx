@@ -32,9 +32,14 @@ import "react-toastify/dist/ReactToastify.css";
 function App() {
   return (
     <div>
-      <ToastContainer position="top-right" autoClose={5000} />
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        style={{ zIndex: 99999 }}
+      />
 
       <Routes>
+        {/* Public Routes */}
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/tutor-search" element={<TutorSearchPage />} />
