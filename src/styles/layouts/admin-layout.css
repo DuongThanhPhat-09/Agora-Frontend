@@ -1,0 +1,175 @@
+/* ===== ADMIN LAYOUT ===== */
+
+/* Main Layout Container */
+.admin-layout {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    background-color: var(--color-cream);
+    font-family: var(--font-sans);
+    color: var(--color-navy);
+    overflow: hidden;
+}
+
+/* ===== SIDEBAR ===== */
+.admin-sidebar {
+    width: 260px;
+    height: 100vh;
+    background-color: var(--color-navy);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 32px 16px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 20;
+}
+
+.admin-sidebar-header {
+    padding: 0 16px;
+    margin-bottom: 48px;
+}
+
+.admin-logo {
+    font-family: var(--font-serif);
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--color-gold);
+    letter-spacing: 0.05em;
+    margin: 0;
+}
+
+.admin-subtitle {
+    color: var(--color-white-40);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin: 4px 0 0;
+}
+
+/* Sidebar Navigation */
+.admin-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--color-white-70);
+    font-size: 14px;
+    font-weight: 500;
+    position: relative;
+    text-decoration: none;
+    /* In case it's an anchor tag */
+}
+
+.admin-nav-item:hover {
+    background-color: var(--color-white-10);
+    color: var(--color-white);
+}
+
+.admin-nav-item-active {
+    background-color: var(--color-gold);
+    color: var(--color-navy);
+    font-weight: 600;
+    box-shadow: 0 4px 6px -1px rgba(212, 180, 131, 0.1);
+}
+
+.admin-nav-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.admin-nav-icon.icon-filled {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.admin-nav-text {
+    flex: 1;
+}
+
+.admin-nav-badge {
+    background-color: rgba(212, 180, 131, 0.2);
+    color: var(--color-gold);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    margin-left: auto;
+}
+
+.admin-nav-badge-alert {
+    background-color: rgba(99, 27, 27, 0.3);
+    color: #fca5a5;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    margin-left: auto;
+}
+
+/* Sidebar Footer */
+.admin-sidebar-footer {
+    padding: 0 16px;
+}
+
+.admin-signout-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--color-white-40);
+    background: none;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    width: 100%;
+    padding: 0;
+}
+
+.admin-signout-btn:hover {
+    color: var(--color-white);
+}
+
+.admin-signout-btn .material-symbols-outlined {
+    font-size: 20px;
+}
+
+/* ===== MAIN CONTENT AREA ===== */
+.admin-main-wrapper {
+    margin-left: 260px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+/* Generic floating header styles if needed globally, 
+   but for now keeping specific page headers in page css 
+   unless they are strictly shared. 
+*/
+
+/* Responsive adjustment for sidebar */
+@media (max-width: 768px) {
+    .admin-sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+
+    .admin-main-wrapper {
+        margin-left: 0;
+    }
+}

@@ -429,47 +429,6 @@ const TutorProfilePage: React.FC = () => {
 
             {/* Main Content */}
             <div className="workspace-main">
-                {/* Header */}
-                <header className="workspace-header">
-                    <div className="header-content">
-                        <div className="breadcrumb-section">
-                            <nav className="breadcrumb">
-                                <span className="breadcrumb-item">Trang chủ</span>
-                                <span className="breadcrumb-separator">›</span>
-                                <span className="breadcrumb-item breadcrumb-current">Dashboard</span>
-                            </nav>
-                            <h2 className="page-greeting">Chào buổi chiều, Minh! 👋</h2>
-                        </div>
-
-                        <div className="header-actions">
-                            <button className="header-button header-button-icon">
-                                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M10 2C11.1046 2 12 2.89543 12 4V10H16C17.1046 10 18 10.8954 18 12C18 13.1046 17.1046 14 16 14H12V18C12 19.1046 11.1046 20 10 20C8.89543 20 8 19.1046 8 18V14H4C2.89543 14 2 13.1046 2 12C2 10.8954 2.89543 10 4 10H8V4C8 2.89543 8.89543 2 10 2Z" />
-                                </svg>
-                            </button>
-
-                            <div className="search-container">
-                                <input
-                                    type="text"
-                                    className="search-input"
-                                    placeholder="Tìm kiếm lớp học, học sinh, tài liệu"
-                                />
-                                <svg className="search-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                    <circle cx="9" cy="9" r="6" stroke="currentColor" strokeWidth="2" />
-                                    <path d="M14 14L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                                </svg>
-                            </div>
-
-                            <button className="header-button header-button-icon">
-                                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M10 2C6.5 2 4 4.5 4 8C4 12.5 10 18 10 18C10 18 16 12.5 16 8C16 4.5 13.5 2 10 2Z" />
-                                    <circle cx="10" cy="8" r="2" fill="white" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </header>
-
                 {/* Profile Page Content */}
                 <div className="profile-content">
                     {/* Profile Status Banner */}
