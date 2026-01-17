@@ -53,9 +53,11 @@ function App() {
         <Route
           path="/tutor"
           element={
-            <ProtectedRoute allowedRoles={["Tutor"]}>
-              <TutorLayout />
-            </ProtectedRoute>
+            // <ProtectedRoute allowedRoles={["Tutor"]}>
+            //   <TutorLayout />
+            // </ProtectedRoute>
+            <TutorLayout />
+
           }
         >
           <Route path="workspace" element={<TutorDashboard />} />
@@ -70,9 +72,11 @@ function App() {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute allowedRoles={["Admin"]}>
-              <AdminLayout />
-            </ProtectedRoute>
+            // <ProtectedRoute allowedRoles={["Admin"]}>
+            //   <AdminLayout />
+            // </ProtectedRoute>
+            <AdminLayout />
+
           }
         >
           <Route index element={<Navigate to="/admin/dashboard" replace />} />

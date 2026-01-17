@@ -3,20 +3,35 @@ import { Link } from "react-router-dom";
 
 const ForbiddenPage: React.FC = () => {
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 text-center px-4">
-            <h1 className="text-9xl font-bold text-red-600">403</h1>
-            <h2 className="text-2xl font-semibold text-gray-700 mt-4">
-                Truy cập bị từ chối
-            </h2>
-            <p className="text-gray-500 mt-2 max-w-md">
-                Bạn không có quyền truy cập vào trang này. Vui lòng liên hệ quản trị viên nếu bạn tin rằng đây là một sự nhầm lẫn.
-            </p>
-            <Link
-                to="/"
-                className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition duration-300"
-            >
-                Về trang chủ
-            </Link>
+        <div className="error-page">
+            <div className="error-container">
+                <div className="error-logo">
+                    <span className="logo-text">Agora</span>
+                </div>
+
+                <h1 className="error-code">403</h1>
+
+                <div className="error-divider"></div>
+
+                <h2 className="error-title">Truy cập bị từ chối</h2>
+
+                <p className="error-message">
+                    Bạn không có quyền truy cập vào trang này. Vui lòng liên hệ quản trị viên nếu bạn tin rằng đây là một sự nhầm lẫn.
+                </p>
+
+                <div className="error-actions">
+                    <Link to="/" className="error-btn-primary">
+                        Về trang chủ
+                    </Link>
+                    <Link to="/login" className="error-btn-secondary">
+                        Đăng nhập
+                    </Link>
+                </div>
+
+                <div className="error-footer">
+                    Cần hỗ trợ? <a href="mailto:support@agora.edu.vn" className="error-link">Liên hệ chúng tôi</a>
+                </div>
+            </div>
         </div>
     );
 };

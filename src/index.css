@@ -25,6 +25,7 @@
 @import "./styles/pages/admin-vetting.css";
 @import "./styles/pages/admin-dispute.css";
 @import "./styles/pages/admin-dispute-detail.css";
+@import "./styles/pages/error-pages.css";
 
 /* ===== TUTOR SEARCH COMPONENTS ===== */
 @import "./styles/components/search-bar.css";
