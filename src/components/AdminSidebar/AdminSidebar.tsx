@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import '../../styles/pages/admin-dashboard.css';
+import '../../styles/layouts/admin-layout.css';
 
 const AdminSidebar = () => {
     const navigate = useNavigate();
@@ -19,24 +19,24 @@ const AdminSidebar = () => {
                 {/* Navigation */}
                 <nav className="admin-nav">
                     <a
-                        className={`admin-nav-item ${isActive('/admin-dashboard') ? 'admin-nav-item-active' : ''}`}
-                        onClick={() => navigate('/admin-dashboard')}
+                        className={`admin-nav-item ${isActive('/admin/dashboard') ? 'admin-nav-item-active' : ''}`}
+                        onClick={() => navigate('/admin/dashboard')}
                     >
                         <span className="material-symbols-outlined admin-nav-icon icon-filled">dashboard</span>
                         <span className="admin-nav-text">Bảng điều khiển</span>
                     </a>
 
                     <a
-                        className={`admin-nav-item ${isActive('/admin-user-management') ? 'admin-nav-item-active' : ''}`}
-                        onClick={() => navigate('/admin-user-management')}
+                        className={`admin-nav-item ${isActive('/admin/users') ? 'admin-nav-item-active' : ''}`}
+                        onClick={() => navigate('/admin/users')}
                     >
                         <span className="material-symbols-outlined admin-nav-icon">group</span>
                         <span className="admin-nav-text">Quản lý người dùng</span>
                     </a>
 
                     <a
-                        className={`admin-nav-item ${isActive('/admin-vetting') ? 'admin-nav-item-active' : ''}`}
-                        onClick={() => navigate('/admin-vetting')}
+                        className={`admin-nav-item ${isActive('/admin/vetting') ? 'admin-nav-item-active' : ''}`}
+                        onClick={() => navigate('/admin/vetting')}
                     >
                         <span className="material-symbols-outlined admin-nav-icon">description</span>
                         <span className="admin-nav-text">Yêu cầu kiểm duyệt</span>
@@ -44,8 +44,8 @@ const AdminSidebar = () => {
                     </a>
 
                     <a
-                        className={`admin-nav-item ${location.pathname.startsWith('/admin-disputes') ? 'admin-nav-item-active' : ''}`}
-                        onClick={() => navigate('/admin-disputes')}
+                        className={`admin-nav-item ${location.pathname.startsWith('/admin/disputes') ? 'admin-nav-item-active' : ''}`}
+                        onClick={() => navigate('/admin/disputes')}
                     >
                         <span className="material-symbols-outlined admin-nav-icon">gavel</span>
                         <span className="admin-nav-text">Khiếu nại</span>
@@ -53,16 +53,16 @@ const AdminSidebar = () => {
                     </a>
 
                     <a
-                        className={`admin-nav-item ${isActive('/admin-financials') ? 'admin-nav-item-active' : ''}`}
-                        onClick={() => navigate('/admin-financials')}
+                        className={`admin-nav-item ${isActive('/admin/financials') ? 'admin-nav-item-active' : ''}`}
+                        onClick={() => navigate('/admin/financials')}
                     >
                         <span className="material-symbols-outlined admin-nav-icon">account_balance</span>
                         <span className="admin-nav-text">Tài chính</span>
                     </a>
 
                     <a
-                        className={`admin-nav-item ${isActive('/admin-settings') ? 'admin-nav-item-active' : ''}`}
-                        onClick={() => navigate('/admin-settings')}
+                        className={`admin-nav-item ${isActive('/admin/settings') ? 'admin-nav-item-active' : ''}`}
+                        onClick={() => navigate('/admin/settings')}
                     >
                         <span className="material-symbols-outlined admin-nav-icon">settings</span>
                         <span className="admin-nav-text">Cài đặt</span>

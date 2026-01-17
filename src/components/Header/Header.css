@@ -18,6 +18,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: nowrap;
     padding: 0 35px;
     background-color: var(--color-white-70);
     backdrop-filter: blur(24px);

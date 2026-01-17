@@ -1,4 +1,4 @@
-import { AdminSidebar } from '../../components/AdminSidebar';
+
 import '../../styles/pages/admin-dashboard.css';
 import '../../styles/pages/admin-vetting.css';
 
@@ -56,9 +56,8 @@ const AdminVettingPage = () => {
     ];
 
     return (
-        <div className="admin-dashboard admin-vetting-page">
-            {/* Sidebar */}
-            <AdminSidebar />
+        <div className="admin-vetting-page">
+            {/* Main Content */}
 
             {/* Main Content */}
             <main className="admin-main">

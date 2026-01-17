@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AdminSidebar } from '../../components/AdminSidebar';
+
 import '../../styles/pages/admin-dashboard.css';
 
 const AdminDisputesPage = () => {
@@ -107,8 +107,7 @@ const AdminDisputesPage = () => {
     ];
 
     return (
-        <div className="admin-dashboard">
-            <AdminSidebar />
+        <>
 
             <main className="admin-main">
                 <div className="admin-content" style={{ paddingTop: '40px' }}>
@@ -295,7 +294,7 @@ const AdminDisputesPage = () => {
                                                 <td className="dispute-td dispute-td-right">
                                                     <button
                                                         className="dispute-action-btn"
-                                                        onClick={() => navigate(`/admin-disputes/${dispute.id}`)}
+                                                        onClick={() => navigate(`/admin/disputes/${dispute.id}`)}
                                                     >
                                                         Điều tra
                                                     </button>
@@ -318,7 +317,7 @@ const AdminDisputesPage = () => {
                     </div>
                 </div>
             </main>
-        </div>
+        </>
     );
 };
 

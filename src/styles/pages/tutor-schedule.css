@@ -213,20 +213,7 @@
     flex-direction: column;
 }
 
-/* Header */
-.schedule-header {
-    background-color: var(--color-white);
-    border-bottom: 1px solid #e4ded5;
-    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1), 0px 1px 2px -1px rgba(0, 0, 0, 0.1);
-    padding: 16px 24px;
-}
-
-.header-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-}
+/* SCHEDULE CONTENT Area */
 
 .breadcrumb-section {
     display: flex;
@@ -358,15 +345,16 @@
     gap: 20px;
 }
 
-/* View Buttons */
+/* View Buttons - scoped to schedule toolbar to prevent conflict with tutor-classes.css */
 .view-buttons {
     display: flex;
     align-items: flex-start;
     gap: 8px;
 }
 
-.view-button {
+.schedule-toolbar .view-button {
     height: 38px;
+    width: auto;
     border-radius: 18px;
     background-color: #faf5ee;
     border: 1px solid #e4ded5;
@@ -378,13 +366,17 @@
     cursor: pointer;
     transition: all 0.2s ease;
     font-family: var(--font-serif);
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.view-button:hover {
+.schedule-toolbar .view-button:hover {
     background-color: #e4ded5;
 }
 
-.view-button-active {
+.schedule-toolbar .view-button-active {
     background-color: var(--color-navy);
     color: var(--color-white);
     border-color: var(--color-navy);
@@ -444,19 +436,25 @@
     background-color: #e4ded5;
 }
 
-/* Filter Controls */
-.filter-controls {
+/* Filter Controls - scoped to schedule toolbar to prevent conflict with tutor-classes.css */
+.schedule-toolbar .filter-controls {
     display: flex;
     align-items: flex-start;
     gap: 12px;
 }
 
-.filter-dropdown {
+.schedule-toolbar .filter-dropdown {
     height: 40px;
     position: relative;
+    /* Remove any inherited styles that cause double border */
+    border: none;
+    background: transparent;
+    min-width: auto;
+    border-radius: 0;
+    padding: 0;
 }
 
-.filter-select {
+.schedule-toolbar .filter-select {
     height: 100%;
     border-radius: 18px;
     background-color: var(--color-white);
@@ -473,7 +471,7 @@
     background-position: right 12px center;
 }
 
-.filter-select:focus {
+.schedule-toolbar .filter-select:focus {
     outline: none;
     border-color: var(--color-gold);
 }

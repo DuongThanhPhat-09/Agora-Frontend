@@ -1,12 +1,11 @@
-import { AdminSidebar } from '../../components/AdminSidebar';
+
 import '../../styles/pages/admin-dashboard.css';
 import '../../styles/pages/admin-financial.css';
 
 const AdminFinancialsPage = () => {
     return (
-        <div className="admin-dashboard">
-            {/* SIDEBAR */}
-            <AdminSidebar />
+        <>
+            {/* MAIN CONTENT */}
 
             {/* MAIN CONTENT */}
             <main className="admin-main">
@@ -284,7 +283,7 @@ const AdminFinancialsPage = () => {
                     </div>
                 </div>
             </main>
-        </div>
+        </>
     );
 };
 

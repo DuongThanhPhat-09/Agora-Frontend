@@ -1,12 +1,8 @@
-import { AdminSidebar } from '../../components/AdminSidebar';
 import '../../styles/pages/admin-dashboard.css';
 
 const AdminDashboardPage = () => {
     return (
-        <div className="admin-dashboard">
-            {/* SIDEBAR */}
-            <AdminSidebar />
-
+        <>
             {/* MAIN CONTENT */}
             <main className="admin-main">
                 {/* FLOATING HEADER */}
@@ -271,7 +267,7 @@ const AdminDashboardPage = () => {
                     </div>
                 </div>
             </main>
-        </div>
+        </>
     );
 };
 

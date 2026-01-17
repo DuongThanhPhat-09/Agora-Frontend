@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AdminSidebar } from '../../components/AdminSidebar';
+
 import '../../styles/pages/admin-dashboard.css';
 import '../../styles/pages/admin-dispute-detail.css';
 
@@ -8,8 +8,7 @@ const AdminDisputeDetailPage = () => {
     const [verdict, setVerdict] = useState('refund');
 
     return (
-        <div className="admin-dashboard">
-            <AdminSidebar />
+        <>
 
             <main className="admin-main">
                 {/* Header */}
@@ -283,7 +282,7 @@ const AdminDisputeDetailPage = () => {
                     </div>
                 </div>
             </main>
-        </div>
+        </>
     );
 };
 
