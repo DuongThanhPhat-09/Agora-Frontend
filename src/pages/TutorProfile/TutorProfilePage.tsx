@@ -7,6 +7,7 @@ import { uploadIdCard } from '../../services/supabase.service';
 import { submitVerification } from '../../services/verification.service';
 import { getUserProfile, parseEKYCData } from '../../services/user.service';
 import { getUserIdFromToken } from '../../services/auth.service';
+import { updateBasicInfo, getTutorProfile, type TutorProfile } from '../../services/tutorProfile.service';
 import type { IdCardUploadState, UserWithEKYC, EKYCContent } from '../../types/verification.types';
 
 const TutorProfilePage: React.FC = () => {
@@ -33,6 +34,19 @@ const TutorProfilePage: React.FC = () => {
     const [userData, setUserData] = useState<UserWithEKYC | null>(null);
     const [ekycData, setEkycData] = useState<EKYCContent | null>(null);
     const [loadingProfile, setLoadingProfile] = useState(true);
+
+    // Tutor Profile State
+    const [tutorProfile, setTutorProfile] = useState<TutorProfile | null>(null);
+    const [loadingTutorProfile, setLoadingTutorProfile] = useState(true);
+
+    // Edit Basic Info Modal State
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editForm, setEditForm] = useState({
+        headline: '',
+        bio: '',
+        hourlyRate: 0
+    });
+    const [isUpdating, setIsUpdating] = useState(false);
 
     useEffect(() => {
         const fetchUserProfile = async () => {
@@ -67,6 +81,28 @@ const TutorProfilePage: React.FC = () => {
             }
         };
         fetchUserProfile();
+    }, []);
+
+    // Fetch Tutor Profile (Basic Info)
+    useEffect(() => {
+        const fetchTutorProfile = async () => {
+            try {
+                setLoadingTutorProfile(true);
+                const userId = getUserIdFromToken();
+                if (userId) {
+                    const response = await getTutorProfile(userId);
+                    if (response.success && response.content) {
+                        setTutorProfile(response.content);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading tutor profile:', error);
+                // Don't show error toast - profile might not exist yet
+            } finally {
+                setLoadingTutorProfile(false);
+            }
+        };
+        fetchTutorProfile();
     }, []);
 
     // Handle front image upload
@@ -213,6 +249,104 @@ const TutorProfilePage: React.FC = () => {
     };
 
     const isReadyToSubmit = uploadState.frontPath && uploadState.backPath && !uploadState.isUploading;
+
+    // Handle Edit Basic Info
+    const handleOpenEditModal = () => {
+        // Pre-fill form with current data
+        setEditForm({
+            headline: tutorProfile?.headline || '',
+            bio: tutorProfile?.bio || '',
+            hourlyRate: tutorProfile?.hourlyRate || 0
+        });
+        setShowEditModal(true);
+    };
+
+    const handleUpdateBasicInfo = async () => {
+        // Frontend Validation (match backend requirements)
+        if (!editForm.headline.trim()) {
+            toast.warning('Vui lòng nhập tiêu đề!');
+            return;
+        }
+
+        // Validate headline characters (only allow letters, numbers, spaces, Vietnamese characters, and common punctuation)
+        const headlineRegex = /^[a-zA-Z0-9\sàáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđĐÀÁẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬÈÉẺẼẸÊẾỀỂỄỆÌÍỈĨỊÒÓỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÙÚỦŨỤƯỨỪỬỮỰỲÝỶỸỴ,.\-]+$/;
+        if (!headlineRegex.test(editForm.headline)) {
+            toast.warning('Tiêu đề chỉ được chứa chữ cái, số, khoảng trắng và dấu câu cơ bản!');
+            return;
+        }
+
+        if (!editForm.bio.trim()) {
+            toast.warning('Vui lòng nhập giới thiệu bản thân!');
+            return;
+        }
+
+        // Bio minimum length: 50 characters (backend requirement)
+        if (editForm.bio.trim().length < 50) {
+            toast.warning('Giới thiệu bản thân phải có ít nhất 50 ký tự để cung cấp đủ thông tin cho học sinh!');
+            return;
+        }
+
+        if (editForm.hourlyRate <= 0) {
+            toast.warning('Vui lòng nhập học phí hợp lệ!');
+            return;
+        }
+
+        setIsUpdating(true);
+        try {
+            const userId = getUserIdFromToken();
+            if (!userId) {
+                toast.error('Không tìm thấy thông tin người dùng');
+                return;
+            }
+
+            const response = await updateBasicInfo(userId, {
+                headline: editForm.headline.trim(),
+                bio: editForm.bio.trim(),
+                hourlyRate: editForm.hourlyRate
+            });
+
+            if (response.success) {
+                toast.success('Cập nhật thông tin thành công!');
+                setShowEditModal(false);
+
+                // Refresh tutor profile data
+                if (response.content) {
+                    setTutorProfile(response.content);
+                }
+            } else {
+                toast.error(response.message || 'Có lỗi xảy ra khi cập nhật');
+            }
+        } catch (error: any) {
+            console.error('Update basic info error:', error);
+
+            // Handle backend validation errors
+            if (error.response?.data?.errors) {
+                const errors = error.response.data.errors;
+                const errorMessages = [];
+
+                if (errors.Headline) {
+                    errorMessages.push(`Tiêu đề: ${errors.Headline[0]}`);
+                }
+                if (errors.Bio) {
+                    errorMessages.push(`Giới thiệu: ${errors.Bio[0]}`);
+                }
+                if (errors.HourlyRate) {
+                    errorMessages.push(`Học phí: ${errors.HourlyRate[0]}`);
+                }
+
+                if (errorMessages.length > 0) {
+                    errorMessages.forEach(msg => toast.error(msg));
+                } else {
+                    toast.error(error.response?.data?.title || 'Có lỗi xảy ra khi cập nhật');
+                }
+            } else {
+                toast.error('Không thể kết nối với server. Vui lòng thử lại.');
+            }
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
 
     return (
         <div className="tutor-profile-page">
@@ -475,7 +609,7 @@ const TutorProfilePage: React.FC = () => {
                             <div className="info-block">
                                 <div className="block-header">
                                     <h3 className="block-title">Thông tin hiển thị</h3>
-                                    <button className="btn-edit">
+                                    <button className="btn-edit" onClick={handleOpenEditModal}>
                                         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                                             <path d="M11.586 2.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM9.379 4.793L1 13.172V16h2.828l8.38-8.379-2.83-2.828z" />
                                         </svg>
@@ -485,15 +619,27 @@ const TutorProfilePage: React.FC = () => {
                                 <div className="info-fields">
                                     <div className="info-field">
                                         <label className="field-label">TÊN HIỂN THỊ</label>
-                                        <p className="field-value">Nguyễn Văn Minh</p>
+                                        <p className="field-value">{userData?.fullname || 'Chưa cập nhật'}</p>
                                     </div>
                                     <div className="info-field">
                                         <label className="field-label">TIÊU ĐỀ (HEADLINE)</label>
-                                        <p className="field-value">Gia sư Toán tâm huyết, chuyên luyện thi vào 10</p>
+                                        {loadingTutorProfile ? (
+                                            <p className="field-value">Đang tải...</p>
+                                        ) : (
+                                            <p className="field-value">
+                                                {tutorProfile?.headline || 'Chưa cập nhật tiêu đề'}
+                                            </p>
+                                        )}
                                     </div>
                                     <div className="info-field">
                                         <label className="field-label">GIỚI THIỆU BẢN THÂN</label>
-                                        <p className="field-value field-value-multiline">Tôi có 5 năm kinh nghiệm giảng dạy Toán THCS và THPT. Chuyên giúp học sinh nắm vững kiến thức nền tảng và tự tin với kỳ thi. Phương pháp giảng dạy của tôi tập trung vào việc hiểu bản chất bài toán thay vì học vẹt công thức.</p>
+                                        {loadingTutorProfile ? (
+                                            <p className="field-value">Đang tải...</p>
+                                        ) : (
+                                            <p className="field-value field-value-multiline">
+                                                {tutorProfile?.bio || 'Chưa cập nhật giới thiệu bản thân'}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -577,9 +723,17 @@ const TutorProfilePage: React.FC = () => {
                                         </label>
                                         <div className="fee-card">
                                             <div className="fee-amount">
-                                                <span className="fee-number">200,000</span>
-                                                <span className="fee-currency">đ</span>
-                                                <span className="fee-unit">/ buổi</span>
+                                                {loadingTutorProfile ? (
+                                                    <span className="fee-number">Đang tải...</span>
+                                                ) : (
+                                                    <>
+                                                        <span className="fee-number">
+                                                            {tutorProfile?.hourlyRate?.toLocaleString('vi-VN') || '0'}
+                                                        </span>
+                                                        <span className="fee-currency">đ</span>
+                                                        <span className="fee-unit">/ buổi</span>
+                                                    </>
+                                                )}
                                             </div>
                                             <div className="fee-note">
                                                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -874,6 +1028,102 @@ const TutorProfilePage: React.FC = () => {
                 </div>
             )}
 
+            {/* Edit Basic Info Modal */}
+            {showEditModal && (
+                <div className="kyc-modal-overlay" onClick={() => setShowEditModal(false)}>
+                    <div className="kyc-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="kyc-modal-header">
+                            <h2>Chỉnh sửa thông tin cơ bản</h2>
+                            <button className="close-btn" onClick={() => setShowEditModal(false)}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <path d="M6 6L18 18M6 18L18 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div className="kyc-modal-body">
+                            <div className="edit-form">
+                                {/* Headline Field */}
+                                <div className="form-group">
+                                    <label htmlFor="headline" className="form-label">
+                                        Tiêu đề (Headline) <span className="required">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="headline"
+                                        className="form-input"
+                                        placeholder="VD: Gia sư Toán tâm huyết, chuyên luyện thi vào 10"
+                                        value={editForm.headline}
+                                        onChange={(e) => setEditForm({ ...editForm, headline: e.target.value })}
+                                        maxLength={100}
+                                    />
+                                    <p className="form-hint">
+                                        {editForm.headline.length}/100 ký tự • Chỉ sử dụng chữ cái, số và dấu câu cơ bản
+                                    </p>
+                                </div>
+
+                                {/* Bio Field */}
+                                <div className="form-group">
+                                    <label htmlFor="bio" className="form-label">
+                                        Giới thiệu bản thân <span className="required">*</span>
+                                    </label>
+                                    <textarea
+                                        id="bio"
+                                        className="form-textarea"
+                                        placeholder="Hãy giới thiệu về bản thân, kinh nghiệm giảng dạy và phương pháp của bạn..."
+                                        value={editForm.bio}
+                                        onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                                        rows={6}
+                                        maxLength={500}
+                                    />
+                                    <p className="form-hint" style={{ color: editForm.bio.length < 50 ? '#EF4444' : '#6B7280' }}>
+                                        {editForm.bio.length}/500 ký tự {editForm.bio.length < 50 && `• Cần thêm ${50 - editForm.bio.length} ký tự (tối thiểu 50)`}
+                                    </p>
+                                </div>
+
+                                {/* Hourly Rate Field */}
+                                <div className="form-group">
+                                    <label htmlFor="hourlyRate" className="form-label">
+                                        Học phí (VNĐ/buổi) <span className="required">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="hourlyRate"
+                                        className="form-input"
+                                        placeholder="200000"
+                                        value={editForm.hourlyRate || ''}
+                                        onChange={(e) => setEditForm({ ...editForm, hourlyRate: Number(e.target.value) })}
+                                        min={0}
+                                        step={10000}
+                                    />
+                                    <p className="form-hint">
+                                        Hiển thị: {editForm.hourlyRate?.toLocaleString('vi-VN') || '0'}đ/buổi
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="modal-footer">
+                                <button
+                                    className="btn-cancel"
+                                    onClick={() => setShowEditModal(false)}
+                                    disabled={isUpdating}
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    className="btn-submit"
+                                    onClick={handleUpdateBasicInfo}
+                                    disabled={isUpdating}
+                                >
+                                    {isUpdating ? 'Đang cập nhật...' : 'Lưu thay đổi'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
             <style>{`
                 /* Modal Styles */
                 .kyc-modal-overlay {
@@ -1016,264 +1266,108 @@ const TutorProfilePage: React.FC = () => {
                     cursor: pointer;
                 }
 
-                .btn-submit-modal.ready:hover:not(:disabled) {
-                    transform: translateY(-2px);
-                    box-shadow: 0 8px 16px rgba(26, 34, 56, 0.3);
-                }
-
-                .btn-submit-modal:disabled {
-                    opacity: 0.7;
-                    cursor: not-allowed;
-                }
-
-                .btn-spinner {
-                    width: 16px;
-                    height: 16px;
-                    border: 2px solid rgba(255, 255, 255, 0.3);
-                    border-top-color: white;
-                    border-radius: 50%;
-                    animation: spin 0.8s linear infinite;
-                }
-
-                @keyframes spin {
-                    to { transform: rotate(360deg); }
-                }
-
-                @media (max-width: 768px) {
-                    .upload-grid-modal {
-                        grid-template-columns: 1fr;
-                    }
-
-                    .kyc-modal-footer {
-                        flex-direction: column-reverse;
-                    }
-
-                    .btn-cancel-modal,
-                    .btn-submit-modal {
-                        width: 100%;
-                        justify-content: center;
-                    }
-                }
-
-                /* eKYC Styles */
-                .kyc-loading {
-                    padding: 40px;
-                    text-align: center;
-                    color: #6b7280;
-                }
-
-                .kyc-success-banner {
-                    background: #d1fae5;
-                    border: 1px solid #34d399;
-                    border-radius: 12px;
-                    padding: 16px;
+                /* Edit Form Styles */
+                .edit-form {
                     display: flex;
-                    align-items: center;
-                    gap: 12px;
+                    flex-direction: column;
+                    gap: 24px;
                     margin-bottom: 24px;
                 }
 
-                .kyc-success-banner svg {
-                    color: #059669;
-                    flex-shrink: 0;
-                }
-
-                .kyc-success-banner h4 {
-                    margin: 0;
-                    font-size: 16px;
-                    font-weight: 600;
-                    color: #065f46;
-                }
-
-                .kyc-success-banner p {
-                    margin: 4px 0 0 0;
-                    font-size: 14px;
-                    color: #047857;
-                }
-
-                .id-card-image-real {
-                    width: 100%;
-                    height: 200px;
-                    object-fit: cover;
-                    border-radius: 8px;
-                    cursor: pointer;
-                    transition: transform 0.2s;
-                }
-
-                .id-card-image-real:hover {
-                    transform: scale(1.02);
-                }
-
-                .ekyc-info-grid {
-                    background: #f9fafb;
-                    border-radius: 12px;
-                    padding: 20px;
-                    margin: 24px 0;
-                }
-
-                .ekyc-info-title {
-                    font-size: 16px;
-                    font-weight: 600;
-                    color: #1a2238;
-                    margin: 0 0 16px 0;
+                .form-group {
                     display: flex;
-                    align-items: center;
+                    flex-direction: column;
                     gap: 8px;
                 }
 
-                .ekyc-fields {
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 16px;
-                }
-
-                .ekyc-field {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 4px;
-                }
-
-                .ekyc-field.full-width {
-                    grid-column: 1 / -1;
-                }
-
-                .ekyc-field label {
-                    font-size: 12px;
-                    font-weight: 600;
-                    color: #6b7280;
-                    text-transform: uppercase;
-                    letter-spacing: 0.5px;
-                }
-
-                .ekyc-field span {
+                .form-label {
                     font-size: 14px;
-                    color: #1a2238;
-                    font-weight: 500;
+                    font-weight: 600;
+                    color: #1F2937;
                 }
 
-                .confidence-score {
-                    color: #059669;
-                    font-weight: 700;
+                .required {
+                    color: #EF4444;
                 }
 
-                /* Eye Icon Button Styles */
-                .eye-icon-btn {
-                    background: none;
-                    border: none;
-                    padding: 4px;
-                    cursor: pointer;
-                    color: #6b7280;
-                    transition: all 0.2s;
-                    border-radius: 4px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-
-                .eye-icon-btn:hover {
-                    color: #1a2238;
-                    background: rgba(26, 34, 56, 0.05);
-                    transform: scale(1.1);
-                }
-
-                .eye-icon-btn svg {
-                    display: block;
-                }
-
-                /* Image Lightbox Styles */
-                .image-lightbox-overlay {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(0, 0, 0, 0.9);
-                    z-index: 99999;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 20px;
-                    animation: fadeIn 0.2s ease-out;
-                    cursor: zoom-out;
-                }
-
-                .lightbox-content {
-                    position: relative;
-                    max-width: 90vw;
-                    max-height: 90vh;
-                    animation: zoomIn 0.3s ease-out;
-                    cursor: default;
-                }
-
-                .lightbox-image {
-                    max-width: 100%;
-                    max-height: 90vh;
-                    width: auto;
-                    height: auto;
+                .form-input, .form-textarea {
+                    padding: 12px 16px;
+                    border: 2px solid #E5E7EB;
                     border-radius: 8px;
-                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+                    font-size: 15px;
+                    font-family: inherit;
+                    transition: border-color 0.2s;
                 }
 
-                .lightbox-close-btn {
-                    position: absolute;
-                    top: -40px;
-                    right: 0;
-                    background: rgba(255, 255, 255, 0.15);
-                    border: 2px solid rgba(255, 255, 255, 0.4);
-                    border-radius: 50%;
-                    width: 32px;
-                    height: 32px;
+                .form-input:focus, .form-textarea:focus {
+                    outline: none;
+                    border-color: #1E3A8A;
+                }
+
+                .form-textarea {
+                    resize: vertical;
+                    min-height: 120px;
+                }
+
+                .form-hint {
+                    font-size: 13px;
+                    color: #6B7280;
+                    margin: 0;
+                }
+
+                .modal-footer {
                     display: flex;
-                    align-items: center;
-                    justify-content: center;
+                    gap: 12px;
+                    justify-content: flex-end;
+                    padding-top: 16px;
+                    border-top: 1px solid #E5E7EB;
+                }
+
+                .btn-cancel, .btn-submit {
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    font-size: 14px;
                     cursor: pointer;
                     transition: all 0.2s;
-                    backdrop-filter: blur(10px);
+                    border: none;
                 }
 
-                .lightbox-close-btn svg {
-                    width: 18px;
-                    height: 18px;
+                .btn-cancel {
+                    background: #F3F4F6;
+                    color: #374151;
                 }
 
-                .lightbox-close-btn:hover {
-                    background: rgba(255, 255, 255, 0.2);
-                    border-color: rgba(255, 255, 255, 0.5);
-                    transform: scale(1.1);
+                .btn-cancel:hover:not(:disabled) {
+                    background: #E5E7EB;
                 }
 
-                @keyframes fadeIn {
-                    from {
-                        opacity: 0;
-                    }
-                    to {
-                        opacity: 1;
-                    }
+                .btn-submit {
+                    background: #1E3A8A;
+                    color: white;
                 }
 
-                @keyframes zoomIn {
-                    from {
-                        opacity: 0;
-                        transform: scale(0.9);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: scale(1);
-                    }
+                .btn-submit:hover:not(:disabled) {
+                    background: #1E40AF;
+                }
+
+                .btn-cancel:disabled, .btn-submit:disabled {
+                    opacity: 0.6;
+                    cursor: not-allowed;
                 }
 
                 @media (max-width: 768px) {
-                    .ekyc-fields {
-                        grid-template-columns: 1fr;
+                    .kyc-modal {
+                        width: 95%;
+                        max-height: 90vh;
                     }
 
-                    .lightbox-close-btn {
-                        top: 10px;
-                        right: 10px;
+                    .edit-form {
+                        gap: 16px;
                     }
                 }
             `}</style>
-        </div>
+        </div >
     );
 };
 
