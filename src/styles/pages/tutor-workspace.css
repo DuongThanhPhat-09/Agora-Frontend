@@ -1077,7 +1077,7 @@
 }
 
 @media (max-width: 640px) {
-    .header-content {
+    .workspace-header .header-content {
         flex-direction: column;
         align-items: flex-start;
     }
