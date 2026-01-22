@@ -19,7 +19,6 @@ import AdminDisputeDetailPage from "./pages/AdminDisputes/AdminDisputeDetailPage
 import { AdminFinancialsPage } from "./pages/AdminFinancials";
 import { AdminSettingsPage } from "./pages/AdminSettings";
 import AdminLayout from "./layouts/AdminLayout";
-import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import NotFoundPage from "./pages/Error/NotFoundPage";
 import UnauthorizedPage from "./pages/Error/UnauthorizedPage";
 import ForbiddenPage from "./pages/Error/ForbiddenPage";
