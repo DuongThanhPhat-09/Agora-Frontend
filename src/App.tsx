@@ -19,6 +19,8 @@ import AdminDisputeDetailPage from "./pages/AdminDisputes/AdminDisputeDetailPage
 import { AdminFinancialsPage } from "./pages/AdminFinancials";
 import { AdminSettingsPage } from "./pages/AdminSettings";
 import AdminLayout from "./layouts/AdminLayout";
+import TutorPortalLayout from "./layouts/TutorPortalLayout";
+import { TutorPortalProfile } from "./pages/TutorPortal";
 import NotFoundPage from "./pages/Error/NotFoundPage";
 import UnauthorizedPage from "./pages/Error/UnauthorizedPage";
 import ForbiddenPage from "./pages/Error/ForbiddenPage";
@@ -91,6 +93,16 @@ function App() {
           <Route path="disputes/:id" element={<AdminDisputeDetailPage />} />
           <Route path="financials" element={<AdminFinancialsPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
+        </Route>
+
+        {/* Tutor Portal - New Layout based on Figma */}
+        <Route
+          path="/tutor-portal"
+          element={<TutorPortalLayout />}
+        >
+          <Route index element={<Navigate to="/tutor-portal/profile" replace />} />
+          <Route path="profile" element={<TutorPortalProfile />} />
+          {/* Future routes: dashboard, schedule, classes, sessions, finance, settings */}
         </Route>
 
         <Route path="/login" element={<LoginPage />} />

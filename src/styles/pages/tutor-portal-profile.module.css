@@ -1,0 +1,1029 @@
+/* ===== TUTOR PORTAL PROFILE PAGE ===== */
+/* CSS Module to avoid global conflicts */
+
+/* Edit Bar - Sticky Top */
+.editBarStickyTop {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background-color: #fff;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.editBarLeft {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.toggleGroup {
+    display: flex;
+    align-items: center;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    padding: 4px;
+    gap: 4px;
+}
+
+.toggleBtn {
+    padding: 6px 16px;
+    border: none;
+    background: none;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 20px;
+    color: #525252;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.toggleBtn.active {
+    background-color: #fff;
+    color: #000;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.editingStatus {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 8px;
+}
+
+.editingDot {
+    width: 6px;
+    height: 6px;
+    background-color: #22c55e;
+    border-radius: 50%;
+}
+
+.editingText {
+    font-size: 12px;
+    line-height: 16px;
+    color: #404040;
+}
+
+.savedStatus {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #737373;
+}
+
+.savedIcon {
+    width: 10px;
+    height: 10px;
+}
+
+.savedText {
+    font-size: 12px;
+    line-height: 16px;
+}
+
+.editBarRight {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.shareBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: none;
+    background: none;
+    font-size: 14px;
+    line-height: 20px;
+    color: #525252;
+    cursor: pointer;
+}
+
+.shareIcon {
+    width: 15px;
+    height: 12px;
+}
+
+.verticalDivider {
+    width: 1px;
+    height: 24px;
+    background-color: #e5e5e5;
+}
+
+.saveDraftBtn {
+    padding: 6px 16px;
+    border-radius: 8px;
+    border: 1px solid #d4d4d4;
+    background: none;
+    font-size: 14px;
+    line-height: 20px;
+    color: #000;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.saveDraftBtn:hover {
+    background-color: #f5f5f5;
+}
+
+.publishBtn {
+    padding: 6px 16px;
+    border-radius: 8px;
+    border: none;
+    background-color: #000;
+    font-size: 14px;
+    line-height: 20px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.publishBtn:hover {
+    background-color: #171717;
+}
+
+/* Main Content Area */
+.mainContent {
+    background-color: #fafafa;
+    min-height: calc(100vh - 56px);
+    padding-bottom: 56px;
+}
+
+/* Hero Section */
+.heroSection {
+    background-color: #fff;
+    border-bottom: 2px dashed #d4d4d4;
+    padding: 48px 32px;
+    position: relative;
+}
+
+.heroContainer {
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+}
+
+.heroLeft {
+    width: 757px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Video Placeholder */
+.videoPlaceholder {
+    height: 380px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #262626, #171717);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: #fff;
+}
+
+.playButton {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+}
+
+.playIcon {
+    width: 24px;
+    height: 24px;
+    fill: #fff;
+}
+
+.videoText {
+    font-size: 14px;
+    line-height: 20px;
+}
+
+/* Tutor Info Card */
+.tutorInfoCard {
+    display: flex;
+    gap: 20px;
+    position: relative;
+}
+
+.tutorAvatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 16px;
+    background-color: #e5e5e5;
+    flex-shrink: 0;
+}
+
+.tutorDetails {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+}
+
+.tutorNameRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tutorName {
+    font-size: 30px;
+    line-height: 36px;
+    font-weight: 400;
+    color: #000;
+    margin: 0;
+}
+
+.verifiedBadge {
+    width: 18px;
+    height: 18px;
+    fill: #3b82f6;
+}
+
+.tutorHeadline {
+    font-size: 16px;
+    line-height: 24px;
+    color: #525252;
+    margin: 0;
+}
+
+.tutorMeta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-top: 4px;
+}
+
+.metaItem {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.ratingIcon {
+    width: 14px;
+    height: 14px;
+    fill: #fbbf24;
+}
+
+.ratingValue {
+    color: #000;
+}
+
+.ratingCount {
+    color: #525252;
+}
+
+.metaIcon {
+    width: 12px;
+    height: 12px;
+    fill: #525252;
+}
+
+.metaText {
+    color: #525252;
+}
+
+/* Subject Tags */
+.subjectTags {
+    display: flex;
+    gap: 8px;
+    padding-top: 8px;
+}
+
+.subjectTag {
+    padding: 4px 12px;
+    background-color: #f5f5f5;
+    border-radius: 9999px;
+    font-size: 14px;
+    line-height: 20px;
+    color: #404040;
+}
+
+/* Stats Bar */
+.statsBar {
+    display: flex;
+    gap: 16px;
+    padding-top: 24px;
+    border-top: 1px solid #e5e5e5;
+    justify-content: center;
+}
+
+.statItem {
+    width: 177px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.statLabel {
+    font-size: 12px;
+    line-height: 16px;
+    color: #525252;
+}
+
+.statValue {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    line-height: 20px;
+    color: #000;
+}
+
+.statIcon {
+    width: 8px;
+    height: 9px;
+}
+
+/* Hero Right - Sidebar */
+.heroRight {
+    width: 363px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Pricing Card */
+.pricingCard {
+    border-radius: 16px;
+    background-color: #fafafa;
+    border: 1px solid #e5e5e5;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.priceRow {
+    display: flex;
+    align-items: baseline;
+    gap: 0;
+}
+
+.priceAmount {
+    font-size: 30px;
+    line-height: 36px;
+    font-weight: 400;
+    color: #000;
+}
+
+.priceUnit {
+    font-size: 18px;
+    line-height: 28px;
+    color: #525252;
+}
+
+.trialPrice {
+    font-size: 14px;
+    line-height: 20px;
+    color: #525252;
+}
+
+.availabilitySection {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.availabilityLabel {
+    font-size: 14px;
+    line-height: 20px;
+    color: #000;
+}
+
+.availabilitySlots {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.slotRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.slotTime {
+    font-size: 14px;
+    line-height: 20px;
+    color: #525252;
+}
+
+.slotSelect {
+    font-size: 12px;
+    line-height: 16px;
+    color: #000;
+    text-decoration: underline;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.bookTrialBtn {
+    padding: 12px 0;
+    border-radius: 12px;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    font-size: 14px;
+    line-height: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.bookTrialBtn:hover {
+    background-color: #171717;
+}
+
+.sendMessageBtn {
+    padding: 12px 0;
+    border-radius: 12px;
+    background-color: #fff;
+    border: 1px solid #d4d4d4;
+    font-size: 14px;
+    line-height: 20px;
+    color: #000;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.sendMessageBtn:hover {
+    background-color: #f5f5f5;
+}
+
+.messageIcon {
+    width: 12px;
+    height: 12px;
+}
+
+.cancellationNote {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 12px;
+    line-height: 16px;
+    color: #525252;
+}
+
+.cancellationIcon {
+    width: 12px;
+    height: 12px;
+}
+
+/* Profile Completeness Card */
+.completenessCard {
+    border-radius: 16px;
+    background-color: #fff;
+    border: 1px solid #e5e5e5;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.completenessHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.completenessLabel {
+    font-size: 14px;
+    line-height: 20px;
+    color: #000;
+}
+
+.completenessPercent {
+    font-size: 14px;
+    line-height: 20px;
+    color: #000;
+}
+
+.progressBar {
+    height: 8px;
+    background-color: #f5f5f5;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.progressFill {
+    height: 100%;
+    background-color: #171717;
+    border-radius: 9999px;
+    transition: width 0.3s ease;
+}
+
+.checklistItems {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.checklistItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.checklistItem.completed {
+    color: #525252;
+}
+
+.checklistItem.incomplete {
+    color: #a3a3a3;
+}
+
+.checkIcon {
+    width: 12px;
+    height: 12px;
+}
+
+.completeProfileBtn {
+    padding: 8px 0;
+    border-radius: 8px;
+    background-color: #fff;
+    border: 1px solid #d4d4d4;
+    font-size: 14px;
+    line-height: 20px;
+    color: #000;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.completeProfileBtn:hover {
+    background-color: #f5f5f5;
+}
+
+/* Edit Hero Button */
+.editHeroBtn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    font-size: 14px;
+    line-height: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1), 0px 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+.editIcon {
+    width: 12px;
+    height: 12px;
+}
+
+/* Content Sections */
+.contentSections {
+    padding: 24px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Section Card */
+.sectionCard {
+    border-radius: 16px;
+    background-color: #fff;
+    border: 2px dashed #d4d4d4;
+    padding: 32px;
+    position: relative;
+}
+
+.sectionHeader {
+    margin-bottom: 16px;
+}
+
+.sectionTitle {
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: 400;
+    color: #000;
+    margin: 0;
+}
+
+.sectionContent {
+    font-size: 16px;
+    line-height: 26px;
+    color: #404040;
+}
+
+.sectionContent p {
+    margin: 0 0 16px 0;
+}
+
+.sectionContent p:last-child {
+    margin-bottom: 0;
+}
+
+/* Edit Section Button */
+.editSectionBtn {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    font-size: 14px;
+    line-height: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1), 0px 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+/* Credentials Section */
+.credentialsList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.credentialItem {
+    display: flex;
+    gap: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.credentialItem:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.credentialIcon {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.credentialDetails {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.credentialTitle {
+    font-size: 16px;
+    line-height: 24px;
+    color: #000;
+    margin: 0;
+}
+
+.credentialInstitution {
+    font-size: 14px;
+    line-height: 20px;
+    color: #404040;
+    margin: 0;
+}
+
+.credentialDate {
+    font-size: 12px;
+    line-height: 16px;
+    color: #737373;
+}
+
+/* Credentials Action Buttons */
+.credentialsActions {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    display: flex;
+    gap: 8px;
+}
+
+.addCredentialBtn {
+    padding: 8px 13px;
+    border-radius: 8px;
+    background-color: #fff;
+    border: 1px solid #d4d4d4;
+    font-size: 14px;
+    line-height: 20px;
+    color: #000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.addCredentialBtn:hover {
+    background-color: #f5f5f5;
+}
+
+.editCredentialBtn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    font-size: 14px;
+    line-height: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1), 0px 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+/* Outcomes Section */
+.outcomeCard {
+    width: 345px;
+    border-radius: 12px;
+    background-color: #fafafa;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.outcomeValue {
+    font-size: 36px;
+    line-height: 40px;
+    color: #000;
+}
+
+.outcomeLabel {
+    font-size: 14px;
+    line-height: 20px;
+    color: #525252;
+    text-align: center;
+}
+
+/* ===== EDIT HERO MODAL ===== */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modalContent {
+    background-color: #fff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 32px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.modalTitle {
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 600;
+    color: #000;
+    margin: 0;
+}
+
+.modalCloseBtn {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #525252;
+    transition: all 0.2s ease;
+}
+
+.modalCloseBtn:hover {
+    background-color: #f5f5f5;
+    color: #000;
+}
+
+.modalBody {
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.verificationInstructions {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    background-color: #fef3c7;
+    border: 1px solid #fbbf24;
+    border-radius: 12px;
+}
+
+.instructionIcon {
+    color: #d97706;
+    flex-shrink: 0;
+}
+
+.instructionText {
+    flex: 1;
+}
+
+.instructionTitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: #000;
+    margin: 0 0 8px 0;
+}
+
+.instructionList {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 13px;
+    line-height: 20px;
+    color: #525252;
+}
+
+.instructionList li {
+    margin-bottom: 4px;
+}
+
+.instructionList li:last-child {
+    margin-bottom: 0;
+}
+
+.uploadGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+.securityNotice {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background-color: #e0f2fe;
+    border: 1px solid #0ea5e9;
+    border-radius: 8px;
+}
+
+.securityNotice svg {
+    color: #0284c7;
+    flex-shrink: 0;
+}
+
+.securityNotice p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 20px;
+    color: #075985;
+}
+
+.modalFooter {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 24px 32px;
+    border-top: 1px solid #e5e5e5;
+}
+
+.modalCancelBtn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1px solid #d4d4d4;
+    background-color: #fff;
+    font-size: 14px;
+    line-height: 20px;
+    color: #525252;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.modalCancelBtn:hover:not(:disabled) {
+    background-color: #f5f5f5;
+}
+
+.modalCancelBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.modalSubmitBtn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    background-color: #a3a3a3;
+    font-size: 14px;
+    line-height: 20px;
+    color: #fff;
+    cursor: not-allowed;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.modalSubmitBtn.ready {
+    background-color: #000;
+    cursor: pointer;
+}
+
+.modalSubmitBtn.ready:hover:not(:disabled) {
+    background-color: #171717;
+}
+
+.modalSubmitBtn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.btnSpinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: modalSpin 0.8s linear infinite;
+}
+
+@keyframes modalSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Modal Responsive */
+@media (max-width: 768px) {
+    .modalContent {
+        max-width: 100%;
+        margin: 10px;
+    }
+
+    .modalHeader,
+    .modalBody,
+    .modalFooter {
+        padding: 20px;
+    }
+
+    .uploadGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .modalFooter {
+        flex-direction: column-reverse;
+    }
+
+    .modalCancelBtn,
+    .modalSubmitBtn {
+        width: 100%;
+        justify-content: center;
+    }
+}
