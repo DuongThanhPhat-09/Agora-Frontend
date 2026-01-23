@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import InputGroup from "../../components/InputGroup";
+import ForgotPasswordModal from "../../components/ForgotPasswordModal";
 import { supabase } from "../../lib/supabase";
 import {
   checkEmailExists,
@@ -17,6 +18,7 @@ const LoginForm: React.FC = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
 
   // Ref để track manual login (tránh double call API)
   const isManualLoginRef = React.useRef(false);
@@ -283,9 +285,17 @@ const LoginForm: React.FC = () => {
               icon="lock"
               value={formData.password}
               onChange={handleChange}
-              rightLink={{ text: "Quên mật khẩu?", href: "#" }}
               showPasswordToggle={true}
             />
+            <div className="text-right mt-2">
+              <button
+                type="button"
+                onClick={() => setIsForgotPasswordOpen(true)}
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
+              >
+                Quên mật khẩu?
+              </button>
+            </div>
           </div>
 
           <div className="login-form__submit animate-fade-in-up delay-300">
@@ -350,6 +360,12 @@ const LoginForm: React.FC = () => {
         </form>
       </div>
       <div className="login-form__accent"></div>
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        isOpen={isForgotPasswordOpen}
+        onClose={() => setIsForgotPasswordOpen(false)}
+      />
     </div>
   );
 };
