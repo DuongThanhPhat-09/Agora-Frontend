@@ -1,1 +1,1 @@
-export { default } from './TutorSchedulePage';
+export { default } from './TutorScheduleContent';
