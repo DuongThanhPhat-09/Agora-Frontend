@@ -1,59 +1,102 @@
-
+import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import TutorDetailModal from './components/TutorDetailModal';
+import {
+    mockGetPendingTutors as getPendingTutors,
+    mockGetTutorDetailForReview as getTutorDetailForReview,
+    mockApproveTutor as approveTutor,
+    mockRejectTutor as rejectTutor,
+} from './mockData';
+import type { TutorForReview, TutorDetailForReview } from '../../types/admin.types';
 import '../../styles/pages/admin-dashboard.css';
 import '../../styles/pages/admin-vetting.css';
 
 const AdminVettingPage = () => {
-    // Sample data for tutors
-    const tutors = [
-        {
-            id: 1,
-            name: "Dr. Eleanor Vance",
-            email: "e.vance@uni.edu",
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuAC-Y15tQcs2PNEQJWEqi5E0Mlac48WDdreuUzI74wnhqOeyoJTUtqw8VStAoqirwgCxjnIqkO3PMMrDsnw1iatus8xTTLSq_JvQdNtOjQ9BH06aQscXxOv7l-WGzNpwoN-Dpzk6_AR_2KW9h3CHYlExV_Cvkhe92c-v5svh8jIhIx6dRmMOPyXf5fAn_GCarcQWj_fz47JrT1ux0-v-9ehLcY-0uXOL_tv_9ZbIa5tMFbQ7TyE4mkW1a7AwkGvsyTGHm2wKTVB-sM",
-            subjects: ["Vật lý", "Toán học"],
-            submitted: "24 Th10, 2023"
-        },
-        {
-            id: 2,
-            name: "Marcus Thorne",
-            email: "m.thorne@academy.org",
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuAOvb7ii3bKUZQcZ9s44xVbMc74oWv7Q_1db0guuXCWDdFYkoXdFfJqwhA_gsWfrrbAOQLR90ytQ8D1LHDT86puG8fXFIFpT9-D-gCIAYZQBL0JluZEYfBiYyhXovvlYog874IJSM_s8Lbhfmmx6F5SqbJN6zW0GL6RFrE9AGDwNnB_K7GOiNhZSa6d4QtrOzSAQMOy1uLOZcWz6ZgUvd_5hHrq-tKvX80Ejth6uwPf8NotFvD2SRG_Np2Q-xnq56_YbyC_NERsPx8",
-            subjects: ["Văn học", "Lịch sử", "+1"],
-            submitted: "23 Th10, 2023"
-        },
-        {
-            id: 3,
-            name: "Sarah Chen",
-            email: "s.chen@tech.edu",
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBwk0R0Zjz_o4Gufvi1O6X7Zf3E1BbCj_nFR1k7pCO2KPla1aIClEaOrrV0_pT1no68Y31xqZPBKTHcdCFVa2JVvdsdP-nr5BPXptwbwy5_QzLuOeOA7iq2pKH4ckUcy7wbHT7QbOEGjNUZeaLbXhif_HSudO46Ivszij53TVkMEMFAEfakXdiejsFOqps3Mp0elqEj4bzUvpeinCTsE0kTwULektMojagsY--slMOslqAznb_tUye88Xvn7D2n6SZyYRGSxjeyzb0",
-            subjects: ["Khoa học máy tính"],
-            submitted: "23 Th10, 2023"
-        },
-        {
-            id: 4,
-            name: "James Wilson",
-            email: "j.wilson@edu.net",
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuCwJ7TscjFc03c43hzCgeGuuPH_Rt4sdu4mZZ6vqZ0DGEnOs8Xp6Qtp9GY4WwH_RqKRhK3XgpdmM33cQ3Aycpr821qHsulDD2RFBFf_l35GaryYZ-7y04Q24cF9mxGDrYRpePLNV2SDfuxW6b7HqbXQxDnzAmHmpDN1Bwij7zPWGzuJLqbMbj807b2MRRBuhAIqEahehGXwbRUJvJks5mOocNP0AMslXws-dTXsj1jfPJCNBvMrCfCmOT3ev4jswNxpeQHQPaZm_PA",
-            subjects: ["Hóa học", "Sinh học"],
-            submitted: "22 Th10, 2023"
-        },
-        {
-            id: 5,
-            name: "Priya Patel",
-            email: "p.patel@uni.ac.uk",
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuAtm14j9Yd928xqqttR5DRr1cOIew7GT18T_3CjI8oThj6ZRVlXAto-ib7Lg00X65HANzxxqEH46_Rpe-jRik7MNWgcM4yeA3WX4TrLl3LFgFkBxrhzygDsE3tahio24z0TCjRrz3UAF8AbR8b6-xQQ0hYvESKqW2QaaIWacAq7U-4otXbNVCqYWbVadUI9imCksfR4OLwnxl_knlb8Z7znXBZJ1B8QVvhjpUpovTXZtVvAZcLEuPkMzn19zw9ORI75MnVL9XijRv8",
-            subjects: ["Kinh tế học"],
-            submitted: "22 Th10, 2023"
-        },
-        {
-            id: 6,
-            name: "David Kim",
-            email: "d.kim@institute.org",
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBl1jcVWV0OZ5T2lz116J2bxcixi8a4PLisAKCy6Cahb6y8_MdMldkxzkdcs83YxWonp2YJGRS7YM6ZPf1cs2lgzpLlLUEIKE3ZN9QV1Kn1tqlmvlG42JyViR_H7p80zqOVOo8sBdgDxyNxQA45yugj-FP-oqRJi2UnULvE93VUpCDygewGp6e3iouseg0M54ndUGJnltsUq4LjLuB0G6DE-_qZHrxbdSddZjELrBl5Taq-uhBMfywUP-vvKC80qQMNs1WRNnmNUlo",
-            subjects: ["Toán học", "Thống kê"],
-            submitted: "21 Th10, 2023"
+    // State management
+    const [tutors, setTutors] = useState<TutorForReview[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [selectedTutorDetail, setSelectedTutorDetail] = useState<TutorDetailForReview | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [loadingDetail, setLoadingDetail] = useState(false);
+
+    // Fetch pending tutors on mount
+    useEffect(() => {
+        fetchPendingTutors();
+    }, []);
+
+    const fetchPendingTutors = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const data = await getPendingTutors();
+            setTutors(data);
+        } catch (err) {
+            console.error('Error fetching pending tutors:', err);
+            setError('Không thể tải danh sách gia sư. Vui lòng thử lại.');
+            setTutors([]);
+        } finally {
+            setLoading(false);
         }
-    ];
+    };
+
+    const handleViewDetail = async (tutorId: string) => {
+        try {
+            setLoadingDetail(true);
+            const detail = await getTutorDetailForReview(tutorId);
+            setSelectedTutorDetail(detail);
+            setIsModalOpen(true);
+        } catch (err) {
+            console.error('Error fetching tutor detail:', err);
+            toast.error('Không thể tải chi tiết gia sư. Vui lòng thử lại.');
+        } finally {
+            setLoadingDetail(false);
+        }
+    };
+
+    const handleApprove = async (tutorId: string) => {
+        try {
+            await approveTutor(tutorId);
+            toast.success('Phê duyệt gia sư thành công!');
+            // Refresh list
+            await fetchPendingTutors();
+        } catch (err) {
+            console.error('Error approving tutor:', err);
+            toast.error('Không thể phê duyệt gia sư. Vui lòng thử lại.');
+            throw err; // Re-throw to let modal handle it
+        }
+    };
+
+    const handleReject = async (tutorId: string, rejectionNote: string) => {
+        try {
+            await rejectTutor(tutorId, rejectionNote);
+            toast.success('Đã từ chối hồ sơ gia sư.');
+            // Refresh list
+            await fetchPendingTutors();
+        } catch (err) {
+            console.error('Error rejecting tutor:', err);
+            toast.error('Không thể từ chối hồ sơ. Vui lòng thử lại.');
+            throw err; // Re-throw to let modal handle it
+        }
+    };
+
+    const formatDate = (dateString: string): string => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+        if (diffHours < 1) {
+            return 'Vừa xong';
+        } else if (diffHours < 24) {
+            return `${diffHours} giờ trước`;
+        } else if (diffDays < 7) {
+            return `${diffDays} ngày trước`;
+        } else {
+            return date.toLocaleDateString('vi-VN');
+        }
+    };
 
     return (
         <div className="admin-vetting-page">
@@ -145,77 +188,124 @@ const AdminVettingPage = () => {
 
                         {/* Table Card */}
                         <div className="vetting-table-card">
-                            <div className="vetting-table-wrapper">
-                                <table className="vetting-table">
-                                    <thead className="vetting-table-head">
-                                        <tr>
-                                            <th className="vetting-table-th">Thông tin gia sư</th>
-                                            <th className="vetting-table-th">Môn học</th>
-                                            <th className="vetting-table-th">Đã nộp</th>
-                                            <th className="vetting-table-th">Trạng thái</th>
-                                            <th className="vetting-table-th">Hành động</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="vetting-table-body">
-                                        {tutors.map((tutor) => (
-                                            <tr key={tutor.id} className="vetting-table-row">
-                                                <td className="vetting-table-td">
-                                                    <div className="vetting-tutor-info">
-                                                        <div
-                                                            className="vetting-tutor-avatar"
-                                                            style={{ backgroundImage: `url(${tutor.avatar})` }}
-                                                        ></div>
-                                                        <div className="vetting-tutor-details">
-                                                            <div className="vetting-tutor-name">{tutor.name}</div>
-                                                            <div className="vetting-tutor-email">{tutor.email}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="vetting-table-td">
-                                                    <div className="vetting-subjects">
-                                                        {tutor.subjects.map((subject, idx) => (
-                                                            <span key={idx} className="vetting-subject-tag">
-                                                                {subject}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </td>
-                                                <td className="vetting-table-td vetting-date">
-                                                    {tutor.submitted}
-                                                </td>
-                                                <td className="vetting-table-td">
-                                                    <span className="vetting-status-badge">
-                                                        <span className="vetting-status-dot"></span>
-                                                        Chờ xem xét
-                                                    </span>
-                                                </td>
-                                                <td className="vetting-table-td">
-                                                    <button className="vetting-action-btn">
-                                                        Xem chi tiết
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                            {/* Loading State */}
+                            {loading && (
+                                <div className="vetting-loading-state">
+                                    <p>Đang tải danh sách gia sư...</p>
+                                </div>
+                            )}
 
-                            {/* Pagination */}
-                            <div className="vetting-pagination">
-                                <p className="vetting-pagination-info">Hiển thị 1-6 trong 12 yêu cầu</p>
-                                <div className="vetting-pagination-controls">
-                                    <button className="vetting-pagination-btn" disabled>
-                                        <span className="material-symbols-outlined vetting-pagination-icon">arrow_back</span>
-                                    </button>
-                                    <button className="vetting-pagination-btn">
-                                        <span className="material-symbols-outlined vetting-pagination-icon">arrow_forward</span>
+                            {/* Error State */}
+                            {error && !loading && (
+                                <div className="vetting-error-state">
+                                    <p>{error}</p>
+                                    <button className="vetting-btn vetting-btn-primary" onClick={fetchPendingTutors}>
+                                        Thử lại
                                     </button>
                                 </div>
-                            </div>
+                            )}
+
+                            {/* Empty State */}
+                            {!loading && !error && tutors.length === 0 && (
+                                <div className="vetting-empty-state">
+                                    <p>Không có gia sư nào đang chờ duyệt</p>
+                                </div>
+                            )}
+
+                            {/* Table with Data */}
+                            {!loading && !error && tutors.length > 0 && (
+                                <div className="vetting-table-wrapper">
+                                    <table className="vetting-table">
+                                        <thead className="vetting-table-head">
+                                            <tr>
+                                                <th className="vetting-table-th">Thông tin gia sư</th>
+                                                <th className="vetting-table-th">Môn học</th>
+                                                <th className="vetting-table-th">Đã nộp</th>
+                                                <th className="vetting-table-th">Trạng thái</th>
+                                                <th className="vetting-table-th">Hành động</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="vetting-table-body">
+                                            {tutors.map((tutor) => (
+                                                <tr key={tutor.tutorid} className="vetting-table-row">
+                                                    <td className="vetting-table-td">
+                                                        <div className="vetting-tutor-info">
+                                                            <div
+                                                                className="vetting-tutor-avatar"
+                                                                style={{ backgroundImage: `url(${tutor.avatarurl || 'https://via.placeholder.com/40'})` }}
+                                                            ></div>
+                                                            <div className="vetting-tutor-details">
+                                                                <div className="vetting-tutor-name">{tutor.fullname}</div>
+                                                                <div className="vetting-tutor-email">{tutor.email}</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="vetting-table-td">
+                                                        <div className="vetting-subjects">
+                                                            {tutor.subjects.map((subject, idx) => (
+                                                                <span key={idx} className="vetting-subject-tag">
+                                                                    {subject}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </td>
+                                                    <td className="vetting-table-td vetting-date">
+                                                        {formatDate(tutor.createdat)}
+                                                    </td>
+                                                    <td className="vetting-table-td">
+                                                        <span className="vetting-status-badge">
+                                                            <span className="vetting-status-dot"></span>
+                                                            Chờ xem xét
+                                                        </span>
+                                                    </td>
+                                                    <td className="vetting-table-td">
+                                                        <button
+                                                            className="vetting-action-btn"
+                                                            onClick={() => handleViewDetail(tutor.tutorid)}
+                                                            disabled={loadingDetail}
+                                                        >
+                                                            {loadingDetail ? 'Đang tải...' : 'Xem chi tiết'}
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+
+                            {/* Pagination */}
+                            {!loading && !error && tutors.length > 0 && (
+                                <div className="vetting-pagination">
+                                    <p className="vetting-pagination-info">
+                                        Hiển thị {tutors.length} trong {tutors.length} yêu cầu
+                                    </p>
+                                    <div className="vetting-pagination-controls">
+                                        <button className="vetting-pagination-btn" disabled>
+                                            <span className="material-symbols-outlined vetting-pagination-icon">arrow_back</span>
+                                        </button>
+                                        <button className="vetting-pagination-btn" disabled>
+                                            <span className="material-symbols-outlined vetting-pagination-icon">arrow_forward</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
             </main>
+
+            {/* Tutor Detail Modal */}
+            <TutorDetailModal
+                tutorDetail={selectedTutorDetail}
+                isOpen={isModalOpen}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setSelectedTutorDetail(null);
+                }}
+                onApprove={handleApprove}
+                onReject={handleReject}
+            />
         </div>
     );
 };

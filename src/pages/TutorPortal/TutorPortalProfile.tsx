@@ -1,15 +1,530 @@
 import React, { useState } from 'react';
+import { useTutorProfileForm } from './hooks/useTutorProfileForm';
+import ProfileHeroModal from './components/ProfileHeroModal';
+import PricingModal from './components/PricingModal';
+import AboutMeModal from './components/AboutMeModal';
+import CredentialModal from './components/CredentialModal';
+import type { CredentialData } from './components/CredentialModal';
+import IdentityVerificationModal from './components/IdentityVerificationModal';
+import type { IdentityVerificationData } from './components/IdentityVerificationModal';
+import IntroVideoSection from './components/IntroVideoSection';
+import ProfileCompleteness from './components/ProfileCompleteness';
 import styles from '../../styles/pages/tutor-portal-profile.module.css';
-import EditHeroModal from './components/EditHeroModal';
+
+// Icon Components
+const PlayIcon = () => (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <path d="M8.17 5.83L22.17 14L8.17 22.17V5.83Z" fill="white" />
+    </svg>
+);
+
+const StarIcon = () => (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="#fbbf24">
+        <path d="M7 0.5L8.76336 4.08316L12.6819 4.65836L9.84095 7.41684L10.5267 11.3416L7 9.475L3.47329 11.3416L4.15905 7.41684L1.31812 4.65836L5.23664 4.08316L7 0.5Z" />
+    </svg>
+);
+
+const LocationIcon = () => (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M7 7.58333C8.01252 7.58333 8.83333 6.76252 8.83333 5.75C8.83333 4.73748 8.01252 3.91667 7 3.91667C5.98748 3.91667 5.16667 4.73748 5.16667 5.75C5.16667 6.76252 5.98748 7.58333 7 7.58333Z" stroke="rgba(62, 47, 40, 0.6)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M7 12.8333C9.33333 10.5 11.6667 8.41421 11.6667 5.75C11.6667 3.17267 9.57733 1.08333 7 1.08333C4.42267 1.08333 2.33333 3.17267 2.33333 5.75C2.33333 8.41421 4.66667 10.5 7 12.8333Z" stroke="rgba(62, 47, 40, 0.6)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
+const DesktopIcon = () => (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <rect x="1.16667" y="1.75" width="11.6667" height="8.16667" rx="1.16667" stroke="rgba(62, 47, 40, 0.6)" strokeWidth="1.2" />
+        <path d="M4.08333 12.25H9.91667" stroke="rgba(62, 47, 40, 0.6)" strokeWidth="1.2" strokeLinecap="round" />
+        <path d="M7 9.91667V12.25" stroke="rgba(62, 47, 40, 0.6)" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+);
+
+const PlusIcon = () => (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+        <path d="M5 1V9M1 5H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+);
+
+const EditPencilIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M11.5 2.5L13.5 4.5M9 5L2.5 11.5V13.5H4.5L11 7M9 5L11.5 2.5L13.5 4.5L11 7M9 5L11 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
+const GraduationIcon = () => (
+    <svg width="21" height="21" viewBox="0 0 21 21" fill="none">
+        <path d="M10.5 2.625L1.75 7.875L10.5 13.125L19.25 7.875L10.5 2.625Z" stroke="#1a2238" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M15.75 10.5V15.75L10.5 18.375L5.25 15.75V10.5" stroke="#1a2238" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
+const CertificateIcon = () => (
+    <svg width="21" height="21" viewBox="0 0 21 21" fill="none">
+        <rect x="3.5" y="2.625" width="14" height="12.25" rx="1.75" stroke="#1a2238" strokeWidth="1.5" />
+        <path d="M7 7H14" stroke="#1a2238" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M7 10.5H11.375" stroke="#1a2238" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+);
+
+const TrashIcon = () => (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M1.75 3.5H12.25" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M5.25 3.5V2.33333C5.25 1.86667 5.61667 1.5 6.08333 1.5H7.91667C8.38333 1.5 8.75 1.86667 8.75 2.33333V3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M10.5 3.5V11.6667C10.5 12.1333 10.1333 12.5 9.66667 12.5H4.33333C3.86667 12.5 3.5 12.1333 3.5 11.6667V3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
+const MessageIcon = () => (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <rect x="1.16667" y="2.33333" width="11.6667" height="9.33333" rx="1.16667" stroke="currentColor" strokeWidth="1.2" />
+        <path d="M1.16667 4.08333L7 7.58333L12.8333 4.08333" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+);
+
+const CheckCircleIcon = () => (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="7" cy="7" r="5.83333" stroke="currentColor" strokeWidth="1.2" />
+        <path d="M4.66667 7L6.41667 8.75L9.33333 5.25" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
+const ShareIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M6 12L12 6M12 6H7.5M12 6V10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="2.25" y="2.25" width="13.5" height="13.5" rx="3" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+);
+
+const VerifiedIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M8 1L9.5 3L12 2.5L11.5 5L14 6.5L12 8L14 9.5L11.5 11L12 13.5L9.5 13L8 15L6.5 13L4 13.5L4.5 11L2 9.5L4 8L2 6.5L4.5 5L4 2.5L6.5 3L8 1Z" fill="#3d4a3e" />
+        <path d="M5.5 8L7 9.5L10.5 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
+// City/District label mapping
+const CITY_LABELS: Record<string, string> = {
+    'hanoi': 'Ha Noi',
+    'hcm': 'TP. Ho Chi Minh',
+    'danang': 'Da Nang',
+    'haiphong': 'Hai Phong',
+    'cantho': 'Can Tho',
+};
+
+const DISTRICT_LABELS: Record<string, Record<string, string>> = {
+    'hanoi': {
+        'ba-dinh': 'Ba Dinh',
+        'hoan-kiem': 'Hoan Kiem',
+        'dong-da': 'Dong Da',
+        'hai-ba-trung': 'Hai Ba Trung',
+        'cau-giay': 'Cau Giay',
+        'thanh-xuan': 'Thanh Xuan',
+    },
+    'hcm': {
+        'quan-1': 'Quan 1',
+        'quan-2': 'Quan 2',
+        'quan-3': 'Quan 3',
+        'quan-7': 'Quan 7',
+        'binh-thanh': 'Binh Thanh',
+        'phu-nhuan': 'Phu Nhuan',
+    },
+};
+
+const TEACHING_MODE_LABELS: Record<string, string> = {
+    'Online': 'Day Online',
+    'Offline': 'Day truc tiep',
+    'Hybrid': 'Online & Truc tiep',
+};
 
 const TutorPortalProfile: React.FC = () => {
     const [isEditMode, setIsEditMode] = useState(true);
-    const [isEditHeroModalOpen, setIsEditHeroModalOpen] = useState(false);
+
+    // Modal states
+    const [isHeroModalOpen, setIsHeroModalOpen] = useState(false);
+    const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
+    const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+    const [isCredentialModalOpen, setIsCredentialModalOpen] = useState(false);
+    const [editingCredential, setEditingCredential] = useState<CredentialData | null>(null);
+    const [isIdentityModalOpen, setIsIdentityModalOpen] = useState(false);
+
+    // Form hook
+    const {
+        formData,
+        isDirty,
+        isLoading,
+        lastSaved,
+        canPublish,
+        updateHeroSection,
+        updatePricing,
+        updateAbout,
+        updateVideoUrl,
+        addCredential,
+        removeCredential,
+        updateIdentityVerification,
+        saveDraft,
+        publishChanges
+    } = useTutorProfileForm();
+
+    // Get display location
+    const getLocationDisplay = () => {
+        const city = CITY_LABELS[formData.teachingAreaCity] || formData.teachingAreaCity;
+        const district = DISTRICT_LABELS[formData.teachingAreaCity]?.[formData.teachingAreaDistrict] || formData.teachingAreaDistrict;
+        return `${district}, ${city}`;
+    };
+
+    // Format price
+    const formatPrice = (price: number) => {
+        return new Intl.NumberFormat('vi-VN').format(price);
+    };
+
+    // Handle completeness section click
+    const handleCompletenessClick = (section: string) => {
+        switch (section) {
+            case 'basicInfo':
+                setIsHeroModalOpen(true);
+                break;
+            case 'video':
+                // Video is inline edit
+                break;
+            case 'about':
+                setIsAboutModalOpen(true);
+                break;
+            case 'credentials':
+                setEditingCredential(null);
+                setIsCredentialModalOpen(true);
+                break;
+            case 'schedule':
+                // Navigate to schedule page
+                window.location.href = '/tutor-portal/schedule';
+                break;
+            case 'identity':
+                setIsIdentityModalOpen(true);
+                break;
+        }
+    };
+
+    // Handle credential edit
+    const handleEditCredential = (credential: CredentialData) => {
+        setEditingCredential(credential);
+        setIsCredentialModalOpen(true);
+    };
+
+    // Handle save credential
+    const handleSaveCredential = (data: CredentialData) => {
+        if (editingCredential) {
+            // Update existing - for now just close
+        } else {
+            addCredential({
+                name: data.name,
+                institution: data.institution,
+                issueYear: data.issueYear,
+                type: 'certificate',
+                verificationStatus: 'pending'
+            });
+        }
+    };
 
     return (
-        <div>
-            {/* Edit Bar - Sticky Top */}
-            <div className={styles.editBarStickyTop}>
+        <div className={styles.profilePage}>
+            {/* Main Content */}
+            <div className={styles.mainContent}>
+                <div className={styles.contentWrapper}>
+                    {/* Left Column */}
+                    <div className={styles.leftColumn}>
+                        {/* Intro Video Section */}
+                        <IntroVideoSection
+                            videoUrl={formData.videoIntroUrl}
+                            onChange={updateVideoUrl}
+                            isEditMode={isEditMode}
+                        />
+
+                        {/* Hero Section Card */}
+                        <div className={styles.sectionCard}>
+                            {isEditMode && (
+                                <>
+                                    <div className={styles.sectionBadge}>Thong tin co ban</div>
+                                    <button
+                                        className={styles.editSectionBtn}
+                                        onClick={() => setIsHeroModalOpen(true)}
+                                    >
+                                        <EditPencilIcon />
+                                        <span>Chinh sua</span>
+                                    </button>
+                                </>
+                            )}
+                            <div className={styles.heroContent}>
+                                {/* Avatar */}
+                                <div className={styles.avatarContainer}>
+                                    <div className={styles.avatar}>
+                                        {formData.avatarUrl && (
+                                            <img src={formData.avatarUrl} alt={formData.fullName} />
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Info */}
+                                <div className={styles.heroInfo}>
+                                    <div className={styles.nameRow}>
+                                        <h1 className={styles.tutorName}>{formData.fullName}</h1>
+                                        <VerifiedIcon />
+                                    </div>
+
+                                    <p className={styles.headline}>{formData.headline}</p>
+
+                                    <div className={styles.metaRow}>
+                                        <div className={styles.metaItem}>
+                                            <StarIcon />
+                                            <span className={styles.metaValue}>
+                                                {formData.averageRating} ({formData.totalReviews} danh gia)
+                                            </span>
+                                        </div>
+                                        <div className={styles.metaItem}>
+                                            <LocationIcon />
+                                            <span className={styles.metaValue}>{getLocationDisplay()}</span>
+                                        </div>
+                                        <div className={styles.metaItem}>
+                                            <DesktopIcon />
+                                            <span className={styles.metaValue}>
+                                                {TEACHING_MODE_LABELS[formData.teachingMode] || formData.teachingMode}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Subject Tags */}
+                                    <div className={styles.subjectTags}>
+                                        <div className={styles.tagsRow}>
+                                            {formData.subjects.map((subject) => (
+                                                <span key={subject.subjectId} className={styles.subjectTag}>
+                                                    {subject.subjectName}
+                                                </span>
+                                            ))}
+                                            {formData.customTags.map((tag) => (
+                                                <span key={tag} className={styles.customTag}>
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* About Me Section */}
+                        <div className={styles.sectionCard}>
+                            <div className={styles.sectionHeader}>
+                                <h2 className={styles.sectionTitle}>Gioi thieu</h2>
+                                {isEditMode && (
+                                    <button
+                                        className={styles.editBtnSmall}
+                                        onClick={() => setIsAboutModalOpen(true)}
+                                    >
+                                        <EditPencilIcon />
+                                        <span>Chinh sua</span>
+                                    </button>
+                                )}
+                            </div>
+                            <div className={styles.aboutContent}>
+                                <p className={styles.bioText}>{formData.bio}</p>
+
+                                <div className={styles.aboutDetails}>
+                                    <div className={styles.detailItem}>
+                                        <span className={styles.detailLabel}>Hoc van</span>
+                                        <span className={styles.detailValue}>{formData.education}</span>
+                                    </div>
+                                    {formData.gpa && formData.gpaScale && (
+                                        <div className={styles.detailItem}>
+                                            <span className={styles.detailLabel}>GPA</span>
+                                            <span className={styles.detailValue}>
+                                                {formData.gpa}/{formData.gpaScale}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className={styles.experienceSection}>
+                                    <h3 className={styles.subTitle}>Kinh nghiem</h3>
+                                    <p className={styles.experienceText}>{formData.experience}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Academic Credentials Section */}
+                        <div className={styles.sectionCard}>
+                            <div className={styles.sectionHeader}>
+                                <h2 className={styles.sectionTitle}>Bang cap & Chung chi</h2>
+                                {isEditMode && (
+                                    <button
+                                        className={styles.addBtn}
+                                        onClick={() => {
+                                            setEditingCredential(null);
+                                            setIsCredentialModalOpen(true);
+                                        }}
+                                    >
+                                        <PlusIcon />
+                                        <span>Them moi</span>
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Credentials List */}
+                            <div className={styles.credentialsList}>
+                                {formData.credentials.map((credential) => (
+                                    <div key={credential.id} className={styles.credentialItem}>
+                                        <div className={styles.credentialIcon}>
+                                            {credential.type === 'education' ? <GraduationIcon /> : <CertificateIcon />}
+                                        </div>
+                                        <div className={styles.credentialInfo}>
+                                            <h4 className={styles.credentialTitle}>{credential.name}</h4>
+                                            <p className={styles.credentialInstitution}>{credential.institution}</p>
+                                            <div className={styles.credentialMeta}>
+                                                {credential.issueYear && (
+                                                    <span className={styles.credentialDate}>
+                                                        Nam {credential.issueYear}
+                                                    </span>
+                                                )}
+                                                <span className={`${styles.verificationBadge} ${styles[credential.verificationStatus]}`}>
+                                                    {credential.verificationStatus === 'verified' ? 'Da xac minh' :
+                                                        credential.verificationStatus === 'pending' ? 'Dang cho duyet' : 'Bi tu choi'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {isEditMode && (
+                                            <div className={styles.credentialActions}>
+                                                <button
+                                                    className={styles.editCredentialBtn}
+                                                    onClick={() => handleEditCredential(credential as any)}
+                                                >
+                                                    <EditPencilIcon />
+                                                </button>
+                                                <button
+                                                    className={styles.deleteCredentialBtn}
+                                                    onClick={() => removeCredential(credential.id)}
+                                                >
+                                                    <TrashIcon />
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Identity Verification Section */}
+                        <div className={styles.sectionCard}>
+                            <div className={styles.sectionHeader}>
+                                <h2 className={styles.sectionTitle}>Xac minh danh tinh</h2>
+                                {isEditMode && (
+                                    <button
+                                        className={styles.editBtnSmall}
+                                        onClick={() => setIsIdentityModalOpen(true)}
+                                    >
+                                        <EditPencilIcon />
+                                        <span>
+                                            {formData.identityVerification.verificationStatus === 'not_submitted'
+                                                ? 'Xac minh ngay'
+                                                : 'Xem chi tiet'}
+                                        </span>
+                                    </button>
+                                )}
+                            </div>
+                            <div className={styles.identityContent}>
+                                <div className={styles.identityStatus}>
+                                    {formData.identityVerification.verificationStatus === 'verified' && (
+                                        <div className={`${styles.identityBadge} ${styles.verified}`}>
+                                            <VerifiedIcon />
+                                            <span>Da xac minh danh tinh</span>
+                                        </div>
+                                    )}
+                                    {formData.identityVerification.verificationStatus === 'pending' && (
+                                        <div className={`${styles.identityBadge} ${styles.pending}`}>
+                                            <span>Dang cho duyet</span>
+                                        </div>
+                                    )}
+                                    {formData.identityVerification.verificationStatus === 'rejected' && (
+                                        <div className={`${styles.identityBadge} ${styles.rejected}`}>
+                                            <span>Bi tu choi - Vui long cap nhat lai</span>
+                                        </div>
+                                    )}
+                                    {formData.identityVerification.verificationStatus === 'not_submitted' && (
+                                        <div className={styles.identityNotSubmitted}>
+                                            <p>Xac minh danh tinh de tang do tin cay voi hoc sinh va phu huynh.</p>
+                                            <button
+                                                className={styles.verifyNowBtn}
+                                                onClick={() => setIsIdentityModalOpen(true)}
+                                            >
+                                                Xac minh ngay
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Column - Sidebar */}
+                    <div className={styles.rightColumn}>
+                        {/* Pricing Card */}
+                        <div className={styles.pricingCard}>
+                            {isEditMode && (
+                                <button
+                                    className={styles.editPriceBtn}
+                                    onClick={() => setIsPricingModalOpen(true)}
+                                >
+                                    <EditPencilIcon />
+                                </button>
+                            )}
+                            <div className={styles.priceRow}>
+                                <span className={styles.priceAmount}>{formatPrice(formData.hourlyRate)}</span>
+                                <span className={styles.priceUnit}>VND / gio</span>
+                            </div>
+                            {formData.trialLessonPrice && (
+                                <div className={styles.trialPrice}>
+                                    Buoi hoc thu: {formatPrice(formData.trialLessonPrice)} VND
+                                </div>
+                            )}
+                            {formData.allowNegotiation && (
+                                <div className={styles.negotiationNote}>
+                                    Co the thuong luong gia
+                                </div>
+                            )}
+
+                            <div className={styles.availabilitySection}>
+                                <span className={styles.availabilityLabel}>Lich ranh tiep theo</span>
+                                {formData.availability.slice(0, 2).map((slot, index) => (
+                                    <div key={index} className={styles.slotRow}>
+                                        <span className={styles.slotTime}>
+                                            {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][slot.dayOfWeek]}, {slot.startTime}
+                                        </span>
+                                        <button className={styles.slotSelect}>Chon</button>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <button className={styles.bookTrialBtn}>Dat buoi hoc thu</button>
+                            <button className={styles.sendMessageBtn}>
+                                <MessageIcon />
+                                <span>Gui tin nhan</span>
+                            </button>
+
+                            <div className={styles.cancellationNote}>
+                                <CheckCircleIcon />
+                                <span>Mien phi huy truoc 24h</span>
+                            </div>
+                        </div>
+
+                        {/* Profile Completeness Card */}
+                        {isEditMode && (
+                            <ProfileCompleteness
+                                profileData={formData}
+                                onSectionClick={handleCompletenessClick}
+                            />
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Edit Bar - Sticky Bottom */}
+            <div className={styles.editBar}>
                 <div className={styles.editBarLeft}>
                     {/* Preview/Edit Toggle */}
                     <div className={styles.toggleGroup}>
@@ -17,353 +532,128 @@ const TutorPortalProfile: React.FC = () => {
                             className={`${styles.toggleBtn} ${!isEditMode ? styles.active : ''}`}
                             onClick={() => setIsEditMode(false)}
                         >
-                            Preview
+                            Xem truoc
                         </button>
                         <button
                             className={`${styles.toggleBtn} ${isEditMode ? styles.active : ''}`}
                             onClick={() => setIsEditMode(true)}
                         >
-                            Edit
+                            Chinh sua
                         </button>
-                    </div>
-
-                    {/* Editing Status */}
-                    <div className={styles.editingStatus}>
-                        <span className={styles.editingDot}></span>
-                        <span className={styles.editingText}>Editing</span>
-                    </div>
-
-                    {/* Saved Status */}
-                    <div className={styles.savedStatus}>
-                        <svg className={styles.savedIcon} viewBox="0 0 10 10" fill="currentColor">
-                            <path d="M8.5 2.5L4 7L1.5 4.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        <span className={styles.savedText}>Saved just now</span>
                     </div>
                 </div>
 
                 <div className={styles.editBarRight}>
+                    {/* Saved Status */}
+                    <div className={styles.savedStatus}>
+                        {isDirty ? (
+                            <>
+                                <span className={styles.unsavedDot}></span>
+                                <span className={styles.savedText}>Chua luu</span>
+                            </>
+                        ) : lastSaved ? (
+                            <>
+                                <span className={styles.savedDot}></span>
+                                <span className={styles.savedText}>Da luu</span>
+                            </>
+                        ) : null}
+                    </div>
+
                     {/* Share Button */}
                     <button className={styles.shareBtn}>
-                        <svg className={styles.shareIcon} viewBox="0 0 15 12" fill="currentColor">
-                            <path d="M6 4L9 1L12 4M9 1V8M2 6V10C2 10.5523 2.44772 11 3 11H15C15.5523 11 16 10.5523 16 10V6" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        Share
+                        <ShareIcon />
                     </button>
 
-                    <div className={styles.verticalDivider}></div>
-
                     {/* Save Draft Button */}
-                    <button className={styles.saveDraftBtn}>Save Draft</button>
+                    <button
+                        className={styles.saveDraftBtn}
+                        onClick={saveDraft}
+                        disabled={!isDirty || isLoading}
+                    >
+                        {isLoading ? 'Dang luu...' : 'Luu nhap'}
+                    </button>
 
                     {/* Publish Button */}
-                    <button className={styles.publishBtn}>Publish Changes</button>
+                    <button
+                        className={styles.publishBtn}
+                        onClick={publishChanges}
+                        disabled={!canPublish || isLoading}
+                    >
+                        Xuat ban
+                    </button>
                 </div>
             </div>
 
-            {/* Main Content */}
-            <div className={styles.mainContent}>
-                {/* Hero Section */}
-                <div className={styles.heroSection}>
-                    <div className={styles.heroContainer}>
-                        {/* Left Column */}
-                        <div className={styles.heroLeft}>
-                            {/* Video Placeholder */}
-                            <div className={styles.videoPlaceholder}>
-                                <div className={styles.playButton}>
-                                    <svg className={styles.playIcon} viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M8 5V19L19 12L8 5Z" />
-                                    </svg>
-                                </div>
-                                <span className={styles.videoText}>Watch introduction video (2:45)</span>
-                            </div>
-
-                            {/* Tutor Info Card */}
-                            <div className={styles.tutorInfoCard}>
-                                <div className={styles.tutorAvatar}></div>
-                                <div className={styles.tutorDetails}>
-                                    {/* Edit Hero Button */}
-                                    {isEditMode && (
-                                        <button
-                                            className={styles.editHeroBtn}
-                                            onClick={() => setIsEditHeroModalOpen(true)}
-                                        >
-                                            <svg className={styles.editIcon} viewBox="0 0 12 12" fill="currentColor">
-                                                <path d="M9.586 1.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM7.379 3.793L0 11.172V14h2.828l7.38-7.379-2.83-2.828z" />
-                                            </svg>
-                                            Edit Hero Section
-                                        </button>
-                                    )}
-                                    <div className={styles.tutorNameRow}>
-                                        <h1 className={styles.tutorName}>Sarah Mitchell</h1>
-                                        <svg className={styles.verifiedBadge} viewBox="0 0 18 18" fill="#3b82f6">
-                                            <path d="M9 0L11.5 2.5L15 2L14.5 5.5L17 8L14.5 10.5L15 14L11.5 13.5L9 16L6.5 13.5L3 14L3.5 10.5L1 8L3.5 5.5L3 2L6.5 2.5L9 0Z" />
-                                            <path d="M6 9L8 11L12 7" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                    </div>
-                                    <p className={styles.tutorHeadline}>Mathematics & Physics Expert | 10+ Years Experience</p>
-
-                                    {/* Meta Info */}
-                                    <div className={styles.tutorMeta}>
-                                        <div className={styles.metaItem}>
-                                            <svg className={styles.ratingIcon} viewBox="0 0 14 14" fill="#fbbf24">
-                                                <path d="M7 0L8.5 4.5H13L9.5 7.5L10.5 12L7 9.5L3.5 12L4.5 7.5L1 4.5H5.5L7 0Z" />
-                                            </svg>
-                                            <span className={styles.ratingValue}>4.9</span>
-                                            <span className={styles.ratingCount}>(127 reviews)</span>
-                                        </div>
-                                        <div className={styles.metaItem}>
-                                            <svg className={styles.metaIcon} viewBox="0 0 12 12" fill="currentColor">
-                                                <path d="M6 0C3.24 0 1 2.24 1 5C1 8.5 6 12 6 12C6 12 11 8.5 11 5C11 2.24 8.76 0 6 0ZM6 7C4.9 7 4 6.1 4 5C4 3.9 4.9 3 6 3C7.1 3 8 3.9 8 5C8 6.1 7.1 7 6 7Z" />
-                                            </svg>
-                                            <span className={styles.metaText}>Boston, MA</span>
-                                        </div>
-                                        <div className={styles.metaItem}>
-                                            <svg className={styles.metaIcon} viewBox="0 0 14 12" fill="currentColor">
-                                                <path d="M13 4L7 8L1 4V10C1 10.5523 1.44772 11 2 11H12C12.5523 11 13 10.5523 13 10V4Z" />
-                                                <path d="M1 3L7 7L13 3V2C13 1.44772 12.5523 1 12 1H2C1.44772 1 1 1.44772 1 2V3Z" />
-                                            </svg>
-                                            <span className={styles.metaText}>Online & In-person</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Subject Tags */}
-                                    <div className={styles.subjectTags}>
-                                        <span className={styles.subjectTag}>Mathematics</span>
-                                        <span className={styles.subjectTag}>Physics</span>
-                                        <span className={styles.subjectTag}>Grade 8-12</span>
-                                        <span className={styles.subjectTag}>AP/IB</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Stats Bar */}
-                            <div className={styles.statsBar}>
-                                <div className={styles.statItem}>
-                                    <span className={styles.statLabel}>Response Time</span>
-                                    <div className={styles.statValue}>
-                                        Within 2 hours
-                                        <svg className={styles.statIcon} viewBox="0 0 8 9" fill="#22c55e">
-                                            <path d="M4 0L7 4H5V9H3V4H1L4 0Z" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div className={styles.statItem}>
-                                    <span className={styles.statLabel}>Lessons Taught</span>
-                                    <div className={styles.statValue}>
-                                        850+ sessions
-                                        <svg className={styles.statIcon} viewBox="0 0 8 9" fill="#22c55e">
-                                            <path d="M4 0L7 4H5V9H3V4H1L4 0Z" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div className={styles.statItem}>
-                                    <span className={styles.statLabel}>Success Rate</span>
-                                    <div className={styles.statValue}>
-                                        95% goals met
-                                        <svg className={styles.statIcon} viewBox="0 0 8 9" fill="#22c55e">
-                                            <path d="M4 0L7 4H5V9H3V4H1L4 0Z" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div className={styles.statItem}>
-                                    <span className={styles.statLabel}>Verified</span>
-                                    <div className={styles.statValue}>
-                                        <svg width="14" height="14" viewBox="0 0 14 14" fill="#22c55e">
-                                            <path d="M7 0L8.5 1.5H11V4L12.5 5.5L11 7V9.5H8.5L7 11L5.5 9.5H3V7L1.5 5.5L3 4V1.5H5.5L7 0Z" />
-                                            <path d="M5 5.5L6.5 7L9 4.5" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                        ID & Education
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Right Column - Sidebar */}
-                        <div className={styles.heroRight}>
-                            {/* Pricing Card */}
-                            <div className={styles.pricingCard}>
-                                <div>
-                                    <div className={styles.priceRow}>
-                                        <span className={styles.priceAmount}>$65</span>
-                                        <span className={styles.priceUnit}>/hour</span>
-                                    </div>
-                                    <p className={styles.trialPrice}>Trial lesson: $45</p>
-                                </div>
-
-                                <div className={styles.availabilitySection}>
-                                    <span className={styles.availabilityLabel}>Next Available</span>
-                                    <div className={styles.availabilitySlots}>
-                                        <div className={styles.slotRow}>
-                                            <span className={styles.slotTime}>Tomorrow, 2:00 PM</span>
-                                            <button className={styles.slotSelect}>Select</button>
-                                        </div>
-                                        <div className={styles.slotRow}>
-                                            <span className={styles.slotTime}>Tomorrow, 4:30 PM</span>
-                                            <button className={styles.slotSelect}>Select</button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <button className={styles.bookTrialBtn}>Book Trial Lesson</button>
-
-                                <button className={styles.sendMessageBtn}>
-                                    <svg className={styles.messageIcon} viewBox="0 0 12 12" fill="none" stroke="currentColor">
-                                        <path d="M1 3L6 6.5L11 3M1 9V3C1 2.44772 1.44772 2 2 2H10C10.5523 2 11 2.44772 11 3V9C11 9.55228 10.5523 10 10 10H2C1.44772 10 1 9.55228 1 9Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
-                                    Send Message
-                                </button>
-
-                                <div className={styles.cancellationNote}>
-                                    <svg className={styles.cancellationIcon} viewBox="0 0 12 12" fill="none" stroke="currentColor">
-                                        <circle cx="6" cy="6" r="5" strokeWidth="1.5" />
-                                        <path d="M6 4V6.5L7.5 8" strokeWidth="1.5" strokeLinecap="round" />
-                                    </svg>
-                                    Free cancellation up to 24h
-                                </div>
-                            </div>
-
-                            {/* Profile Completeness Card */}
-                            <div className={styles.completenessCard}>
-                                <div className={styles.completenessHeader}>
-                                    <span className={styles.completenessLabel}>Profile Completeness</span>
-                                    <span className={styles.completenessPercent}>82%</span>
-                                </div>
-
-                                <div className={styles.progressBar}>
-                                    <div className={styles.progressFill} style={{ width: '82%' }}></div>
-                                </div>
-
-                                <div className={styles.checklistItems}>
-                                    <div className={`${styles.checklistItem} ${styles.completed}`}>
-                                        <svg className={styles.checkIcon} viewBox="0 0 12 12" fill="#22c55e">
-                                            <path d="M10 3L4.5 8.5L2 6" stroke="#22c55e" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                        Basic info
-                                    </div>
-                                    <div className={`${styles.checklistItem} ${styles.completed}`}>
-                                        <svg className={styles.checkIcon} viewBox="0 0 12 12" fill="#22c55e">
-                                            <path d="M10 3L4.5 8.5L2 6" stroke="#22c55e" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                        Introduction video
-                                    </div>
-                                    <div className={`${styles.checklistItem} ${styles.incomplete}`}>
-                                        <svg className={styles.checkIcon} viewBox="0 0 12 12" fill="none" stroke="#a3a3a3">
-                                            <circle cx="6" cy="6" r="5" strokeWidth="1.5" />
-                                        </svg>
-                                        Add 2 more success stories
-                                    </div>
-                                    <div className={`${styles.checklistItem} ${styles.incomplete}`}>
-                                        <svg className={styles.checkIcon} viewBox="0 0 12 12" fill="none" stroke="#a3a3a3">
-                                            <circle cx="6" cy="6" r="5" strokeWidth="1.5" />
-                                        </svg>
-                                        Upload certificate
-                                    </div>
-                                </div>
-
-                                <button className={styles.completeProfileBtn}>Complete profile</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Content Sections */}
-                <div className={styles.contentSections}>
-                    {/* About Me Section */}
-                    <div className={styles.sectionCard}>
-                        <div className={styles.sectionHeader}>
-                            <h2 className={styles.sectionTitle}>About Me</h2>
-                        </div>
-                        <div className={styles.sectionContent}>
-                            <p>
-                                I'm a passionate educator with over 10 years of experience teaching Mathematics and Physics to high school students.
-                                I hold a Master's degree in Applied Mathematics from MIT and have helped hundreds of students achieve their academic goals.
-                            </p>
-                            <p>
-                                My teaching philosophy centers on building strong foundations and developing problem-solving skills.
-                                I believe every student can excel in STEM subjects with the right guidance and approach.
-                            </p>
-                        </div>
-                        {isEditMode && (
-                            <button className={styles.editSectionBtn}>
-                                <svg className={styles.editIcon} viewBox="0 0 12 12" fill="currentColor">
-                                    <path d="M9.586 1.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM7.379 3.793L0 11.172V14h2.828l7.38-7.379-2.83-2.828z" />
-                                </svg>
-                                Edit About
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Academic Credentials Section */}
-                    <div className={styles.sectionCard}>
-                        <div className={styles.sectionHeader}>
-                            <h2 className={styles.sectionTitle}>Academic Credentials</h2>
-                        </div>
-                        <div className={styles.credentialsList}>
-                            <div className={styles.credentialItem}>
-                                <div className={styles.credentialIcon}>🎓</div>
-                                <div className={styles.credentialDetails}>
-                                    <h4 className={styles.credentialTitle}>Master of Science in Applied Mathematics</h4>
-                                    <p className={styles.credentialInstitution}>Massachusetts Institute of Technology (MIT)</p>
-                                    <span className={styles.credentialDate}>2010 - 2012</span>
-                                </div>
-                            </div>
-                            <div className={styles.credentialItem}>
-                                <div className={styles.credentialIcon}>📜</div>
-                                <div className={styles.credentialDetails}>
-                                    <h4 className={styles.credentialTitle}>Teaching License - Massachusetts</h4>
-                                    <p className={styles.credentialInstitution}>State Board of Education</p>
-                                    <span className={styles.credentialDate}>Issued 2013</span>
-                                </div>
-                            </div>
-                        </div>
-                        {isEditMode && (
-                            <div className={styles.credentialsActions}>
-                                <button className={styles.addCredentialBtn}>
-                                    <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor">
-                                        <path d="M5 0V12M0 6H10" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-                                    </svg>
-                                    Add Credential
-                                </button>
-                                <button className={styles.editCredentialBtn}>
-                                    <svg className={styles.editIcon} viewBox="0 0 12 12" fill="currentColor">
-                                        <path d="M9.586 1.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM7.379 3.793L0 11.172V14h2.828l7.38-7.379-2.83-2.828z" />
-                                    </svg>
-                                    Edit
-                                </button>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Student Outcomes Section */}
-                    <div className={styles.sectionCard}>
-                        <div className={styles.sectionHeader}>
-                            <h2 className={styles.sectionTitle}>Student Outcomes</h2>
-                        </div>
-                        <div className={styles.outcomeCard}>
-                            <span className={styles.outcomeValue}>95%</span>
-                            <span className={styles.outcomeLabel}>Students improved by 1+ grade</span>
-                        </div>
-                        {isEditMode && (
-                            <button className={styles.editSectionBtn}>
-                                <svg className={styles.editIcon} viewBox="0 0 12 12" fill="currentColor">
-                                    <path d="M9.586 1.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM7.379 3.793L0 11.172V14h2.828l7.38-7.379-2.83-2.828z" />
-                                </svg>
-                                Edit Metrics
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* Edit Hero Modal with eKYC Verification */}
-            <EditHeroModal
-                isOpen={isEditHeroModalOpen}
-                onClose={() => setIsEditHeroModalOpen(false)}
-                onSuccess={() => {
-                    // Handle successful verification (e.g., refresh user data)
-                    console.log('Verification submitted successfully');
+            {/* Modals */}
+            <ProfileHeroModal
+                isOpen={isHeroModalOpen}
+                onClose={() => setIsHeroModalOpen(false)}
+                onSave={(data) => {
+                    updateHeroSection({
+                        avatarUrl: data.avatarFile ? URL.createObjectURL(data.avatarFile) : formData.avatarUrl,
+                        avatarFile: data.avatarFile,
+                        headline: data.headline,
+                        teachingAreaCity: data.teachingAreaCity,
+                        teachingAreaDistrict: data.teachingAreaDistrict,
+                        teachingMode: data.teachingMode as any,
+                        subjects: data.subjects,
+                        customTags: data.customTags
+                    });
                 }}
+                initialData={{
+                    avatarUrl: formData.avatarUrl,
+                    avatarFile: formData.avatarFile,
+                    headline: formData.headline,
+                    teachingAreaCity: formData.teachingAreaCity,
+                    teachingAreaDistrict: formData.teachingAreaDistrict,
+                    teachingMode: formData.teachingMode,
+                    subjects: formData.subjects,
+                    customTags: formData.customTags
+                }}
+            />
+
+            <PricingModal
+                isOpen={isPricingModalOpen}
+                onClose={() => setIsPricingModalOpen(false)}
+                onSave={updatePricing}
+                initialData={{
+                    hourlyRate: formData.hourlyRate,
+                    trialLessonPrice: formData.trialLessonPrice,
+                    allowNegotiation: formData.allowNegotiation
+                }}
+            />
+
+            <AboutMeModal
+                isOpen={isAboutModalOpen}
+                onClose={() => setIsAboutModalOpen(false)}
+                onSave={updateAbout}
+                initialData={{
+                    bio: formData.bio,
+                    education: formData.education,
+                    gpaScale: formData.gpaScale,
+                    gpa: formData.gpa,
+                    experience: formData.experience
+                }}
+            />
+
+            <CredentialModal
+                isOpen={isCredentialModalOpen}
+                onClose={() => {
+                    setIsCredentialModalOpen(false);
+                    setEditingCredential(null);
+                }}
+                onSave={handleSaveCredential}
+                initialData={editingCredential || undefined}
+                isEditing={!!editingCredential}
+            />
+
+            <IdentityVerificationModal
+                isOpen={isIdentityModalOpen}
+                onClose={() => setIsIdentityModalOpen(false)}
+                onSave={(data) => {
+                    updateIdentityVerification(data);
+                }}
+                initialData={formData.identityVerification}
             />
         </div>
     );

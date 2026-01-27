@@ -2,68 +2,98 @@ import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import '../styles/layouts/tutor-portal-layout.css';
 
-// Back Arrow Icon
-const BackIcon = () => (
-    <svg className="tutor-portal-header-back-icon" viewBox="0 0 25 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M19 10H5M5 10L12 17M5 10L12 3" />
+// Logo Icon (Agora symbol)
+const LogoIcon = () => (
+    <svg className="tutor-portal-logo-icon" width="28" height="28" viewBox="0 0 28 28" fill="currentColor">
+        <path d="M14 2L2 8V20L14 26L26 20V8L14 2ZM14 4.5L22.5 9V19L14 23.5L5.5 19V9L14 4.5Z" />
+        <path d="M14 8L8 11V17L14 20L20 17V11L14 8Z" />
+    </svg>
+);
+
+// Search Icon
+const SearchIcon = () => (
+    <svg className="tutor-portal-search-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <circle cx="6" cy="6" r="4.5" />
+        <path d="M9.5 9.5L13 13" strokeLinecap="round" />
     </svg>
 );
 
 // Notification Bell Icon
 const NotificationIcon = () => (
-    <svg className="tutor-portal-notification-icon" viewBox="0 0 16 21" fill="currentColor">
-        <path d="M8 0C4.68629 0 2 2.68629 2 6V11L0 14V15H16V14L14 11V6C14 2.68629 11.3137 0 8 0Z" />
-        <path d="M8 21C9.65685 21 11 19.6569 11 18H5C5 19.6569 6.34315 21 8 21Z" />
+    <svg className="tutor-portal-notification-icon" viewBox="0 0 18 20" fill="currentColor">
+        <path d="M9 0C5.68629 0 3 2.68629 3 6V11L1 14V15H17V14L15 11V6C15 2.68629 12.3137 0 9 0Z" />
+        <path d="M9 20C10.6569 20 12 18.6569 12 17H6C6 18.6569 7.34315 20 9 20Z" />
     </svg>
 );
 
-// Icons as SVG components for cleaner code
+// Icons as SVG components for cleaner code - Updated to 17.5px to match Figma
 const DashboardIcon = () => (
-    <svg className="tutor-portal-nav-icon" width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-        <path d="M2 3C2 2.44772 2.44772 2 3 2H5C5.55228 2 6 2.44772 6 3V5C6 5.55228 5.55228 6 5 6H3C2.44772 6 2 5.55228 2 5V3Z" />
-        <path d="M2 9C2 8.44772 2.44772 8 3 8H5C5.55228 8 6 8.44772 6 9V11C6 11.5523 5.55228 12 5 12H3C2.44772 12 2 11.5523 2 11V9Z" />
-        <path d="M8 3C8 2.44772 8.44772 2 9 2H11C11.5523 2 12 2.44772 12 3V5C12 5.55228 11.5523 6 11 6H9C8.44772 6 8 5.55228 8 5V3Z" />
-        <path d="M9 8C8.44772 8 8 8.44772 8 9V11C8 11.5523 8.44772 12 9 12H11C11.5523 12 12 11.5523 12 11V9C12 8.44772 11.5523 8 11 8H9Z" />
+    <svg className="tutor-portal-nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
+        <path d="M2 4C2 2.89543 2.89543 2 4 2H7C7.55228 2 8 2.44772 8 3V7C8 7.55228 7.55228 8 7 8H4C2.89543 8 2 7.10457 2 6V4Z" />
+        <path d="M2 12C2 10.8954 2.89543 10 4 10H7C7.55228 10 8 10.4477 8 11V15C8 15.5523 7.55228 16 7 16H4C2.89543 16 2 15.1046 2 14V12Z" />
+        <path d="M10 3C10 2.44772 10.4477 2 11 2H14C15.1046 2 16 2.89543 16 4V6C16 7.10457 15.1046 8 14 8H11C10.4477 8 10 7.55228 10 7V3Z" />
+        <path d="M10 11C10 10.4477 10.4477 10 11 10H14C15.1046 10 16 10.8954 16 12V14C16 15.1046 15.1046 16 14 16H11C10.4477 16 10 15.5523 10 15V11Z" />
     </svg>
 );
 
 const ProfileIcon = () => (
-    <svg className="tutor-portal-nav-icon" width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-        <path d="M7 6C8.10457 6 9 5.10457 9 4C9 2.89543 8.10457 2 7 2C5.89543 2 5 2.89543 5 4C5 5.10457 5.89543 6 7 6Z" />
-        <path d="M2 12C2 9.79086 4.23858 8 7 8C9.76142 8 12 9.79086 12 12H2Z" />
+    <svg className="tutor-portal-nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
+        <path d="M9 8C10.6569 8 12 6.65685 12 5C12 3.34315 10.6569 2 9 2C7.34315 2 6 3.34315 6 5C6 6.65685 7.34315 8 9 8Z" />
+        <path d="M2 16C2 12.6863 5.13401 10 9 10C12.866 10 16 12.6863 16 16H2Z" />
     </svg>
 );
 
 const ScheduleIcon = () => (
-    <svg className="tutor-portal-nav-icon" width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-        <path d="M4 1C3.44772 1 3 1.44772 3 2V2.5H2.5C1.67157 2.5 1 3.17157 1 4V11.5C1 12.3284 1.67157 13 2.5 13H11.5C12.3284 13 13 12.3284 13 11.5V4C13 3.17157 12.3284 2.5 11.5 2.5H11V2C11 1.44772 10.5523 1 10 1C9.44772 1 9 1.44772 9 2V2.5H5V2C5 1.44772 4.55228 1 4 1Z" />
+    <svg className="tutor-portal-nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
+        <path d="M5 1C4.44772 1 4 1.44772 4 2V3H3C1.89543 3 1 3.89543 1 5V15C1 16.1046 1.89543 17 3 17H15C16.1046 17 17 16.1046 17 15V5C17 3.89543 16.1046 3 15 3H14V2C14 1.44772 13.5523 1 13 1C12.4477 1 12 1.44772 12 2V3H6V2C6 1.44772 5.55228 1 5 1ZM3 7H15V15H3V7Z" />
     </svg>
 );
 
 const ClassIcon = () => (
-    <svg className="tutor-portal-nav-icon" width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-        <path d="M7 2L1 5L7 8L13 5L7 2Z" />
-        <path d="M1 9L7 12L13 9" stroke="currentColor" strokeWidth="1.5" fill="none" />
+    <svg className="tutor-portal-nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
+        <path d="M9 2L1 6L9 10L17 6L9 2Z" />
+        <path d="M1 12L9 16L17 12" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
     </svg>
 );
 
 const SessionsIcon = () => (
-    <svg className="tutor-portal-nav-icon" width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-        <path d="M7 1C3.68629 1 1 3.68629 1 7C1 10.3137 3.68629 13 7 13C10.3137 13 13 10.3137 13 7C13 3.68629 10.3137 1 7 1ZM7 4V7L9 9" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+    <svg className="tutor-portal-nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="9" cy="9" r="7" />
+        <path d="M9 5V9L12 11" strokeLinecap="round" />
     </svg>
 );
 
 const FinanceIcon = () => (
-    <svg className="tutor-portal-nav-icon" width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-        <path d="M2 3C2 2.44772 2.44772 2 3 2H11C11.5523 2 12 2.44772 12 3V11C12 11.5523 11.5523 12 11 12H3C2.44772 12 2 11.5523 2 11V3Z" />
-        <path d="M7 4V10M5 6H9M5 8H9" stroke="white" strokeWidth="1" strokeLinecap="round" />
+    <svg className="tutor-portal-nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
+        <path d="M2 4C2 2.89543 2.89543 2 4 2H14C15.1046 2 16 2.89543 16 4V14C16 15.1046 15.1046 16 14 16H4C2.89543 16 2 15.1046 2 14V4Z" />
+        <path d="M9 5V13M6 8H12M6 10H12" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
 );
 
 const SettingsIcon = () => (
-    <svg className="tutor-portal-nav-icon" width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-        <path d="M7 9C8.10457 9 9 8.10457 9 7C9 5.89543 8.10457 5 7 5C5.89543 5 5 5.89543 5 7C5 8.10457 5.89543 9 7 9Z" />
-        <path d="M11.4 8.4L12.6 8.8C12.8 9 13 9.2 13 9.6V10.4C13 10.8 12.8 11 12.6 11.2L11.4 11.6C11.2 12 11 12.4 10.8 12.6L11 13.8C11 14 10.8 14.2 10.6 14.4L9.8 14.8C9.6 14.8 9.4 14.8 9.2 14.6L8.2 13.6C8 13.6 7.6 13.6 7.4 13.6C7 13.6 6.6 13.6 6.4 13.6L5.4 14.6C5.2 14.8 5 14.8 4.8 14.8L4 14.4C3.8 14.2 3.6 14 3.6 13.8L3.8 12.6C3.6 12.4 3.4 12 3.2 11.6L2 11.2C1.8 11 1.6 10.8 1.6 10.4V9.6C1.6 9.2 1.8 9 2 8.8L3.2 8.4C3.4 8 3.6 7.6 3.8 7.4L3.6 6.2C3.6 6 3.8 5.8 4 5.6L4.8 5.2C5 5.2 5.2 5.2 5.4 5.4L6.4 6.4C6.6 6.4 7 6.4 7.2 6.4C7.6 6.4 8 6.4 8.2 6.4L9.2 5.4C9.4 5.2 9.6 5.2 9.8 5.2L10.6 5.6C10.8 5.8 11 6 11 6.2L10.8 7.4C11 7.6 11.2 8 11.4 8.4Z" />
+    <svg className="tutor-portal-nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <circle cx="9" cy="9" r="2.5" />
+        <path d="M9 1V3M9 15V17M1 9H3M15 9H17M3.05 3.05L4.46 4.46M13.54 13.54L14.95 14.95M3.05 14.95L4.46 13.54M13.54 4.46L14.95 3.05" strokeLinecap="round" />
+    </svg>
+);
+
+const MessagesIcon = () => (
+    <svg className="tutor-portal-nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="M1 4L9 9L17 4M1 14V4C1 2.89543 1.89543 2 3 2H15C16.1046 2 17 2.89543 17 4V14C17 15.1046 16.1046 16 15 16H3C1.89543 16 1 15.1046 1 14Z" strokeLinecap="round" />
+    </svg>
+);
+
+// Hamburger Menu Icon for mobile
+const MenuIcon = () => (
+    <svg className="tutor-portal-menu-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M3 5H17M3 10H17M3 15H17" strokeLinecap="round" />
+    </svg>
+);
+
+// Close Icon for mobile sidebar
+const CloseIcon = () => (
+    <svg className="tutor-portal-close-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M5 5L15 15M15 5L5 15" strokeLinecap="round" />
     </svg>
 );
 
@@ -71,6 +101,7 @@ const SettingsIcon = () => (
 const navItems = [
     { path: '/tutor-portal/dashboard', label: 'Dashboard', icon: DashboardIcon },
     { path: '/tutor-portal/profile', label: 'Public Profile', icon: ProfileIcon },
+    { path: '/tutor-portal/messages', label: 'Messages', icon: MessagesIcon },
     { path: '/tutor-portal/schedule', label: 'Teaching Schedule', icon: ScheduleIcon },
     { path: '/tutor-portal/classes', label: 'Class Management', icon: ClassIcon },
     { path: '/tutor-portal/sessions', label: 'Sessions', icon: SessionsIcon },
@@ -82,28 +113,73 @@ const TutorPortalLayout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [notificationCount] = useState(3);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const isActive = (path: string) => location.pathname === path;
 
-    // Placeholder avatar - replace with actual user data
-    const userAvatar = 'https://ui-avatars.com/api/?name=Sarah+Mitchell&background=e5e5e5&color=000&size=128';
+    // Placeholder user data - replace with actual user data
+    const userData = {
+        name: 'Sarah Mitchell',
+        initials: 'SM',
+        role: 'TUTOR',
+        avatar: 'https://ui-avatars.com/api/?name=Sarah+Mitchell&background=3d4a3e&color=f2f0e4&size=128'
+    };
 
     return (
         <div className="tutor-portal-layout">
+            {/* Mobile Sidebar Overlay */}
+            {sidebarOpen && (
+                <div
+                    className="tutor-portal-sidebar-overlay"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
-            <aside className="tutor-portal-sidebar">
+            <aside className={`tutor-portal-sidebar ${sidebarOpen ? 'open' : ''}`}>
+                {/* Logo Section */}
+                <div className="tutor-portal-sidebar-logo">
+                    <LogoIcon />
+                    <span className="tutor-portal-logo-text">AGORA</span>
+                    {/* Mobile Close Button */}
+                    <button
+                        className="tutor-portal-sidebar-close"
+                        onClick={() => setSidebarOpen(false)}
+                    >
+                        <CloseIcon />
+                    </button>
+                </div>
+
+                {/* Navigation */}
                 <nav className="tutor-portal-sidebar-nav">
                     {navItems.map((item) => (
                         <div
                             key={item.path}
                             className={`tutor-portal-nav-item ${isActive(item.path) ? 'active' : ''}`}
-                            onClick={() => navigate(item.path)}
+                            onClick={() => {
+                                navigate(item.path);
+                                setSidebarOpen(false);
+                            }}
                         >
                             <item.icon />
                             <span className="tutor-portal-nav-text">{item.label}</span>
                         </div>
                     ))}
                 </nav>
+
+                {/* User Profile Card at Bottom */}
+                <div className="tutor-portal-sidebar-user">
+                    <div className="tutor-portal-user-card">
+                        <div className="tutor-portal-user-avatar">
+                            <span className="tutor-portal-user-initials">{userData.initials}</span>
+                        </div>
+                        <div className="tutor-portal-user-info">
+                            <span className="tutor-portal-user-name">{userData.name}</span>
+                            <span className="tutor-portal-user-role">{userData.role}</span>
+                        </div>
+                    </div>
+                </div>
             </aside>
 
             {/* Main Content */}
@@ -111,16 +187,29 @@ const TutorPortalLayout: React.FC = () => {
                 {/* Header */}
                 <header className="tutor-portal-header">
                     <div className="tutor-portal-header-container">
-                        {/* Left: Back + Title */}
-                        <div className="tutor-portal-header-left">
-                            <div onClick={() => navigate(-1)}>
-                                <BackIcon />
-                            </div>
-                            <h1 className="tutor-portal-header-title">Tutor Portal</h1>
+                        {/* Mobile Menu Button */}
+                        <button
+                            className="tutor-portal-menu-btn"
+                            onClick={() => setSidebarOpen(true)}
+                        >
+                            <MenuIcon />
+                        </button>
+
+                        {/* Search Bar */}
+                        <div className="tutor-portal-header-search">
+                            <SearchIcon />
+                            <input
+                                type="text"
+                                className="tutor-portal-search-input"
+                                placeholder="Search classes, students..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
                         </div>
 
-                        {/* Right: Notifications + Avatar */}
+                        {/* Right: User Info + Notifications + Avatar */}
                         <div className="tutor-portal-header-right">
+                            {/* Notification Button */}
                             <button className="tutor-portal-notification-btn">
                                 <NotificationIcon />
                                 {notificationCount > 0 && (
@@ -129,11 +218,19 @@ const TutorPortalLayout: React.FC = () => {
                                     </div>
                                 )}
                             </button>
-                            <img
-                                className="tutor-portal-header-avatar"
-                                src={userAvatar}
-                                alt="User avatar"
-                            />
+
+                            {/* User Info */}
+                            <div className="tutor-portal-header-user">
+                                <div className="tutor-portal-header-user-info">
+                                    <span className="tutor-portal-header-user-name">{userData.name}</span>
+                                    <span className="tutor-portal-header-user-role">{userData.role}</span>
+                                </div>
+                                <img
+                                    className="tutor-portal-header-avatar"
+                                    src={userData.avatar}
+                                    alt="User avatar"
+                                />
+                            </div>
                         </div>
                     </div>
                 </header>

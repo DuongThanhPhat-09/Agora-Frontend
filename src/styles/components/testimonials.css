@@ -208,3 +208,24 @@
         line-height: 24px;
     }
 }
+
+/* ===== LARGE SCREEN ENHANCEMENTS ===== */
+@media (min-width: 1920px) {
+    .testimonials-container {
+        max-width: 1600px;
+    }
+
+    .testimonials-header {
+        gap: 400px;
+    }
+}
+
+@media (min-width: 2560px) {
+    .testimonials-container {
+        max-width: 1900px;
+    }
+
+    .testimonials-header {
+        gap: 500px;
+    }
+}
