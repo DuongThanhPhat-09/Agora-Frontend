@@ -3,6 +3,7 @@ import HomePage from "./pages/Home/HomePage";
 import TutorSearchPage from "./pages/TutorSearch/TutorSearchPage";
 import LoginPage from "./pages/Login/LoginPage";
 import RegisterPage from "./pages/Register/RegisterPage";
+import ResetPasswordPage from "./pages/Login/ResetPasswordPage";
 import { TutorDetailPage } from "./pages/TutorDetail";
 import TutorLayout from "./layouts/TutorLayout";
 import TutorDashboard from "./pages/TutorWorkspace/TutorDashboard";
@@ -113,6 +114,7 @@ function App() {
 
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         {/* Error Pages */}
         <Route path="/401" element={<UnauthorizedPage />} />
