@@ -16,7 +16,7 @@ import { AdminDashboardPage } from "./pages/AdminDashboard";
 import { UserManagementPage } from "./pages/AdminUserManagement";
 import { AdminVettingPage } from "./pages/AdminVetting";
 import { AdminDisputesPage } from "./pages/AdminDisputes";
-import AdminDisputeDetailPage from "./pages/AdminDisputes/AdminDisputeDetailPage";
+import AdminDisputeDetailPageExpanded from "./pages/AdminDisputes/AdminDisputeDetailPageExpanded";
 import { AdminFinancialsPage } from "./pages/AdminFinancials";
 import { AdminSettingsPage } from "./pages/AdminSettings";
 import AdminLayout from "./layouts/AdminLayout";
@@ -91,7 +91,7 @@ function App() {
           <Route path="users" element={<UserManagementPage />} />
           <Route path="vetting" element={<AdminVettingPage />} />
           <Route path="disputes" element={<AdminDisputesPage />} />
-          <Route path="disputes/:id" element={<AdminDisputeDetailPage />} />
+          <Route path="disputes/:disputeId" element={<AdminDisputeDetailPageExpanded />} />
           <Route path="financials" element={<AdminFinancialsPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
