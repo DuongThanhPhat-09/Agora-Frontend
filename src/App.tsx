@@ -48,14 +48,6 @@ function App() {
         <Route path="/tutor-detail" element={<TutorDetailPage />} />
         <Route path="/tutor-detail/:id" element={<TutorDetailPage />} />
 
-        {/* Redirect old tutor URLs to new structure */}
-        <Route path="/tutor-workspace" element={<Navigate to="/tutor/workspace" replace />} />
-        <Route path="/tutor-schedule" element={<Navigate to="/tutor/schedule" replace />} />
-        <Route path="/tutor-classes" element={<Navigate to="/tutor/classes" replace />} />
-        <Route path="/tutor-messages" element={<Navigate to="/tutor/messages" replace />} />
-        <Route path="/tutor-wallet" element={<Navigate to="/tutor/wallet" replace />} />
-        <Route path="/tutor-profile" element={<Navigate to="/tutor/profile" replace />} />
-
         {/* Tutor Layout with nested routes - PROTECTED */}
         <Route
           path="/tutor"
