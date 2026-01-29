@@ -5,6 +5,12 @@
     box-sizing: border-box;
 }
 
+html {
+    /* Fluid font-size scaling for large screens */
+    /* 16px at 1024px viewport -> 20px at 2560px viewport -> 24px at 3840px (4K) */
+    font-size: clamp(100%, 87.5% + 0.25vw, 150%);
+}
+
 body {
     font-family: var(--font-primary);
     background-color: var(--color-cream);
@@ -12,6 +18,37 @@ body {
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== LARGE SCREEN SCALING ===== */
+/*
+ * Use CSS zoom for proportional scaling on large screens.
+ * This scales everything (fonts, spacing, borders) proportionally.
+ * Works in Chrome, Edge, Safari. Firefox uses font-size fallback.
+ */
+
+/* Scale up for 1920px+ screens (Full HD+) */
+@media (min-width: 1920px) {
+    html {
+        zoom: 1.1; /* 110% scale */
+        font-size: 110%; /* Fallback for Firefox */
+    }
+}
+
+/* Scale up for 2560px+ screens (2K/QHD) */
+@media (min-width: 2560px) {
+    html {
+        zoom: 1.25; /* 125% scale */
+        font-size: 125%; /* Fallback for Firefox */
+    }
+}
+
+/* Scale up for 3840px+ screens (4K/UHD) */
+@media (min-width: 3840px) {
+    html {
+        zoom: 1.5; /* 150% scale */
+        font-size: 150%; /* Fallback for Firefox */
+    }
 }
 
 img {

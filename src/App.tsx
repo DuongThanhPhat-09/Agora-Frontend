@@ -3,6 +3,7 @@ import HomePage from "./pages/Home/HomePage";
 import TutorSearchPage from "./pages/TutorSearch/TutorSearchPage";
 import LoginPage from "./pages/Login/LoginPage";
 import RegisterPage from "./pages/Register/RegisterPage";
+import ResetPasswordPage from "./pages/Login/ResetPasswordPage";
 import { TutorDetailPage } from "./pages/TutorDetail";
 import TutorLayout from "./layouts/TutorLayout";
 import TutorDashboard from "./pages/TutorWorkspace/TutorDashboard";
@@ -19,6 +20,8 @@ import AdminDisputeDetailPage from "./pages/AdminDisputes/AdminDisputeDetailPage
 import { AdminFinancialsPage } from "./pages/AdminFinancials";
 import { AdminSettingsPage } from "./pages/AdminSettings";
 import AdminLayout from "./layouts/AdminLayout";
+import TutorPortalLayout from "./layouts/TutorPortalLayout";
+import { TutorPortalProfile, TutorPortalDashboard, TutorPortalSchedule, TutorPortalMessages, TutorPortalClasses, TutorPortalClassDetail, TutorPortalStudentProfile } from "./pages/TutorPortal";
 import NotFoundPage from "./pages/Error/NotFoundPage";
 import UnauthorizedPage from "./pages/Error/UnauthorizedPage";
 import ForbiddenPage from "./pages/Error/ForbiddenPage";
@@ -93,8 +96,25 @@ function App() {
           <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
 
+        {/* Tutor Portal - New Layout based on Figma */}
+        <Route
+          path="/tutor-portal"
+          element={<TutorPortalLayout />}
+        >
+          <Route index element={<Navigate to="/tutor-portal/dashboard" replace />} />
+          <Route path="dashboard" element={<TutorPortalDashboard />} />
+          <Route path="profile" element={<TutorPortalProfile />} />
+          <Route path="schedule" element={<TutorPortalSchedule />} />
+          <Route path="messages" element={<TutorPortalMessages />} />
+          <Route path="classes" element={<TutorPortalClasses />} />
+          <Route path="classes/:classId" element={<TutorPortalClassDetail />} />
+          <Route path="students/:studentId" element={<TutorPortalStudentProfile />} />
+          {/* Future routes: sessions, finance, settings */}
+        </Route>
+
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         {/* Error Pages */}
         <Route path="/401" element={<UnauthorizedPage />} />

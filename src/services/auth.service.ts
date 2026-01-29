@@ -228,3 +228,45 @@ export const parseEKYCData = (ekycRawData: string | null) => {
     return null;
   }
 };
+
+// --- PASSWORD MANAGEMENT ---
+
+/**
+ * Sync password with backend after Supabase password reset
+ */
+export const syncPassword = async (supabaseToken: string, newPassword: string) => {
+  try {
+    console.log("🔄 Syncing password with backend...");
+    const response = await api.put("/passwords/sync", {
+      supabaseToken,
+      newPassword
+    });
+    console.log("✅ Password synced successfully");
+    return response.data;
+  } catch (error) {
+    console.error("❌ Password sync error:", error);
+    throw error;
+  }
+};
+
+/**
+ * Change password (requires old password)
+ */
+export const changePassword = async (oldPassword: string, newPassword: string) => {
+  try {
+    console.log("🔄 Changing password...");
+    const user = getCurrentUser();
+    const response = await api.put("/passwords/change", {
+      oldPassword,
+      newPassword
+    }, {
+      headers: { Authorization: `Bearer ${user?.accessToken}` }
+    });
+    console.log("✅ Password changed successfully");
+    return response.data;
+  } catch (error) {
+    console.error("❌ Password change error:", error);
+    throw error;
+  }
+};
+

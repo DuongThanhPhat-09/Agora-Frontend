@@ -1,0 +1,456 @@
+/* ===== TUTOR PORTAL LAYOUT ===== */
+/* Figma Design System - Dark Navy Sidebar with Cream Accents */
+
+/* Main Layout */
+.tutor-portal-layout {
+    width: 100%;
+    min-height: 100vh;
+    position: relative;
+    display: flex;
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    color: #1a2238;
+    background-color: #f2f0e4;
+}
+
+/* ===== SIDEBAR ===== */
+.tutor-portal-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 224px;
+    height: 100vh;
+    background-color: #1a2238;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* Sidebar Logo */
+.tutor-portal-sidebar-logo {
+    display: flex;
+    align-items: center;
+    padding: 28px;
+    gap: 10.5px;
+}
+
+.tutor-portal-logo-icon {
+    width: 28px;
+    height: 28px;
+    color: #f2f0e4;
+}
+
+.tutor-portal-logo-text {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 28px;
+    letter-spacing: -0.52px;
+    color: #f2f0e4;
+}
+
+/* Sidebar Navigation */
+.tutor-portal-sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    padding: 14px;
+    gap: 3.5px;
+    flex: 1;
+}
+
+.tutor-portal-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10.5px;
+    padding: 10.5px 14px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: rgba(242, 240, 228, 0.7);
+    font-size: 14px;
+    line-height: 21px;
+    font-weight: 500;
+    font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.tutor-portal-nav-item:hover {
+    background-color: rgba(242, 240, 228, 0.1);
+    color: rgba(242, 240, 228, 0.9);
+}
+
+.tutor-portal-nav-item.active {
+    background-color: #f2f0e4;
+    color: #1a2238;
+}
+
+.tutor-portal-nav-icon {
+    width: 17.5px;
+    height: 17.5px;
+    flex-shrink: 0;
+}
+
+.tutor-portal-nav-text {
+    flex: 1;
+}
+
+/* Sidebar User Profile */
+.tutor-portal-sidebar-user {
+    border-top: 1.2px solid rgba(255, 255, 255, 0.1);
+    padding: 21px;
+}
+
+.tutor-portal-user-card {
+    display: flex;
+    align-items: center;
+    gap: 10.5px;
+    padding: 10.5px;
+    border-radius: 10.5px;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.tutor-portal-user-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 9999px;
+    background-color: #3d4a3e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.tutor-portal-user-initials {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 14px;
+    line-height: 21px;
+    font-weight: 700;
+    color: #f2f0e4;
+}
+
+.tutor-portal-user-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.tutor-portal-user-name {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12.3px;
+    line-height: 17.5px;
+    font-weight: 700;
+    color: #f2f0e4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tutor-portal-user-role {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 10.5px;
+    line-height: 14px;
+    color: rgba(242, 240, 228, 0.5);
+}
+
+/* ===== HEADER ===== */
+.tutor-portal-header {
+    width: 100%;
+    height: 56px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background-color: rgba(255, 255, 255, 0.5);
+    border-bottom: 1.2px solid rgba(62, 47, 40, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    box-sizing: border-box;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.tutor-portal-header-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+/* Header Search */
+.tutor-portal-header-search {
+    flex: 1;
+    max-width: 400px;
+    position: relative;
+}
+
+.tutor-portal-search-input {
+    width: 100%;
+    padding: 7px 14px 8.9px 35px;
+    border-radius: 9999px;
+    background-color: #f2f0e4;
+    border: none;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12.3px;
+    line-height: 17.5px;
+    color: #1a2238;
+    outline: none;
+}
+
+.tutor-portal-search-input::placeholder {
+    color: #9ca3af;
+}
+
+.tutor-portal-search-icon {
+    position: absolute;
+    left: 10.5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    color: #9ca3af;
+    pointer-events: none;
+}
+
+/* Header Right Section */
+.tutor-portal-header-right {
+    display: flex;
+    align-items: center;
+    gap: 21px;
+}
+
+/* Header User Info */
+.tutor-portal-header-user {
+    display: flex;
+    align-items: center;
+    gap: 10.5px;
+}
+
+.tutor-portal-header-user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.tutor-portal-header-user-name {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12.3px;
+    line-height: 12.25px;
+    font-weight: 700;
+    color: #1a2238;
+}
+
+.tutor-portal-header-user-role {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 10px;
+    line-height: 15px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #3e2f28;
+    opacity: 0.6;
+}
+
+.tutor-portal-header-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 9999px;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+/* Notification Button */
+.tutor-portal-notification-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px;
+    border-radius: 9999px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.tutor-portal-notification-btn:hover {
+    background-color: rgba(62, 47, 40, 0.05);
+}
+
+.tutor-portal-notification-icon {
+    width: 17.5px;
+    height: 17.5px;
+    color: #1a2238;
+}
+
+.tutor-portal-notification-badge {
+    position: absolute;
+    top: 4.25px;
+    right: 5.25px;
+    min-width: 14px;
+    height: 15px;
+    padding: 0 2px;
+    border-radius: 9999px;
+    background-color: #631b1b;
+    border: 1px solid #f2f0e4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tutor-portal-notification-count {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 10px;
+    line-height: 15px;
+    font-weight: 700;
+    color: #fff;
+}
+
+/* ===== MAIN CONTENT AREA ===== */
+.tutor-portal-main {
+    margin-left: 224px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f2f0e4;
+}
+
+/* ===== MOBILE MENU ===== */
+.tutor-portal-menu-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #1a2238;
+    transition: background-color 0.2s ease;
+}
+
+.tutor-portal-menu-btn:hover {
+    background-color: rgba(26, 34, 56, 0.05);
+}
+
+.tutor-portal-menu-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.tutor-portal-sidebar-close {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    margin-left: auto;
+    border-radius: 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #f2f0e4;
+    transition: background-color 0.2s ease;
+}
+
+.tutor-portal-sidebar-close:hover {
+    background-color: rgba(242, 240, 228, 0.1);
+}
+
+.tutor-portal-close-icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* Sidebar Overlay for Mobile */
+.tutor-portal-sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(26, 34, 56, 0.5);
+    z-index: 99;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+    .tutor-portal-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+    .tutor-portal-sidebar.open {
+        transform: translateX(0);
+    }
+
+    .tutor-portal-main {
+        margin-left: 0;
+    }
+
+    .tutor-portal-header-search {
+        max-width: 300px;
+    }
+
+    .tutor-portal-menu-btn {
+        display: flex;
+    }
+
+    .tutor-portal-sidebar-close {
+        display: flex;
+    }
+
+    .tutor-portal-sidebar-overlay {
+        display: block;
+    }
+}
+
+@media (max-width: 768px) {
+    .tutor-portal-header {
+        padding: 0 16px;
+    }
+
+    .tutor-portal-header-search {
+        display: none;
+    }
+
+    .tutor-portal-header-user-info {
+        display: none;
+    }
+}
+
+/* ===== LARGE SCREEN ENHANCEMENTS ===== */
+@media (min-width: 1920px) {
+    .tutor-portal-sidebar {
+        width: 280px;
+    }
+
+    .tutor-portal-main {
+        margin-left: 280px;
+    }
+
+    .tutor-portal-header {
+        padding: 0 35px;
+    }
+}
+
+@media (min-width: 2560px) {
+    .tutor-portal-sidebar {
+        width: 320px;
+    }
+
+    .tutor-portal-main {
+        margin-left: 320px;
+    }
+
+    .tutor-portal-header {
+        padding: 0 42px;
+    }
+
+    .tutor-portal-header-search {
+        max-width: 500px;
+    }
+}
