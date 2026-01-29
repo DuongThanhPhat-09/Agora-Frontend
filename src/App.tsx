@@ -16,7 +16,7 @@ import { AdminDashboardPage } from "./pages/AdminDashboard";
 import { UserManagementPage } from "./pages/AdminUserManagement";
 import { AdminVettingPage } from "./pages/AdminVetting";
 import { AdminDisputesPage } from "./pages/AdminDisputes";
-import AdminDisputeDetailPage from "./pages/AdminDisputes/AdminDisputeDetailPage";
+import AdminDisputeDetailPageExpanded from "./pages/AdminDisputes/AdminDisputeDetailPageExpanded";
 import { AdminFinancialsPage } from "./pages/AdminFinancials";
 import { AdminSettingsPage } from "./pages/AdminSettings";
 import AdminLayout from "./layouts/AdminLayout";
@@ -47,14 +47,6 @@ function App() {
         <Route path="/tutor-search" element={<TutorSearchPage />} />
         <Route path="/tutor-detail" element={<TutorDetailPage />} />
         <Route path="/tutor-detail/:id" element={<TutorDetailPage />} />
-
-        {/* Redirect old tutor URLs to new structure */}
-        <Route path="/tutor-workspace" element={<Navigate to="/tutor/workspace" replace />} />
-        <Route path="/tutor-schedule" element={<Navigate to="/tutor/schedule" replace />} />
-        <Route path="/tutor-classes" element={<Navigate to="/tutor/classes" replace />} />
-        <Route path="/tutor-messages" element={<Navigate to="/tutor/messages" replace />} />
-        <Route path="/tutor-wallet" element={<Navigate to="/tutor/wallet" replace />} />
-        <Route path="/tutor-profile" element={<Navigate to="/tutor/profile" replace />} />
 
         {/* Tutor Layout with nested routes - PROTECTED */}
         <Route
@@ -91,7 +83,7 @@ function App() {
           <Route path="users" element={<UserManagementPage />} />
           <Route path="vetting" element={<AdminVettingPage />} />
           <Route path="disputes" element={<AdminDisputesPage />} />
-          <Route path="disputes/:id" element={<AdminDisputeDetailPage />} />
+          <Route path="disputes/:disputeId" element={<AdminDisputeDetailPageExpanded />} />
           <Route path="financials" element={<AdminFinancialsPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
         </Route>

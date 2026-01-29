@@ -1,110 +1,34 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { mockGetDisputes } from './mockData';
+import type { DisputeForAdmin } from '../../types/admin.types';
+import { formatCurrency, formatRelativeTime, formatDisputeType } from '../../utils/formatters';
 
 import '../../styles/pages/admin-dashboard.css';
 
 const AdminDisputesPage = () => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('all');
+    const [disputes, setDisputes] = useState<DisputeForAdmin[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    // Sample data for disputes
-    const disputes = [
-        {
-            id: '8821',
-            student: {
-                name: 'Sarah M.',
-                avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA6nPy0_cZA794Sg0K6k7-mZMsB-Mq_jr8XELGDnDjPPsLfmrhcV1NDh_qlM4AWYj-orlbdH8cmxG7gXgcKNmGKbHbY6JNwMe4j1B_Q-Z7JSv6El5lnrRdRA7pm33EOE_aLhD-TWTdV-YLqcTbCl3a4R2uuPqNNzvLCRuGUqpAhFJiE7dpXUxtIYqm-evHUMeTuJZyNGC5f38sovWYKkpfaXTGDM_w-Og3LpcJ6UboTtdZuhvEsYhagQp4IfhHvJKwDsnIaYMgtrm4'
-            },
-            tutor: {
-                name: 'Prof. Davids',
-                avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCfoPTqviyQwfEXTgibH4wMRXkJD6CN5H2GH6xtjpn3E2nlgadR4YcLpz_kpxv_BG43eqpj6koea1XRsQNJSPU-XOleaLq5dYlPwXqm3iVs65w7_0ixup07F0wxHdX0lbhLf8ZU1S1VvWUzh9LRSd8UJbUeUZr3ezKZOIdEAQBDQ_w4HAbodf1qfJiXm9vTrewxtSQduiB86tbj0DL5XT8A2h8R2gJ8oQbf_yRlBQP4g7qtAHdf2gDfxRKyy5LyUHRoyioarN-oy4w'
-            },
-            reason: {
-                title: 'Gia sư không đến',
-                description: 'Học viên báo cáo gia sư vắng mặt...'
-            },
-            amount: 50.00,
-            timeRemaining: '23h còn lại',
-            priority: 'Cao',
-            isUrgent: true
-        },
-        {
-            id: '8822',
-            student: {
-                name: 'Michael C.',
-                avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA4ZkjNRJFYQ5d44SUKMdNbhGHwlaQbTvXu6muMXS06rK0aVxYP780rruPH-XcXfgv2y0FFqRgmCYv8glTMPISlctepzpUwANlHi2L0qWQDbhC8_bDwy5ggytDc7VUFq8EmxKVZjPRnXOVwcgqsq9FCEDFD_4IV29HxviNkgkefs4jEFKIfrovLSZqkKwtF0hZ9hc-HdYdz56qetY6gU0kY8piGRS1v0GiXk0TdyIN2VUe0SyYOUa6USEQZKh3qAlOIK4emGgm-nTs'
-            },
-            tutor: {
-                name: 'Tutor Jane',
-                avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAgGVmiMa1qOpPl9ptdzQmoDOvRv81iK__Lau7oXY35Hqed699ccruST3HLpnAMp3WlqMTb7zYb1-h0qfuKV9IsGZnxHmY7n6iefXknJzQNVDyjF8kumQ8J_m4icZqU8xOkRrOROSijpdgfJMVnCVe70oyoPBUCIFJF8Kd1kppqA1bc7r2XBJE450VchjmKDRkOGcqirsPk1-zHHuhck8iKU51odEqRY9uulyEoruIju4pXIkbh_t_Xqz4AMiAr2rZGDJWpz0QzpyY'
-            },
-            reason: {
-                title: 'Nộp bài muộn',
-                description: 'Phản hồi chậm 3 ngày'
-            },
-            amount: 30.00,
-            timeRemaining: '2 ngày còn lại',
-            priority: 'Trung bình',
-            isUrgent: false
-        },
-        {
-            id: '8823',
-            student: {
-                name: 'Emma W.',
-                avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDXH0JZiBytEovqHxhoTP7ycg5FCGsD3jhOi1e3TmhKKGDiwzurTOcqS4lTKZV8PaZTxHLdnIQ_Xn_tgl0-lU0NNPXNfrCn3O5T8Y_FTx2l-DMpVsohxsowHZSTd2FM5WkDAZZyuUV1mGKMMGVoS9iKcn2G7qKfqeW0wsv4r9X6VsPTupbLu7mky6himXAtv25ihSi3NpcSx-pUNxWz5GGQLBQKgb7cEY4b_rPmoefsbnhBE3EYFIOmJ9fUTWSoaHnpxWvPGhJ8Heo'
-            },
-            tutor: {
-                name: 'Dr. Roberts',
-                avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCMBrilX3h5Zs6XdyMjSCYGqJO_4gM3TLx6vbZtPLycGNYtfEO4cYD9lY8VVI0dwD-nJilY0gHxA-j1evOJYhy4GOPwUVcCs-i1krQmX8HuAf_zXDAfcMqpDIQWWt8GfWeFdOf2NLBThkjHseWDV3277IO8WrJojWT2eYuiyAg9nPspFFyDJWGL5IE5jWAt_ahFm5Mr2vh3SeUniGNFvJj-mQOGXw2fSb2MnC2FMCJkriNgS4xHQhIMPtR2wykda8VIaG4kYr7kKN8'
-            },
-            reason: {
-                title: 'Khiếu nại đạo văn',
-                description: 'Điểm Turnitin bị khiếu nại'
-            },
-            amount: 120.00,
-            timeRemaining: '1h còn lại',
-            priority: 'Cao',
-            isUrgent: true
-        },
-        {
-            id: '8824',
-            student: {
-                name: 'David K.',
-                avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBIbMgb54iQRlKq8R6thAqqyS4IycvGSisxI_FzhNdi-pWvKgj80ugA9mWDNCpNh4JUxxq3gyRtu0iU-aBxF2hrWvv7we2nha4IomPwuTY4BIb_6bIlG4LHvGwAo6MTxRLQxxyEl0kxK3O-lDYllNWZyUGIzjRNBW-lxBkwHeG7UCfc6CNQvVWMdlJI1HTdYgFTW5QcQtVBdNkckdvz1GIXRLDuuR-j2kD7ghr1PoHzzB7sc-MHIAcok8_rmjBvmvPj8MOsFa0urak'
-            },
-            tutor: {
-                name: 'Tutor Alan',
-                avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB1wg4zpoI28ONSMoAP_S3dVZI8Cw52Gax0nichlFDJ44h0jImtFQWVksnENbeXJVcphV67YZSd0kX-FxTAJ9iMw6oIvDmVNCYppjF_zVUzbClJsB4U3Sbiq5PE2n0wjCwfYr4BNNyWK-oDvl5lHGgNShyr7AhOLN1ywB9ZNp2bl96Z5KY6SrVm57ExIqrbxy6i53foP_f3V0ShkQuWAgV_5s2bBhDUQReCRzXOTXzUwSFAFj92qX3ZWpNp8X3mBva14ul_GarXbrE'
-            },
-            reason: {
-                title: 'Sự cố kết nối',
-                description: 'Buổi học bị ngắt quãng giữa chừng'
-            },
-            amount: 45.00,
-            timeRemaining: '4h còn lại',
-            priority: 'Thấp',
-            isUrgent: false
-        },
-        {
-            id: '8825',
-            student: {
-                name: 'Olivia R.',
-                avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDBSUmQDdr1c-kYm6495UMOZD676z-wxNcvVgDeTx5kxl7vwVGng6EZtdGGpoH5iF5Juge6sYsIfLVYLnecjFdTGYGXVpAAdYUp7DEyfk3HSGPtyc1hWpSwqPwQrzYNMjAw-DW9-8m-dJHnIQNFJaRLW9cgbNhlRpPlRvsFZgwhFWO0281SaMi64fXpbAEN-kX7xq7yUa16cCF8dSU49cn7xIC7gHpkp_RAFZnr8JA8Q2Urc6XceuGm9pf_8HsSX1aMxSVYamRNigg'
-            },
-            tutor: {
-                name: 'Prof. Smith',
-                avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAPEYH13JjSGv8fsXI2X9JcF7wzb5IRk_xFS4NCTr-VxwZk5Je0NNjcjaQbpdDfFOYtrJQlJdTBerft0qwRMcLzzqdTusPAmQAOjJgpyPpkYHR2jrBaVoRr9GAk0ZVerq58fJjHGG2qnvjsh1hdma9gVUC-BiechWyJ0jjm-uQ6dwRtxxLKC5RV80jrxzeOWTdhl_zbujPzLTMBELah_H3w7MHgYpLLxRejxopAUtkpHuH6BaET2JmhJiBwAKPd68jRG9uFcJwWz3w'
-            },
-            reason: {
-                title: 'Tranh chấp nội dung',
-                description: 'Nội dung môn học không chính xác'
-            },
-            amount: 200.00,
-            timeRemaining: '5 ngày còn lại',
-            priority: 'Trung bình',
-            isUrgent: false
+    // Fetch disputes on mount
+    useEffect(() => {
+        fetchDisputes();
+    }, []);
+
+    const fetchDisputes = async () => {
+        try {
+            setLoading(true);
+            const data = await mockGetDisputes();
+            setDisputes(data);
+        } catch (err) {
+            console.error('Error fetching disputes:', err);
+        } finally {
+            setLoading(false);
         }
-    ];
+    };
+
 
     return (
         <>
@@ -250,57 +174,76 @@ const AdminDisputesPage = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {disputes.map((dispute) => (
-                                            <tr key={dispute.id} className="dispute-tr">
-                                                <td className="dispute-td dispute-td-id">
-                                                    {dispute.isUrgent && <div className="dispute-priority-indicator"></div>}
-                                                    #{dispute.id}
-                                                </td>
-                                                <td className="dispute-td">
-                                                    <div className="dispute-parties-wrapper">
-                                                        <div className="dispute-avatars">
-                                                            <div className="dispute-avatar" style={{ backgroundImage: `url('${dispute.student.avatar}')` }}></div>
-                                                            <div className="dispute-avatar" style={{ backgroundImage: `url('${dispute.tutor.avatar}')` }}></div>
-                                                        </div>
-                                                        <div className="dispute-parties-names">
-                                                            <span>{dispute.student.name}</span>
-                                                            <span className="dispute-vs">VS</span>
-                                                            <span>{dispute.tutor.name}</span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="dispute-td">
-                                                    <span className="dispute-reason-title">{dispute.reason.title}</span>
-                                                    <p className="dispute-reason-desc">{dispute.reason.description}</p>
-                                                </td>
-                                                <td className="dispute-td">
-                                                    <div className={`dispute-amount-badge ${dispute.amount > 100 ? 'dispute-amount-gold' : 'dispute-amount-gray'}`}>
-                                                        ${dispute.amount.toFixed(2)}
-                                                    </div>
-                                                </td>
-                                                <td className="dispute-td">
-                                                    <div className={`dispute-time ${dispute.isUrgent ? 'dispute-time-crimson' : 'dispute-time-gray'}`}>
-                                                        <span className="material-symbols-outlined dispute-time-icon">
-                                                            {dispute.isUrgent ? 'timer' : 'calendar_clock'}
-                                                        </span>
-                                                        {dispute.timeRemaining}
-                                                    </div>
-                                                </td>
-                                                <td className="dispute-td">
-                                                    <span className={`dispute-priority-badge dispute-priority-${dispute.priority.toLowerCase() === 'cao' ? 'high' : dispute.priority.toLowerCase() === 'trung bình' ? 'medium' : 'low'}`}>
-                                                        {dispute.priority}
-                                                    </span>
-                                                </td>
-                                                <td className="dispute-td dispute-td-right">
-                                                    <button
-                                                        className="dispute-action-btn"
-                                                        onClick={() => navigate(`/admin/disputes/${dispute.id}`)}
-                                                    >
-                                                        Điều tra
-                                                    </button>
+                                        {loading ? (
+                                            <tr>
+                                                <td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                                                    Đang tải danh sách khiếu nại...
                                                 </td>
                                             </tr>
-                                        ))}
+                                        ) : disputes.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                                                    Không có khiếu nại nào
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            disputes.map((dispute) => {
+                                                const isUrgent = dispute.priority === 'high';
+                                                const timeRemaining = formatRelativeTime(dispute.deadlineat);
+
+                                                return (
+                                                    <tr key={dispute.disputeid} className="dispute-tr">
+                                                        <td className="dispute-td dispute-td-id">
+                                                            {isUrgent && <div className="dispute-priority-indicator"></div>}
+                                                            #{dispute.disputeid}
+                                                        </td>
+                                                        <td className="dispute-td">
+                                                            <div className="dispute-parties-wrapper">
+                                                                <div className="dispute-avatars">
+                                                                    <div className="dispute-avatar" style={{ backgroundImage: `url('${dispute.studentavatar}')` }}></div>
+                                                                    <div className="dispute-avatar" style={{ backgroundImage: `url('${dispute.tutoravatar}')` }}></div>
+                                                                </div>
+                                                                <div className="dispute-parties-names">
+                                                                    <span>{dispute.studentname}</span>
+                                                                    <span className="dispute-vs">VS</span>
+                                                                    <span>{dispute.tutorname}</span>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="dispute-td">
+                                                            <span className="dispute-reason-title">{formatDisputeType(dispute.disputetype)}</span>
+                                                            <p className="dispute-reason-desc">Đã nộp {formatRelativeTime(dispute.createdat)}</p>
+                                                        </td>
+                                                        <td className="dispute-td">
+                                                            <div className={`dispute-amount-badge ${dispute.escrowamount > 1000000 ? 'dispute-amount-gold' : 'dispute-amount-gray'}`}>
+                                                                {formatCurrency(dispute.escrowamount)}
+                                                            </div>
+                                                        </td>
+                                                        <td className="dispute-td">
+                                                            <div className={`dispute-time ${isUrgent ? 'dispute-time-crimson' : 'dispute-time-gray'}`}>
+                                                                <span className="material-symbols-outlined dispute-time-icon">
+                                                                    {isUrgent ? 'timer' : 'calendar_clock'}
+                                                                </span>
+                                                                {timeRemaining}
+                                                            </div>
+                                                        </td>
+                                                        <td className="dispute-td">
+                                                            <span className={`dispute-priority-badge dispute-priority-${dispute.priority}`}>
+                                                                {dispute.priority === 'high' ? 'Cao' : dispute.priority === 'medium' ? 'Trung bình' : 'Thấp'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="dispute-td dispute-td-right">
+                                                            <button
+                                                                className="dispute-action-btn"
+                                                                onClick={() => navigate(`/admin/disputes/${dispute.disputeid}`)}
+                                                            >
+                                                                Điều tra
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
