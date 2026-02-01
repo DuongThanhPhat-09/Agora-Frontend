@@ -150,14 +150,19 @@ const TutorPortalProfile: React.FC = () => {
     // Form hook
     const {
         formData,
+        sectionStatuses,
         isDirty,
         isLoading,
+        isInitialLoading,
+        isVideoUploading,
         lastSaved,
+        error,
         canPublish,
         updateHeroSection,
         updatePricing,
         updateAbout,
         updateVideoUrl,
+        uploadVideo,
         addCredential,
         removeCredential,
         updateIdentityVerification,
@@ -235,7 +240,9 @@ const TutorPortalProfile: React.FC = () => {
                         <IntroVideoSection
                             videoUrl={formData.videoIntroUrl}
                             onChange={updateVideoUrl}
+                            onUploadVideo={uploadVideo}
                             isEditMode={isEditMode}
+                            isUploading={isVideoUploading}
                         />
 
                         {/* Hero Section Card */}
