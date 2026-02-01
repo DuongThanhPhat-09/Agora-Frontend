@@ -11,102 +11,197 @@ const api = axios.create({
     },
 });
 
-/**
- * Request/Response Types for Tutor Profile API
- */
-export interface UpdateBasicInfoRequest {
-    headline: string;
-    bio: string;
+// ============================================
+// Types for Tutor Verification Progress API
+// ============================================
+
+export type SectionStatus = 'in_progress' | 'updated';
+
+export interface SubjectSelection {
+    subjectId: number;
+    subjectName: string;
+    gradeLevels: number[];
+}
+
+export interface VideoSection {
+    videoUrl: string | null;
+    status: SectionStatus;
+    updatedAt: string | null;
+}
+
+export interface BasicInfoSection {
+    avatarUrl: string | null;
+    headline: string | null;
+    teachingAreaCity: string | null;
+    teachingAreaDistrict: string | null;
+    teachingMode: string | null;
+    subjects: SubjectSelection[];
+    status: SectionStatus;
+    updatedAt: string | null;
+}
+
+export interface IntroductionSection {
+    bio: string | null;
+    education: string | null;
+    gpa: number | null;
+    gpaScale: number | null;
+    experience: string | null;
+    status: SectionStatus;
+    updatedAt: string | null;
+}
+
+export interface Certificate {
+    id: number;
+    name: string;
+    institution: string;
+    issueYear: number | null;
+    certificateUrl?: string;
+    verificationStatus: 'pending' | 'verified' | 'rejected';
+    type: 'education' | 'license' | 'certificate';
+}
+
+export interface CertificatesSection {
+    totalCount: number;
+    certificates: Certificate[];
+    status: SectionStatus;
+    updatedAt: string | null;
+}
+
+export interface IdentityCardSection {
+    frontImageUrl: string | null;
+    backImageUrl: string | null;
+    isVerified: boolean;
+    status: SectionStatus;
+    updatedAt: string | null;
+}
+
+export interface PricingSection {
     hourlyRate: number;
+    trialLessonPrice: number | null;
+    allowPriceNegotiation: boolean;
+    status: SectionStatus;
+    updatedAt: string | null;
 }
 
-export interface TutorProfileResponse {
-    success: boolean;
-    message?: string;
-    content?: TutorProfile;
-    statusCode?: number;
+export interface VerificationSections {
+    video: VideoSection;
+    basicInfo: BasicInfoSection;
+    introduction: IntroductionSection;
+    certificates: CertificatesSection;
+    identityCard: IdentityCardSection;
+    pricing: PricingSection;
 }
 
-export interface TutorProfile {
-    tutorId?: string;  // Added tutorId from backend
-    headline: string;
-    bio: string;
-    hourlyRate: number;
-    // Add other fields as needed when backend provides more data
+export interface VerificationProgressResponse {
+    content: {
+        sections: VerificationSections;
+    };
+    statusCode: number;
+    message: string;
+    error: string | null;
 }
+
+// Generic API response type
+export interface ApiResponse<T = any> {
+    content: T;
+    statusCode: number;
+    message: string;
+    error: string | null;
+}
+
+// ============================================
+// Helper Functions
+// ============================================
+
+const getAuthHeaders = () => {
+    const user = getCurrentUser();
+    return {
+        Authorization: `Bearer ${user?.accessToken}`
+    };
+};
+
+// ============================================
+// API Functions
+// ============================================
 
 /**
- * Update tutor basic information (Headline, Bio, Hourly Rate)
- * PUT /api/users/{id}/tutor-profile
+ * Get tutor verification progress
+ * GET /api/tutor-verification/{id}/progress
  * 
- * @param userId - User ID of the tutor
- * @param data - Basic info data to update
- * @returns API response with updated profile
+ * @param userId - User ID (same as tutor ID)
+ * @returns Verification progress with all sections
  */
-export const updateBasicInfo = async (
-    userId: string,
-    data: UpdateBasicInfoRequest
-): Promise<TutorProfileResponse> => {
+export const getVerificationProgress = async (userId: string): Promise<VerificationProgressResponse> => {
     try {
-        const user = getCurrentUser();
+        console.log('📊 Fetching verification progress for:', userId);
 
-        // Debug logging
-        console.log('🔍 UPDATE DEBUG:', {
-            userId,
-            endpoint: `/users/${userId}/tutor-profile`,
-            payload: data,
-            token: user?.accessToken?.substring(0, 20) + '...'
+        const response = await api.get(`/tutor-verification/${userId}/progress`, {
+            headers: getAuthHeaders()
         });
 
-        const response = await api.put(`/users/${userId}/tutor-profile`, data, {
-            headers: {
-                Authorization: `Bearer ${user?.accessToken}`
-            }
-        });
-
-        console.log('✅ UPDATE SUCCESS:', response.data);
+        console.log('✅ Verification progress fetched:', response.data);
         return response.data;
     } catch (error: any) {
-        console.error('❌ UPDATE ERROR Details:', {
+        console.error('❌ Error fetching verification progress:', {
             status: error.response?.status,
-            statusText: error.response?.statusText,
             data: error.response?.data,
-            headers: error.response?.headers
+            message: error.message
         });
-
-        // Print full error data as string
-        console.error('❌ FULL ERROR DATA:', JSON.stringify(error.response?.data, null, 2));
-
-        console.error('Error updating tutor basic info:', error);
         throw error;
     }
 };
 
 /**
- * Get tutor profile information
- * GET /api/users/{id}/tutor-profile-info
+ * Upload/Update intro video
+ * PUT /api/tutor-verification/{id}/tutor-profile/video
  * 
- * @param userId - User ID of the tutor (decoded from JWT token)
- * @returns Tutor profile data
+ * @param userId - User ID (same as tutor ID)
+ * @param videoFile - Video file to upload
+ * @returns API response
  */
-export const getTutorProfile = async (userId: string): Promise<TutorProfileResponse> => {
+export const updateVideo = async (
+    userId: string,
+    videoFile: File
+): Promise<ApiResponse> => {
     try {
-        const user = getCurrentUser();
-        const response = await api.get(`/users/${userId}/tutor-profile-info`, {
-            headers: {
-                Authorization: `Bearer ${user?.accessToken}`
-            }
+        console.log('🎥 Uploading video for:', userId);
+        console.log('File info:', {
+            name: videoFile.name,
+            size: `${(videoFile.size / 1024 / 1024).toFixed(2)} MB`,
+            type: videoFile.type
         });
 
-        // Backend returns { content, statusCode, message }
-        // Transform to our expected format
-        return {
-            success: response.data.statusCode === 200,
-            message: response.data.message,
-            content: response.data.content
-        };
+        const formData = new FormData();
+        formData.append('VideoFile', videoFile);
+
+        const response = await api.put(
+            `/tutor-verification/${userId}/tutor-profile/video`,
+            formData,
+            {
+                headers: {
+                    ...getAuthHeaders(),
+                    'Content-Type': 'multipart/form-data'
+                }
+            }
+        );
+
+        console.log('✅ Video uploaded successfully:', response.data);
+        return response.data;
     } catch (error: any) {
-        console.error('Error fetching tutor profile:', error);
+        console.error('❌ Error uploading video:', {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message
+        });
         throw error;
     }
 };
+
+// ============================================
+// TODO: Add more update endpoints here
+// - PUT /api/tutor-verification/{id}/tutor-profile/basic-info
+// - PUT /api/tutor-verification/{id}/tutor-profile/introduction
+// - PUT /api/tutor-verification/{id}/certificates
+// - PUT /api/tutor-verification/{id}/identity-card
+// - PUT /api/tutor-verification/{id}/pricing
+// ============================================

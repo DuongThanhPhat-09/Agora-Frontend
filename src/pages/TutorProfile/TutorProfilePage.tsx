@@ -7,8 +7,16 @@ import { uploadIdCard } from '../../services/supabase.service';
 import { submitVerification } from '../../services/verification.service';
 import { getUserProfile, parseEKYCData } from '../../services/user.service';
 import { getUserIdFromToken } from '../../services/auth.service';
-import { updateBasicInfo, getTutorProfile, type TutorProfile } from '../../services/tutorProfile.service';
+// TODO: Old API functions removed - need to migrate to new verification API
+// import { updateBasicInfo, getTutorProfile, type TutorProfile } from '../../services/tutorProfile.service';
 import type { IdCardUploadState, UserWithEKYC, EKYCContent } from '../../types/verification.types';
+
+// Temporary type until we migrate to new API
+interface TutorProfile {
+    headline?: string;
+    bio?: string;
+    hourlyRate?: number;
+}
 
 const TutorProfilePage: React.FC = () => {
     const navigate = useNavigate();
@@ -84,17 +92,20 @@ const TutorProfilePage: React.FC = () => {
     }, []);
 
     // Fetch Tutor Profile (Basic Info)
+    // TODO: Migrate to new verification API - getVerificationProgress
     useEffect(() => {
         const fetchTutorProfile = async () => {
             try {
                 setLoadingTutorProfile(true);
-                const userId = getUserIdFromToken();
-                if (userId) {
-                    const response = await getTutorProfile(userId);
-                    if (response.success && response.content) {
-                        setTutorProfile(response.content);
-                    }
-                }
+                // const userId = getUserIdFromToken();
+                // if (userId) {
+                //     const response = await getTutorProfile(userId);
+                //     if (response.success && response.content) {
+                //         setTutorProfile(response.content);
+                //     }
+                // }
+                // For now, set empty profile
+                setTutorProfile(null);
             } catch (error) {
                 console.error('Error loading tutor profile:', error);
                 // Don't show error toast - profile might not exist yet
@@ -299,23 +310,28 @@ const TutorProfilePage: React.FC = () => {
                 return;
             }
 
-            const response = await updateBasicInfo(userId, {
-                headline: editForm.headline.trim(),
-                bio: editForm.bio.trim(),
-                hourlyRate: editForm.hourlyRate
-            });
+            // TODO: Migrate to new verification API
+            // const response = await updateBasicInfo(userId, {
+            //     headline: editForm.headline.trim(),
+            //     bio: editForm.bio.trim(),
+            //     hourlyRate: editForm.hourlyRate
+            // });
 
-            if (response.success) {
-                toast.success('Cập nhật thông tin thành công!');
-                setShowEditModal(false);
+            // if (response.success) {
+            //     toast.success('Cập nhật thông tin thành công!');
+            //     setShowEditModal(false);
 
-                // Refresh tutor profile data
-                if (response.content) {
-                    setTutorProfile(response.content);
-                }
-            } else {
-                toast.error(response.message || 'Có lỗi xảy ra khi cập nhật');
-            }
+            //     // Refresh tutor profile data
+            //     if (response.content) {
+            //         setTutorProfile(response.content);
+            //     }
+            // } else {
+            //     toast.error(response.message || 'Có lỗi xảy ra khi cập nhật');
+            // }
+
+            // Temporary: Show not implemented message
+            toast.info('Chức năng đang được cập nhật. Vui lòng sử dụng trang TutorPortal.');
+            setShowEditModal(false);
         } catch (error: any) {
             console.error('Update basic info error:', error);
 

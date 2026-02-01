@@ -1,4 +1,11 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import {
+    getVerificationProgress,
+    updateVideo,
+    type VerificationSections
+} from '../../../services/tutorProfile.service';
+import { getUserIdFromToken } from '../../../services/auth.service';
 import type { IdentityVerificationData } from '../components/IdentityVerificationModal';
 
 // Re-export for convenience
@@ -28,8 +35,20 @@ export interface AvailabilitySlot {
     endTime: string;
 }
 
+// Section status from API
+export type SectionStatus = 'in_progress' | 'updated';
+
+export interface SectionStatuses {
+    video: SectionStatus;
+    basicInfo: SectionStatus;
+    introduction: SectionStatus;
+    certificates: SectionStatus;
+    identityCard: SectionStatus;
+    pricing: SectionStatus;
+}
+
 export interface TutorProfileFormData {
-    // Hero section
+    // Hero section (basicInfo)
     avatarUrl: string;
     avatarFile: File | null;
     fullName: string;
@@ -49,7 +68,7 @@ export interface TutorProfileFormData {
     trialLessonPrice: number | null;
     allowNegotiation: boolean;
 
-    // About
+    // About (introduction)
     bio: string;
     education: string;
     gpaScale: 4 | 10 | null;
@@ -59,74 +78,46 @@ export interface TutorProfileFormData {
     // Video
     videoIntroUrl: string | null;
 
-    // Credentials
+    // Credentials (certificates)
     credentials: CredentialData[];
 
     // Schedule
     availability: AvailabilitySlot[];
 
-    // Identity Verification
+    // Identity Verification (identityCard)
     identityVerification: IdentityVerificationData;
 }
 
-// Initial mock data
+// Initial empty data
 const initialFormData: TutorProfileFormData = {
     avatarUrl: '',
     avatarFile: null,
-    fullName: 'Sarah Mitchell',
-    headline: 'Gia su Toan & Vat Ly | 10+ Nam Kinh Nghiem',
-    teachingAreaCity: 'hanoi',
-    teachingAreaDistrict: 'cau-giay',
-    teachingMode: 'Hybrid',
-    subjects: [
-        { subjectId: 1, subjectName: 'Toan', gradeLevels: [10, 11, 12] },
-        { subjectId: 2, subjectName: 'Vat Ly', gradeLevels: [10, 11, 12] }
-    ],
-    customTags: ['AP/IB', 'Luyen thi'],
+    fullName: '',
+    headline: '',
+    teachingAreaCity: '',
+    teachingAreaDistrict: '',
+    teachingMode: '',
+    subjects: [],
+    customTags: [],
 
-    averageRating: 4.9,
-    totalReviews: 127,
+    averageRating: 0,
+    totalReviews: 0,
 
-    hourlyRate: 250000,
-    trialLessonPrice: 150000,
-    allowNegotiation: true,
+    hourlyRate: 0,
+    trialLessonPrice: null,
+    allowNegotiation: false,
 
-    bio: `Toi la mot nha giao duc dam me voi hon 10 nam kinh nghiem giang day Toan va Vat Ly cho hoc sinh trung hoc. Toi co bang Thac si Toan ung dung tu MIT va da giup hang tram hoc sinh dat duoc muc tieu hoc tap cua ho.
-
-Triet ly giang day cua toi tap trung vao viec xay dung nen tang vung chac va phat trien ky nang giai quyet van de. Toi tin rang moi hoc sinh deu co the xuat sac trong cac mon STEM voi su huong dan va phuong phap tiep can phu hop.`,
-
-    education: 'Thac si Toan ung dung - MIT (2010-2012)',
-    gpaScale: 4,
-    gpa: 3.8,
-    experience: `10+ nam kinh nghiem giang day Toan va Vat Ly cap 3. Da giup 200+ hoc sinh cai thien diem so va thi dau dai hoc thanh cong. Chuyen sau luyen thi AP, IB va SAT Math.`,
+    bio: '',
+    education: '',
+    gpaScale: null,
+    gpa: null,
+    experience: '',
 
     videoIntroUrl: null,
 
-    credentials: [
-        {
-            id: 1,
-            name: 'Thac si Khoa hoc Toan ung dung',
-            institution: 'Vien Cong nghe Massachusetts (MIT)',
-            issueYear: 2012,
-            type: 'education',
-            verificationStatus: 'verified'
-        },
-        {
-            id: 2,
-            name: 'Chung chi giang day - Massachusetts',
-            institution: 'Ban Giao duc Bang',
-            issueYear: 2013,
-            type: 'license',
-            verificationStatus: 'verified'
-        }
-    ],
+    credentials: [],
 
-    availability: [
-        { id: 1, dayOfWeek: 1, startTime: '14:00', endTime: '16:00' },
-        { id: 2, dayOfWeek: 1, startTime: '16:30', endTime: '18:30' },
-        { id: 3, dayOfWeek: 3, startTime: '14:00', endTime: '16:00' },
-        { id: 4, dayOfWeek: 5, startTime: '09:00', endTime: '11:00' }
-    ],
+    availability: [],
 
     identityVerification: {
         idNumber: '',
@@ -139,11 +130,134 @@ Triet ly giang day cua toi tap trung vao viec xay dung nen tang vung chac va pha
     }
 };
 
+const initialSectionStatuses: SectionStatuses = {
+    video: 'in_progress',
+    basicInfo: 'in_progress',
+    introduction: 'in_progress',
+    certificates: 'in_progress',
+    identityCard: 'in_progress',
+    pricing: 'in_progress'
+};
+
+/**
+ * Map API response sections to form data
+ */
+function mapSectionsToFormData(sections: VerificationSections): Partial<TutorProfileFormData> {
+    return {
+        // Video section
+        videoIntroUrl: sections.video.videoUrl,
+
+        // Basic info section
+        avatarUrl: sections.basicInfo.avatarUrl || '',
+        headline: sections.basicInfo.headline || '',
+        teachingAreaCity: sections.basicInfo.teachingAreaCity || '',
+        teachingAreaDistrict: sections.basicInfo.teachingAreaDistrict || '',
+        teachingMode: (sections.basicInfo.teachingMode as 'Online' | 'Offline' | 'Hybrid' | '') || '',
+        subjects: sections.basicInfo.subjects || [],
+
+        // Introduction section
+        bio: sections.introduction.bio || '',
+        education: sections.introduction.education || '',
+        gpa: sections.introduction.gpa,
+        gpaScale: sections.introduction.gpaScale as 4 | 10 | null,
+        experience: sections.introduction.experience || '',
+
+        // Certificates section
+        credentials: sections.certificates.certificates.map(cert => ({
+            id: cert.id,
+            name: cert.name,
+            institution: cert.institution,
+            issueYear: cert.issueYear,
+            certificateUrl: cert.certificateUrl,
+            verificationStatus: cert.verificationStatus,
+            type: cert.type
+        })),
+
+        // Identity card section
+        identityVerification: {
+            idNumber: '',
+            fullNameOnId: '',
+            dateOfBirth: '',
+            idFrontImage: null,
+            idFrontImageUrl: sections.identityCard.frontImageUrl || undefined,
+            idBackImage: null,
+            idBackImageUrl: sections.identityCard.backImageUrl || undefined,
+            selfieWithId: null,
+            verificationStatus: sections.identityCard.isVerified ? 'verified' :
+                sections.identityCard.status === 'updated' ? 'pending' : 'not_submitted'
+        },
+
+        // Pricing section
+        hourlyRate: sections.pricing.hourlyRate || 0,
+        trialLessonPrice: sections.pricing.trialLessonPrice,
+        allowNegotiation: sections.pricing.allowPriceNegotiation || false
+    };
+}
+
+/**
+ * Extract section statuses from API response
+ */
+function mapSectionStatuses(sections: VerificationSections): SectionStatuses {
+    return {
+        video: sections.video.status,
+        basicInfo: sections.basicInfo.status,
+        introduction: sections.introduction.status,
+        certificates: sections.certificates.status,
+        identityCard: sections.identityCard.status,
+        pricing: sections.pricing.status
+    };
+}
+
 export function useTutorProfileForm() {
     const [formData, setFormData] = useState<TutorProfileFormData>(initialFormData);
     const [savedData, setSavedData] = useState<TutorProfileFormData>(initialFormData);
+    const [sectionStatuses, setSectionStatuses] = useState<SectionStatuses>(initialSectionStatuses);
     const [isLoading, setIsLoading] = useState(false);
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
+    const [isVideoUploading, setIsVideoUploading] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    // Get user ID
+    const userId = getUserIdFromToken();
+
+    // Fetch initial data from API
+    const fetchProgress = useCallback(async () => {
+        if (!userId) {
+            console.error('❌ Cannot fetch progress: userId not found');
+            setError('User not authenticated');
+            setIsInitialLoading(false);
+            return;
+        }
+
+        try {
+            setError(null);
+            const response = await getVerificationProgress(userId);
+
+            if (response.statusCode === 200 && response.content?.sections) {
+                const mappedData = mapSectionsToFormData(response.content.sections);
+                const statuses = mapSectionStatuses(response.content.sections);
+
+                setFormData(prev => ({ ...prev, ...mappedData }));
+                setSavedData(prev => ({ ...prev, ...mappedData }));
+                setSectionStatuses(statuses);
+
+                console.log('✅ Profile data loaded from API');
+            }
+        } catch (err: any) {
+            console.error('❌ Failed to fetch progress:', err);
+            const errorMessage = err.response?.data?.message || err.message || 'Failed to load profile data';
+            setError(errorMessage);
+            toast.error(errorMessage);
+        } finally {
+            setIsInitialLoading(false);
+        }
+    }, [userId]);
+
+    // Load data on mount
+    useEffect(() => {
+        fetchProgress();
+    }, [fetchProgress]);
 
     // Check if form has unsaved changes
     const isDirty = useMemo(() => {
@@ -175,10 +289,64 @@ export function useTutorProfileForm() {
         setFormData(prev => ({ ...prev, ...data }));
     }, []);
 
-    // Update video URL
+    // Update video URL (for URL input)
     const updateVideoUrl = useCallback((url: string | null) => {
         setFormData(prev => ({ ...prev, videoIntroUrl: url }));
     }, []);
+
+    // Upload video file via API
+    const uploadVideo = useCallback(async (file: File): Promise<string | null> => {
+        if (!userId) {
+            console.error('❌ Cannot upload video: userId not found');
+            return null;
+        }
+
+        setIsVideoUploading(true);
+        setError(null);
+
+        try {
+            // Call the API to upload video
+            const response = await updateVideo(userId, file);
+
+            if (response.statusCode === 200) {
+                console.log('✅ Video uploaded successfully');
+
+                // Show success toast with API message
+                toast.success(response.message || 'Video uploaded successfully!');
+
+                // Refetch progress to get the new video URL
+                const progressResponse = await getVerificationProgress(userId);
+
+                if (progressResponse.statusCode === 200 && progressResponse.content?.sections) {
+                    const videoUrl = progressResponse.content.sections.video.videoUrl;
+                    const statuses = mapSectionStatuses(progressResponse.content.sections);
+
+                    setFormData(prev => ({ ...prev, videoIntroUrl: videoUrl }));
+                    setSavedData(prev => ({ ...prev, videoIntroUrl: videoUrl }));
+                    setSectionStatuses(statuses);
+                    setLastSaved(new Date());
+
+                    return videoUrl;
+                }
+            } else {
+                // Show error toast if statusCode is not 200
+                toast.error(response.message || 'Failed to upload video');
+            }
+
+            return null;
+        } catch (err: any) {
+            console.error('❌ Error uploading video:', err);
+            const errorMessage = err.response?.data?.message || 'Failed to upload video';
+            setError(errorMessage);
+
+            // Show error toast
+            toast.error(errorMessage);
+
+            return null;
+        } finally {
+            setIsVideoUploading(false);
+        }
+    }, [userId]);
 
     // Add credential
     const addCredential = useCallback((credential: Omit<CredentialData, 'id'>) => {
@@ -232,20 +400,20 @@ export function useTutorProfileForm() {
         }));
     }, []);
 
-    // Save draft
+    // Save draft (TODO: implement with API when available)
     const saveDraft = useCallback(async () => {
         setIsLoading(true);
-        // Simulate API call
+        // TODO: Call save draft API
         await new Promise(resolve => setTimeout(resolve, 500));
         setSavedData(formData);
         setLastSaved(new Date());
         setIsLoading(false);
     }, [formData]);
 
-    // Publish changes
+    // Publish changes (TODO: implement with API when available)
     const publishChanges = useCallback(async () => {
         setIsLoading(true);
-        // Simulate API call
+        // TODO: Call publish API
         await new Promise(resolve => setTimeout(resolve, 1000));
         setSavedData(formData);
         setLastSaved(new Date());
@@ -259,36 +427,26 @@ export function useTutorProfileForm() {
 
     // Check if profile is complete enough to publish
     const canPublish = useMemo(() => {
-        const hasBasicInfo =
-            !!formData.avatarUrl &&
-            formData.headline.length >= 10 &&
-            !!formData.teachingAreaCity &&
-            !!formData.teachingAreaDistrict &&
-            !!formData.teachingMode;
-
-        const hasSubjects =
-            formData.subjects.length >= 1 &&
-            formData.subjects.every(s => s.gradeLevels.length > 0);
-
-        const hasPricing = formData.hourlyRate >= 50000;
-
-        const hasBio = formData.bio.length >= 100;
-
-        const hasExperience = formData.experience.length >= 50;
-
-        return hasBasicInfo && hasSubjects && hasPricing && hasBio && hasExperience;
-    }, [formData]);
+        // All sections must be "updated"
+        return Object.values(sectionStatuses).every(status => status === 'updated');
+    }, [sectionStatuses]);
 
     return {
         formData,
+        sectionStatuses,
         isDirty,
         isLoading,
+        isInitialLoading,
+        isVideoUploading,
         lastSaved,
+        error,
         canPublish,
+        fetchProgress,
         updateHeroSection,
         updatePricing,
         updateAbout,
         updateVideoUrl,
+        uploadVideo,
         addCredential,
         updateCredential,
         removeCredential,
