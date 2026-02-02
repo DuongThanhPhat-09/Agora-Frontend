@@ -1,5 +1,4 @@
 import React, { useState, useRef } from 'react';
-import { Modal } from 'antd';
 import styles from './IntroVideoSection.module.css';
 
 // Constants
@@ -35,12 +34,6 @@ const LoadingSpinner = () => (
     </svg>
 );
 
-const DeleteIcon = () => (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <path d="M3 5H15M6 5V4C6 3.44772 6.44772 3 7 3H11C11.5523 3 12 3.44772 12 4V5M7 8V13M11 8V13M4 5L5 15C5 15.5523 5.44772 16 6 16H12C12.5523 16 13 15.5523 13 15L14 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
-
 interface IntroVideoSectionProps {
     videoUrl: string | null;
     onChange: (url: string | null) => void;
@@ -57,7 +50,6 @@ const IntroVideoSection: React.FC<IntroVideoSectionProps> = ({
     isUploading = false
 }) => {
     const [error, setError] = useState<string | null>(null);
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -128,21 +120,6 @@ const IntroVideoSection: React.FC<IntroVideoSectionProps> = ({
         }
     };
 
-    // Handle remove video - show confirmation modal
-    const showDeleteConfirm = () => {
-        setIsDeleteModalOpen(true);
-    };
-
-    const handleConfirmDelete = () => {
-        onChange(null);
-        setError(null);
-        setIsDeleteModalOpen(false);
-    };
-
-    const handleCancelDelete = () => {
-        setIsDeleteModalOpen(false);
-    };
-
     // Trigger file input
     const triggerFileInput = () => {
         setError(null);
@@ -156,7 +133,7 @@ const IntroVideoSection: React.FC<IntroVideoSectionProps> = ({
                 <div className={styles.container}>
                     <div className={styles.noVideo}>
                         <VideoIcon />
-                        <span>Chua co video gioi thieu</span>
+                        <span>Chưa có video giới thiệu</span>
                     </div>
                 </div>
             );
@@ -167,7 +144,7 @@ const IntroVideoSection: React.FC<IntroVideoSectionProps> = ({
                 <div className={styles.videoWrapper}>
                     <div className={styles.label}>
                         <VideoIcon />
-                        <span>Intro Video</span>
+                        <span>Video giới thiệu</span>
                     </div>
                     <video
                         src={videoUrl}
@@ -186,12 +163,12 @@ const IntroVideoSection: React.FC<IntroVideoSectionProps> = ({
                 <div className={styles.uploadingState}>
                     <div className={styles.label}>
                         <VideoIcon />
-                        <span>Intro Video</span>
+                        <span>Video giới thiệu</span>
                     </div>
                     <div className={styles.uploadingContent}>
                         <LoadingSpinner />
-                        <span className={styles.uploadingText}>Dang tai len video...</span>
-                        <span className={styles.uploadingHint}>Vui long doi trong giay lat</span>
+                        <span className={styles.uploadingText}>Đang tải lên video...</span>
+                        <span className={styles.uploadingHint}>Vui lòng đợi trong giây lát</span>
                     </div>
                 </div>
             </div>
@@ -205,14 +182,11 @@ const IntroVideoSection: React.FC<IntroVideoSectionProps> = ({
                 <div className={styles.videoWrapper}>
                     <div className={styles.label}>
                         <VideoIcon />
-                        <span>Intro Video</span>
+                        <span>Video giới thiệu</span>
                     </div>
                     <div className={styles.actionButtons}>
                         <button className={styles.editBtn} onClick={triggerFileInput} title="Thay đổi video">
                             <EditIcon />
-                        </button>
-                        <button className={styles.deleteBtn} onClick={showDeleteConfirm} title="Xóa video">
-                            <DeleteIcon />
                         </button>
                     </div>
                     <input
@@ -229,20 +203,6 @@ const IntroVideoSection: React.FC<IntroVideoSectionProps> = ({
                     />
                 </div>
                 {error && <div className={styles.errorMessage}>{error}</div>}
-
-                {/* Delete Confirmation Modal */}
-                <Modal
-                    title="Xác nhận xóa video"
-                    open={isDeleteModalOpen}
-                    onOk={handleConfirmDelete}
-                    onCancel={handleCancelDelete}
-                    okText="Xóa"
-                    cancelText="Hủy"
-                    okButtonProps={{ danger: true }}
-                >
-                    <p>Bạn có chắc chắn muốn xóa video giới thiệu này không?</p>
-                    <p style={{ color: '#666', fontSize: '14px' }}>Hành động này không thể hoàn tác.</p>
-                </Modal>
             </div>
         );
     }
@@ -259,7 +219,7 @@ const IntroVideoSection: React.FC<IntroVideoSectionProps> = ({
             >
                 <div className={styles.label}>
                     <VideoIcon />
-                    <span>Intro Video</span>
+                    <span>Video giới thiệu</span>
                 </div>
                 <input
                     ref={fileInputRef}

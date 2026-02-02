@@ -20,7 +20,8 @@ export type SectionStatus = 'in_progress' | 'updated';
 export interface SubjectSelection {
     subjectId: number;
     subjectName: string;
-    gradeLevels: number[];
+    gradeLevels: number[] | string;  // API may return as JSON string
+    tags: string[] | string | null;  // Tags for this subject (may be JSON string from API)
 }
 
 export interface VideoSection {
@@ -198,10 +199,115 @@ export const updateVideo = async (
 };
 
 // ============================================
+// Basic Info Update Types
+// ============================================
+
+export interface SubjectInput {
+    subjectId: number;
+    gradeLevels: string[];  // ["grade_10", "grade_11", ...]
+    tags: string[];  // Tags for this subject (max 5, required)
+}
+
+export interface BasicInfoUpdateData {
+    headline: string;
+    teachingAreaCity: string;
+    teachingAreaDistrict: string;
+    teachingMode: string;  // API expects PascalCase: 'Online', 'Offline', 'Both'
+    subjects: SubjectInput[];
+}
+
+/**
+ * Update avatar
+ * PUT /api/tutor-verification/{id}/tutor-profile/avatar
+ * 
+ * @param userId - User ID (same as tutor ID)
+ * @param avatarFile - Avatar image file
+ * @returns API response
+ */
+export const updateAvatar = async (
+    userId: string,
+    avatarFile: File
+): Promise<ApiResponse> => {
+    try {
+        console.log('🖼️ Uploading avatar for:', userId);
+        console.log('File info:', {
+            name: avatarFile.name,
+            size: `${(avatarFile.size / 1024).toFixed(2)} KB`,
+            type: avatarFile.type
+        });
+
+        const formData = new FormData();
+        formData.append('AvatarFile', avatarFile);
+
+        const response = await api.put(
+            `/tutor-verification/${userId}/tutor-profile/avatar`,
+            formData,
+            {
+                headers: {
+                    ...getAuthHeaders(),
+                    'Content-Type': 'multipart/form-data'
+                }
+            }
+        );
+
+        console.log('✅ Avatar uploaded successfully:', response.data);
+        return response.data;
+    } catch (error: any) {
+        console.error('❌ Error uploading avatar:', {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message
+        });
+        throw error;
+    }
+};
+
+/**
+ * Update basic info
+ * PUT /api/tutor-verification/{id}/tutor-profile/basic-info
+ * 
+ * @param userId - User ID (same as tutor ID)
+ * @param data - Basic info data to update (JSON)
+ * @returns API response
+ */
+export const updateBasicInfo = async (
+    userId: string,
+    data: BasicInfoUpdateData
+): Promise<ApiResponse> => {
+    try {
+        console.log('📝 Updating basic info for:', userId);
+        console.log('Data:', data);
+
+        // Send as JSON (application/json)
+        const response = await api.put(
+            `/tutor-verification/${userId}/tutor-profile/basic-info`,
+            data,  // Send JSON directly
+            {
+                headers: {
+                    ...getAuthHeaders(),
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        console.log('✅ Basic info updated successfully:', response.data);
+        return response.data;
+    } catch (error: any) {
+        console.error('❌ Error updating basic info:', {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message
+        });
+        throw error;
+    }
+};
+
+// ============================================
 // TODO: Add more update endpoints here
-// - PUT /api/tutor-verification/{id}/tutor-profile/basic-info
 // - PUT /api/tutor-verification/{id}/tutor-profile/introduction
 // - PUT /api/tutor-verification/{id}/certificates
 // - PUT /api/tutor-verification/{id}/identity-card
 // - PUT /api/tutor-verification/{id}/pricing
 // ============================================
+
+

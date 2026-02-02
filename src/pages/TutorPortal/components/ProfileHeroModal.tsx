@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import { AutoComplete } from 'antd';
 import EditModal from './EditModal';
 import FormField from './FormField';
 import {
@@ -7,86 +9,49 @@ import {
     validateCity,
     validateDistrict,
     validateTeachingMode,
-    validateSubjects,
-    validateGradeLevels,
-    validateCustomTags
+    validateSubjects
 } from '../utils/validation';
+import {
+    VIETNAM_PROVINCES,
+    VIETNAM_DISTRICTS
+} from '../data/vietnamLocations';
 import styles from './ProfileHeroModal.module.css';
 
-// Mock data for cities/districts
-const CITIES = [
-    { value: 'hanoi', label: 'Ha Noi' },
-    { value: 'hcm', label: 'TP. Ho Chi Minh' },
-    { value: 'danang', label: 'Da Nang' },
-    { value: 'haiphong', label: 'Hai Phong' },
-    { value: 'cantho', label: 'Can Tho' },
-];
 
-const DISTRICTS: Record<string, { value: string; label: string }[]> = {
-    hanoi: [
-        { value: 'ba-dinh', label: 'Ba Dinh' },
-        { value: 'hoan-kiem', label: 'Hoan Kiem' },
-        { value: 'dong-da', label: 'Dong Da' },
-        { value: 'hai-ba-trung', label: 'Hai Ba Trung' },
-        { value: 'cau-giay', label: 'Cau Giay' },
-        { value: 'thanh-xuan', label: 'Thanh Xuan' },
-    ],
-    hcm: [
-        { value: 'quan-1', label: 'Quan 1' },
-        { value: 'quan-2', label: 'Quan 2' },
-        { value: 'quan-3', label: 'Quan 3' },
-        { value: 'quan-7', label: 'Quan 7' },
-        { value: 'binh-thanh', label: 'Binh Thanh' },
-        { value: 'phu-nhuan', label: 'Phu Nhuan' },
-    ],
-    danang: [
-        { value: 'hai-chau', label: 'Hai Chau' },
-        { value: 'son-tra', label: 'Son Tra' },
-        { value: 'ngu-hanh-son', label: 'Ngu Hanh Son' },
-    ],
-    haiphong: [
-        { value: 'hong-bang', label: 'Hong Bang' },
-        { value: 'le-chan', label: 'Le Chan' },
-    ],
-    cantho: [
-        { value: 'ninh-kieu', label: 'Ninh Kieu' },
-        { value: 'cai-rang', label: 'Cai Rang' },
-    ],
-};
 
 const SUBJECTS = [
-    { id: 1, name: 'Toan' },
-    { id: 2, name: 'Vat Ly' },
-    { id: 3, name: 'Hoa Hoc' },
-    { id: 4, name: 'Sinh Hoc' },
-    { id: 5, name: 'Tieng Anh' },
-    { id: 6, name: 'Ngu Van' },
-    { id: 7, name: 'Lich Su' },
-    { id: 8, name: 'Dia Ly' },
-    { id: 9, name: 'Tin Hoc' },
+    { id: 1, name: 'Toán' },
+    { id: 2, name: 'Vật Lý' },
+    { id: 3, name: 'Hóa Học' },
+    { id: 4, name: 'Sinh Học' },
+    { id: 5, name: 'Tiếng Anh' },
+    { id: 6, name: 'Ngữ Văn' },
+    { id: 7, name: 'Lịch Sử' },
+    { id: 8, name: 'Địa Lý' },
+    { id: 9, name: 'Tin Học' },
     { id: 10, name: 'IELTS' },
 ];
 
 const GRADE_LEVELS = [
-    { value: 1, label: 'Lop 1' },
-    { value: 2, label: 'Lop 2' },
-    { value: 3, label: 'Lop 3' },
-    { value: 4, label: 'Lop 4' },
-    { value: 5, label: 'Lop 5' },
-    { value: 6, label: 'Lop 6' },
-    { value: 7, label: 'Lop 7' },
-    { value: 8, label: 'Lop 8' },
-    { value: 9, label: 'Lop 9' },
-    { value: 10, label: 'Lop 10' },
-    { value: 11, label: 'Lop 11' },
-    { value: 12, label: 'Lop 12' },
-    { value: 13, label: 'Dai hoc' },
+    { value: 'grade_1', label: 'Lớp 1' },
+    { value: 'grade_2', label: 'Lớp 2' },
+    { value: 'grade_3', label: 'Lớp 3' },
+    { value: 'grade_4', label: 'Lớp 4' },
+    { value: 'grade_5', label: 'Lớp 5' },
+    { value: 'grade_6', label: 'Lớp 6' },
+    { value: 'grade_7', label: 'Lớp 7' },
+    { value: 'grade_8', label: 'Lớp 8' },
+    { value: 'grade_9', label: 'Lớp 9' },
+    { value: 'grade_10', label: 'Lớp 10' },
+    { value: 'grade_11', label: 'Lớp 11' },
+    { value: 'grade_12', label: 'Lớp 12' },
+    { value: 'grade_university', label: 'Đại học' },
 ];
 
 const TEACHING_MODES = [
-    { value: 'Online', label: 'Day Online' },
-    { value: 'Offline', label: 'Day truc tiep' },
-    { value: 'Hybrid', label: 'Ca hai hinh thuc' },
+    { value: 'online', label: 'Dạy Online' },
+    { value: 'offline', label: 'Dạy trực tiếp' },
+    { value: 'both', label: 'Cả hai hình thức' },
 ];
 
 // Icons
@@ -106,7 +71,8 @@ const CloseIcon = () => (
 interface SubjectSelection {
     subjectId: number;
     subjectName: string;
-    gradeLevels: number[];
+    gradeLevels: string[];  // ['grade_10', 'grade_11', ...]
+    tags: string[];  // Tags for this subject (max 5, required)
 }
 
 interface ProfileHeroData {
@@ -115,15 +81,14 @@ interface ProfileHeroData {
     headline: string;
     teachingAreaCity: string;
     teachingAreaDistrict: string;
-    teachingMode: 'Online' | 'Offline' | 'Hybrid' | '';
+    teachingMode: 'online' | 'offline' | 'both' | '';
     subjects: SubjectSelection[];
-    customTags: string[];
 }
 
 interface ProfileHeroModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: ProfileHeroData) => void;
+    onSave: (data: ProfileHeroData) => void | Promise<void>;
     initialData: ProfileHeroData;
 }
 
@@ -136,8 +101,9 @@ const ProfileHeroModal: React.FC<ProfileHeroModalProps> = ({
     const [formData, setFormData] = useState<ProfileHeroData>(initialData);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [avatarPreview, setAvatarPreview] = useState<string>(initialData.avatarUrl);
-    const [newTag, setNewTag] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [citySearch, setCitySearch] = useState<string>('');
+    const [districtSearch, setDistrictSearch] = useState<string>('');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Reset form when modal opens
@@ -146,7 +112,11 @@ const ProfileHeroModal: React.FC<ProfileHeroModalProps> = ({
             setFormData(initialData);
             setAvatarPreview(initialData.avatarUrl);
             setErrors({});
-            setNewTag('');
+            // Set initial search values from saved data
+            const selectedCity = VIETNAM_PROVINCES.find(p => p.value === initialData.teachingAreaCity);
+            setCitySearch(selectedCity?.label || '');
+            const selectedDistrict = VIETNAM_DISTRICTS[initialData.teachingAreaCity]?.find(d => d.value === initialData.teachingAreaDistrict);
+            setDistrictSearch(selectedDistrict?.label || '');
         }
     }, [isOpen, initialData]);
 
@@ -192,12 +162,12 @@ const ProfileHeroModal: React.FC<ProfileHeroModalProps> = ({
                 };
             } else {
                 if (prev.subjects.length >= 5) {
-                    setErrors(e => ({ ...e, subjects: 'Chi duoc chon toi da 5 mon hoc' }));
+                    setErrors(e => ({ ...e, subjects: 'Chỉ được chọn tối đa 5 môn học' }));
                     return prev;
                 }
                 return {
                     ...prev,
-                    subjects: [...prev.subjects, { subjectId, subjectName, gradeLevels: [] }]
+                    subjects: [...prev.subjects, { subjectId, subjectName, gradeLevels: [], tags: [] }]
                 };
             }
         });
@@ -205,7 +175,7 @@ const ProfileHeroModal: React.FC<ProfileHeroModalProps> = ({
     };
 
     // Handle grade level toggle for a subject
-    const handleGradeLevelToggle = (subjectId: number, gradeLevel: number) => {
+    const handleGradeLevelToggle = (subjectId: number, gradeLevel: string) => {
         setFormData(prev => ({
             ...prev,
             subjects: prev.subjects.map(subject => {
@@ -223,35 +193,50 @@ const ProfileHeroModal: React.FC<ProfileHeroModalProps> = ({
         }));
     };
 
-    // Handle custom tag add
-    const handleAddTag = () => {
-        if (!newTag.trim()) return;
-        if (formData.customTags.length >= 10) {
-            setErrors(prev => ({ ...prev, customTags: 'Chi duoc them toi da 10 the' }));
-            return;
-        }
-        if (newTag.length > 50) {
-            setErrors(prev => ({ ...prev, customTags: 'The khong duoc vuot qua 50 ky tu' }));
-            return;
-        }
-        if (formData.customTags.includes(newTag.trim())) {
-            setErrors(prev => ({ ...prev, customTags: 'The nay da ton tai' }));
-            return;
-        }
+    // Handle adding tag to a subject
+    const handleSubjectTagAdd = (subjectId: number, tagValue: string) => {
+        if (!tagValue.trim()) return;
 
         setFormData(prev => ({
             ...prev,
-            customTags: [...prev.customTags, newTag.trim()]
+            subjects: prev.subjects.map(subject => {
+                if (subject.subjectId === subjectId) {
+                    if (subject.tags.length >= 5) {
+                        setErrors(e => ({ ...e, [`tags_${subjectId}`]: 'Tối đa 5 thẻ cho mỗi môn học' }));
+                        return subject;
+                    }
+                    if (tagValue.length > 50) {
+                        setErrors(e => ({ ...e, [`tags_${subjectId}`]: 'Thẻ không được vượt quá 50 ký tự' }));
+                        return subject;
+                    }
+                    if (subject.tags.includes(tagValue.trim())) {
+                        setErrors(e => ({ ...e, [`tags_${subjectId}`]: 'Thẻ này đã tồn tại' }));
+                        return subject;
+                    }
+                    setErrors(e => ({ ...e, [`tags_${subjectId}`]: '' }));
+                    return {
+                        ...subject,
+                        tags: [...subject.tags, tagValue.trim()]
+                    };
+                }
+                return subject;
+            })
         }));
-        setNewTag('');
-        setErrors(prev => ({ ...prev, customTags: '' }));
     };
 
-    // Handle custom tag remove
-    const handleRemoveTag = (tag: string) => {
+    // Handle removing tag from a subject
+    const handleSubjectTagRemove = (subjectId: number, tagToRemove: string) => {
         setFormData(prev => ({
             ...prev,
-            customTags: prev.customTags.filter(t => t !== tag)
+            subjects: prev.subjects.map(subject => {
+                if (subject.subjectId === subjectId) {
+                    return {
+                        ...subject,
+                        tags: subject.tags.filter(t => t !== tagToRemove)
+                    };
+                }
+                return subject;
+            })
         }));
     };
 
@@ -292,16 +277,23 @@ const ProfileHeroModal: React.FC<ProfileHeroModalProps> = ({
         // Validate grade levels for each selected subject
         const subjectsWithoutLevels = formData.subjects.filter(s => s.gradeLevels.length === 0);
         if (subjectsWithoutLevels.length > 0) {
-            newErrors.gradeLevels = 'Vui long chon cap do cho moi mon hoc';
+            newErrors.gradeLevels = 'Vui lòng chọn cấp độ cho mỗi môn học';
         }
 
-        // Validate custom tags
-        const tagsValidation = validateCustomTags(formData.customTags);
-        if (!tagsValidation.isValid) {
-            newErrors.customTags = tagsValidation.error || '';
+        // Validate tags for each selected subject (required, at least 1 tag per subject)
+        const subjectsWithoutTags = formData.subjects.filter(s => s.tags.length === 0);
+        if (subjectsWithoutTags.length > 0) {
+            newErrors.subjectTags = 'Mỗi môn học phải có ít nhất 1 thẻ mô tả';
         }
 
         setErrors(newErrors);
+
+        // Show toast if validation fails
+        if (Object.keys(newErrors).length > 0) {
+            const firstError = Object.values(newErrors)[0];
+            toast.error(firstError);
+        }
+
         return Object.keys(newErrors).length === 0;
     };
 
@@ -310,12 +302,12 @@ const ProfileHeroModal: React.FC<ProfileHeroModalProps> = ({
         if (!validateForm()) return;
 
         setIsLoading(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setIsLoading(false);
-
-        onSave(formData);
-        onClose();
+        try {
+            // Call onSave - parent handles API call and closing modal
+            await onSave(formData);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -323,14 +315,14 @@ const ProfileHeroModal: React.FC<ProfileHeroModalProps> = ({
             isOpen={isOpen}
             onClose={onClose}
             onSave={handleSave}
-            title="Chinh sua thong tin co ban"
+            title="Chỉnh sửa thông tin cơ bản"
             isLoading={isLoading}
             size="large"
         >
             <div className={styles.form}>
                 {/* Avatar Upload */}
                 <div className={styles.avatarSection}>
-                    <label className={styles.sectionLabel}>Anh dai dien</label>
+                    <label className={styles.sectionLabel}>Ảnh đại diện</label>
                     <div className={styles.avatarUpload}>
                         <div
                             className={styles.avatarPreview}
@@ -341,7 +333,7 @@ const ProfileHeroModal: React.FC<ProfileHeroModalProps> = ({
                             ) : (
                                 <div className={styles.avatarPlaceholder}>
                                     <UploadIcon />
-                                    <span>Tai anh len</span>
+                                    <span>Tải ảnh lên</span>
                                 </div>
                             )}
                             <div className={styles.avatarOverlay}>
@@ -356,8 +348,8 @@ const ProfileHeroModal: React.FC<ProfileHeroModalProps> = ({
                             className={styles.fileInput}
                         />
                         <div className={styles.avatarHint}>
-                            <p>Dinh dang: JPG, PNG</p>
-                            <p>Kich thuoc toi da: 5MB</p>
+                            <p>Định dạng: JPG, PNG</p>
+                            <p>Kích thước tối đa: 5MB</p>
                         </div>
                     </div>
                     {errors.avatar && <span className={styles.error}>{errors.avatar}</span>}
@@ -365,50 +357,96 @@ const ProfileHeroModal: React.FC<ProfileHeroModalProps> = ({
 
                 {/* Headline */}
                 <FormField
-                    type="text"
+                    type="textarea"
                     name="headline"
-                    label="Tieu de gioi thieu"
+                    label="Tiêu đề giới thiệu"
                     value={formData.headline}
                     onChange={(value) => setFormData(prev => ({ ...prev, headline: value }))}
-                    placeholder="VD: Gia su Toan - Ly 10 nam kinh nghiem"
+                    placeholder="VD: Gia sư Toán - Lý 10 năm kinh nghiệm"
                     maxLength={200}
                     required
                     error={errors.headline}
-                    hint="10-200 ky tu, mo ta ngan gon ve ban than"
+                    hint="10-200 ký tự, mô tả ngắn gọn về bản thân"
                 />
 
                 {/* Location */}
                 <div className={styles.row}>
-                    <FormField
-                        type="select"
-                        name="city"
-                        label="Thanh pho"
-                        value={formData.teachingAreaCity}
-                        onChange={handleCityChange}
-                        options={CITIES}
-                        placeholder="Chon thanh pho"
-                        required
-                        error={errors.city}
-                    />
-                    <FormField
-                        type="select"
-                        name="district"
-                        label="Quan/Huyen"
-                        value={formData.teachingAreaDistrict}
-                        onChange={(value) => setFormData(prev => ({ ...prev, teachingAreaDistrict: value }))}
-                        options={DISTRICTS[formData.teachingAreaCity] || []}
-                        placeholder="Chon quan/huyen"
-                        required
-                        disabled={!formData.teachingAreaCity}
-                        error={errors.district}
-                    />
+                    <div className={styles.formGroup}>
+                        <label className={styles.label}>
+                            Thành phố <span className={styles.required}>*</span>
+                        </label>
+                        <AutoComplete
+                            value={citySearch}
+                            options={VIETNAM_PROVINCES.map(p => ({
+                                value: p.label,
+                                key: p.value
+                            }))}
+                            onSelect={(value) => {
+                                const province = VIETNAM_PROVINCES.find(p => p.label === value);
+                                if (province) {
+                                    setCitySearch(value);
+                                    handleCityChange(province.value);
+                                    setDistrictSearch('');
+                                }
+                            }}
+                            onChange={(value) => {
+                                setCitySearch(value);
+                            }}
+                            placeholder="Nhập tên thành phố..."
+                            className={styles.autocomplete}
+                            filterOption={(inputValue, option) =>
+                                option?.value?.toLowerCase().includes(inputValue.toLowerCase()) ?? false
+                            }
+                            allowClear
+                            onClear={() => {
+                                setCitySearch('');
+                                setDistrictSearch('');
+                                setFormData(prev => ({ ...prev, teachingAreaCity: '', teachingAreaDistrict: '' }));
+                            }}
+                        />
+                        {errors.city && <span className={styles.error}>{errors.city}</span>}
+                    </div>
+                    <div className={styles.formGroup}>
+                        <label className={styles.label}>
+                            Quận/Huyện <span className={styles.required}>*</span>
+                        </label>
+                        <AutoComplete
+                            value={districtSearch}
+                            options={(VIETNAM_DISTRICTS[formData.teachingAreaCity] || []).map(d => ({
+                                value: d.label,
+                                key: d.value
+                            }))}
+                            onSelect={(value) => {
+                                const district = (VIETNAM_DISTRICTS[formData.teachingAreaCity] || []).find(d => d.label === value);
+                                if (district) {
+                                    setDistrictSearch(value);
+                                    setFormData(prev => ({ ...prev, teachingAreaDistrict: district.value }));
+                                }
+                            }}
+                            onChange={(value) => {
+                                setDistrictSearch(value);
+                            }}
+                            placeholder="Nhập tên quận/huyện..."
+                            disabled={!formData.teachingAreaCity}
+                            className={styles.autocomplete}
+                            filterOption={(inputValue, option) =>
+                                option?.value?.toLowerCase().includes(inputValue.toLowerCase()) ?? false
+                            }
+                            allowClear
+                            onClear={() => {
+                                setDistrictSearch('');
+                                setFormData(prev => ({ ...prev, teachingAreaDistrict: '' }));
+                            }}
+                        />
+                        {errors.district && <span className={styles.error}>{errors.district}</span>}
+                    </div>
                 </div>
 
                 {/* Teaching Mode */}
                 <FormField
                     type="radio"
                     name="teachingMode"
-                    label="Hinh thuc day hoc"
+                    label="Hình thức dạy học"
                     value={formData.teachingMode}
                     onChange={(value) => setFormData(prev => ({ ...prev, teachingMode: value as ProfileHeroData['teachingMode'] }))}
                     options={TEACHING_MODES}
@@ -419,8 +457,8 @@ const ProfileHeroModal: React.FC<ProfileHeroModalProps> = ({
                 {/* Subjects */}
                 <div className={styles.subjectsSection}>
                     <label className={styles.sectionLabel}>
-                        Mon hoc <span className={styles.required}>*</span>
-                        <span className={styles.hint}>(Chon 1-5 mon)</span>
+                        Môn học <span className={styles.required}>*</span>
+                        <span className={styles.hint}>(Chọn 1-5 môn)</span>
                     </label>
                     <div className={styles.subjectGrid}>
                         {SUBJECTS.map(subject => (
@@ -437,11 +475,11 @@ const ProfileHeroModal: React.FC<ProfileHeroModalProps> = ({
                     {errors.subjects && <span className={styles.error}>{errors.subjects}</span>}
                 </div>
 
-                {/* Grade Levels per Subject */}
+                {/* Grade Levels and Tags per Subject */}
                 {formData.subjects.length > 0 && (
                     <div className={styles.gradeLevelsSection}>
                         <label className={styles.sectionLabel}>
-                            Cap do day <span className={styles.required}>*</span>
+                            Cấp độ dạy <span className={styles.required}>*</span>
                         </label>
                         {formData.subjects.map(subject => (
                             <div key={subject.subjectId} className={styles.subjectGradeLevels}>
@@ -458,48 +496,64 @@ const ProfileHeroModal: React.FC<ProfileHeroModalProps> = ({
                                         </button>
                                     ))}
                                 </div>
+                                {/* Subject Tags Input */}
+                                <div className={styles.subjectTagsSection}>
+                                    <div className={styles.tagInputRow}>
+                                        <input
+                                            type="text"
+                                            id={`tag-input-${subject.subjectId}`}
+                                            placeholder="VD: Luyện thi đại học, Kiên nhẫn..."
+                                            maxLength={50}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    const input = e.target as HTMLInputElement;
+                                                    handleSubjectTagAdd(subject.subjectId, input.value);
+                                                    input.value = '';
+                                                }
+                                            }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const input = document.getElementById(`tag-input-${subject.subjectId}`) as HTMLInputElement;
+                                                if (input) {
+                                                    handleSubjectTagAdd(subject.subjectId, input.value);
+                                                    input.value = '';
+                                                }
+                                            }}
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                    <span className={styles.tagHint}>
+                                        Thẻ mô tả môn học ({subject.tags.length}/5) <span className={styles.required}>*</span>
+                                    </span>
+                                    {subject.tags.length > 0 && (
+                                        <div className={styles.tagsList}>
+                                            {subject.tags.map(tag => (
+                                                <span key={tag} className={styles.tag}>
+                                                    {tag}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleSubjectTagRemove(subject.subjectId, tag)}
+                                                    >
+                                                        <CloseIcon />
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {errors[`tags_${subject.subjectId}`] && (
+                                        <span className={styles.error}>{errors[`tags_${subject.subjectId}`]}</span>
+                                    )}
+                                </div>
                             </div>
                         ))}
                         {errors.gradeLevels && <span className={styles.error}>{errors.gradeLevels}</span>}
+                        {errors.subjectTags && <span className={styles.error}>{errors.subjectTags}</span>}
                     </div>
                 )}
-
-                {/* Custom Tags */}
-                <div className={styles.tagsSection}>
-                    <label className={styles.sectionLabel}>
-                        The tuy chinh
-                        <span className={styles.hint}>(Khong bat buoc, toi da 10 the)</span>
-                    </label>
-                    <div className={styles.tagInput}>
-                        <input
-                            type="text"
-                            value={newTag}
-                            onChange={(e) => setNewTag(e.target.value)}
-                            placeholder="Nhap the va nhan Enter"
-                            maxLength={50}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    handleAddTag();
-                                }
-                            }}
-                        />
-                        <button type="button" onClick={handleAddTag}>Them</button>
-                    </div>
-                    {formData.customTags.length > 0 && (
-                        <div className={styles.tagsList}>
-                            {formData.customTags.map(tag => (
-                                <span key={tag} className={styles.tag}>
-                                    {tag}
-                                    <button type="button" onClick={() => handleRemoveTag(tag)}>
-                                        <CloseIcon />
-                                    </button>
-                                </span>
-                            ))}
-                        </div>
-                    )}
-                    {errors.customTags && <span className={styles.error}>{errors.customTags}</span>}
-                </div>
             </div>
         </EditModal>
     );

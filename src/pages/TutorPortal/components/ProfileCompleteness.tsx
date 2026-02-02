@@ -58,7 +58,7 @@ const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
             !!profileData.teachingAreaDistrict;
         items.push({
             key: 'basicInfo',
-            label: 'Thong tin co ban',
+            label: 'Thông tin cơ bản',
             completed: hasBasicInfo,
             percentage: 15
         });

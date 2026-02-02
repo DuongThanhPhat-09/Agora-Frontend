@@ -60,7 +60,8 @@ export const validateDistrict = (value: string): ValidationResult => {
 
 // Teaching mode validation
 export const validateTeachingMode = (value: string): ValidationResult => {
-    const validModes = ['Online', 'Offline', 'Hybrid'];
+    // Support both old format (PascalCase) and new API format (lowercase)
+    const validModes = ['Online', 'Offline', 'Hybrid', 'online', 'offline', 'hybrid', 'both'];
     if (!value || !validModes.includes(value)) {
         return { isValid: false, error: 'Vui lòng chọn hình thức dạy học' };
     }
