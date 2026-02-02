@@ -163,6 +163,7 @@ const TutorPortalProfile: React.FC = () => {
         updateAbout,
         updateVideoUrl,
         uploadVideo,
+        saveBasicInfo,
         addCredential,
         removeCredential,
         updateIdentityVerification,
@@ -249,7 +250,7 @@ const TutorPortalProfile: React.FC = () => {
                         <div className={styles.sectionCard}>
                             {isEditMode && (
                                 <>
-                                    <div className={styles.sectionBadge}>Thong tin co ban</div>
+                                    <div className={styles.sectionBadge}>Thông tin cơ bản</div>
                                     <button
                                         className={styles.editSectionBtn}
                                         onClick={() => setIsHeroModalOpen(true)}
@@ -282,7 +283,7 @@ const TutorPortalProfile: React.FC = () => {
                                         <div className={styles.metaItem}>
                                             <StarIcon />
                                             <span className={styles.metaValue}>
-                                                {formData.averageRating} ({formData.totalReviews} danh gia)
+                                                {formData.averageRating} ({formData.totalReviews} đánh giá)
                                             </span>
                                         </div>
                                         <div className={styles.metaItem}>
@@ -300,16 +301,21 @@ const TutorPortalProfile: React.FC = () => {
                                     {/* Subject Tags */}
                                     <div className={styles.subjectTags}>
                                         <div className={styles.tagsRow}>
-                                            {formData.subjects.map((subject) => (
-                                                <span key={subject.subjectId} className={styles.subjectTag}>
-                                                    {subject.subjectName}
-                                                </span>
-                                            ))}
-                                            {formData.customTags.map((tag) => (
-                                                <span key={tag} className={styles.customTag}>
-                                                    {tag}
-                                                </span>
-                                            ))}
+                                            {formData.subjects
+                                                .filter(subject => subject.subjectName && subject.subjectName.trim())
+                                                .map((subject) => (
+                                                    <span key={subject.subjectId} className={styles.subjectTag}>
+                                                        {subject.subjectName}
+                                                    </span>
+                                                ))}
+                                            {/* Display subject-specific tags */}
+                                            {formData.subjects.flatMap(subject =>
+                                                subject.tags.map((tag: string) => (
+                                                    <span key={`${subject.subjectId}-${tag}`} className={styles.customTag}>
+                                                        {tag}
+                                                    </span>
+                                                ))
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -319,14 +325,14 @@ const TutorPortalProfile: React.FC = () => {
                         {/* About Me Section */}
                         <div className={styles.sectionCard}>
                             <div className={styles.sectionHeader}>
-                                <h2 className={styles.sectionTitle}>Gioi thieu</h2>
+                                <h2 className={styles.sectionTitle}>Giới thiệu</h2>
                                 {isEditMode && (
                                     <button
                                         className={styles.editBtnSmall}
                                         onClick={() => setIsAboutModalOpen(true)}
                                     >
                                         <EditPencilIcon />
-                                        <span>Chinh sua</span>
+                                        <span>Chỉnh sửa</span>
                                     </button>
                                 )}
                             </div>
@@ -335,7 +341,7 @@ const TutorPortalProfile: React.FC = () => {
 
                                 <div className={styles.aboutDetails}>
                                     <div className={styles.detailItem}>
-                                        <span className={styles.detailLabel}>Hoc van</span>
+                                        <span className={styles.detailLabel}>Học vấn</span>
                                         <span className={styles.detailValue}>{formData.education}</span>
                                     </div>
                                     {formData.gpa && formData.gpaScale && (
@@ -349,7 +355,7 @@ const TutorPortalProfile: React.FC = () => {
                                 </div>
 
                                 <div className={styles.experienceSection}>
-                                    <h3 className={styles.subTitle}>Kinh nghiem</h3>
+                                    <h3 className={styles.subTitle}>Kinh nghiệm</h3>
                                     <p className={styles.experienceText}>{formData.experience}</p>
                                 </div>
                             </div>
@@ -358,7 +364,7 @@ const TutorPortalProfile: React.FC = () => {
                         {/* Academic Credentials Section */}
                         <div className={styles.sectionCard}>
                             <div className={styles.sectionHeader}>
-                                <h2 className={styles.sectionTitle}>Bang cap & Chung chi</h2>
+                                <h2 className={styles.sectionTitle}>Bằng cấp & Chứng chỉ</h2>
                                 {isEditMode && (
                                     <button
                                         className={styles.addBtn}
@@ -368,7 +374,7 @@ const TutorPortalProfile: React.FC = () => {
                                         }}
                                     >
                                         <PlusIcon />
-                                        <span>Them moi</span>
+                                        <span>Thêm mới</span>
                                     </button>
                                 )}
                             </div>
@@ -386,12 +392,12 @@ const TutorPortalProfile: React.FC = () => {
                                             <div className={styles.credentialMeta}>
                                                 {credential.issueYear && (
                                                     <span className={styles.credentialDate}>
-                                                        Nam {credential.issueYear}
+                                                        Năm {credential.issueYear}
                                                     </span>
                                                 )}
                                                 <span className={`${styles.verificationBadge} ${styles[credential.verificationStatus]}`}>
-                                                    {credential.verificationStatus === 'verified' ? 'Da xac minh' :
-                                                        credential.verificationStatus === 'pending' ? 'Dang cho duyet' : 'Bi tu choi'}
+                                                    {credential.verificationStatus === 'verified' ? 'Đã xác minh' :
+                                                        credential.verificationStatus === 'pending' ? 'Đang chờ duyệt' : 'Bị từ chối'}
                                                 </span>
                                             </div>
                                         </div>
@@ -444,22 +450,22 @@ const TutorPortalProfile: React.FC = () => {
                                     )}
                                     {formData.identityVerification.verificationStatus === 'pending' && (
                                         <div className={`${styles.identityBadge} ${styles.pending}`}>
-                                            <span>Dang cho duyet</span>
+                                            <span>Đang chờ duyệt</span>
                                         </div>
                                     )}
                                     {formData.identityVerification.verificationStatus === 'rejected' && (
                                         <div className={`${styles.identityBadge} ${styles.rejected}`}>
-                                            <span>Bi tu choi - Vui long cap nhat lai</span>
+                                            <span>Bị từ chối - Vui lòng cập nhật lại</span>
                                         </div>
                                     )}
                                     {formData.identityVerification.verificationStatus === 'not_submitted' && (
                                         <div className={styles.identityNotSubmitted}>
-                                            <p>Xac minh danh tinh de tang do tin cay voi hoc sinh va phu huynh.</p>
+                                            <p>Xác minh danh tính để tăng độ tin cậy với học sinh và phụ huynh.</p>
                                             <button
                                                 className={styles.verifyNowBtn}
                                                 onClick={() => setIsIdentityModalOpen(true)}
                                             >
-                                                Xac minh ngay
+                                                Xác minh ngay
                                             </button>
                                         </div>
                                     )}
@@ -482,40 +488,40 @@ const TutorPortalProfile: React.FC = () => {
                             )}
                             <div className={styles.priceRow}>
                                 <span className={styles.priceAmount}>{formatPrice(formData.hourlyRate)}</span>
-                                <span className={styles.priceUnit}>VND / gio</span>
+                                <span className={styles.priceUnit}>VND / giờ</span>
                             </div>
                             {formData.trialLessonPrice && (
                                 <div className={styles.trialPrice}>
-                                    Buoi hoc thu: {formatPrice(formData.trialLessonPrice)} VND
+                                    Buổi học thử: {formatPrice(formData.trialLessonPrice)} VND
                                 </div>
                             )}
                             {formData.allowNegotiation && (
                                 <div className={styles.negotiationNote}>
-                                    Co the thuong luong gia
+                                    Có thể thương lượng giá
                                 </div>
                             )}
 
                             <div className={styles.availabilitySection}>
-                                <span className={styles.availabilityLabel}>Lich ranh tiep theo</span>
+                                <span className={styles.availabilityLabel}>Lịch rảnh tiếp theo</span>
                                 {formData.availability.slice(0, 2).map((slot, index) => (
                                     <div key={index} className={styles.slotRow}>
                                         <span className={styles.slotTime}>
                                             {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][slot.dayOfWeek]}, {slot.startTime}
                                         </span>
-                                        <button className={styles.slotSelect}>Chon</button>
+                                        <button className={styles.slotSelect}>Chọn</button>
                                     </div>
                                 ))}
                             </div>
 
-                            <button className={styles.bookTrialBtn}>Dat buoi hoc thu</button>
+                            <button className={styles.bookTrialBtn}>Đặt buổi học thử</button>
                             <button className={styles.sendMessageBtn}>
                                 <MessageIcon />
-                                <span>Gui tin nhan</span>
+                                <span>Gửi tin nhắn</span>
                             </button>
 
                             <div className={styles.cancellationNote}>
                                 <CheckCircleIcon />
-                                <span>Mien phi huy truoc 24h</span>
+                                <span>Miễn phí hủy trước 24h</span>
                             </div>
                         </div>
 
@@ -539,13 +545,13 @@ const TutorPortalProfile: React.FC = () => {
                             className={`${styles.toggleBtn} ${!isEditMode ? styles.active : ''}`}
                             onClick={() => setIsEditMode(false)}
                         >
-                            Xem truoc
+                            Xem trước
                         </button>
                         <button
                             className={`${styles.toggleBtn} ${isEditMode ? styles.active : ''}`}
                             onClick={() => setIsEditMode(true)}
                         >
-                            Chinh sua
+                            Chỉnh sửa
                         </button>
                     </div>
                 </div>
@@ -556,12 +562,12 @@ const TutorPortalProfile: React.FC = () => {
                         {isDirty ? (
                             <>
                                 <span className={styles.unsavedDot}></span>
-                                <span className={styles.savedText}>Chua luu</span>
+                                <span className={styles.savedText}>Chưa lưu</span>
                             </>
                         ) : lastSaved ? (
                             <>
                                 <span className={styles.savedDot}></span>
-                                <span className={styles.savedText}>Da luu</span>
+                                <span className={styles.savedText}>Đã lưu</span>
                             </>
                         ) : null}
                     </div>
@@ -577,7 +583,7 @@ const TutorPortalProfile: React.FC = () => {
                         onClick={saveDraft}
                         disabled={!isDirty || isLoading}
                     >
-                        {isLoading ? 'Dang luu...' : 'Luu nhap'}
+                        {isLoading ? 'Đang lưu...' : 'Lưu nháp'}
                     </button>
 
                     {/* Publish Button */}
@@ -586,7 +592,7 @@ const TutorPortalProfile: React.FC = () => {
                         onClick={publishChanges}
                         disabled={!canPublish || isLoading}
                     >
-                        Xuat ban
+                        Xuất bản
                     </button>
                 </div>
             </div>
@@ -595,17 +601,20 @@ const TutorPortalProfile: React.FC = () => {
             <ProfileHeroModal
                 isOpen={isHeroModalOpen}
                 onClose={() => setIsHeroModalOpen(false)}
-                onSave={(data) => {
-                    updateHeroSection({
-                        avatarUrl: data.avatarFile ? URL.createObjectURL(data.avatarFile) : formData.avatarUrl,
+                onSave={async (data) => {
+                    // Call API to save basic info
+                    const success = await saveBasicInfo({
                         avatarFile: data.avatarFile,
                         headline: data.headline,
                         teachingAreaCity: data.teachingAreaCity,
                         teachingAreaDistrict: data.teachingAreaDistrict,
-                        teachingMode: data.teachingMode as any,
-                        subjects: data.subjects,
-                        customTags: data.customTags
+                        teachingMode: data.teachingMode,
+                        subjects: data.subjects
                     });
+
+                    if (success) {
+                        setIsHeroModalOpen(false);
+                    }
                 }}
                 initialData={{
                     avatarUrl: formData.avatarUrl,
@@ -614,8 +623,7 @@ const TutorPortalProfile: React.FC = () => {
                     teachingAreaCity: formData.teachingAreaCity,
                     teachingAreaDistrict: formData.teachingAreaDistrict,
                     teachingMode: formData.teachingMode,
-                    subjects: formData.subjects,
-                    customTags: formData.customTags
+                    subjects: formData.subjects
                 }}
             />
 

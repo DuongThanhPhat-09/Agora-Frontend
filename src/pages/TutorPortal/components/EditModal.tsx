@@ -34,8 +34,8 @@ const EditModal: React.FC<EditModalProps> = ({
     title,
     children,
     isLoading = false,
-    saveLabel = 'Luu',
-    cancelLabel = 'Huy',
+    saveLabel = 'Lưu',
+    cancelLabel = 'Hủy',
     size = 'medium',
     saveDisabled = false
 }) => {

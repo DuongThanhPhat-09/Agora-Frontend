@@ -75,16 +75,16 @@ interface IdentityVerificationModalProps {
 // Validation functions
 const validateIdImage = (file: File | null, existingUrl?: string): { isValid: boolean; error?: string } => {
     if (!file && !existingUrl) {
-        return { isValid: false, error: 'Vui long tai len anh' };
+        return { isValid: false, error: 'Vui lòng tải lên ảnh' };
     }
     if (file) {
         const maxSize = 5 * 1024 * 1024; // 5MB
         if (file.size > maxSize) {
-            return { isValid: false, error: 'Kich thuoc anh khong duoc vuot qua 5MB' };
+            return { isValid: false, error: 'Kích thước ảnh không được vượt quá 5MB' };
         }
         const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
         if (!allowedTypes.includes(file.type)) {
-            return { isValid: false, error: 'Chi chap nhan dinh dang JPG hoac PNG' };
+            return { isValid: false, error: 'Chỉ chấp nhận định dạng JPG hoặc PNG' };
         }
     }
     return { isValid: true };
@@ -175,7 +175,7 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
             return;
         }
 
-        toast.success('Upload anh mat truoc thanh cong!');
+        toast.success('Upload ảnh mặt trước thành công!');
         setFrontPath(result.publicUrl || result.path);
         setIsFrontUploading(false);
     };
@@ -213,7 +213,7 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
             return;
         }
 
-        toast.success('Upload anh mat sau thanh cong!');
+        toast.success('Upload ảnh mặt sau thành công!');
         setBackPath(result.publicUrl || result.path);
         setIsBackUploading(false);
     };
@@ -277,12 +277,12 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
 
         // Validate front image - must have uploaded path
         if (!frontPath && !formData.idFrontImageUrl) {
-            newErrors.front = 'Vui long tai len anh mat truoc CCCD';
+            newErrors.front = 'Vui lòng tải lên ảnh mặt trước CCCD';
         }
 
         // Validate back image - must have uploaded path
         if (!backPath && !formData.idBackImageUrl) {
-            newErrors.back = 'Vui long tai len anh mat sau CCCD';
+            newErrors.back = 'Vui lòng tải lên ảnh mặt sau CCCD';
         }
 
         setErrors(newErrors);
@@ -295,7 +295,7 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
 
         // Check if still uploading
         if (isFrontUploading || isBackUploading) {
-            toast.warning('Vui long cho upload anh hoan tat!');
+            toast.warning('Vui lòng chờ upload ảnh hoàn tất!');
             return;
         }
 
@@ -304,7 +304,7 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
         const backImagePath = backPath || formData.idBackImageUrl;
 
         if (!frontImagePath || !backImagePath) {
-            toast.error('Vui long upload day du anh CCCD ca 2 mat!');
+            toast.error('Vui lòng upload đầy đủ ảnh CCCD cả 2 mặt!');
             return;
         }
 
@@ -314,7 +314,7 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
             const response = await submitVerification(frontImagePath, backImagePath);
 
             if (response.success) {
-                toast.success('Xac thuc danh tinh thanh cong! Admin se xet duyet trong 24-48h.');
+                toast.success('Xác thực danh tính thành công! Admin sẽ xét duyệt trong 24-48h.');
 
                 // Update form data with pending status
                 const updatedData: IdentityVerificationData = {
@@ -327,11 +327,11 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
                 onSave(updatedData);
                 onClose();
             } else {
-                toast.error(response.message || 'Co loi xay ra khi gui xac thuc');
+                toast.error(response.message || 'Có lỗi xảy ra khi gửi xác thực');
             }
         } catch (error) {
             console.error('Submit verification error:', error);
-            toast.error('Khong the ket noi voi server. Vui long thu lai.');
+            toast.error('Không thể kết nối với server. Vui lòng thử lại.');
         } finally {
             setIsLoading(false);
         }
@@ -343,28 +343,28 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
                 return (
                     <div className={`${styles.statusBadge} ${styles.verified}`}>
                         <CheckIcon />
-                        <span>Da xac minh</span>
+                        <span>Đã xác minh</span>
                     </div>
                 );
             case 'rejected':
                 return (
                     <div className={`${styles.statusBadge} ${styles.rejected}`}>
                         <CloseIcon />
-                        <span>Bi tu choi</span>
+                        <span>Bị từ chối</span>
                     </div>
                 );
             case 'pending':
                 return (
                     <div className={`${styles.statusBadge} ${styles.pending}`}>
                         <PendingIcon />
-                        <span>Dang cho duyet</span>
+                        <span>Đang chờ duyệt</span>
                     </div>
                 );
             default:
                 return (
                     <div className={`${styles.statusBadge} ${styles.notSubmitted}`}>
                         <IdCardIcon />
-                        <span>Chua xac minh</span>
+                        <span>Chưa xác minh</span>
                     </div>
                 );
         }
@@ -372,40 +372,40 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
 
     const isAlreadyVerified = formData.verificationStatus === 'verified';
     const isReadyToSubmit = (frontPath || formData.idFrontImageUrl) &&
-                           (backPath || formData.idBackImageUrl) &&
-                           !isFrontUploading && !isBackUploading;
+        (backPath || formData.idBackImageUrl) &&
+        !isFrontUploading && !isBackUploading;
 
     return (
         <EditModal
             isOpen={isOpen}
             onClose={onClose}
             onSave={handleSave}
-            title="Xac minh danh tinh"
+            title="Xác minh danh tính"
             isLoading={isLoading}
-            saveLabel={isAlreadyVerified ? 'Dong' : 'Gui xac minh'}
+            saveLabel={isAlreadyVerified ? 'Đóng' : 'Gửi xác minh'}
             size="large"
             saveDisabled={!isReadyToSubmit && !isAlreadyVerified}
         >
             <div className={styles.form}>
                 {/* Verification Status */}
                 <div className={styles.statusSection}>
-                    <label className={styles.sectionLabel}>Trang thai xac minh</label>
+                    <label className={styles.sectionLabel}>Trạng thái xác minh</label>
                     {getStatusBadge()}
                     {formData.verificationStatus === 'rejected' && formData.rejectionReason && (
                         <div className={styles.rejectionReason}>
-                            <strong>Ly do tu choi:</strong> {formData.rejectionReason}
+                            <strong>Lý do từ chối:</strong> {formData.rejectionReason}
                         </div>
                     )}
                 </div>
 
                 {/* Instructions */}
                 <div className={styles.instructions}>
-                    <h4>Huong dan xac minh</h4>
+                    <h4>Hướng dẫn xác minh</h4>
                     <ul>
-                        <li>Chup anh CCCD/CMND ro rang, khong bi mo, khong bi cat goc</li>
-                        <li>Dam bao anh sang du, khong bi choi sang</li>
-                        <li>Toan bo the CCCD phai nam trong khung hinh</li>
-                        <li>File anh duoi 5MB, dinh dang JPG hoac PNG</li>
+                        <li>Chụp ảnh CCCD/CMND rõ ràng, không bị mờ, không bị cắt góc</li>
+                        <li>Đảm bảo ánh sáng đủ, không bị chói sáng</li>
+                        <li>Toàn bộ thẻ CCCD phải nằm trong khung hình</li>
+                        <li>File ảnh dưới 5MB, định dạng JPG hoặc PNG</li>
                     </ul>
                 </div>
 
@@ -414,7 +414,7 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
                     {/* Front Image */}
                     <div className={styles.uploadSection}>
                         <label className={styles.sectionLabel}>
-                            Mat truoc CCCD/CMND <span className={styles.required}>*</span>
+                            Mặt trước CCCD/CMND <span className={styles.required}>*</span>
                         </label>
                         {previews.front ? (
                             <div className={styles.imagePreview}>
@@ -422,7 +422,7 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
                                 {isFrontUploading && (
                                     <div className={styles.uploadOverlay}>
                                         <SpinnerIcon />
-                                        <span>Dang upload...</span>
+                                        <span>Đang upload...</span>
                                     </div>
                                 )}
                                 {!isAlreadyVerified && !isFrontUploading && (
@@ -446,8 +446,8 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
                                 onClick={() => !isAlreadyVerified && frontInputRef.current?.click()}
                             >
                                 <IdCardIcon />
-                                <span>Tai len mat truoc</span>
-                                <span className={styles.uploadHint}>JPG, PNG - Toi da 5MB</span>
+                                <span>Tải lên mặt trước</span>
+                                <span className={styles.uploadHint}>JPG, PNG - Tối đa 5MB</span>
                             </div>
                         )}
                         <input
@@ -464,7 +464,7 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
                     {/* Back Image */}
                     <div className={styles.uploadSection}>
                         <label className={styles.sectionLabel}>
-                            Mat sau CCCD/CMND <span className={styles.required}>*</span>
+                            Mặt sau CCCD/CMND <span className={styles.required}>*</span>
                         </label>
                         {previews.back ? (
                             <div className={styles.imagePreview}>
@@ -472,7 +472,7 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
                                 {isBackUploading && (
                                     <div className={styles.uploadOverlay}>
                                         <SpinnerIcon />
-                                        <span>Dang upload...</span>
+                                        <span>Đang upload...</span>
                                     </div>
                                 )}
                                 {!isAlreadyVerified && !isBackUploading && (
@@ -496,8 +496,8 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
                                 onClick={() => !isAlreadyVerified && backInputRef.current?.click()}
                             >
                                 <IdCardIcon />
-                                <span>Tai len mat sau</span>
-                                <span className={styles.uploadHint}>JPG, PNG - Toi da 5MB</span>
+                                <span>Tải lên mặt sau</span>
+                                <span className={styles.uploadHint}>JPG, PNG - Tối đa 5MB</span>
                             </div>
                         )}
                         <input
@@ -515,10 +515,10 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
                 {/* Selfie with ID (Optional) */}
                 <div className={styles.uploadSection}>
                     <label className={styles.sectionLabel}>
-                        Anh selfie cam CCCD <span className={styles.optional}>(Khong bat buoc)</span>
+                        Ảnh selfie cầm CCCD <span className={styles.optional}>(Không bắt buộc)</span>
                     </label>
                     <p className={styles.selfieHint}>
-                        Chup anh ban cam CCCD ben canh khuon mat de tang do tin cay
+                        Chụp ảnh bạn cầm CCCD bên cạnh khuôn mặt để tăng độ tin cậy
                     </p>
                     {previews.selfie ? (
                         <div className={styles.imagePreview}>
@@ -539,8 +539,8 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
                             onClick={() => !isAlreadyVerified && selfieInputRef.current?.click()}
                         >
                             <CameraIcon />
-                            <span>Tai len anh selfie</span>
-                            <span className={styles.uploadHint}>JPG, PNG - Toi da 5MB</span>
+                            <span>Tải lên ảnh selfie</span>
+                            <span className={styles.uploadHint}>JPG, PNG - Tối đa 5MB</span>
                         </div>
                     )}
                     <input
@@ -557,9 +557,9 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
                 {/* Privacy Note */}
                 <div className={styles.privacyNote}>
                     <p>
-                        Thong tin CCCD/CMND cua ban duoc bao mat tuyet doi va chi duoc su dung
-                        de xac minh danh tinh. Chung toi cam ket khong chia se thong tin nay
-                        voi bat ky ben thu ba nao.
+                        Thông tin CCCD/CMND của bạn được bảo mật tuyệt đối và chỉ được sử dụng
+                        để xác minh danh tính. Chúng tôi cam kết không chia sẻ thông tin này
+                        với bất kỳ bên thứ ba nào.
                     </p>
                 </div>
             </div>

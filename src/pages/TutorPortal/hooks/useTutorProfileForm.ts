@@ -3,7 +3,10 @@ import { toast } from 'react-toastify';
 import {
     getVerificationProgress,
     updateVideo,
-    type VerificationSections
+    updateAvatar,
+    updateBasicInfo,
+    type VerificationSections,
+    type BasicInfoUpdateData
 } from '../../../services/tutorProfile.service';
 import { getUserIdFromToken } from '../../../services/auth.service';
 import type { IdentityVerificationData } from '../components/IdentityVerificationModal';
@@ -15,7 +18,8 @@ export type { IdentityVerificationData };
 export interface SubjectSelection {
     subjectId: number;
     subjectName: string;
-    gradeLevels: number[];
+    gradeLevels: string[];  // ['grade_10', 'grade_11', ...]
+    tags: string[];  // Tags for this subject (max 5, required)
 }
 
 export interface CredentialData {
@@ -55,9 +59,8 @@ export interface TutorProfileFormData {
     headline: string;
     teachingAreaCity: string;
     teachingAreaDistrict: string;
-    teachingMode: 'Online' | 'Offline' | 'Hybrid' | '';
-    subjects: SubjectSelection[];
-    customTags: string[];
+    teachingMode: 'online' | 'offline' | 'both' | '';
+    subjects: SubjectSelection[];  // Now includes tags per subject
 
     // Display only (not editable)
     averageRating: number;
@@ -98,7 +101,6 @@ const initialFormData: TutorProfileFormData = {
     teachingAreaDistrict: '',
     teachingMode: '',
     subjects: [],
-    customTags: [],
 
     averageRating: 0,
     totalReviews: 0,
@@ -140,6 +142,36 @@ const initialSectionStatuses: SectionStatuses = {
 };
 
 /**
+ * Helper: Map teaching mode from API format to frontend format
+ */
+function mapTeachingModeFromApi(mode: string | null): 'online' | 'offline' | 'both' | '' {
+    if (!mode) return '';
+    const modeMap: Record<string, 'online' | 'offline' | 'both'> = {
+        'online': 'online',
+        'Online': 'online',
+        'offline': 'offline',
+        'Offline': 'offline',
+        'both': 'both',
+        'Both': 'both',
+        'hybrid': 'both',
+        'Hybrid': 'both'
+    };
+    return modeMap[mode] || '';
+}
+
+/**
+ * Helper: Map teaching mode from frontend format to API format (PascalCase)
+ */
+function mapTeachingModeToApi(mode: 'online' | 'offline' | 'both' | ''): string {
+    const modeMap: Record<string, string> = {
+        'online': 'Online',
+        'offline': 'Offline',
+        'both': 'Both'
+    };
+    return modeMap[mode] || '';
+}
+
+/**
  * Map API response sections to form data
  */
 function mapSectionsToFormData(sections: VerificationSections): Partial<TutorProfileFormData> {
@@ -152,8 +184,43 @@ function mapSectionsToFormData(sections: VerificationSections): Partial<TutorPro
         headline: sections.basicInfo.headline || '',
         teachingAreaCity: sections.basicInfo.teachingAreaCity || '',
         teachingAreaDistrict: sections.basicInfo.teachingAreaDistrict || '',
-        teachingMode: (sections.basicInfo.teachingMode as 'Online' | 'Offline' | 'Hybrid' | '') || '',
-        subjects: sections.basicInfo.subjects || [],
+        // Map teaching mode from API to frontend format
+        teachingMode: mapTeachingModeFromApi(sections.basicInfo.teachingMode),
+        // Map subjects with gradeLevels converted to string format
+        // Note: API may return gradeLevels/tags as JSON string instead of array
+        subjects: (sections.basicInfo.subjects || []).map(s => {
+            let gradeLevels: string[] = [];
+            let tags: string[] = [];
+
+            // Parse gradeLevels
+            if (typeof s.gradeLevels === 'string') {
+                try {
+                    gradeLevels = JSON.parse(s.gradeLevels);
+                } catch {
+                    gradeLevels = [];
+                }
+            } else if (Array.isArray(s.gradeLevels)) {
+                gradeLevels = s.gradeLevels.map(g => typeof g === 'string' ? g : `grade_${g}`);
+            }
+
+            // Parse tags (may also be JSON string from API)
+            if (typeof s.tags === 'string') {
+                try {
+                    tags = JSON.parse(s.tags);
+                } catch {
+                    tags = [];
+                }
+            } else if (Array.isArray(s.tags)) {
+                tags = s.tags;
+            }
+
+            return {
+                subjectId: s.subjectId,
+                subjectName: s.subjectName || '',
+                gradeLevels,
+                tags
+            };
+        }),
 
         // Introduction section
         bio: sections.introduction.bio || '',
@@ -348,6 +415,89 @@ export function useTutorProfileForm() {
         }
     }, [userId]);
 
+    // Save basic info to API (calls both avatar and basic-info endpoints)
+    const saveBasicInfo = useCallback(async (data: {
+        avatarFile: File | null;
+        headline: string;
+        teachingAreaCity: string;
+        teachingAreaDistrict: string;
+        teachingMode: 'online' | 'offline' | 'both' | '';
+        subjects: SubjectSelection[];
+    }): Promise<boolean> => {
+        if (!userId) {
+            toast.error('Không tìm thấy thông tin người dùng');
+            return false;
+        }
+
+        if (!data.teachingMode) {
+            toast.error('Vui lòng chọn hình thức dạy học');
+            return false;
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            console.log('📝 Saving basic info...');
+
+            // Step 1: Upload avatar if provided
+            if (data.avatarFile) {
+                console.log('🖼️ Uploading avatar first...');
+                const avatarResponse = await updateAvatar(userId, data.avatarFile);
+                if (avatarResponse.statusCode !== 200) {
+                    toast.error(avatarResponse.message || 'Không thể tải lên ảnh đại diện');
+                    return false;
+                }
+                console.log('✅ Avatar uploaded successfully');
+            }
+
+            // Step 2: Update basic info (JSON)
+            const apiData: BasicInfoUpdateData = {
+                headline: data.headline,
+                teachingAreaCity: data.teachingAreaCity,
+                teachingAreaDistrict: data.teachingAreaDistrict,
+                teachingMode: mapTeachingModeToApi(data.teachingMode),
+                subjects: data.subjects.map(s => ({
+                    subjectId: s.subjectId,
+                    gradeLevels: s.gradeLevels,  // Already in string format: ["grade_10", ...]
+                    tags: s.tags || []  // Tags for this subject
+                }))
+            };
+
+            const response = await updateBasicInfo(userId, apiData);
+
+            if (response.statusCode === 200) {
+                toast.success(response.message || 'Cập nhật thông tin thành công!');
+
+                // Refetch progress to get updated data
+                const progressResponse = await getVerificationProgress(userId);
+
+                if (progressResponse.statusCode === 200 && progressResponse.content?.sections) {
+                    const mappedData = mapSectionsToFormData(progressResponse.content.sections);
+                    const statuses = mapSectionStatuses(progressResponse.content.sections);
+
+                    setFormData(prev => ({ ...prev, ...mappedData }));
+                    setSavedData(prev => ({ ...prev, ...mappedData }));
+                    setSectionStatuses(statuses);
+                    setLastSaved(new Date());
+                }
+
+                return true;
+            } else {
+                toast.error(response.message || 'Không thể cập nhật thông tin');
+                return false;
+            }
+        } catch (err: any) {
+            console.error('❌ Error saving basic info:', err);
+            const errorMessage = err.response?.data?.message || 'Có lỗi xảy ra khi cập nhật thông tin';
+            setError(errorMessage);
+            toast.error(errorMessage);
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [userId]);
+
     // Add credential
     const addCredential = useCallback((credential: Omit<CredentialData, 'id'>) => {
         const newId = Math.max(0, ...formData.credentials.map(c => c.id)) + 1;
@@ -447,6 +597,7 @@ export function useTutorProfileForm() {
         updateAbout,
         updateVideoUrl,
         uploadVideo,
+        saveBasicInfo,
         addCredential,
         updateCredential,
         removeCredential,

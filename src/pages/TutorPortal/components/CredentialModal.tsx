@@ -275,7 +275,7 @@ const CredentialModal: React.FC<CredentialModalProps> = ({
                     <label className={styles.sectionLabel}>
                         File chung chi <span className={styles.required}>*</span>
                     </label>
-                    <p className={styles.hint}>Dinh dang: JPG, PNG, PDF. Toi da 10MB</p>
+                    <p className={styles.hint}>Định dạng: JPG, PNG, PDF. Tối đa 10MB</p>
 
                     {/* File Preview */}
                     {(formData.certificateFile || formData.certificateUrl) && (
