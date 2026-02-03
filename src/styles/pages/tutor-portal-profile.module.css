@@ -1523,6 +1523,58 @@
     position: relative;
 }
 
+/* No Schedule State in Pricing Card */
+.noScheduleSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px 0;
+    margin: 14px 0;
+    border-top: 1px solid rgba(62, 47, 40, 0.05);
+    border-bottom: 1px solid rgba(62, 47, 40, 0.05);
+}
+
+.noScheduleMessage {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(62, 47, 40, 0.5);
+    margin: 0 0 12px 0;
+}
+
+.updateScheduleLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    background-color: #f2f0e4;
+    border: 1px solid rgba(62, 47, 40, 0.1);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: #1a2238;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.updateScheduleLink:hover {
+    background-color: #e5e3d8;
+}
+
+/* Disabled Book Trial Button */
+.bookTrialBtn:disabled {
+    background-color: rgba(26, 34, 56, 0.3);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.bookTrialBtn:disabled:hover {
+    background-color: rgba(26, 34, 56, 0.3);
+}
+
 /* ===== IDENTITY VERIFICATION SECTION ===== */
 .identityContent {
     padding-top: 8px;

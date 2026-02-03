@@ -11,3 +11,4 @@ export { default as IdentityVerificationModal } from './IdentityVerificationModa
 export type { IdentityVerificationData } from './IdentityVerificationModal';
 export { default as RescheduleModal } from './RescheduleModal';
 export { default as AddAvailabilityModal } from './AddAvailabilityModal';
+export { default as EditAvailabilityModal } from './EditAvailabilityModal';
