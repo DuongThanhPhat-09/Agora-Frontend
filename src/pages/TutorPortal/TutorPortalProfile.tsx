@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTutorProfileForm } from './hooks/useTutorProfileForm';
 import ProfileHeroModal from './components/ProfileHeroModal';
 import PricingModal from './components/PricingModal';
@@ -9,6 +10,7 @@ import IdentityVerificationModal from './components/IdentityVerificationModal';
 import type { IdentityVerificationData } from './components/IdentityVerificationModal';
 import IntroVideoSection from './components/IntroVideoSection';
 import ProfileCompleteness from './components/ProfileCompleteness';
+import BookingModal from './components/BookingModal';
 import styles from '../../styles/pages/tutor-portal-profile.module.css';
 
 // Icon Components
@@ -137,6 +139,7 @@ const TEACHING_MODE_LABELS: Record<string, string> = {
 };
 
 const TutorPortalProfile: React.FC = () => {
+    const navigate = useNavigate();
     const [isEditMode, setIsEditMode] = useState(true);
 
     // Modal states
@@ -146,6 +149,7 @@ const TutorPortalProfile: React.FC = () => {
     const [isCredentialModalOpen, setIsCredentialModalOpen] = useState(false);
     const [editingCredential, setEditingCredential] = useState<CredentialData | null>(null);
     const [isIdentityModalOpen, setIsIdentityModalOpen] = useState(false);
+    const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
     // Form hook
     const {
@@ -493,29 +497,55 @@ const TutorPortalProfile: React.FC = () => {
                                     Buổi học thử: {formatPrice(formData.trialLessonPrice)} VND
                                 </div>
                             )}
-                            {formData.allowNegotiation && (
+                            {formData.allowPriceNegotiation && (
                                 <div className={styles.negotiationNote}>
                                     Có thể thương lượng giá
                                 </div>
                             )}
 
-                            <div className={styles.availabilitySection}>
-                                <span className={styles.availabilityLabel}>Lịch rảnh tiếp theo</span>
-                                {formData.availability.slice(0, 2).map((slot, index) => (
-                                    <div key={index} className={styles.slotRow}>
-                                        <span className={styles.slotTime}>
-                                            {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][slot.dayOfWeek]}, {slot.startTime}
-                                        </span>
-                                        <button className={styles.slotSelect}>Chọn</button>
-                                    </div>
-                                ))}
-                            </div>
+                            {/* Show availability section only in preview mode when has schedule */}
+                            {!isEditMode && formData.availability.length > 0 && (
+                                <div className={styles.availabilitySection}>
+                                    <span className={styles.availabilityLabel}>Lịch rảnh tiếp theo</span>
+                                    {formData.availability.slice(0, 2).map((slot, index) => (
+                                        <div key={index} className={styles.slotRow}>
+                                            <span className={styles.slotTime}>
+                                                {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][slot.dayOfWeek]}, {slot.startTime}
+                                            </span>
+                                            <button className={styles.slotSelect}>Chọn</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
 
-                            <button className={styles.bookTrialBtn}>Đặt buổi học thử</button>
-                            <button className={styles.sendMessageBtn}>
-                                <MessageIcon />
-                                <span>Gửi tin nhắn</span>
-                            </button>
+                            {/* Show no schedule message on card only in edit mode */}
+                            {isEditMode && formData.availability.length === 0 && (
+                                <div className={styles.noScheduleSection}>
+                                    <p className={styles.noScheduleMessage}>Chưa cập nhật lịch</p>
+                                    <button
+                                        className={styles.updateScheduleLink}
+                                        onClick={() => navigate('/tutor-portal/schedule')}
+                                    >
+                                        Cập nhật lịch ngay
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Show booking and message buttons only in preview mode */}
+                            {!isEditMode && (
+                                <>
+                                    <button
+                                        className={styles.bookTrialBtn}
+                                        onClick={() => setIsBookingModalOpen(true)}
+                                    >
+                                        Đặt buổi học thử
+                                    </button>
+                                    <button className={styles.sendMessageBtn}>
+                                        <MessageIcon />
+                                        <span>Gửi tin nhắn</span>
+                                    </button>
+                                </>
+                            )}
 
                             <div className={styles.cancellationNote}>
                                 <CheckCircleIcon />
@@ -628,11 +658,17 @@ const TutorPortalProfile: React.FC = () => {
             <PricingModal
                 isOpen={isPricingModalOpen}
                 onClose={() => setIsPricingModalOpen(false)}
-                onSave={updatePricing}
+                onSave={async (data) => {
+                    const success = await updatePricing(data);
+                    if (success) {
+                        setIsPricingModalOpen(false);
+                    }
+                    return success;
+                }}
                 initialData={{
                     hourlyRate: formData.hourlyRate,
                     trialLessonPrice: formData.trialLessonPrice,
-                    allowNegotiation: formData.allowNegotiation
+                    allowPriceNegotiation: formData.allowPriceNegotiation
                 }}
             />
 
@@ -673,6 +709,18 @@ const TutorPortalProfile: React.FC = () => {
                     updateIdentityVerification(data);
                 }}
                 initialData={formData.identityVerification}
+            />
+
+            <BookingModal
+                isOpen={isBookingModalOpen}
+                onClose={() => setIsBookingModalOpen(false)}
+                availability={formData.availability}
+                hourlyRate={formData.hourlyRate}
+                trialLessonPrice={formData.trialLessonPrice}
+                onNavigateToSchedule={() => {
+                    setIsBookingModalOpen(false);
+                    navigate('/tutor-portal/schedule');
+                }}
             />
         </div>
     );

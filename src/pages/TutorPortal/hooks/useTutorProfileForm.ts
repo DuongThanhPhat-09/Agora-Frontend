@@ -6,9 +6,11 @@ import {
     updateAvatar,
     updateBasicInfo,
     updateIntroduction,
+    updatePricing as updatePricingApi,
     type VerificationSections,
     type BasicInfoUpdateData,
-    type IntroductionUpdateData
+    type IntroductionUpdateData,
+    type PricingUpdateData
 } from '../../../services/tutorProfile.service';
 import { getUserIdFromToken } from '../../../services/auth.service';
 import type { IdentityVerificationData } from '../components/IdentityVerificationModal';
@@ -71,7 +73,7 @@ export interface TutorProfileFormData {
     // Pricing
     hourlyRate: number;
     trialLessonPrice: number | null;
-    allowNegotiation: boolean;
+    allowPriceNegotiation: boolean;
 
     // About (introduction)
     bio: string;
@@ -109,7 +111,7 @@ const initialFormData: TutorProfileFormData = {
 
     hourlyRate: 0,
     trialLessonPrice: null,
-    allowNegotiation: false,
+    allowPriceNegotiation: false,
 
     bio: '',
     education: '',
@@ -259,7 +261,7 @@ function mapSectionsToFormData(sections: VerificationSections): Partial<TutorPro
         // Pricing section
         hourlyRate: sections.pricing.hourlyRate || 0,
         trialLessonPrice: sections.pricing.trialLessonPrice,
-        allowNegotiation: sections.pricing.allowPriceNegotiation || false
+        allowPriceNegotiation: sections.pricing.allowPriceNegotiation || false
     };
 }
 
@@ -338,14 +340,68 @@ export function useTutorProfileForm() {
         setFormData(prev => ({ ...prev, ...data }));
     }, []);
 
-    // Update pricing
-    const updatePricing = useCallback((data: {
+    // Update pricing (calls API)
+    const updatePricing = useCallback(async (data: {
         hourlyRate: number;
         trialLessonPrice: number | null;
-        allowNegotiation: boolean;
-    }) => {
-        setFormData(prev => ({ ...prev, ...data }));
-    }, []);
+        allowPriceNegotiation: boolean;
+    }): Promise<boolean> => {
+        if (!userId) {
+            toast.error('Không tìm thấy thông tin người dùng');
+            return false;
+        }
+
+        // Validate hourlyRate
+        if (data.hourlyRate < 50000 || data.hourlyRate > 2000000) {
+            toast.error('Giá theo giờ phải nằm trong khoảng 50,000 - 2,000,000 VND');
+            return false;
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            console.log('💰 Saving pricing...');
+
+            const apiData: PricingUpdateData = {
+                hourlyRate: data.hourlyRate,
+                trialLessonPrice: data.trialLessonPrice,
+                allowPriceNegotiation: data.allowPriceNegotiation
+            };
+
+            const response = await updatePricingApi(userId, apiData);
+
+            if (response.statusCode === 200) {
+                toast.success(response.message || 'Cập nhật giá thành công!');
+
+                // Refetch progress to get updated data
+                const progressResponse = await getVerificationProgress(userId);
+
+                if (progressResponse.statusCode === 200 && progressResponse.content?.sections) {
+                    const mappedData = mapSectionsToFormData(progressResponse.content.sections);
+                    const statuses = mapSectionStatuses(progressResponse.content.sections);
+
+                    setFormData(prev => ({ ...prev, ...mappedData }));
+                    setSavedData(prev => ({ ...prev, ...mappedData }));
+                    setSectionStatuses(statuses);
+                    setLastSaved(new Date());
+                }
+
+                return true;
+            } else {
+                toast.error(response.message || 'Không thể cập nhật giá');
+                return false;
+            }
+        } catch (err: any) {
+            console.error('❌ Error saving pricing:', err);
+            const errorMessage = err.response?.data?.message || 'Có lỗi xảy ra khi cập nhật giá';
+            setError(errorMessage);
+            toast.error(errorMessage);
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [userId]);
 
     // Update about section (calls API)
     const updateAbout = useCallback(async (data: {

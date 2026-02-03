@@ -354,10 +354,58 @@ export const updateIntroduction = async (
 };
 
 // ============================================
+// Pricing Update Types
+// ============================================
+
+export interface PricingUpdateData {
+    hourlyRate: number;
+    trialLessonPrice: number | null;
+    allowPriceNegotiation: boolean;
+}
+
+/**
+ * Update pricing
+ * PUT /api/tutor-verification/{id}/tutor-profile/pricing
+ *
+ * @param userId - User ID (same as tutor ID)
+ * @param data - Pricing data to update
+ * @returns API response
+ */
+export const updatePricing = async (
+    userId: string,
+    data: PricingUpdateData
+): Promise<ApiResponse> => {
+    try {
+        console.log('💰 Updating pricing for:', userId);
+        console.log('Data:', data);
+
+        const response = await api.put(
+            `/tutor-verification/${userId}/tutor-profile/pricing`,
+            data,
+            {
+                headers: {
+                    ...getAuthHeaders(),
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        console.log('✅ Pricing updated successfully:', response.data);
+        return response.data;
+    } catch (error: any) {
+        console.error('❌ Error updating pricing:', {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message
+        });
+        throw error;
+    }
+};
+
+// ============================================
 // TODO: Add more update endpoints here
 // - PUT /api/tutor-verification/{id}/certificates
 // - PUT /api/tutor-verification/{id}/identity-card
-// - PUT /api/tutor-verification/{id}/pricing
 // ============================================
 
 

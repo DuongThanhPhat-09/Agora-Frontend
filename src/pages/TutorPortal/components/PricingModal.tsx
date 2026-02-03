@@ -12,13 +12,13 @@ import styles from './PricingModal.module.css';
 interface PricingData {
     hourlyRate: number;
     trialLessonPrice: number | null;
-    allowNegotiation: boolean;
+    allowPriceNegotiation: boolean;
 }
 
 interface PricingModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: PricingData) => void;
+    onSave: (data: PricingData) => Promise<boolean>;
     initialData: PricingData;
 }
 
@@ -104,11 +104,12 @@ const PricingModal: React.FC<PricingModalProps> = ({
         if (!validateForm()) return;
 
         setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 500));
+        const success = await onSave(formData);
         setIsLoading(false);
 
-        onSave(formData);
-        onClose();
+        if (success) {
+            onClose();
+        }
     };
 
     return (
@@ -116,7 +117,7 @@ const PricingModal: React.FC<PricingModalProps> = ({
             isOpen={isOpen}
             onClose={onClose}
             onSave={handleSave}
-            title="Chinh sua gia day"
+            title="Chỉnh sửa giá dạy"
             isLoading={isLoading}
             size="small"
         >
@@ -126,9 +127,10 @@ const PricingModal: React.FC<PricingModalProps> = ({
                     <FormField
                         type="text"
                         name="hourlyRate"
-                        label="Gia theo gio"
+                        label="Giá theo giờ"
                         value={hourlyRateDisplay}
                         onChange={handleHourlyRateChange}
+                        onBlur={handleHourlyRateBlur}
                         placeholder="VD: 200,000 VND"
                         required
                         error={errors.hourlyRate}
@@ -141,31 +143,32 @@ const PricingModal: React.FC<PricingModalProps> = ({
                     <FormField
                         type="text"
                         name="trialPrice"
-                        label="Gia buoi hoc thu"
+                        label="Giá buổi học thử"
                         value={trialPriceDisplay}
                         onChange={handleTrialPriceChange}
-                        placeholder="De trong neu khong co"
+                        onBlur={handleTrialPriceBlur}
+                        placeholder="Để trống nếu không có"
                         error={errors.trialPrice}
-                        hint="Phai thap hon gia theo gio"
+                        hint="Phải thấp hơn giá theo giờ"
                     />
                 </div>
 
                 {/* Allow Negotiation */}
                 <FormField
                     type="checkbox"
-                    name="allowNegotiation"
-                    label="Cho phep thuong luong gia"
-                    checked={formData.allowNegotiation}
-                    onChange={(checked) => setFormData(prev => ({ ...prev, allowNegotiation: checked }))}
+                    name="allowPriceNegotiation"
+                    label="Cho phép thương lượng giá"
+                    checked={formData.allowPriceNegotiation}
+                    onChange={(checked) => setFormData(prev => ({ ...prev, allowPriceNegotiation: checked }))}
                 />
 
                 {/* Pricing Tips */}
                 <div className={styles.tips}>
-                    <h4>Meo dat gia</h4>
+                    <h4>Mẹo đặt giá</h4>
                     <ul>
-                        <li>Gia buoi hoc thu thap hon se thu hut nhieu hoc sinh hon</li>
-                        <li>Xem xet gia thi truong trong khu vuc cua ban</li>
-                        <li>Co the dieu chinh gia theo cap do va do kho cua mon hoc</li>
+                        <li>Giá buổi học thử thấp hơn sẽ thu hút nhiều học sinh hơn</li>
+                        <li>Xem xét giá thị trường trong khu vực của bạn</li>
+                        <li>Có thể điều chỉnh giá theo cấp độ và độ khó của môn học</li>
                     </ul>
                 </div>
             </div>

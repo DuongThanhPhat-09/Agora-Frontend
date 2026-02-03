@@ -1,26 +1,42 @@
-import { FunctionComponent, useState } from 'react';
+import { FunctionComponent, useState, useEffect } from 'react';
 import { X, Clock } from 'lucide-react';
 import { toast } from 'react-toastify';
 import styles from './AddAvailabilityModal.module.css';
-import { createAvailability, DAY_OF_WEEK_MAP } from '../../../services/availability.service';
+import { updateAvailability, DAY_OF_WEEK_MAP } from '../../../services/availability.service';
 
-interface AddAvailabilityModalProps {
+interface EditAvailabilityModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSuccess?: () => void;  // Callback when availability is created successfully
+    onSuccess?: () => void;
+    availabilityData: {
+        id: number;
+        dayOfWeek: number;  // API format: 2-8
+        startTime: string;
+        endTime: string;
+    } | null;
 }
 
-const AddAvailabilityModal: FunctionComponent<AddAvailabilityModalProps> = ({
+const EditAvailabilityModal: FunctionComponent<EditAvailabilityModalProps> = ({
     isOpen,
     onClose,
     onSuccess,
+    availabilityData,
 }) => {
-    const [dayOfWeek, setDayOfWeek] = useState<number>(2);  // Default: Thứ 2
+    const [dayOfWeek, setDayOfWeek] = useState<number>(2);
     const [fromTime, setFromTime] = useState('');
     const [toTime, setToTime] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    if (!isOpen) return null;
+    // Update form when availabilityData changes
+    useEffect(() => {
+        if (availabilityData) {
+            setDayOfWeek(availabilityData.dayOfWeek);
+            setFromTime(availabilityData.startTime);
+            setToTime(availabilityData.endTime);
+        }
+    }, [availabilityData]);
+
+    if (!isOpen || !availabilityData) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -39,18 +55,13 @@ const AddAvailabilityModal: FunctionComponent<AddAvailabilityModalProps> = ({
         setIsLoading(true);
 
         try {
-            await createAvailability({
+            await updateAvailability(availabilityData.id, {
                 dayofweek: dayOfWeek,
                 starttime: fromTime,
                 endtime: toTime,
             });
 
-            toast.success('Thêm lịch rảnh thành công!');
-
-            // Reset form
-            setDayOfWeek(2);
-            setFromTime('');
-            setToTime('');
+            toast.success('Cập nhật lịch rảnh thành công!');
 
             // Call success callback
             if (onSuccess) {
@@ -58,9 +69,9 @@ const AddAvailabilityModal: FunctionComponent<AddAvailabilityModalProps> = ({
             }
 
             onClose();
-        } catch (error: any) {
-            console.error('Error creating availability:', error);
-            const errorMessage = error.response?.data?.message || 'Không thể thêm lịch rảnh. Vui lòng thử lại.';
+        } catch (error: unknown) {
+            const axiosError = error as { response?: { data?: { message?: string } } };
+            const errorMessage = axiosError.response?.data?.message || 'Không thể cập nhật lịch rảnh. Vui lòng thử lại.';
             toast.error(errorMessage);
         } finally {
             setIsLoading(false);
@@ -68,10 +79,6 @@ const AddAvailabilityModal: FunctionComponent<AddAvailabilityModalProps> = ({
     };
 
     const handleCancel = () => {
-        // Reset form
-        setDayOfWeek(2);
-        setFromTime('');
-        setToTime('');
         onClose();
     };
 
@@ -93,7 +100,7 @@ const AddAvailabilityModal: FunctionComponent<AddAvailabilityModalProps> = ({
             <div className={`${styles.sidebarModal} ${isOpen ? styles.open : ''}`}>
                 {/* Header */}
                 <div className={styles.header}>
-                    <h2 className={styles.title}>Thêm lịch rảnh</h2>
+                    <h2 className={styles.title}>Chỉnh sửa lịch rảnh</h2>
                     <button className={styles.closeBtn} onClick={handleCancel} type="button">
                         <X size={18} strokeWidth={2} />
                     </button>
@@ -165,7 +172,7 @@ const AddAvailabilityModal: FunctionComponent<AddAvailabilityModalProps> = ({
                                 className={styles.primaryBtn}
                                 disabled={isLoading}
                             >
-                                {isLoading ? 'Đang xử lý...' : 'Thêm lịch'}
+                                {isLoading ? 'Đang xử lý...' : 'Lưu thay đổi'}
                             </button>
                             <button
                                 type="button"
@@ -183,4 +190,4 @@ const AddAvailabilityModal: FunctionComponent<AddAvailabilityModalProps> = ({
     );
 };
 
-export default AddAvailabilityModal;
+export default EditAvailabilityModal;
