@@ -248,18 +248,17 @@ const TutorPortalProfile: React.FC = () => {
 
                         {/* Hero Section Card */}
                         <div className={styles.sectionCard}>
-                            {isEditMode && (
-                                <>
-                                    <div className={styles.sectionBadge}>Thông tin cơ bản</div>
+                            <div className={styles.sectionHeader}>
+                                <h2 className={styles.sectionTitle}>Thông tin cơ bản</h2>
+                                {isEditMode && (
                                     <button
-                                        className={styles.editSectionBtn}
+                                        className={styles.editIconBtn}
                                         onClick={() => setIsHeroModalOpen(true)}
                                     >
                                         <EditPencilIcon />
-                                        <span>Chinh sua</span>
                                     </button>
-                                </>
-                            )}
+                                )}
+                            </div>
                             <div className={styles.heroContent}>
                                 {/* Avatar */}
                                 <div className={styles.avatarContainer}>
@@ -328,11 +327,10 @@ const TutorPortalProfile: React.FC = () => {
                                 <h2 className={styles.sectionTitle}>Giới thiệu</h2>
                                 {isEditMode && (
                                     <button
-                                        className={styles.editBtnSmall}
+                                        className={styles.editIconBtn}
                                         onClick={() => setIsAboutModalOpen(true)}
                                     >
                                         <EditPencilIcon />
-                                        <span>Chỉnh sửa</span>
                                     </button>
                                 )}
                             </div>
@@ -641,7 +639,13 @@ const TutorPortalProfile: React.FC = () => {
             <AboutMeModal
                 isOpen={isAboutModalOpen}
                 onClose={() => setIsAboutModalOpen(false)}
-                onSave={updateAbout}
+                onSave={async (data) => {
+                    const success = await updateAbout(data);
+                    if (success) {
+                        setIsAboutModalOpen(false);
+                    }
+                    return success;
+                }}
                 initialData={{
                     bio: formData.bio,
                     education: formData.education,
