@@ -5,8 +5,10 @@ import {
     updateVideo,
     updateAvatar,
     updateBasicInfo,
+    updateIntroduction,
     type VerificationSections,
-    type BasicInfoUpdateData
+    type BasicInfoUpdateData,
+    type IntroductionUpdateData
 } from '../../../services/tutorProfile.service';
 import { getUserIdFromToken } from '../../../services/auth.service';
 import type { IdentityVerificationData } from '../components/IdentityVerificationModal';
@@ -345,16 +347,66 @@ export function useTutorProfileForm() {
         setFormData(prev => ({ ...prev, ...data }));
     }, []);
 
-    // Update about section
-    const updateAbout = useCallback((data: {
+    // Update about section (calls API)
+    const updateAbout = useCallback(async (data: {
         bio: string;
         education: string;
         gpaScale: 4 | 10 | null;
         gpa: number | null;
         experience: string;
-    }) => {
-        setFormData(prev => ({ ...prev, ...data }));
-    }, []);
+    }): Promise<boolean> => {
+        if (!userId) {
+            toast.error('Không tìm thấy thông tin người dùng');
+            return false;
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            console.log('📝 Saving introduction...');
+
+            const apiData: IntroductionUpdateData = {
+                bio: data.bio,
+                education: data.education,
+                gpa: data.gpa,
+                gpaScale: data.gpaScale,
+                experience: data.experience
+            };
+
+            const response = await updateIntroduction(userId, apiData);
+
+            if (response.statusCode === 200) {
+                toast.success(response.message || 'Cập nhật giới thiệu thành công!');
+
+                // Refetch progress to get updated data
+                const progressResponse = await getVerificationProgress(userId);
+
+                if (progressResponse.statusCode === 200 && progressResponse.content?.sections) {
+                    const mappedData = mapSectionsToFormData(progressResponse.content.sections);
+                    const statuses = mapSectionStatuses(progressResponse.content.sections);
+
+                    setFormData(prev => ({ ...prev, ...mappedData }));
+                    setSavedData(prev => ({ ...prev, ...mappedData }));
+                    setSectionStatuses(statuses);
+                    setLastSaved(new Date());
+                }
+
+                return true;
+            } else {
+                toast.error(response.message || 'Không thể cập nhật giới thiệu');
+                return false;
+            }
+        } catch (err: any) {
+            console.error('❌ Error saving introduction:', err);
+            const errorMessage = err.response?.data?.message || 'Có lỗi xảy ra khi cập nhật giới thiệu';
+            setError(errorMessage);
+            toast.error(errorMessage);
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [userId]);
 
     // Update video URL (for URL input)
     const updateVideoUrl = useCallback((url: string | null) => {

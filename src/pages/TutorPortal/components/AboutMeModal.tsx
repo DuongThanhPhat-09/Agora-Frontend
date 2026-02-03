@@ -20,12 +20,12 @@ interface AboutMeData {
 interface AboutMeModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: AboutMeData) => void;
+    onSave: (data: AboutMeData) => Promise<boolean>;
     initialData: AboutMeData;
 }
 
 const GPA_SCALES = [
-    { value: '', label: 'Chon thang diem' },
+    { value: '', label: 'Chọn thang điểm' },
     { value: '4', label: 'Thang 4.0' },
     { value: '10', label: 'Thang 10' },
 ];
@@ -107,11 +107,12 @@ const AboutMeModal: React.FC<AboutMeModalProps> = ({
         if (!validateForm()) return;
 
         setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 500));
+        const success = await onSave(formData);
         setIsLoading(false);
 
-        onSave(formData);
-        onClose();
+        if (success) {
+            onClose();
+        }
     };
 
     return (
@@ -119,7 +120,7 @@ const AboutMeModal: React.FC<AboutMeModalProps> = ({
             isOpen={isOpen}
             onClose={onClose}
             onSave={handleSave}
-            title="Chinh sua gioi thieu ban than"
+            title="Chỉnh sửa giới thiệu bản thân"
             isLoading={isLoading}
             size="large"
         >
@@ -128,25 +129,25 @@ const AboutMeModal: React.FC<AboutMeModalProps> = ({
                 <FormField
                     type="textarea"
                     name="bio"
-                    label="Gioi thieu ban than"
+                    label="Giới thiệu bản thân"
                     value={formData.bio}
                     onChange={(value) => setFormData(prev => ({ ...prev, bio: value }))}
-                    placeholder="Hay viet mot doan gioi thieu ve ban than, kinh nghiem va phuong phap giang day cua ban..."
+                    placeholder="Hãy viết một đoạn giới thiệu về bản thân, kinh nghiệm và phương pháp giảng dạy của bạn..."
                     maxLength={2000}
                     rows={6}
                     required
                     error={errors.bio}
-                    hint="100-2000 ky tu"
+                    hint="100-2000 ký tự"
                 />
 
                 {/* Education */}
                 <FormField
                     type="text"
                     name="education"
-                    label="Trinh do hoc van"
+                    label="Trình độ học vấn"
                     value={formData.education}
                     onChange={(value) => setFormData(prev => ({ ...prev, education: value }))}
-                    placeholder="VD: Cu nhan Su pham Toan - Dai hoc Su pham Ha Noi"
+                    placeholder="VD: Cử nhân Sư phạm Toán - Đại học Sư phạm Hà Nội"
                     maxLength={255}
                     required
                     error={errors.education}
@@ -157,19 +158,19 @@ const AboutMeModal: React.FC<AboutMeModalProps> = ({
                     <FormField
                         type="select"
                         name="gpaScale"
-                        label="Thang diem"
+                        label="Thang điểm"
                         value={formData.gpaScale?.toString() || ''}
                         onChange={handleGpaScaleChange}
                         options={GPA_SCALES.slice(1)}
-                        placeholder="Chon thang diem"
+                        placeholder="Chọn thang điểm"
                     />
                     <FormField
                         type="number"
                         name="gpa"
-                        label="Diem GPA"
+                        label="Điểm GPA"
                         value={formData.gpa?.toString() || ''}
                         onChange={handleGpaChange}
-                        placeholder={formData.gpaScale === 4 ? 'VD: 3.5' : formData.gpaScale === 10 ? 'VD: 8.5' : 'Chon thang diem truoc'}
+                        placeholder={formData.gpaScale === 4 ? 'VD: 3.5' : formData.gpaScale === 10 ? 'VD: 8.5' : 'Chọn thang điểm trước'}
                         disabled={!formData.gpaScale}
                         error={errors.gpa}
                     />
@@ -179,25 +180,25 @@ const AboutMeModal: React.FC<AboutMeModalProps> = ({
                 <FormField
                     type="textarea"
                     name="experience"
-                    label="Kinh nghiem giang day"
+                    label="Kinh nghiệm giảng dạy"
                     value={formData.experience}
                     onChange={(value) => setFormData(prev => ({ ...prev, experience: value }))}
-                    placeholder="Mo ta kinh nghiem giang day cua ban: so nam kinh nghiem, cac lop da day, thanh tich hoc sinh..."
+                    placeholder="Mô tả kinh nghiệm giảng dạy của bạn: số năm kinh nghiệm, các lớp đã dạy, thành tích học sinh..."
                     maxLength={2000}
                     rows={5}
                     required
                     error={errors.experience}
-                    hint="50-2000 ky tu"
+                    hint="50-2000 ký tự"
                 />
 
                 {/* Writing Tips */}
                 <div className={styles.tips}>
-                    <h4>Meo viet gioi thieu hieu qua</h4>
+                    <h4>Mẹo viết giới thiệu hiệu quả</h4>
                     <ul>
-                        <li>Neu ro phuong phap giang day dac trung cua ban</li>
-                        <li>Chia se thanh tich cua hoc sinh truoc do</li>
-                        <li>Giai thich tai sao ban dam me viec giang day</li>
-                        <li>Su dung ngon ngu than thien, de tiep can</li>
+                        <li>Nêu rõ phương pháp giảng dạy đặc trưng của bạn</li>
+                        <li>Chia sẻ thành tích của học sinh trước đó</li>
+                        <li>Giải thích tại sao bạn đam mê việc giảng dạy</li>
+                        <li>Sử dụng ngôn ngữ thân thiện, dễ tiếp cận</li>
                     </ul>
                 </div>
             </div>

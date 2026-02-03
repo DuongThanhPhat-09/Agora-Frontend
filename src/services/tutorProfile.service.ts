@@ -303,8 +303,58 @@ export const updateBasicInfo = async (
 };
 
 // ============================================
+// Introduction Update Types
+// ============================================
+
+export interface IntroductionUpdateData {
+    bio: string;
+    education: string;
+    gpa: number | null;
+    gpaScale: number | null;  // 4 or 10
+    experience: string;
+}
+
+/**
+ * Update introduction (about me)
+ * PUT /api/tutor-verification/{id}/tutor-profile/introduction
+ *
+ * @param userId - User ID (same as tutor ID)
+ * @param data - Introduction data to update
+ * @returns API response
+ */
+export const updateIntroduction = async (
+    userId: string,
+    data: IntroductionUpdateData
+): Promise<ApiResponse> => {
+    try {
+        console.log('📝 Updating introduction for:', userId);
+        console.log('Data:', data);
+
+        const response = await api.put(
+            `/tutor-verification/${userId}/tutor-profile/introduction`,
+            data,
+            {
+                headers: {
+                    ...getAuthHeaders(),
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        console.log('✅ Introduction updated successfully:', response.data);
+        return response.data;
+    } catch (error: any) {
+        console.error('❌ Error updating introduction:', {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message
+        });
+        throw error;
+    }
+};
+
+// ============================================
 // TODO: Add more update endpoints here
-// - PUT /api/tutor-verification/{id}/tutor-profile/introduction
 // - PUT /api/tutor-verification/{id}/certificates
 // - PUT /api/tutor-verification/{id}/identity-card
 // - PUT /api/tutor-verification/{id}/pricing
