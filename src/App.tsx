@@ -34,6 +34,7 @@ import ParentChildren from "./pages/ParentChildren";
 import ChildrenDetail from "./pages/ParentChildren/Details";
 import ParentWallet from "./pages/ParentWallet";
 import ParentMessage from "./pages/ParentMessage";
+import StudentDashboard from "./pages/StudentDashboard";
 
 // ---------------------
 
@@ -127,6 +128,21 @@ function App() {
           <Route path="children/:id" element={<ChildrenDetail />} />
           <Route path="wallet" element={<ParentWallet />} />
           <Route path="messages" element={<ParentMessage />} />
+        </Route>
+
+        {/* Student Layout - PROTECTED */}
+        <Route
+          path="/student"
+          element={
+            // <ProtectedRoute allowedRoles={["Admin"]}>
+            //   <AdminLayout />
+            // </ProtectedRoute>
+            <ParentLayout />
+
+          }
+        >
+          <Route index element={<Navigate to="/student/dashboard" replace />} />
+          <Route path="dashboard" element={<StudentDashboard />} />
         </Route>
 
         <Route path="/login" element={<LoginPage />} />
