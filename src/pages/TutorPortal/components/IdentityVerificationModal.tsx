@@ -37,13 +37,6 @@ const PendingIcon = () => (
     </svg>
 );
 
-const CameraIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <path d="M23 19C23 19.5304 22.7893 20.0391 22.4142 20.4142C22.0391 20.7893 21.5304 21 21 21H3C2.46957 21 1.96086 20.7893 1.58579 20.4142C1.21071 20.0391 1 19.5304 1 19V8C1 7.46957 1.21071 6.96086 1.58579 6.58579C1.96086 6.21071 2.46957 6 3 6H7L9 3H15L17 6H21C21.5304 6 22.0391 6.21071 22.4142 6.58579C22.7893 6.96086 23 7.46957 23 8V19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="2" />
-    </svg>
-);
-
 const SpinnerIcon = () => (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className={styles.spinner}>
         <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
@@ -55,12 +48,13 @@ export interface IdentityVerificationData {
     idNumber: string;
     fullNameOnId: string;
     dateOfBirth: string;
+    address?: string;
+    hometown?: string;
+    gender?: string;
     idFrontImage: File | null;
     idFrontImageUrl?: string;
     idBackImage: File | null;
     idBackImageUrl?: string;
-    selfieWithId: File | null;
-    selfieWithIdUrl?: string;
     verificationStatus: 'not_submitted' | 'pending' | 'verified' | 'rejected';
     rejectionReason?: string;
 }
@@ -102,7 +96,6 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
         dateOfBirth: '',
         idFrontImage: null,
         idBackImage: null,
-        selfieWithId: null,
         verificationStatus: 'not_submitted'
     };
 
@@ -116,16 +109,13 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
     const [previews, setPreviews] = useState<{
         front: string | null;
         back: string | null;
-        selfie: string | null;
     }>({
         front: initialData?.idFrontImageUrl || null,
-        back: initialData?.idBackImageUrl || null,
-        selfie: initialData?.selfieWithIdUrl || null
+        back: initialData?.idBackImageUrl || null
     });
 
     const frontInputRef = useRef<HTMLInputElement>(null);
     const backInputRef = useRef<HTMLInputElement>(null);
-    const selfieInputRef = useRef<HTMLInputElement>(null);
 
     // Reset form when modal opens
     useEffect(() => {
@@ -133,8 +123,7 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
             setFormData(initialData || defaultData);
             setPreviews({
                 front: initialData?.idFrontImageUrl || null,
-                back: initialData?.idBackImageUrl || null,
-                selfie: initialData?.selfieWithIdUrl || null
+                back: initialData?.idBackImageUrl || null
             });
             setErrors({});
             setFrontPath(null);
@@ -218,39 +207,16 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
         setIsBackUploading(false);
     };
 
-    // Handle selfie upload (optional, stored locally)
-    const handleSelfieSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        const validation = validateIdImage(file);
-        if (!validation.isValid) {
-            setErrors(prev => ({ ...prev, selfie: validation.error || '' }));
-            return;
-        }
-
-        setFormData(prev => ({ ...prev, selfieWithId: file }));
-        setErrors(prev => ({ ...prev, selfie: '' }));
-
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setPreviews(prev => ({ ...prev, selfie: reader.result as string }));
-        };
-        reader.readAsDataURL(file);
-    };
-
     // Remove uploaded file
-    const handleRemoveFile = (type: 'front' | 'back' | 'selfie') => {
+    const handleRemoveFile = (type: 'front' | 'back') => {
         const fieldMap = {
             front: 'idFrontImage',
-            back: 'idBackImage',
-            selfie: 'selfieWithId'
+            back: 'idBackImage'
         } as const;
 
         const urlMap = {
             front: 'idFrontImageUrl',
-            back: 'idBackImageUrl',
-            selfie: 'selfieWithIdUrl'
+            back: 'idBackImageUrl'
         } as const;
 
         setFormData(prev => ({
@@ -263,11 +229,9 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
         if (type === 'front') {
             setFrontPath(null);
             if (frontInputRef.current) frontInputRef.current.value = '';
-        } else if (type === 'back') {
+        } else {
             setBackPath(null);
             if (backInputRef.current) backInputRef.current.value = '';
-        } else {
-            if (selfieInputRef.current) selfieInputRef.current.value = '';
         }
     };
 
@@ -314,17 +278,40 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
             const response = await submitVerification(frontImagePath, backImagePath);
 
             if (response.success) {
-                toast.success('Xác thực danh tính thành công! Admin sẽ xét duyệt trong 24-48h.');
+                // Check if eKYC returned data immediately (verified)
+                const isVerified = response.status === 'approved' && response.content;
 
-                // Update form data with pending status
-                const updatedData: IdentityVerificationData = {
-                    ...formData,
-                    idFrontImageUrl: frontImagePath,
-                    idBackImageUrl: backImagePath,
-                    verificationStatus: 'pending'
-                };
+                if (isVerified && response.content) {
+                    toast.success('Xác thực danh tính thành công!');
 
-                onSave(updatedData);
+                    // Update form data with verified status and eKYC data
+                    const updatedData: IdentityVerificationData = {
+                        ...formData,
+                        idNumber: response.content.id || '',
+                        fullNameOnId: response.content.name || '',
+                        dateOfBirth: response.content.dob || '',
+                        address: response.content.address || '',
+                        hometown: response.content.home || '',
+                        gender: response.content.sex || '',
+                        idFrontImageUrl: frontImagePath,
+                        idBackImageUrl: backImagePath,
+                        verificationStatus: 'verified'
+                    };
+
+                    onSave(updatedData);
+                } else {
+                    toast.success('Đã gửi yêu cầu xác thực. Admin sẽ xét duyệt trong 24-48h.');
+
+                    // Update form data with pending status
+                    const updatedData: IdentityVerificationData = {
+                        ...formData,
+                        idFrontImageUrl: frontImagePath,
+                        idBackImageUrl: backImagePath,
+                        verificationStatus: 'pending'
+                    };
+
+                    onSave(updatedData);
+                }
                 onClose();
             } else {
                 toast.error(response.message || 'Có lỗi xảy ra khi gửi xác thực');
@@ -375,16 +362,26 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
         (backPath || formData.idBackImageUrl) &&
         !isFrontUploading && !isBackUploading;
 
+    // When verified, clicking "Đóng" just closes the modal
+    const handleSaveOrClose = () => {
+        if (isAlreadyVerified) {
+            onClose();
+        } else {
+            handleSave();
+        }
+    };
+
     return (
         <EditModal
             isOpen={isOpen}
             onClose={onClose}
-            onSave={handleSave}
+            onSave={handleSaveOrClose}
             title="Xác minh danh tính"
             isLoading={isLoading}
             saveLabel={isAlreadyVerified ? 'Đóng' : 'Gửi xác minh'}
             size="large"
             saveDisabled={!isReadyToSubmit && !isAlreadyVerified}
+            hideCancel={isAlreadyVerified}
         >
             <div className={styles.form}>
                 {/* Verification Status */}
@@ -398,16 +395,63 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
                     )}
                 </div>
 
-                {/* Instructions */}
-                <div className={styles.instructions}>
-                    <h4>Hướng dẫn xác minh</h4>
-                    <ul>
-                        <li>Chụp ảnh CCCD/CMND rõ ràng, không bị mờ, không bị cắt góc</li>
-                        <li>Đảm bảo ánh sáng đủ, không bị chói sáng</li>
-                        <li>Toàn bộ thẻ CCCD phải nằm trong khung hình</li>
-                        <li>File ảnh dưới 5MB, định dạng JPG hoặc PNG</li>
-                    </ul>
-                </div>
+                {/* Show eKYC extracted data if verified */}
+                {isAlreadyVerified && formData.fullNameOnId && (
+                    <div className={styles.ekycDataSection}>
+                        <h4 className={styles.ekycTitle}>Thông tin đã xác minh</h4>
+                        <div className={styles.ekycGrid}>
+                            {formData.idNumber && (
+                                <div className={styles.ekycItem}>
+                                    <span className={styles.ekycLabel}>Số CCCD</span>
+                                    <span className={styles.ekycValue}>{formData.idNumber}</span>
+                                </div>
+                            )}
+                            {formData.fullNameOnId && (
+                                <div className={styles.ekycItem}>
+                                    <span className={styles.ekycLabel}>Họ và tên</span>
+                                    <span className={styles.ekycValue}>{formData.fullNameOnId}</span>
+                                </div>
+                            )}
+                            {formData.dateOfBirth && (
+                                <div className={styles.ekycItem}>
+                                    <span className={styles.ekycLabel}>Ngày sinh</span>
+                                    <span className={styles.ekycValue}>{formData.dateOfBirth}</span>
+                                </div>
+                            )}
+                            {formData.gender && (
+                                <div className={styles.ekycItem}>
+                                    <span className={styles.ekycLabel}>Giới tính</span>
+                                    <span className={styles.ekycValue}>{formData.gender}</span>
+                                </div>
+                            )}
+                            {formData.hometown && (
+                                <div className={styles.ekycItem}>
+                                    <span className={styles.ekycLabel}>Quê quán</span>
+                                    <span className={styles.ekycValue}>{formData.hometown}</span>
+                                </div>
+                            )}
+                            {formData.address && (
+                                <div className={styles.ekycItem}>
+                                    <span className={styles.ekycLabel}>Địa chỉ</span>
+                                    <span className={styles.ekycValue}>{formData.address}</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Instructions - only show if not yet verified */}
+                {!isAlreadyVerified && (
+                    <div className={styles.instructions}>
+                        <h4>Hướng dẫn xác minh</h4>
+                        <ul>
+                            <li>Chụp ảnh CCCD/CMND rõ ràng, không bị mờ, không bị cắt góc</li>
+                            <li>Đảm bảo ánh sáng đủ, không bị chói sáng</li>
+                            <li>Toàn bộ thẻ CCCD phải nằm trong khung hình</li>
+                            <li>File ảnh dưới 5MB, định dạng JPG hoặc PNG</li>
+                        </ul>
+                    </div>
+                )}
 
                 {/* ID Card Images */}
                 <div className={styles.imageUploads}>
@@ -510,48 +554,6 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
                         />
                         {errors.back && <span className={styles.error}>{errors.back}</span>}
                     </div>
-                </div>
-
-                {/* Selfie with ID (Optional) */}
-                <div className={styles.uploadSection}>
-                    <label className={styles.sectionLabel}>
-                        Ảnh selfie cầm CCCD <span className={styles.optional}>(Không bắt buộc)</span>
-                    </label>
-                    <p className={styles.selfieHint}>
-                        Chụp ảnh bạn cầm CCCD bên cạnh khuôn mặt để tăng độ tin cậy
-                    </p>
-                    {previews.selfie ? (
-                        <div className={styles.imagePreview}>
-                            <img src={previews.selfie} alt="Selfie with ID" />
-                            {!isAlreadyVerified && (
-                                <button
-                                    type="button"
-                                    className={styles.removeBtn}
-                                    onClick={() => handleRemoveFile('selfie')}
-                                >
-                                    <CloseIcon />
-                                </button>
-                            )}
-                        </div>
-                    ) : (
-                        <div
-                            className={styles.uploadArea}
-                            onClick={() => !isAlreadyVerified && selfieInputRef.current?.click()}
-                        >
-                            <CameraIcon />
-                            <span>Tải lên ảnh selfie</span>
-                            <span className={styles.uploadHint}>JPG, PNG - Tối đa 5MB</span>
-                        </div>
-                    )}
-                    <input
-                        ref={selfieInputRef}
-                        type="file"
-                        accept="image/jpeg,image/png"
-                        onChange={handleSelfieSelected}
-                        className={styles.fileInput}
-                        disabled={isAlreadyVerified}
-                    />
-                    {errors.selfie && <span className={styles.error}>{errors.selfie}</span>}
                 </div>
 
                 {/* Privacy Note */}

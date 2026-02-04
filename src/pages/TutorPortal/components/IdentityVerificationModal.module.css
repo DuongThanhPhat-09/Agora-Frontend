@@ -309,6 +309,67 @@
     color: rgba(62, 47, 40, 0.6);
 }
 
+/* eKYC Data Section */
+.ekycDataSection {
+    padding: 20px;
+    border-radius: 12px;
+    background-color: rgba(61, 74, 62, 0.05);
+    border: 1px solid rgba(61, 74, 62, 0.15);
+}
+
+.ekycTitle {
+    margin: 0 0 16px 0;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #3d4a3e;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ekycTitle::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #3d4a3e;
+}
+
+.ekycGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.ekycItem {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ekycLabel {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(62, 47, 40, 0.5);
+}
+
+.ekycValue {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #3e2f28;
+}
+
+/* Full width for address */
+.ekycItem:nth-child(5),
+.ekycItem:nth-child(6) {
+    grid-column: span 2;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     .imageUploads {
