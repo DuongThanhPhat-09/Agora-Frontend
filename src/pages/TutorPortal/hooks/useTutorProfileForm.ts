@@ -13,6 +13,8 @@ import {
     type PricingUpdateData
 } from '../../../services/tutorProfile.service';
 import { getUserIdFromToken } from '../../../services/auth.service';
+import { getAvailability, DAY_OF_WEEK_MAP } from '../../../services/availability.service';
+import type { AvailabilitySlot as ApiAvailabilitySlot } from '../../../services/availability.service';
 import type { IdentityVerificationData } from '../components/IdentityVerificationModal';
 
 // Re-export for convenience
@@ -38,9 +40,11 @@ export interface CredentialData {
 
 export interface AvailabilitySlot {
     id: number;
-    dayOfWeek: number;
+    dayOfWeek: number;  // 0=CN, 1=T2, 2=T3, 3=T4, 4=T5, 5=T6, 6=T7 (for display)
+    apiDayOfWeek: number;  // 2-8 (API format)
     startTime: string;
     endTime: string;
+    dayName: string;  // "Thứ 2", "Thứ 3", etc.
 }
 
 // Section status from API
@@ -325,10 +329,49 @@ export function useTutorProfileForm() {
         }
     }, [userId]);
 
+    // Fetch availability from API
+    const fetchAvailabilityData = useCallback(async () => {
+        if (!userId) return;
+
+        try {
+            const response = await getAvailability(userId);
+
+            if (response.content && Array.isArray(response.content)) {
+                // Map API response to local format
+                // API dayofweek: 2=T2, 3=T3, 4=T4, 5=T5, 6=T6, 7=T7, 8=CN
+                // Display dayOfWeek: 0=CN, 1=T2, 2=T3, 3=T4, 4=T5, 5=T6, 6=T7
+                const mappedAvailability: AvailabilitySlot[] = response.content.map((slot: ApiAvailabilitySlot) => {
+                    // Convert API day (2-8) to display day (0-6)
+                    // API 2=T2 -> display 1, API 3=T3 -> display 2, ..., API 8=CN -> display 0
+                    const displayDayOfWeek = slot.dayofweek === 8 ? 0 : slot.dayofweek - 1;
+
+                    return {
+                        id: slot.availabilityid,
+                        dayOfWeek: displayDayOfWeek,
+                        apiDayOfWeek: slot.dayofweek,
+                        startTime: slot.starttime,
+                        endTime: slot.endtime,
+                        dayName: DAY_OF_WEEK_MAP[slot.dayofweek] || ''
+                    };
+                });
+
+                setFormData(prev => ({ ...prev, availability: mappedAvailability }));
+                setSavedData(prev => ({ ...prev, availability: mappedAvailability }));
+            }
+        } catch (err: unknown) {
+            // Don't show error if 404 (no availability yet)
+            const axiosError = err as { response?: { status?: number } };
+            if (axiosError.response?.status !== 404) {
+                console.error('Failed to fetch availability:', err);
+            }
+        }
+    }, [userId]);
+
     // Load data on mount
     useEffect(() => {
         fetchProgress();
-    }, [fetchProgress]);
+        fetchAvailabilityData();
+    }, [fetchProgress, fetchAvailabilityData]);
 
     // Check if form has unsaved changes
     const isDirty = useMemo(() => {
@@ -700,6 +743,7 @@ export function useTutorProfileForm() {
         error,
         canPublish,
         fetchProgress,
+        fetchAvailability: fetchAvailabilityData,
         updateHeroSection,
         updatePricing,
         updateAbout,

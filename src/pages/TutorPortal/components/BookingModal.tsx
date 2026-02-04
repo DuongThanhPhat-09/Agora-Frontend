@@ -3,27 +3,26 @@ import { Modal } from 'antd';
 import styles from './BookingModal.module.css';
 
 interface AvailabilitySlot {
+    id: number;
     dayOfWeek: number;
+    apiDayOfWeek: number;
     startTime: string;
     endTime: string;
+    dayName: string;
 }
 
 interface BookingModalProps {
     isOpen: boolean;
     onClose: () => void;
     availability: AvailabilitySlot[];
-    hourlyRate: number;
     trialLessonPrice: number | null;
     onNavigateToSchedule: () => void;
 }
-
-const DAY_LABELS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
 const BookingModal: React.FC<BookingModalProps> = ({
     isOpen,
     onClose,
     availability,
-    hourlyRate,
     trialLessonPrice,
     onNavigateToSchedule
 }) => {
@@ -34,9 +33,9 @@ const BookingModal: React.FC<BookingModalProps> = ({
         return new Intl.NumberFormat('vi-VN').format(price);
     };
 
-    // Group availability by day
+    // Group availability by apiDayOfWeek (2-8)
     const groupedAvailability = availability.reduce((acc, slot) => {
-        const day = slot.dayOfWeek;
+        const day = slot.apiDayOfWeek;
         if (!acc[day]) {
             acc[day] = [];
         }
@@ -73,21 +72,21 @@ const BookingModal: React.FC<BookingModalProps> = ({
                         <div className={styles.scheduleSection}>
                             <h3 className={styles.sectionTitle}>Lịch rảnh của gia sư</h3>
                             <div className={styles.scheduleGrid}>
-                                {Object.entries(groupedAvailability).map(([day, slots]) => (
-                                    <div key={day} className={styles.dayGroup}>
+                                {Object.entries(groupedAvailability).map(([, slots]) => (
+                                    <div key={slots[0].id} className={styles.dayGroup}>
                                         <div className={styles.dayLabel}>
-                                            {DAY_LABELS[parseInt(day)]}
+                                            {slots[0].dayName}
                                         </div>
                                         <div className={styles.timeSlots}>
-                                            {slots.map((slot, index) => (
+                                            {slots.map((slot) => (
                                                 <button
-                                                    key={index}
+                                                    key={slot.id}
                                                     className={styles.timeSlot}
                                                     onClick={() => {
                                                         // In preview mode, just show - no real booking action
                                                     }}
                                                 >
-                                                    {slot.startTime}
+                                                    {slot.startTime} - {slot.endTime}
                                                 </button>
                                             ))}
                                         </div>

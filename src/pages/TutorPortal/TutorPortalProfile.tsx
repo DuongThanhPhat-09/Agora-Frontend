@@ -503,21 +503,6 @@ const TutorPortalProfile: React.FC = () => {
                                 </div>
                             )}
 
-                            {/* Show availability section only in preview mode when has schedule */}
-                            {!isEditMode && formData.availability.length > 0 && (
-                                <div className={styles.availabilitySection}>
-                                    <span className={styles.availabilityLabel}>Lịch rảnh tiếp theo</span>
-                                    {formData.availability.slice(0, 2).map((slot, index) => (
-                                        <div key={index} className={styles.slotRow}>
-                                            <span className={styles.slotTime}>
-                                                {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][slot.dayOfWeek]}, {slot.startTime}
-                                            </span>
-                                            <button className={styles.slotSelect}>Chọn</button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
                             {/* Show no schedule message on card only in edit mode */}
                             {isEditMode && formData.availability.length === 0 && (
                                 <div className={styles.noScheduleSection}>
@@ -715,7 +700,6 @@ const TutorPortalProfile: React.FC = () => {
                 isOpen={isBookingModalOpen}
                 onClose={() => setIsBookingModalOpen(false)}
                 availability={formData.availability}
-                hourlyRate={formData.hourlyRate}
                 trialLessonPrice={formData.trialLessonPrice}
                 onNavigateToSchedule={() => {
                     setIsBookingModalOpen(false);
