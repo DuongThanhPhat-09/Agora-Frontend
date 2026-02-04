@@ -14,6 +14,7 @@ import {
 } from '../../../services/tutorProfile.service';
 import { getUserIdFromToken } from '../../../services/auth.service';
 import { getAvailability, DAY_OF_WEEK_MAP } from '../../../services/availability.service';
+import { getUserKYCData } from '../../../services/verification.service';
 import type { AvailabilitySlot as ApiAvailabilitySlot } from '../../../services/availability.service';
 import type { IdentityVerificationData } from '../components/IdentityVerificationModal';
 
@@ -135,7 +136,6 @@ const initialFormData: TutorProfileFormData = {
         dateOfBirth: '',
         idFrontImage: null,
         idBackImage: null,
-        selfieWithId: null,
         verificationStatus: 'not_submitted'
     }
 };
@@ -257,7 +257,6 @@ function mapSectionsToFormData(sections: VerificationSections): Partial<TutorPro
             idFrontImageUrl: sections.identityCard.frontImageUrl || undefined,
             idBackImage: null,
             idBackImageUrl: sections.identityCard.backImageUrl || undefined,
-            selfieWithId: null,
             verificationStatus: sections.identityCard.isVerified ? 'verified' :
                 sections.identityCard.status === 'updated' ? 'pending' : 'not_submitted'
         },
@@ -367,11 +366,51 @@ export function useTutorProfileForm() {
         }
     }, [userId]);
 
+    // Fetch user's KYC verification status from /api/users/{id}
+    const fetchUserKYCStatus = useCallback(async () => {
+        if (!userId) return;
+
+        try {
+            const kycData = await getUserKYCData(userId);
+
+            if (kycData) {
+                console.log('✅ User KYC data loaded:', kycData);
+
+                // Update identity verification state based on user data
+                const identityVerification: IdentityVerificationData = {
+                    idNumber: kycData.ekycData?.id || '',
+                    fullNameOnId: kycData.ekycData?.name || '',
+                    dateOfBirth: kycData.ekycData?.dob || '',
+                    address: kycData.ekycData?.address || '',
+                    hometown: kycData.ekycData?.home || '',
+                    gender: kycData.ekycData?.sex || '',
+                    idFrontImage: null,
+                    idFrontImageUrl: kycData.idCardFrontUrl || undefined,
+                    idBackImage: null,
+                    idBackImageUrl: kycData.idCardBackUrl || undefined,
+                    verificationStatus: kycData.isIdentityVerified ? 'verified' :
+                        (kycData.idCardFrontUrl && kycData.idCardBackUrl) ? 'pending' : 'not_submitted'
+                };
+
+                setFormData(prev => ({ ...prev, identityVerification }));
+                setSavedData(prev => ({ ...prev, identityVerification }));
+
+                // Also update section status if verified
+                if (kycData.isIdentityVerified) {
+                    setSectionStatuses(prev => ({ ...prev, identityCard: 'updated' }));
+                }
+            }
+        } catch (err: unknown) {
+            console.error('Failed to fetch user KYC status:', err);
+        }
+    }, [userId]);
+
     // Load data on mount
     useEffect(() => {
         fetchProgress();
         fetchAvailabilityData();
-    }, [fetchProgress, fetchAvailabilityData]);
+        fetchUserKYCStatus();
+    }, [fetchProgress, fetchAvailabilityData, fetchUserKYCStatus]);
 
     // Check if form has unsaved changes
     const isDirty = useMemo(() => {

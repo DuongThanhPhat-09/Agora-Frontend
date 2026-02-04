@@ -186,6 +186,11 @@
     cursor: not-allowed;
 }
 
+.saveBtn.fullWidth {
+    flex: 1;
+    justify-content: center;
+}
+
 /* Loading Spinner */
 .spinner {
     animation: spin 1s linear infinite;
