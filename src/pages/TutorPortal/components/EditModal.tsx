@@ -12,6 +12,7 @@ interface EditModalProps {
     cancelLabel?: string;
     size?: 'small' | 'medium' | 'large';
     saveDisabled?: boolean;
+    hideCancel?: boolean;  // Hide cancel button (for view-only mode)
 }
 
 const CloseIcon = () => (
@@ -37,7 +38,8 @@ const EditModal: React.FC<EditModalProps> = ({
     saveLabel = 'Lưu',
     cancelLabel = 'Hủy',
     size = 'medium',
-    saveDisabled = false
+    saveDisabled = false,
+    hideCancel = false
 }) => {
     const modalRef = useRef<HTMLDivElement>(null);
 
@@ -103,15 +105,17 @@ const EditModal: React.FC<EditModalProps> = ({
 
                 {/* Footer */}
                 <div className={styles.footer}>
+                    {!hideCancel && (
+                        <button
+                            className={styles.cancelBtn}
+                            onClick={onClose}
+                            disabled={isLoading}
+                        >
+                            {cancelLabel}
+                        </button>
+                    )}
                     <button
-                        className={styles.cancelBtn}
-                        onClick={onClose}
-                        disabled={isLoading}
-                    >
-                        {cancelLabel}
-                    </button>
-                    <button
-                        className={styles.saveBtn}
+                        className={`${styles.saveBtn} ${hideCancel ? styles.fullWidth : ''}`}
                         onClick={onSave}
                         disabled={isLoading || saveDisabled}
                     >

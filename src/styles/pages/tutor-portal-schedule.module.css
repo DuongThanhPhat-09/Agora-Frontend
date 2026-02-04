@@ -11,7 +11,8 @@
 .schedulePage {
     display: flex;
     background-color: #f2f0e4;
-    height: calc(100vh - 56px); /* Subtract header height */
+    height: calc(100vh - 56px);
+    /* Subtract header height */
     overflow: hidden;
     font-family: 'IBM Plex Sans', sans-serif;
     position: relative;
@@ -27,112 +28,138 @@
 }
 
 .mainContainer.withSidebar {
-    margin-right: 0; /* Sidebar overlays on desktop */
+    margin-right: 0;
+    /* Sidebar overlays on desktop */
 }
 
 /* ===== HEADER SECTION ===== */
 .headerSection {
-    background-color: #fff;
-    border-bottom: 1px solid rgba(62, 47, 40, 0.1);
-    padding: 21px 28px 0;
+    background: linear-gradient(135deg, #1a2238 0%, #2a3a5c 100%);
+    border-bottom: none;
+    padding: 24px 32px 0;
     flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.headerSection::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
 }
 
 .headerTop {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 14px;
+    margin-bottom: 18px;
+    position: relative;
+    z-index: 1;
 }
 
 .pageTitle {
     font-family: 'Bricolage Grotesque', serif;
-    font-size: 21px;
+    font-size: 24px;
     font-weight: 700;
-    line-height: 28px;
-    color: #1a2238;
+    line-height: 32px;
+    color: #ffffff;
     margin: 0;
+    letter-spacing: -0.02em;
 }
 
 .headerActions {
     display: flex;
     align-items: center;
-    gap: 10.5px;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
 }
 
 /* Sync Button */
 .syncBtn {
     display: flex;
     align-items: center;
-    gap: 7px;
-    padding: 5.25px 10.5px;
-    border-radius: 7px;
-    background-color: rgba(242, 240, 228, 0.5);
-    border: 1px solid rgba(62, 47, 40, 0.1);
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 16.5px;
-    color: #1a2238;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 18px;
+    color: #ffffff;
     cursor: pointer;
     transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
 }
 
 .syncBtn:hover {
-    background-color: rgba(242, 240, 228, 0.8);
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
 }
 
 /* Add Button */
 .addBtn {
     display: flex;
     align-items: center;
-    gap: 7px;
-    padding: 7px 17.5px;
-    border-radius: 7px;
-    background-color: #1a2238;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #4f8cff 0%, #3b7dff 100%);
     border: none;
     font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 10.5px;
+    font-size: 12px;
     font-weight: 700;
-    line-height: 14px;
+    line-height: 16px;
     color: #fff;
     cursor: pointer;
-    box-shadow: 0px 10px 15px -3px rgba(26, 34, 56, 0.1), 0px 4px 6px -4px rgba(26, 34, 56, 0.1);
+    box-shadow: 0 4px 15px rgba(79, 140, 255, 0.35);
     transition: all 0.2s ease;
 }
 
 .addBtn:hover {
-    background-color: #2a3248;
+    background: linear-gradient(135deg, #5d96ff 0%, #4a88ff 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(79, 140, 255, 0.45);
 }
 
 /* Tabs */
 .tabs {
     display: flex;
-    gap: 28px;
+    gap: 32px;
+    position: relative;
+    z-index: 1;
 }
 
 .tab {
-    padding: 0 3.5px 10.5px;
+    padding: 0 4px 14px;
     background: none;
     border: none;
-    border-bottom: 1px solid transparent;
+    border-bottom: 2px solid transparent;
     font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 10.5px;
-    font-weight: 700;
-    letter-spacing: 0.52px;
-    line-height: 14px;
-    color: rgba(62, 47, 40, 0.4);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    line-height: 16px;
+    color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .tab.active {
-    color: #1a2238;
-    border-bottom-color: #1a2238;
+    color: #ffffff;
+    border-bottom-color: #4f8cff;
 }
 
 .tab:hover:not(.active) {
-    color: rgba(62, 47, 40, 0.6);
+    color: rgba(255, 255, 255, 0.8);
 }
 
 /* ===== CALENDAR CONTAINER ===== */
@@ -141,7 +168,9 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    min-height: 0; /* Important for flex children to shrink */
+    min-height: 0;
+    /* Important for flex children to shrink */
+    position: relative;
 }
 
 /* Calendar Controls */
@@ -229,11 +258,17 @@
     line-height: 16.5px;
     color: #fff;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
 }
 
-.nowBtn:hover {
+.nowBtn:hover:not(:disabled) {
     background-color: #2a3248;
+}
+
+.nowBtn:disabled,
+.nowBtn.active {
+    background-color: rgba(26, 34, 56, 0.3);
+    cursor: default;
 }
 
 /* Legend */
@@ -297,27 +332,29 @@
 /* ===== CALENDAR GRID ===== */
 .calendarGrid {
     flex: 1;
-    margin: 28px;
-    border-radius: 21px;
+    margin: 20px 28px 28px;
+    border-radius: 16px;
     background-color: #fff;
-    border: 1px solid rgba(62, 47, 40, 0.1);
-    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(26, 34, 56, 0.08);
+    box-shadow: 0 4px 20px rgba(26, 34, 56, 0.06), 0 1px 3px rgba(26, 34, 56, 0.04);
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    min-height: 0; /* Important for flex children to shrink */
+    min-height: 0;
+    /* Important for flex children to shrink */
 }
 
 /* Calendar Header - Fixed */
 .calendarHeader {
     display: grid;
     grid-template-columns: 70px repeat(7, 1fr);
-    border-bottom: 1px solid rgba(62, 47, 40, 0.05);
+    border-bottom: 1px solid rgba(26, 34, 56, 0.06);
     flex-shrink: 0;
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
 }
 
 .timeColumn {
-    border-right: 1px solid rgba(62, 47, 40, 0.05);
+    border-right: 1px solid rgba(26, 34, 56, 0.06);
     box-sizing: border-box;
 }
 
@@ -325,10 +362,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 13.4px 14px 14px;
-    gap: 2.8px;
-    border-right: 1px solid rgba(62, 47, 40, 0.05);
+    padding: 16px 14px 14px;
+    gap: 4px;
+    border-right: 1px solid rgba(26, 34, 56, 0.06);
     box-sizing: border-box;
+    transition: background-color 0.2s ease;
 }
 
 .dayColumn:last-child {
@@ -336,36 +374,57 @@
 }
 
 .dayColumn.today {
-    background-color: rgba(242, 240, 228, 0.2);
+    background: linear-gradient(180deg, rgba(79, 140, 255, 0.08) 0%, rgba(79, 140, 255, 0.03) 100%);
 }
 
 .dayName {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    line-height: 15px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    line-height: 16px;
     text-transform: uppercase;
-    color: rgba(62, 47, 40, 0.4);
+    color: rgba(26, 34, 56, 0.45);
 }
 
 .dayNumber {
     font-family: 'Bricolage Grotesque', serif;
-    font-size: 21px;
+    font-size: 22px;
     font-weight: 700;
     line-height: 28px;
-    color: rgba(62, 47, 40, 0.8);
+    color: #1a2238;
+    opacity: 0.75;
+}
+
+.monthName {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    line-height: 14px;
+    text-transform: uppercase;
+    color: rgba(26, 34, 56, 0.35);
+}
+
+.today .dayName {
+    color: #4f8cff;
 }
 
 .today .dayNumber {
-    color: #1a2238;
+    color: #4f8cff;
+    opacity: 1;
+}
+
+.today .monthName {
+    color: rgba(79, 140, 255, 0.7);
 }
 
 /* Calendar Body - Scrollable */
 .calendarBody {
     flex: 1;
-    overflow-y: scroll; /* Always show scrollbar to prevent layout shift */
+    overflow-y: scroll;
+    /* Always show scrollbar to prevent layout shift */
     overflow-x: hidden;
-    scrollbar-gutter: stable; /* Reserve space for scrollbar to align with header */
+    scrollbar-gutter: stable;
+    /* Reserve space for scrollbar to align with header */
     min-height: 0;
 }
 
@@ -393,7 +452,7 @@
     display: grid;
     grid-template-columns: 70px repeat(7, 1fr);
     min-height: 70px;
-    border-bottom: 1px solid rgba(62, 47, 40, 0.05);
+    border-bottom: 1px solid rgba(26, 34, 56, 0.05);
 }
 
 .timeRow:last-child {
@@ -407,20 +466,26 @@
     font-weight: 700;
     line-height: 16.5px;
     text-align: right;
-    color: rgba(62, 47, 40, 0.4);
-    border-right: 1px solid rgba(62, 47, 40, 0.05);
+    color: rgba(26, 34, 56, 0.45);
+    border-right: 1px solid rgba(26, 34, 56, 0.05);
     box-sizing: border-box;
 }
 
 .timeCell {
     position: relative;
-    border-right: 1px solid rgba(62, 47, 40, 0.05);
+    border-right: 1px solid rgba(26, 34, 56, 0.05);
     padding: 3.5px;
     box-sizing: border-box;
 }
 
 .timeCell:last-child {
     border-right: none;
+}
+
+/* Ensure cells containing blocks have a clear priority */
+.timeCell:has(.availableBlock),
+.timeCell:has(.sessionBlock) {
+    z-index: 10;
 }
 
 .timeCell.todayColumn {
@@ -435,27 +500,27 @@
     right: 3.5px;
     background-color: #1a2238;
     border-radius: 7px;
-    border-left: 3.2px solid #3d4a3e;
+    border-left: 3.2px solid #4f8cff;
     padding: 10.5px;
     display: flex;
     flex-direction: column;
     cursor: pointer;
     box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1), 0px 4px 6px -4px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    z-index: 1;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    z-index: 100;
+    transition: all 0.2s ease;
 }
 
 .sessionBlock:hover {
     transform: scale(1.02);
-    z-index: 2;
+    z-index: 150;
     box-shadow: 0px 15px 25px -5px rgba(0, 0, 0, 0.15), 0px 8px 10px -6px rgba(0, 0, 0, 0.1);
 }
 
 .sessionBlock.selected {
-    box-shadow: 0px 0px 0px 2px #3d4a3e, 0px 15px 25px -5px rgba(0, 0, 0, 0.15);
+    box-shadow: 0px 0px 0px 2px #4f8cff, 0px 15px 25px -5px rgba(0, 0, 0, 0.15);
     transform: scale(1.02);
-    z-index: 3;
+    z-index: 200;
 }
 
 .sessionName {
@@ -478,32 +543,214 @@
     text-overflow: ellipsis;
 }
 
-/* Available Block */
-.availableBlock {
+/* Loading Overlay */
+.loadingOverlay {
     position: absolute;
-    top: 3.5px;
-    left: 3.5px;
-    right: 3.5px;
-    bottom: 3.5px;
-    border-radius: 7px;
-    border: 1px dashed rgba(26, 34, 56, 0.1);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.7);
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 10;
+    backdrop-filter: blur(2px);
 }
 
-.availableBlock span {
-    font-size: 9px;
+/* Available Block */
+.availableBlock {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    right: 3px;
+    border-radius: 10px;
+    border: 2px solid #1a2238;
+    background: linear-gradient(135deg, #1a2238 0%, #2a3a5c 100%);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    transition: all 0.1s ease;
+    min-height: 58px;
+    box-sizing: border-box;
+    box-shadow: 0 2px 8px rgba(26, 34, 56, 0.2);
+    z-index: 100;
+    cursor: pointer;
+}
+
+.availableBlock:hover {
+    background: linear-gradient(135deg, #2a3a5c 0%, #3d4f7a 100%);
+    border-color: #4f8cff;
+    box-shadow: 0 8px 24px rgba(26, 34, 56, 0.3);
+    transform: translateY(-1px);
+    z-index: 500;
+}
+
+.availableContent {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.availableLabel {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
     font-weight: 700;
-    line-height: 13.5px;
+    line-height: 16px;
     text-transform: uppercase;
-    color: rgba(26, 34, 56, 0.3);
+    letter-spacing: 0.8px;
+    color: #ffffff;
+}
+
+.availableTime {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 16px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Slot Actions Container */
+.slotActions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 1;
+    transition: transform 0.2s ease;
+}
+
+.availableBlock:hover .slotActions {
+    transform: scale(1.05);
+}
+
+/* Edit Button */
+.editSlotBtn {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #ffffff;
+    flex-shrink: 0;
+}
+
+.editSlotBtn:hover {
+    background: #4f8cff;
+    border-color: #4f8cff;
+    color: #fff;
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(79, 140, 255, 0.4);
+}
+
+.editSlotBtn svg,
+.editSlotBtn span {
+    font-size: 14px;
+}
+
+/* Delete Button */
+.deleteSlotBtn {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #ffffff;
+    flex-shrink: 0;
+}
+
+.deleteSlotBtn:hover {
+    background: #dc3545;
+    border-color: #dc3545;
+    color: #fff;
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+}
+
+.deleteSlotBtn svg,
+.deleteSlotBtn span {
+    font-size: 13px;
+}
+
+/* Empty State */
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 40px;
+    text-align: center;
+    background-color: #fff;
+    border-radius: 21px;
+    margin: 28px;
+    border: 1px solid rgba(62, 47, 40, 0.1);
+}
+
+.emptyIcon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.emptyTitle {
+    font-family: 'Bricolage Grotesque', serif;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 24px;
+    color: #1a2238;
+    margin: 0 0 8px 0;
+}
+
+.emptyDescription {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 20px;
+    color: rgba(62, 47, 40, 0.6);
+    margin: 0 0 24px 0;
+    max-width: 300px;
+}
+
+.emptyBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 10px;
+    background-color: #1a2238;
+    border: none;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 18px;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0px 10px 15px -3px rgba(26, 34, 56, 0.1), 0px 4px 6px -4px rgba(26, 34, 56, 0.1);
+    transition: all 0.2s ease;
+}
+
+.emptyBtn:hover {
+    background-color: #2a3248;
+    transform: translateY(-1px);
 }
 
 /* ===== SIDEBAR ===== */
 .sidebar {
     position: fixed;
-    top: 56px; /* Header height */
+    top: 56px;
+    /* Header height */
     right: 0;
     bottom: 0;
     width: 336px;
@@ -982,6 +1229,7 @@
 
 /* Small mobile */
 @media (max-width: 480px) {
+
     .calendarHeader,
     .timeRow {
         min-width: 600px;

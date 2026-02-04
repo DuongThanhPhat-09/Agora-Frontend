@@ -6,11 +6,16 @@ import {
     updateAvatar,
     updateBasicInfo,
     updateIntroduction,
+    updatePricing as updatePricingApi,
     type VerificationSections,
     type BasicInfoUpdateData,
-    type IntroductionUpdateData
+    type IntroductionUpdateData,
+    type PricingUpdateData
 } from '../../../services/tutorProfile.service';
 import { getUserIdFromToken } from '../../../services/auth.service';
+import { getAvailability, DAY_OF_WEEK_MAP } from '../../../services/availability.service';
+import { getUserKYCData } from '../../../services/verification.service';
+import type { AvailabilitySlot as ApiAvailabilitySlot } from '../../../services/availability.service';
 import type { IdentityVerificationData } from '../components/IdentityVerificationModal';
 
 // Re-export for convenience
@@ -36,9 +41,11 @@ export interface CredentialData {
 
 export interface AvailabilitySlot {
     id: number;
-    dayOfWeek: number;
+    dayOfWeek: number;  // 0=CN, 1=T2, 2=T3, 3=T4, 4=T5, 5=T6, 6=T7 (for display)
+    apiDayOfWeek: number;  // 2-8 (API format)
     startTime: string;
     endTime: string;
+    dayName: string;  // "Thứ 2", "Thứ 3", etc.
 }
 
 // Section status from API
@@ -71,7 +78,7 @@ export interface TutorProfileFormData {
     // Pricing
     hourlyRate: number;
     trialLessonPrice: number | null;
-    allowNegotiation: boolean;
+    allowPriceNegotiation: boolean;
 
     // About (introduction)
     bio: string;
@@ -109,7 +116,7 @@ const initialFormData: TutorProfileFormData = {
 
     hourlyRate: 0,
     trialLessonPrice: null,
-    allowNegotiation: false,
+    allowPriceNegotiation: false,
 
     bio: '',
     education: '',
@@ -129,7 +136,6 @@ const initialFormData: TutorProfileFormData = {
         dateOfBirth: '',
         idFrontImage: null,
         idBackImage: null,
-        selfieWithId: null,
         verificationStatus: 'not_submitted'
     }
 };
@@ -251,7 +257,6 @@ function mapSectionsToFormData(sections: VerificationSections): Partial<TutorPro
             idFrontImageUrl: sections.identityCard.frontImageUrl || undefined,
             idBackImage: null,
             idBackImageUrl: sections.identityCard.backImageUrl || undefined,
-            selfieWithId: null,
             verificationStatus: sections.identityCard.isVerified ? 'verified' :
                 sections.identityCard.status === 'updated' ? 'pending' : 'not_submitted'
         },
@@ -259,7 +264,7 @@ function mapSectionsToFormData(sections: VerificationSections): Partial<TutorPro
         // Pricing section
         hourlyRate: sections.pricing.hourlyRate || 0,
         trialLessonPrice: sections.pricing.trialLessonPrice,
-        allowNegotiation: sections.pricing.allowPriceNegotiation || false
+        allowPriceNegotiation: sections.pricing.allowPriceNegotiation || false
     };
 }
 
@@ -323,10 +328,89 @@ export function useTutorProfileForm() {
         }
     }, [userId]);
 
+    // Fetch availability from API
+    const fetchAvailabilityData = useCallback(async () => {
+        if (!userId) return;
+
+        try {
+            const response = await getAvailability(userId);
+
+            if (response.content && Array.isArray(response.content)) {
+                // Map API response to local format
+                // API dayofweek: 2=T2, 3=T3, 4=T4, 5=T5, 6=T6, 7=T7, 8=CN
+                // Display dayOfWeek: 0=CN, 1=T2, 2=T3, 3=T4, 4=T5, 5=T6, 6=T7
+                const mappedAvailability: AvailabilitySlot[] = response.content.map((slot: ApiAvailabilitySlot) => {
+                    // Convert API day (2-8) to display day (0-6)
+                    // API 2=T2 -> display 1, API 3=T3 -> display 2, ..., API 8=CN -> display 0
+                    const displayDayOfWeek = slot.dayofweek === 8 ? 0 : slot.dayofweek - 1;
+
+                    return {
+                        id: slot.availabilityid,
+                        dayOfWeek: displayDayOfWeek,
+                        apiDayOfWeek: slot.dayofweek,
+                        startTime: slot.starttime,
+                        endTime: slot.endtime,
+                        dayName: DAY_OF_WEEK_MAP[slot.dayofweek] || ''
+                    };
+                });
+
+                setFormData(prev => ({ ...prev, availability: mappedAvailability }));
+                setSavedData(prev => ({ ...prev, availability: mappedAvailability }));
+            }
+        } catch (err: unknown) {
+            // Don't show error if 404 (no availability yet)
+            const axiosError = err as { response?: { status?: number } };
+            if (axiosError.response?.status !== 404) {
+                console.error('Failed to fetch availability:', err);
+            }
+        }
+    }, [userId]);
+
+    // Fetch user's KYC verification status from /api/users/{id}
+    const fetchUserKYCStatus = useCallback(async () => {
+        if (!userId) return;
+
+        try {
+            const kycData = await getUserKYCData(userId);
+
+            if (kycData) {
+                console.log('✅ User KYC data loaded:', kycData);
+
+                // Update identity verification state based on user data
+                const identityVerification: IdentityVerificationData = {
+                    idNumber: kycData.ekycData?.id || '',
+                    fullNameOnId: kycData.ekycData?.name || '',
+                    dateOfBirth: kycData.ekycData?.dob || '',
+                    address: kycData.ekycData?.address || '',
+                    hometown: kycData.ekycData?.home || '',
+                    gender: kycData.ekycData?.sex || '',
+                    idFrontImage: null,
+                    idFrontImageUrl: kycData.idCardFrontUrl || undefined,
+                    idBackImage: null,
+                    idBackImageUrl: kycData.idCardBackUrl || undefined,
+                    verificationStatus: kycData.isIdentityVerified ? 'verified' :
+                        (kycData.idCardFrontUrl && kycData.idCardBackUrl) ? 'pending' : 'not_submitted'
+                };
+
+                setFormData(prev => ({ ...prev, identityVerification }));
+                setSavedData(prev => ({ ...prev, identityVerification }));
+
+                // Also update section status if verified
+                if (kycData.isIdentityVerified) {
+                    setSectionStatuses(prev => ({ ...prev, identityCard: 'updated' }));
+                }
+            }
+        } catch (err: unknown) {
+            console.error('Failed to fetch user KYC status:', err);
+        }
+    }, [userId]);
+
     // Load data on mount
     useEffect(() => {
         fetchProgress();
-    }, [fetchProgress]);
+        fetchAvailabilityData();
+        fetchUserKYCStatus();
+    }, [fetchProgress, fetchAvailabilityData, fetchUserKYCStatus]);
 
     // Check if form has unsaved changes
     const isDirty = useMemo(() => {
@@ -338,14 +422,68 @@ export function useTutorProfileForm() {
         setFormData(prev => ({ ...prev, ...data }));
     }, []);
 
-    // Update pricing
-    const updatePricing = useCallback((data: {
+    // Update pricing (calls API)
+    const updatePricing = useCallback(async (data: {
         hourlyRate: number;
         trialLessonPrice: number | null;
-        allowNegotiation: boolean;
-    }) => {
-        setFormData(prev => ({ ...prev, ...data }));
-    }, []);
+        allowPriceNegotiation: boolean;
+    }): Promise<boolean> => {
+        if (!userId) {
+            toast.error('Không tìm thấy thông tin người dùng');
+            return false;
+        }
+
+        // Validate hourlyRate
+        if (data.hourlyRate < 50000 || data.hourlyRate > 2000000) {
+            toast.error('Giá theo giờ phải nằm trong khoảng 50,000 - 2,000,000 VND');
+            return false;
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            console.log('💰 Saving pricing...');
+
+            const apiData: PricingUpdateData = {
+                hourlyRate: data.hourlyRate,
+                trialLessonPrice: data.trialLessonPrice,
+                allowPriceNegotiation: data.allowPriceNegotiation
+            };
+
+            const response = await updatePricingApi(userId, apiData);
+
+            if (response.statusCode === 200) {
+                toast.success(response.message || 'Cập nhật giá thành công!');
+
+                // Refetch progress to get updated data
+                const progressResponse = await getVerificationProgress(userId);
+
+                if (progressResponse.statusCode === 200 && progressResponse.content?.sections) {
+                    const mappedData = mapSectionsToFormData(progressResponse.content.sections);
+                    const statuses = mapSectionStatuses(progressResponse.content.sections);
+
+                    setFormData(prev => ({ ...prev, ...mappedData }));
+                    setSavedData(prev => ({ ...prev, ...mappedData }));
+                    setSectionStatuses(statuses);
+                    setLastSaved(new Date());
+                }
+
+                return true;
+            } else {
+                toast.error(response.message || 'Không thể cập nhật giá');
+                return false;
+            }
+        } catch (err: any) {
+            console.error('❌ Error saving pricing:', err);
+            const errorMessage = err.response?.data?.message || 'Có lỗi xảy ra khi cập nhật giá';
+            setError(errorMessage);
+            toast.error(errorMessage);
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [userId]);
 
     // Update about section (calls API)
     const updateAbout = useCallback(async (data: {
@@ -644,6 +782,7 @@ export function useTutorProfileForm() {
         error,
         canPublish,
         fetchProgress,
+        fetchAvailability: fetchAvailabilityData,
         updateHeroSection,
         updatePricing,
         updateAbout,
