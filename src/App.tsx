@@ -28,6 +28,12 @@ import ForbiddenPage from "./pages/Error/ForbiddenPage";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import ParentLayout from "./layouts/ParentLayout";
+import ParentDashboard from "./pages/ParentDashboard";
+import ParentChildren from "./pages/ParentChildren";
+import ChildrenDetail from "./pages/ParentChildren/Details";
+import ParentWallet from "./pages/ParentWallet";
+import ParentMessage from "./pages/ParentMessage";
 
 // ---------------------
 
@@ -102,6 +108,25 @@ function App() {
           <Route path="classes/:classId" element={<TutorPortalClassDetail />} />
           <Route path="students/:studentId" element={<TutorPortalStudentProfile />} />
           {/* Future routes: sessions, finance, settings */}
+        </Route>
+
+        {/* Parent Layout - PROTECTED */}
+        <Route
+          path="/parent"
+          element={
+            // <ProtectedRoute allowedRoles={["Admin"]}>
+            //   <AdminLayout />
+            // </ProtectedRoute>
+            <ParentLayout />
+
+          }
+        >
+          <Route index element={<Navigate to="/parent/dashboard" replace />} />
+          <Route path="dashboard" element={<ParentDashboard />} />
+          <Route path="children" element={<ParentChildren />} />
+          <Route path="children/:id" element={<ChildrenDetail />} />
+          <Route path="wallet" element={<ParentWallet />} />
+          <Route path="messages" element={<ParentMessage />} />
         </Route>
 
         <Route path="/login" element={<LoginPage />} />

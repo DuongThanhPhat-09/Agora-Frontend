@@ -1,0 +1,373 @@
+/* Main Content Area */
+.mainContent {
+    display: flex;
+    flex: 1 0 0;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-bottom: 32px;
+    padding-top: 32px;
+    padding-left: 40px;
+    padding-right: 40px;
+    position: relative;
+    width: 100%;
+    background-color: #fafafa;
+}
+
+.container {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    position: relative;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+/* Left Column - Children Cards */
+.leftColumn {
+    display: flex;
+    flex: 1 0 0;
+    flex-direction: column;
+    gap: 24px;
+    align-items: flex-start;
+    min-height: 1px;
+    min-width: 1px;
+    position: relative;
+    align-self: stretch;
+}
+
+/* Right Column - Tips & Pending */
+.rightColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    align-items: flex-start;
+    position: relative;
+    align-self: stretch;
+    flex-shrink: 0;
+    width: 288px;
+}
+
+/* Headings */
+.heading {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: relative;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+.headingText {
+    font-size: 20px;
+    line-height: 28px;
+    color: #171717;
+    font-family: 'Nimbus Sans', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    margin: 0;
+}
+
+/* Children Container */
+.childrenContainer {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+/* Recently Linked Section */
+.recentlyLinkedSection {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+    padding-top: 8px;
+    position: relative;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+.subheading {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: relative;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+.subheadingText {
+    font-size: 18px;
+    line-height: 28px;
+    color: #171717;
+    font-family: 'Nimbus Sans', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    margin: 0;
+}
+
+/* Sidebar Cards */
+.sidebarCard {
+    background-color: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-style: solid;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 25px;
+    position: relative;
+    border-radius: 8px;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+.sidebarCardHeader {
+    position: relative;
+    flex-shrink: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.sidebarCardIcon {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: relative;
+    flex-shrink: 0;
+    height: 16px;
+    width: 12px;
+}
+
+.sidebarCardTitle {
+    padding-left: 8px;
+    font-size: 16px;
+    line-height: 24px;
+    color: #171717;
+    font-family: 'Nimbus Sans', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    margin: 0;
+}
+
+/* Tips List */
+.tipsList {
+    position: relative;
+    flex-shrink: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.tipItem {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+.tipItem:nth-child(1) .tipText {
+    height: 40px;
+}
+
+.tipIcon {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-top: 2px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.iconCheck {
+    width: 12.25px;
+    height: 14px;
+}
+
+.tipText {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-left: 8px;
+    padding-right: 1.45px;
+    position: relative;
+    flex-shrink: 0;
+    width: 216.3px;
+    font-size: 14px;
+    line-height: 20px;
+    color: #525252;
+    font-family: 'Nimbus Sans', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    margin: 0;
+}
+
+.tipText p {
+    margin: 0;
+}
+
+.tipTextSingle {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-left: 8px;
+    position: relative;
+    flex-shrink: 0;
+    font-size: 14px;
+    line-height: 20px;
+    color: #525252;
+    font-family: 'Nimbus Sans', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    margin: 0;
+}
+
+.tipItem:nth-child(2) .tipTextSingle {
+    width: 210.14px;
+}
+
+.tipItem:nth-child(3) .tipTextSingle {
+    width: 158.05px;
+}
+
+.tipItem:nth-child(4) .tipTextSingle {
+    width: 179.98px;
+}
+
+/* Sidebar Subheading */
+.sidebarSubheading {
+    position: relative;
+    flex-shrink: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.sidebarSubheadingText {
+    font-size: 16px;
+    line-height: 24px;
+    color: #171717;
+    font-family: 'Nimbus Sans', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    margin: 0;
+}
+
+/* Pending Invite Item */
+.pendingInviteItem {
+    position: relative;
+    flex-shrink: 0;
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.pendingInviteButton {
+    padding-top: 2px;
+}
+
+.pendingInviteLeft {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.pendingInviteName {
+    font-size: 14px;
+    line-height: 20px;
+    color: #171717;
+    font-family: 'Nimbus Sans', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    margin: 0;
+}
+
+.pendingInviteDate {
+    font-size: 12px;
+    line-height: 16px;
+    color: #525252;
+    font-family: 'Nimbus Sans', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    margin: 0;
+}
+
+.pendingInviteButton {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    flex-shrink: 0;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: 'Nimbus Sans', sans-serif;
+}
+
+.pendingInviteButtonText {
+    font-size: 12px;
+    line-height: 16px;
+    color: #525252;
+    text-align: center;
+    font-family: 'Nimbus Sans', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    margin: 0;
+}
+
+.pendingInviteDivider {
+    border-top: 1px solid #e5e5e5;
+    border-top-style: solid;
+    position: relative;
+    flex-shrink: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-top: 17px;
+}
+
+.pendingInviteNote {
+    font-size: 12px;
+    line-height: 16px;
+    color: #737373;
+    font-family: 'Nimbus Sans', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    margin: 0;
+}
+
+.pendingInviteButton:hover {
+    color: #171717;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .childrenContainer {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .mainContent {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .rightColumn {
+        width: 100%;
+    }
+}

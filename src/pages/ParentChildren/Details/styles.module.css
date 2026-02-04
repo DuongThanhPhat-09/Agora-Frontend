@@ -1,0 +1,365 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    padding: 24px;
+    width: 100%;
+}
+
+.insightStrip {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+}
+
+.insightCard {
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    padding: 9px 17px;
+    gap: 8px;
+}
+
+.insightIcon {
+    width: 16px;
+    height: 16px;
+}
+
+.insightText {
+    font-size: 14px;
+    line-height: 20px;
+    color: #171717;
+    font-family: 'Nimbus Sans', sans-serif;
+    font-weight: 400;
+}
+
+.chartsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+}
+
+.chartCard {
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.cardHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.cardTitle {
+    font-size: 18px;
+    line-height: 28px;
+    color: #171717;
+    font-family: 'Nimbus Sans', sans-serif;
+    font-weight: 400;
+}
+
+.cardMeta {
+    font-size: 12px;
+    line-height: 16px;
+    color: #525252;
+    font-family: 'Nimbus Sans', sans-serif;
+}
+
+.tabGroup {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tabActive {
+    background: #171717;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 12px;
+    font-size: 12px;
+    line-height: 16px;
+    font-family: 'Nimbus Sans', sans-serif;
+}
+
+.tabButton {
+    background: transparent;
+    color: #525252;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 12px;
+    font-size: 12px;
+    line-height: 16px;
+    font-family: 'Nimbus Sans', sans-serif;
+}
+
+.chartArea {
+    background: #fafafa;
+    border-radius: 8px;
+    height: 184px;
+    position: relative;
+}
+
+.chartOverlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    pointer-events: none;
+}
+
+.chartIcon {
+    width: 36px;
+    height: 36px;
+}
+
+.chartIconWide {
+    width: 40px;
+    height: 36px;
+}
+
+.chartLabel {
+    font-size: 14px;
+    line-height: 20px;
+    color: #525252;
+    font-family: 'Nimbus Sans', sans-serif;
+}
+
+.chartNote {
+    font-size: 12px;
+    line-height: 16px;
+    color: #737373;
+    font-family: 'Nimbus Sans', sans-serif;
+}
+
+.cardFootnote {
+    font-size: 12px;
+    line-height: 16px;
+    color: #525252;
+    font-family: 'Nimbus Sans', sans-serif;
+}
+
+.legendGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 24px;
+}
+
+.legendItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legendSwatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+}
+
+.legendText {
+    font-size: 12px;
+    line-height: 16px;
+    color: #525252;
+    font-family: 'Nimbus Sans', sans-serif;
+}
+
+.linkButton {
+    background: transparent;
+    border: none;
+    color: #525252;
+    font-size: 14px;
+    line-height: 20px;
+    font-family: 'Nimbus Sans', sans-serif;
+    cursor: pointer;
+    padding: 0;
+}
+
+.infoList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.infoRow {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    line-height: 20px;
+    font-family: 'Nimbus Sans', sans-serif;
+}
+
+.infoLabel {
+    color: #525252;
+}
+
+.infoValue {
+    color: #171717;
+}
+
+.infoValueMuted {
+    color: #525252;
+}
+
+.highlightBox {
+    background: #fafafa;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.highlightLabel {
+    font-size: 12px;
+    line-height: 16px;
+    color: #525252;
+    font-family: 'Nimbus Sans', sans-serif;
+}
+
+.highlightValue {
+    font-size: 14px;
+    line-height: 20px;
+    color: #171717;
+    font-family: 'Nimbus Sans', sans-serif;
+}
+
+.reportsCard {
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+.reportsHeader {
+    border-bottom: 1px solid #e5e5e5;
+    padding: 24px;
+}
+
+.reportsTitle {
+    font-size: 18px;
+    line-height: 28px;
+    color: #171717;
+    font-family: 'Nimbus Sans', sans-serif;
+}
+
+.reportsBody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 24px;
+}
+
+.reportItem {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.reportMain {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.reportLine {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.reportDate {
+    font-size: 14px;
+    line-height: 20px;
+    color: #171717;
+    font-family: 'Nimbus Sans', sans-serif;
+}
+
+.reportTutor {
+    font-size: 12px;
+    line-height: 16px;
+    color: #525252;
+    font-family: 'Nimbus Sans', sans-serif;
+}
+
+.reportSummary {
+    font-size: 14px;
+    line-height: 20px;
+    color: #525252;
+    font-family: 'Nimbus Sans', sans-serif;
+}
+
+.reportLink {
+    background: transparent;
+    border: none;
+    color: #525252;
+    font-size: 14px;
+    line-height: 20px;
+    font-family: 'Nimbus Sans', sans-serif;
+    cursor: pointer;
+    padding: 0;
+    align-self: flex-end;
+}
+
+.reportMetaRow {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.reportMetaItem {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.reportMetaIcon {
+    width: 12px;
+    height: 12px;
+}
+
+.reportMetaText {
+    font-size: 12px;
+    line-height: 16px;
+    color: #525252;
+    font-family: 'Nimbus Sans', sans-serif;
+}
+
+.reportGrade {
+    font-size: 12px;
+    line-height: 16px;
+    color: #525252;
+    font-family: 'Nimbus Sans', sans-serif;
+}
+
+.reportDivider {
+    border-top: 1px solid #e5e5e5;
+}
+
+.reportsFooter {
+    border-top: 1px solid #e5e5e5;
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+}
+
+@media (max-width: 1200px) {
+    .chartsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .insightStrip {
+        flex-direction: column;
+    }
+}

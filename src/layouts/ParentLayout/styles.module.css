@@ -1,0 +1,720 @@
+/* StudentLayout Styles */
+.studentLayout {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    align-items: flex-start;
+    position: relative;
+}
+
+/* ========== Sidebar ========== */
+.sidebar {
+    width: 256px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background: #ffffff;
+    border-right: 1px solid #e5e5e5;
+    flex-shrink: 0;
+    position: relative;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.sidebarHeader {
+    width: 255px;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 24px;
+    padding-top: 24px;
+    padding-bottom: 25px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.sidebarHeader .logo {
+    font-family: 'Nimbus Sans', sans-serif;
+    font-size: 20px;
+    color: #171717;
+    font-weight: normal;
+    font-style: normal;
+    line-height: 28px;
+    width: 96.89px;
+}
+
+.nav {
+    flex: 1 0 0;
+    min-height: 1px;
+    min-width: 1px;
+    width: 255px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.navLink {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.navLink:hover {
+    background-color: #f5f5f5;
+}
+
+.navLink.active {
+    background-color: #f5f5f5;
+}
+
+.navLink .iconWrapper {
+    width: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.navLink .iconWrapper img,
+.navLink .iconWrapper svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+    max-width: none;
+}
+
+.navLink .textWrapper {
+    padding-left: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.navLink .text {
+    font-family: 'Nimbus Sans', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: normal;
+    font-style: normal;
+    white-space: nowrap;
+    color: #171717;
+    margin: 0;
+}
+
+.navLink:not(.active) .text {
+    color: #525252;
+}
+
+.sidebarFooter {
+    width: 255px;
+    border-top: 1px solid #e5e5e5;
+    padding: 17px 16px 16px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.settingsLink {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.settingsLink:hover {
+    background-color: #f5f5f5;
+}
+
+.settingsLink .text {
+    color: #525252;
+}
+
+/* ========== Main Content Area ========== */
+.mainContent {
+    flex: 1 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 1px;
+    min-width: 1px;
+    overflow: hidden;
+    height: 100%;
+    position: relative;
+}
+
+/* ========== Header ========== */
+.header {
+    width: 100%;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 16px 24px;
+    padding-top: 16px;
+    padding-bottom: 17px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.header .container {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    gap: 16px;
+}
+
+.header .leftContainer {
+    display: flex;
+    align-items: center;
+    flex-shrink: 1;
+    gap: 16px;
+    min-width: 0;
+}
+
+/* User Profile Dropdown */
+.userProfileDropdown {
+    border: 1px solid #d4d4d4;
+    display: flex;
+    align-items: center;
+    padding: 9px 17px 9px 17px;
+    border-radius: 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    background: #ffffff;
+}
+
+.userProfileDropdown:hover {
+    background-color: #f5f5f5;
+}
+
+.userAvatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 9999px;
+    flex-shrink: 0;
+    position: relative;
+    background: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.userAvatar img,
+.userAvatar svg {
+    width: 32px;
+    height: 32px;
+    display: block;
+    max-width: none;
+}
+
+.userInfo {
+    padding-left: 12px;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.userInfo .userName {
+    font-family: 'Nimbus Sans', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: normal;
+    font-style: normal;
+    color: #171717;
+    margin: 0;
+}
+
+.userInfo .userGrade {
+    font-family: 'Nimbus Sans', sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: normal;
+    font-style: normal;
+    color: #525252;
+    margin: 0;
+}
+
+.dropdownArrow {
+    padding-left: 12px;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.dropdownArrow svg {
+    width: 12px;
+    height: 12px;
+    display: block;
+    max-width: none;
+}
+
+/* Search Bar */
+.searchBar {
+    display: flex;
+    align-items: center;
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 400px;
+}
+
+.searchBar .background {
+    background: #f5f5f5;
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-radius: 9999px;
+    position: relative;
+    width: 100%;
+}
+
+.searchBar .searchIcon {
+    width: 14px;
+    height: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.searchBar .searchIcon img,
+.searchBar .searchIcon svg {
+    width: 14px;
+    height: 14px;
+    display: block;
+    max-width: none;
+}
+
+.searchBar .searchText {
+    padding-left: 8px;
+    flex-shrink: 1;
+    position: relative;
+    width: 100%;
+}
+
+.searchBar .searchText input {
+    font-family: 'Nimbus Sans', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: normal;
+    font-style: normal;
+    color: #171717;
+    border: none;
+    background: transparent;
+    outline: none;
+    width: 100%;
+}
+
+.searchBar .searchText input::placeholder {
+    color: #999999;
+}
+
+/* Header Actions */
+.headerActions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.headerActionButton {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    transition: background-color 0.2s ease;
+}
+
+.headerActionButton:hover {
+    background-color: #f5f5f5;
+}
+
+.headerActionButton img,
+.headerActionButton svg {
+    display: block;
+    max-width: none;
+}
+
+.headerActions .notificationButton img,
+.headerActions .notificationButton svg {
+    width: 16px;
+    height: 16px;
+}
+
+.headerActions .buttonMargin {
+    padding-left: 16px;
+    height: 36px;
+    width: 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.headerActions .settingsButton img,
+.headerActions .settingsButton svg {
+    width: 16px;
+    height: 16px;
+}
+
+.headerActions .profileButtonWrapper {
+    padding-left: 16px;
+    height: 36px;
+    width: 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.headerActions .profileButton {
+    width: 36px;
+    height: 36px;
+    border-radius: 9999px;
+    background: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+}
+
+.headerActions .profileButton img,
+.headerActions .profileButton svg {
+    width: 36px;
+    height: 36px;
+    display: block;
+    max-width: none;
+}
+
+/* ========== Content Area ========== */
+.contentArea {
+    flex: 1 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 1px;
+    min-width: 1px;
+    overflow-y: auto;
+    background: #fafafa;
+    position: relative;
+    width: 100%;
+    padding: 12px;
+}
+
+/* ========== Mobile Menu Toggle ========== */
+.mobileMenuToggle {
+    display: none;
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 1001;
+    width: 40px;
+    height: 40px;
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobileMenuToggle svg {
+    width: 20px;
+    height: 20px;
+}
+
+.mobileMenuToggle:hover {
+    background-color: #f5f5f5;
+}
+
+/* ========== Overlay ========== */
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.overlay.hidden {
+    display: none;
+}
+
+/* ========== Responsive - Tablet (768px - 1023px) ========== */
+@media (max-width: 1023px) {
+    .sidebar {
+        width: 200px;
+    }
+
+    .sidebarHeader {
+        width: 199px;
+    }
+
+    .sidebarHeader .logo {
+        font-size: 18px;
+        width: auto;
+    }
+
+    .nav {
+        width: 199px;
+    }
+
+    .navLink .text {
+        font-size: 15px;
+    }
+
+    .sidebarFooter {
+        width: 199px;
+    }
+
+    .searchBar {
+        max-width: 250px;
+    }
+
+    .userInfo .userName {
+        font-size: 13px;
+    }
+
+    .userInfo .userGrade {
+        font-size: 11px;
+    }
+
+    .headerActions .profileButtonWrapper {
+        display: none;
+    }
+}
+
+/* ========== Responsive - Mobile (< 768px) ========== */
+@media (max-width: 767px) {
+    .studentLayout {
+        position: relative;
+    }
+
+    .mobileMenuToggle {
+        display: flex;
+    }
+
+    .overlay {
+        display: block;
+    }
+
+    .overlay.hidden {
+        display: none;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 1000;
+        width: 256px;
+        max-width: 80%;
+        height: 100%;
+        border-right: none;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .sidebarHeader {
+        width: 100%;
+    }
+
+    .sidebarHeader .logo {
+        font-size: 18px;
+        width: auto;
+    }
+
+    .nav {
+        width: 100%;
+    }
+
+    .navLink .text {
+        font-size: 15px;
+    }
+
+    .sidebarFooter {
+        width: 100%;
+    }
+
+    .mainContent {
+        width: 100%;
+    }
+
+    .header {
+        padding: 12px 16px;
+        padding-top: 12px;
+        padding-bottom: 12px;
+    }
+
+    .header .container {
+        gap: 8px;
+    }
+
+    .header .leftContainer {
+        gap: 12px;
+    }
+
+    /* Hide User Profile Dropdown on mobile */
+    .userProfileDropdown {
+        display: none;
+    }
+
+    /* Hide Search Bar on mobile */
+    .searchBar {
+        display: none;
+    }
+
+    .headerActions .buttonMargin,
+    .headerActions .profileButtonWrapper {
+        display: none;
+    }
+
+    .headerActionButton {
+        width: 32px;
+        height: 32px;
+    }
+
+    .headerActions .notificationButton img,
+    .headerActions .notificationButton svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .headerActions .settingsButton img,
+    .headerActions .settingsButton svg {
+        width: 14px;
+        height: 14px;
+    }
+}
+
+/* ========== Responsive - Small Mobile (< 480px) ========== */
+@media (max-width: 479px) {
+    .sidebar {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .sidebarHeader .logo {
+        font-size: 16px;
+    }
+
+    .nav {
+        padding: 12px;
+    }
+
+    .navLink {
+        padding: 10px 12px;
+    }
+
+    .navLink .iconWrapper {
+        width: 18px;
+    }
+
+    .navLink .iconWrapper img,
+    .navLink .iconWrapper svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .navLink .text {
+        font-size: 14px;
+        line-height: 20px;
+    }
+
+    .settingsLink {
+        padding: 10px 12px;
+    }
+
+    .settingsLink .iconWrapper {
+        width: 18px;
+    }
+
+    .settingsLink .iconWrapper img,
+    .settingsLink .iconWrapper svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .settingsLink .text {
+        font-size: 14px;
+        line-height: 20px;
+    }
+
+    .header {
+        padding: 12px 16px;
+    }
+
+    .headerActionButton {
+        width: 32px;
+        height: 32px;
+    }
+
+    .headerActions .notificationButton img,
+    .headerActions .notificationButton svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .headerActions .settingsButton img,
+    .headerActions .settingsButton svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .userInfo .userName {
+        font-size: 12px;
+        line-height: 16px;
+    }
+
+    .userInfo .userGrade {
+        font-size: 10px;
+        line-height: 14px;
+    }
+}
+
+/* ========== Print Styles ========== */
+@media print {
+
+    .sidebar,
+    .mobileMenuToggle,
+    .overlay {
+        display: none !important;
+    }
+
+    .mainContent {
+        width: 100%;
+    }
+}
