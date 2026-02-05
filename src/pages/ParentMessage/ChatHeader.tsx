@@ -6,7 +6,14 @@ const callIcon = 'https://www.figma.com/api/mcp/asset/e7357708-29a2-4580-956e-87
 const videoIcon = 'https://www.figma.com/api/mcp/asset/dbce7cb1-79c1-43f3-9c44-3b84b6c1bc06';
 const moreIcon = 'https://www.figma.com/api/mcp/asset/4275581e-11bc-41b8-859c-6e795005d430';
 
-const ChatHeader = () => {
+interface ChatHeaderProps {
+    selectedChannelId: number | null;
+}
+
+const ChatHeader = ({ selectedChannelId }: ChatHeaderProps) => {
+    // Hiện tại sử dụng dữ liệu mẫu, sau này sẽ fetch từ API
+    // TODO: Fetch channel info từ API khi có selectedChannelId
+
     return (
         <div className={styles.chatHeader}>
             <div className={styles.chatHeaderInfo}>
