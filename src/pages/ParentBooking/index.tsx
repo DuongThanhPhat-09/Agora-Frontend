@@ -58,7 +58,7 @@ const recentlyLinkedData = [
   },
 ];
 
-const ParentChildren = () => {
+const ParentBooking = () => {
   const [isAddChildModalOpen, setIsAddChildModalOpen] = useState(false);
 
   const handleOpenAddChildModal = () => {
@@ -189,4 +189,4 @@ const ParentChildren = () => {
   );
 };
 
-export default ParentChildren;
+export default ParentBooking;

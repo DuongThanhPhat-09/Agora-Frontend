@@ -38,12 +38,13 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ParentLayout from './layouts/ParentLayout';
 import ParentDashboard from './pages/ParentDashboard';
-import ParentChildren from './pages/ParentChildren';
-import ChildrenDetail from './pages/ParentChildren/Details';
+import ParentBooking from './pages/ParentBooking';
+import BookingDetail from './pages/ParentBooking/Details';
 import ParentWallet from './pages/ParentWallet';
 import ParentMessage from './pages/ParentMessage';
 import StudentDashboard from './pages/StudentDashboard';
 import StudentCourses from './pages/StudentCourses';
+import ParentStudent from './pages/ParentStudent';
 
 // ---------------------
 
@@ -123,8 +124,9 @@ function App() {
         >
           <Route index element={<Navigate to="/parent/dashboard" replace />} />
           <Route path="dashboard" element={<ParentDashboard />} />
-          <Route path="children" element={<ParentChildren />} />
-          <Route path="children/:id" element={<ChildrenDetail />} />
+          <Route path="booking" element={<ParentBooking />} />
+          <Route path="booking/:id" element={<BookingDetail />} />
+          <Route path="student" element={<ParentStudent />} />
           <Route path="wallet" element={<ParentWallet />} />
           <Route path="messages" element={<ParentMessage />} />
         </Route>

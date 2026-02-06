@@ -1,6 +1,7 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import styles from './styles.module.css';
 import { useEffect, useState } from 'react';
+import { Gauge, LayoutDashboard, MessageSquare, User, Wallet } from 'lucide-react';
 
 interface ParentLayoutProps {
   children?: React.ReactNode;
@@ -9,53 +10,19 @@ interface ParentLayoutProps {
 // Navigation items
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', path: '/parent/dashboard' },
-  { id: 'children', label: 'Children', path: '/parent/children' },
+  { id: 'student', label: 'Student', path: '/parent/student' },
+  { id: 'booking', label: 'Booking', path: '/parent/booking' },
   { id: 'monitoring', label: 'Monitoring', path: '/parent/monitoring' },
   { id: 'wallet', label: 'Wallet', path: '/parent/wallet' },
   { id: 'messages', label: 'Messages', path: '/parent/messages' },
 ];
 
-// Navigation icons (using inline SVGs for simplicity, can be replaced with lucide-react icons)
-const DashboardIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="3" y="3" width="6" height="6" rx="1" fill="#171717" />
-    <rect x="11" y="3" width="6" height="6" rx="1" fill="#171717" />
-    <rect x="3" y="11" width="6" height="6" rx="1" fill="#171717" />
-    <rect x="11" y="11" width="6" height="6" rx="1" fill="#171717" />
-  </svg>
-);
-
-const ChildrenIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10 9C11.6569 9 13 7.65685 13 6C13 4.34315 11.6569 3 10 3C8.34315 3 7 4.34315 7 6C7 7.65685 8.34315 9 10 9Z" fill="#525252" />
-    <path d="M3 18C3 14.134 6.13401 11 10 11C13.866 11 17 14.134 17 18H3Z" fill="#525252" />
-  </svg>
-);
-
-const MonitoringIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10 3C11.1046 3 12 3.89543 12 5C12 6.10457 11.1046 7 10 7C8.89543 7 8 6.10457 8 5C8 3.89543 8.89543 3 10 3Z" fill="#525252" />
-    <path d="M10 9C11.6569 9 13 10.1046 13 8.5C13 6.89543 11.6569 5.5 10 5.5C8.34315 5.5 7 6.89543 7 8.5C7 10.1046 8.34315 11.5 10 11.5Z" fill="#525252" />
-    <path d="M10 13C12.2091 13 14 14.7909 14 17H6C6 14.7909 7.79086 13 10 13Z" fill="#525252" />
-  </svg>
-);
-
-const WalletIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M4 4C4 2.89543 4.89543 2 6 2H14C15.1046 2 16 2.89543 16 4V18L10 15L4 18V4Z" fill="#525252" />
-  </svg>
-);
-
-const MessagesIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M2 5C2 4.44772 2.44772 4 3 4H17C17.5523 4 18 4.44772 18 5V15C18 15.5523 17.5523 16 17 16H3C2.44772 16 2 15.5523 2 15V5Z" fill="#525252" />
-    <path d="M2 5L10 10L18 5" stroke="#525252" strokeWidth="1.5" />
-  </svg>
-);
-
 const SettingsIcon = () => (
   <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10 3C11.6569 3 13 4.34315 13 6C13 7.65685 11.6569 9 10 9C8.34315 9 7 7.65685 7 6C7 4.34315 8.34315 3 10 3Z" fill="#525252" />
+    <path
+      d="M10 3C11.6569 3 13 4.34315 13 6C13 7.65685 11.6569 9 10 9C8.34315 9 7 7.65685 7 6C7 4.34315 8.34315 3 10 3Z"
+      fill="#525252"
+    />
     <path d="M3 18C3 14.134 6.13401 11 10 11C13.866 11 17 14.134 17 18H3Z" fill="#525252" />
   </svg>
 );
@@ -104,7 +71,8 @@ const MenuIcon = () => (
       d="M3 6H21C21.5523 6 5.44772 6 5C21.5523 6 5 5.44772 6 5C21.5523 6 6 4.44772 6 6V6H17C17.5523 6 6 4.44772 6 6V18H3Z"
       fill="#171717"
     />
-    <path d="M3 12H21C21.5523 12 11.44772 12 5C21.5523 12 5 5.44772 12 5C21.5523 12 5 5.44772 12 5V18H3Z"
+    <path
+      d="M3 12H21C21.5523 12 11.44772 12 5C21.5523 12 5 5.44772 12 5C21.5523 12 5 5.44772 12 5V18H3Z"
       fill="#171717"
     />
   </svg>
@@ -185,19 +153,22 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
             let IconComponent;
             switch (item.id) {
               case 'dashboard':
-                IconComponent = DashboardIcon;
+                IconComponent = <LayoutDashboard />;
                 break;
-              case 'children':
-                IconComponent = ChildrenIcon;
+              case 'student':
+                IconComponent = <User />;
+                break;
+              case 'booking':
+                IconComponent = <User />;
                 break;
               case 'monitoring':
-                IconComponent = MonitoringIcon;
+                IconComponent = <Gauge />;
                 break;
               case 'wallet':
-                IconComponent = WalletIcon;
+                IconComponent = <Wallet />;
                 break;
               case 'messages':
-                IconComponent = MessagesIcon;
+                IconComponent = <MessageSquare />;
                 break;
               default:
                 IconComponent = undefined;
@@ -210,9 +181,7 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
                 onClick={() => handleNavClick(item.path)}
                 data-node-id={`nav-${item.id}`}
               >
-                <div className={styles.iconWrapper}>
-                  {IconComponent && <IconComponent />}
-                </div>
+                <div className={styles.iconWrapper}>{IconComponent}</div>
                 <div className={styles.textWrapper}>
                   <p className={styles.text}>{item.label}</p>
                 </div>
@@ -287,9 +256,7 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
         </header>
 
         {/* Content Area - Children will be rendered here */}
-        <div className={styles.contentArea}>
-          {children || <Outlet />}
-        </div>
+        <div className={styles.contentArea}>{children || <Outlet />}</div>
       </div>
     </div>
   );
