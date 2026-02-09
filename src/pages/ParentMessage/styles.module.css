@@ -455,6 +455,33 @@
   height: 16px;
 }
 
+.leaveButton {
+  border: 1px solid #d4d4d4;
+  background: transparent;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #dc2626;
+  transition: all 0.2s ease;
+}
+
+.leaveButton:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.leaveButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.leaveButton svg {
+  width: 16px;
+  height: 16px;
+}
+
 .messagesArea {
   position: relative;
   background: #fafafa;
@@ -680,6 +707,21 @@
   border-radius: 8px;
   padding: 12px;
   cursor: pointer;
+}
+
+.sendButton img {
+  width: 16px;
+  height: 16px;
+}
+
+.sendingSpinner {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .sendButton img {

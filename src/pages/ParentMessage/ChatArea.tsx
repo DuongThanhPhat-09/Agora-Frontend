@@ -1,19 +1,89 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import styles from './styles.module.css';
 import ChatHeader from './ChatHeader';
 import ChatMessagesArea from './ChatMessagesArea';
 import MessageComposer from './MessageComposer';
 import QuickTemplates from './QuickTemplates';
 import { getChatMessages, type ChatMessage } from '../../services/chat.service';
+import { signalRService } from '../../services/signalr.service';
+import { message } from 'antd';
 
 interface ChatAreaProps {
   selectedChannelId: number | null;
+  currentUserId: string | null;
 }
 
-const ChatArea = ({ selectedChannelId }: ChatAreaProps) => {
+const ChatArea = ({ selectedChannelId, currentUserId }: ChatAreaProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
+  const [connectionState, setConnectionState] = useState<string>('disconnected');
 
+  // Kết nối SignalR khi component mount
+  useEffect(() => {
+    let mounted = true;
+
+    const initSignalR = async () => {
+      try {
+        await signalRService.connect();
+        if (mounted) {
+          setConnectionState('connected');
+
+          // Đăng ký nhận tin nhắn
+          signalRService.onMessageReceived((data: any) => {
+            console.log('📩 SignalR messageReceived:', data);
+            // Thêm tin nhắn mới vào list (mới nhất ở đầu)
+            if (data?.channelId === selectedChannelId) {
+              const newMessage: ChatMessage = {
+                messageId: data.messageId,
+                channelId: data.channelId,
+                senderId: data.senderId,
+                content: data.content,
+                messageType: data.messageType,
+                createdAt: data.createdAt,
+              };
+              setMessages((prev) => [newMessage, ...prev]);
+            }
+          });
+        }
+      } catch (err) {
+        console.error('SignalR connection error:', err);
+        if (mounted) {
+          setConnectionState('error');
+          message.error('Failed to connect to chat server');
+        }
+      }
+    };
+
+    initSignalR();
+
+    return () => {
+      mounted = false;
+      signalRService.offMessageReceived();
+      signalRService.offUserJoined();
+      signalRService.offUserLeft();
+      signalRService.disconnect();
+      setConnectionState('disconnected');
+    };
+  }, []);
+
+  // Join channel khi selectedChannelId thay đổi
+  useEffect(() => {
+    const joinChannel = async () => {
+      if (selectedChannelId && signalRService.isConnected()) {
+        try {
+          await signalRService.joinChannel(selectedChannelId);
+          console.log(`✅ Joined channel ${selectedChannelId}`);
+        } catch (err) {
+          console.error('Error joining channel:', err);
+          message.error('Failed to join chat channel');
+        }
+      }
+    };
+
+    joinChannel();
+  }, [selectedChannelId]);
+
+  // Lấy lịch sử tin nhắn từ API khi chọn channel
   useEffect(() => {
     if (!selectedChannelId) {
       setMessages([]);
@@ -23,23 +93,47 @@ const ChatArea = ({ selectedChannelId }: ChatAreaProps) => {
     const fetchMessages = async () => {
       try {
         setLoading(true);
-        // TODO: Fetch messages từ API theo selectedChannelId
-        // const response = await getChatMessages(selectedChannelId);
-        console.log('Fetching messages for channel:', selectedChannelId);
-
-        // Giả lập delay để hiển thị loading
         const { content } = await getChatMessages(selectedChannelId);
-
-        // Set mock data (sau này sẽ thay bằng API data)
+        // API hiện tại đã được fix trả về đúng
         setMessages(content);
       } catch (err) {
         console.error('Error fetching messages:', err);
+        message.error('Failed to load messages');
       } finally {
         setLoading(false);
       }
     };
 
     fetchMessages();
+  }, [selectedChannelId]);
+
+  // Handler gửi tin nhắn
+  const handleSendMessage = useCallback(async (content: string) => {
+    if (!selectedChannelId || !content.trim()) {
+      return;
+    }
+
+    try {
+      await signalRService.sendMessage(selectedChannelId, content.trim());
+      console.log(`✅ Sent message to channel ${selectedChannelId}`);
+    } catch (err) {
+      console.error('Error sending message:', err);
+      message.error('Failed to send message');
+    }
+  }, [selectedChannelId]);
+
+  // Handler rời channel
+  const handleLeaveChannel = useCallback(async () => {
+    if (!selectedChannelId) return;
+
+    try {
+      await signalRService.leaveChannel(selectedChannelId);
+      console.log(`✅ Left channel ${selectedChannelId}`);
+      setMessages([]);
+    } catch (err) {
+      console.error('Error leaving channel:', err);
+      message.error('Failed to leave chat channel');
+    }
   }, [selectedChannelId]);
 
   // Nếu không có channel nào được chọn, hiển thị empty state
@@ -55,11 +149,15 @@ const ChatArea = ({ selectedChannelId }: ChatAreaProps) => {
 
   return (
     <section className={styles.chatArea}>
-      <ChatHeader selectedChannelId={selectedChannelId} />
-      <ChatMessagesArea messages={messages} loading={loading} />
+      <ChatHeader
+        selectedChannelId={selectedChannelId}
+        onLeaveChannel={handleLeaveChannel}
+        connectionState={connectionState}
+      />
+      <ChatMessagesArea messages={messages} loading={loading} currentUserId={currentUserId} />
       <div className={styles.chatFooter}>
-        <QuickTemplates />
-        <MessageComposer />
+        {/* <QuickTemplates /> */}
+        <MessageComposer onSend={handleSendMessage} disabled={!signalRService.isConnected()} />
       </div>
     </section>
   );

@@ -9,9 +9,10 @@ const tutorAvatarSmall = 'https://www.figma.com/api/mcp/asset/0ff4008a-fd18-4174
 interface ChatMessagesAreaProps {
   messages: Array<ChatMessage>;
   loading: boolean;
+  currentUserId: string | null;
 }
 
-const ChatMessagesArea = ({ messages, loading }: ChatMessagesAreaProps) => {
+const ChatMessagesArea = ({ messages, loading, currentUserId }: ChatMessagesAreaProps) => {
   if (loading) {
     return (
       <div className={styles.messagesArea}>
@@ -37,16 +38,18 @@ const ChatMessagesArea = ({ messages, loading }: ChatMessagesAreaProps) => {
     <div className={styles.messagesArea}>
       <SessionContextCard />
       <div className={styles.dateSeparator}>Today</div>
-      {messages.map((msg, index) => (
-        <MessageBubble
-          key={index}
-          avatar={tutorAvatarSmall}
-          message={msg.content}
-          time={msg.createdAt}
-          isSender={false}
-        />
-      ))}
-      <TypingIndicator />
+      {messages.map((msg) => {
+        return (
+          <MessageBubble
+            key={msg.messageId}
+            avatar={tutorAvatarSmall}
+            message={msg.content}
+            time={msg.createdAt}
+            isSender={currentUserId ? msg.senderId === currentUserId : false}
+          />
+        );
+      })}
+      {/* <TypingIndicator /> */}
     </div>
   );
 };

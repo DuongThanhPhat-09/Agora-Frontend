@@ -5,6 +5,7 @@ import HeaderTopBar from './HeaderTopBar';
 import MessageListSidebar from './MessageListSidebar';
 
 const ParentMessage = () => {
+  const userId = "USR-PAR-01";
   const [selectedChannelId, setSelectedChannelId] = useState<number | null>(null);
 
   return (
@@ -12,7 +13,7 @@ const ParentMessage = () => {
       <HeaderTopBar />
       <div className={styles.mainContent}>
         <MessageListSidebar onChannelSelect={setSelectedChannelId} selectedChannelId={selectedChannelId} />
-        <ChatArea selectedChannelId={selectedChannelId} />
+        <ChatArea selectedChannelId={selectedChannelId} currentUserId={userId} />
       </div>
     </div>
   );

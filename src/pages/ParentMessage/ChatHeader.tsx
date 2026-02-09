@@ -1,4 +1,5 @@
 import styles from './styles.module.css';
+import { LogOut } from 'lucide-react';
 
 const tutorAvatar = 'https://www.figma.com/api/mcp/asset/3ee4e6d4-e39b-4753-a0d0-0ec3d0ba2b44';
 const badgeAssigned = 'https://www.figma.com/api/mcp/asset/d7adf34e-7b26-4007-8282-2540aba0e56e';
@@ -8,12 +9,11 @@ const moreIcon = 'https://www.figma.com/api/mcp/asset/4275581e-11bc-41b8-859c-6e
 
 interface ChatHeaderProps {
     selectedChannelId: number | null;
+    onLeaveChannel: () => void;
+    connectionState: string;
 }
 
-const ChatHeader = ({ selectedChannelId }: ChatHeaderProps) => {
-    // Hiện tại sử dụng dữ liệu mẫu, sau này sẽ fetch từ API
-    // TODO: Fetch channel info từ API khi có selectedChannelId
-
+const ChatHeader = ({ selectedChannelId, onLeaveChannel, connectionState }: ChatHeaderProps) => {
     return (
         <div className={styles.chatHeader}>
             <div className={styles.chatHeaderInfo}>
@@ -25,7 +25,7 @@ const ChatHeader = ({ selectedChannelId }: ChatHeaderProps) => {
                         <span className={styles.chatSession}>Session #12</span>
                     </div>
                     <div className={styles.chatHeaderMetaRow}>
-                        <span className={styles.chatRole}>Math Tutor • Online now</span>
+                        <span className={styles.chatRole}>Math Tutor • {connectionState === 'connected' ? 'Online now' : 'Offline'}</span>
                         <span className={styles.messageBadge}>
                             <img alt="" className={styles.messageBadgeIcon} src={badgeAssigned} />
                             <span>HW Assigned</span>
@@ -34,14 +34,24 @@ const ChatHeader = ({ selectedChannelId }: ChatHeaderProps) => {
                 </div>
             </div>
             <div className={styles.chatHeaderActions}>
-                <button className={styles.iconButton} type="button">
+                <button className={styles.iconButton} type="button" title="Call">
                     <img alt="" src={callIcon} />
                 </button>
-                <button className={styles.iconButton} type="button">
+                <button className={styles.iconButton} type="button" title="Video Call">
                     <img alt="" src={videoIcon} />
                 </button>
-                <button className={styles.iconButton} type="button">
+                <button className={styles.iconButton} type="button" title="More Options">
                     <img alt="" src={moreIcon} />
+                </button>
+                <button
+                    className={styles.leaveButton}
+                    type="button"
+                    onClick={onLeaveChannel}
+                    disabled={!selectedChannelId}
+                    title="Leave Channel"
+                >
+                    <LogOut size={16} />
+                    <span>Leave</span>
                 </button>
             </div>
         </div>

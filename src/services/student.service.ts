@@ -12,10 +12,93 @@ const api = axios.create({
   },
 });
 
+export interface ICreateParentStudent {
+  fullname: string;
+  birthdate: string;
+  school: string;
+  gradelevel?: string;
+  learninggoals?: string;
+}
+
+export type IUpdateParentStudent = ICreateParentStudent;
+
+export interface IGetBookingParams {
+  page: number;
+  pageSize: number;
+  status?: string;
+}
+
 export const getStudents = async (): Promise<ApiResponse<StudentType[]>> => {
   try {
     const response = await api.get(`/parent/students`, {
       headers: getAuthHeaders(),
+    });
+
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ Error fetching verification progress:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+    throw error;
+  }
+};
+
+export const deleteStudent = async (id: string) => {
+  try {
+    const response = await api.delete(`/parent/students/${id}`, {
+      headers: getAuthHeaders(),
+    });
+
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ Error fetching verification progress:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+    throw error;
+  }
+};
+
+export const createParentStudent = async (payload: ICreateParentStudent) => {
+  try {
+    const response = await api.post<ICreateParentStudent>(`/parent/students`, payload, { headers: getAuthHeaders() });
+
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ Error fetching verification progress:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+    throw error;
+  }
+};
+
+export const updateParentStudent = async (id: string, payload: IUpdateParentStudent) => {
+  try {
+    const response = await api.put<IUpdateParentStudent>(`/parent/students/${id}`, payload, {
+      headers: getAuthHeaders(),
+    });
+
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ Error fetching verification progress:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+    throw error;
+  }
+};
+
+export const getParentBookings = async (params: IGetBookingParams = { page: 1, pageSize: 10 }) => {
+  try {
+    const response = await api.get(`/parent/bookings`, {
+      headers: getAuthHeaders(),
+      params,
     });
 
     return response.data;

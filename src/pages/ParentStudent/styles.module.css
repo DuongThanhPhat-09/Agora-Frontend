@@ -18,8 +18,8 @@
   --color-success: #16a34a;
   --color-input-bg: #f5f5f5;
   --shadow-sm: 0 1px 2px 0 rgba(23, 23, 23, 0.04);
-  --shadow-md: 0 4px 12px rgba(23, 23, 23, 0.06);
-  --shadow-lg: 0 8px 24px rgba(23, 23, 23, 0.1);
+  --shadow-md: 0.4px 12px rgba(23, 23, 23, 0.06);
+  --shadow-lg: 0.8px 24px rgba(23, 23, 23, 0.1);
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
@@ -274,11 +274,7 @@
   }
 }
 
-.studentsTable thead {
-  background: linear-gradient(180deg, var(--color-border-light) 0%, var(--color-white) 100%);
-}
-
-.studentsTable tr {
+.studentsTable tbody tr {
   transition: background-color var(--transition-fast);
 }
 
@@ -307,6 +303,10 @@
   border-top-right-radius: var(--radius-lg);
 }
 
+.tableHeaderActions {
+  text-align: right;
+}
+
 .tableRow {
   border-bottom: 1px solid var(--color-border-light);
   transition: all var(--transition-fast);
@@ -324,7 +324,7 @@
 .studentInfo {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap:  16px;
 }
 
 .studentAvatar {
@@ -387,7 +387,7 @@
 .studentExtra {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap:  20px;
   flex-wrap: wrap;
 }
 
@@ -503,44 +503,38 @@
   color: var(--color-danger);
 }
 
-.actionBtnDelete:hover {
-  background: rgba(220, 38, 38, 0.08);
-  border-color: rgba(220, 38, 38, 0.2);
-  color: var(--color-danger-hover);
-}
-
-.actionBtnDelete:hover svg {
+.actionBtn:hover svg {
   color: var(--color-danger-hover);
 }
 
 /* ===== MODAL OVERLAY ===== */
 .modalOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(23, 23, 23, 0.6);
-  backdrop-filter: blur(8px);
-  z-index: 1000;
-  animation: fadeIn var(--transition-normal);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(23, 23, 23, 0.6);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    animation: fadeIn var(--transition-normal);
 }
 
 /* ===== MODAL CONTENT ===== */
 .modalContent {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--color-white);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
-  max-width: 500px;
-  width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
-  z-index: 1001;
-  animation: scaleIn var(--transition-normal);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--color-white);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    z-index: 1001;
+    animation: modalScaleIn var(--transition-normal);
 }
 
 @keyframes modalScaleIn {
@@ -559,16 +553,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 24px 24px 24px;
-  border-bottom: 1px solid var(--color-border-light);
+  padding: 24px 32px 24px 24px;
+    border-bottom: 1px solid var(--color-border-light);
 }
 
 .modalTitle {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  margin: 0;
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0;
   letter-spacing: -0.5px;
 }
 
@@ -580,7 +574,7 @@
   height: 32px;
   border: none;
   background: var(--color-border-light);
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   cursor: pointer;
   transition: all var(--transition-fast);
   color: var(--color-text-secondary);
@@ -628,11 +622,11 @@
   width: 100%;
   padding: 12px 16px;
   font-family: var(--font-primary);
-  font-size: 15px;
+  font-size:  15px;
   color: var(--color-text-primary);
   background: var(--color-input-bg);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   transition: all var(--transition-fast);
 }
 
@@ -640,7 +634,7 @@
 .formTextarea:focus {
   outline: none;
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 0 3px rgba(79, 70, 229, 0.15);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
 }
 
 .formInputError {
@@ -658,13 +652,6 @@
   75% {
     transform: translateX(4px);
   }
-}
-
-.formTextarea {
-  min-height: 80px;
-  resize: vertical;
-  font-family: var(--font-primary);
-  line-height: 1.5;
 }
 
 .errorMessage {
@@ -686,6 +673,13 @@
   }
 }
 
+.formTextarea {
+  min-height: 80px;
+  resize: vertical;
+  font-family: var(--font-primary);
+  line-height: 1.5;
+}
+
 /* ===== MODAL ACTIONS ===== */
 .modalActions {
   display: flex;
@@ -699,7 +693,7 @@
   font-family: var(--font-primary);
   font-size: 14px;
   font-weight: 500;
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   border: 1px solid var(--color-border);
   background: var(--color-white);
   color: var(--color-text-secondary);
@@ -719,80 +713,80 @@
 }
 
 .modalBtnPrimary:hover {
-  background: var(--color-accent-hover);
-  border-color: var(--color-accent-hover);
+    background: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
   transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-sm);
 }
 
 .modalBtnPrimary:active {
   transform: translateY(0);
 }
 
-/* ===== DELETE MODAL ===== */
+/* ===== DELETE CONFIRMATION MODAL ===== */
 .deleteModalContent {
   max-width: 400px;
 }
 
 .deleteModalIcon {
-  width: 80px;
+    width: 80px;
   height: 80px;
-  margin: 0 auto 24px;
-  background: rgba(220, 38, 38, 0.1);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    margin: 0 auto 24px;
+    background: rgba(220, 38, 38, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .deleteModalIcon svg {
-  color: var(--color-danger);
-  width: 40px;
-  height: 40px;
+    color: var(--color-danger);
+    width: 40px;
+    height: 40px;
 }
 
 .deleteModalTitle {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  margin: 0 0 24px 16px;
-  text-align: center;
-  letter-spacing: -0.5px;
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 24px 16px;
+    text-align: center;
+    letter-spacing: -0.5px;
 }
 
 .deleteModalText {
-  font-family: var(--font-primary);
-  font-size: 15px;
-  color: var(--color-text-secondary);
-  line-height: 1.6;
-  text-align: center;
-  margin: 0 0 32px;
+    font-family: var(--font-primary);
+    font-size: 15px;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    text-align: center;
+    margin: 0 0 16px;
 }
 
 .deleteModalText strong {
-  font-weight: 600;
-  color: var(--color-text-primary);
+    font-weight: 600;
+    color: var(--color-text-primary);
 }
 
 .deleteModalActions {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  padding-top: 24px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    padding-top: 24px;
 }
 
 .modalBtnDanger {
-  background: var(--color-danger);
-  color: var(--color-white);
-  border-color: var(--color-danger);
+    background: var(--color-danger);
+    color: var(--color-white);
+    border-color: var(--color-danger);
 }
 
 .modalBtnDanger:hover {
-  background: var(--color-danger-hover);
-  border-color: var(--color-danger-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+    background: var(--color-danger-hover);
+    border-color: var(--color-danger-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
 }
 
 /* ===== RESPONSIVE ===== */
@@ -809,7 +803,7 @@
 
   .addBtn {
     width: 100%;
-  justify-content: center;
+    justify-content: center;
   }
 
   .studentsTable {
@@ -833,6 +827,10 @@
     gap: 4px;
   }
 
+  .studentMeta {
+    gap: 8px;
+  }
+
   .studentName {
     font-size: 14px;
   }
@@ -843,18 +841,17 @@
     max-height: 85vh;
   }
 
-  .formLabel {
-    font-size: 13px;
-  }
-
   .addStudentForm {
     padding: 20px 24px 24px;
+  }
+
+  .formLabel {
+    font-size: 13px;
   }
 
   .modalActions {
     flex-direction: column;
     width: 100%;
-    padding-top: 16px;
   }
 }
 
@@ -880,18 +877,6 @@
     height: 48px;
   }
 
-  .modalContent {
-    width: 100%;
-    }
-
-  .tableHeader {
-    padding: 8px 12px;
-  }
-
-  .tableHeader:first-child {
-    padding-left: 16px;
-  }
-
   .studentName {
     font-size: 14px;
   }
@@ -902,10 +887,6 @@
 
   .studentExtra {
     gap: 12px;
-  }
-
-  .actionsCell {
-    padding: 12px 16px;
   }
 
   .actionBtn {
