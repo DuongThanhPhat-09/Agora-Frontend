@@ -55,7 +55,7 @@ export const getChats = async (): Promise<ApiResponse<ChatChanel[]>> => {
 
 export const getChatMessages = async (
   channelId: number,
-  query: ChatMessageQuery = { page: 1, pageSize: 25 },
+  query: ChatMessageQuery = { page: 1, pageSize: 10 },
 ): Promise<ApiResponse<ChatMessage[]>> => {
   try {
     const response = await api.get(`/chat/channels/${channelId}/messages`, {

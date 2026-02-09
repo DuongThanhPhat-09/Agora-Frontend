@@ -95,7 +95,7 @@ const ChatArea = ({ selectedChannelId, currentUserId }: ChatAreaProps) => {
         setLoading(true);
         const { content } = await getChatMessages(selectedChannelId);
         // API hiện tại đã được fix trả về đúng
-        setMessages(content);
+        setMessages(content.reverse());
       } catch (err) {
         console.error('Error fetching messages:', err);
         message.error('Failed to load messages');
@@ -107,20 +107,35 @@ const ChatArea = ({ selectedChannelId, currentUserId }: ChatAreaProps) => {
     fetchMessages();
   }, [selectedChannelId]);
 
-  // Handler gửi tin nhắn
+  // Handler gửi tin nhắn - hiển thị message ngay lên đầu
   const handleSendMessage = useCallback(async (content: string) => {
     if (!selectedChannelId || !content.trim()) {
       return;
     }
 
+    // Tạo message để hiển thị ngay lập tức
+    const tempMessage: ChatMessage = {
+      messageId: Date.now(), // Tạo ID tạm thời
+      channelId: selectedChannelId,
+      senderId: currentUserId || '',
+      content: content.trim(),
+      messageType: 'text',
+      createdAt: new Date().toISOString(),
+    };
+
+    // Hiển thị message ngay lên đầu
+    setMessages((prev) => [...prev, tempMessage]);
+
     try {
       await signalRService.sendMessage(selectedChannelId, content.trim());
-      console.log(`✅ Sent message to channel ${selectedChannelId}`);
+      console.log(`✅ Sent message to channel ${selectedChannelId}:`, content);
     } catch (err) {
       console.error('Error sending message:', err);
+      // Xóa message thất bại khỏi UI
+      setMessages((prev) => prev.filter((msg) => msg.messageId !== tempMessage.messageId));
       message.error('Failed to send message');
     }
-  }, [selectedChannelId]);
+  }, [selectedChannelId, currentUserId]);
 
   // Handler rời channel
   const handleLeaveChannel = useCallback(async () => {
