@@ -1,8 +1,9 @@
 import styles from './styles.module.css';
 import MessageBubble from './MessageBubble';
-import SessionContextCard from './SessionContextCard';
-import TypingIndicator from './TypingIndicator';
 import type { ChatMessage } from '../../services/chat.service';
+import InfiniteScroll from 'react-infinite-scroll-component';
+import { Loader2 } from 'lucide-react';
+import { useState } from 'react';
 
 const tutorAvatarSmall = 'https://www.figma.com/api/mcp/asset/0ff4008a-fd18-4174-9e83-f377eb2a5123';
 
@@ -10,9 +11,12 @@ interface ChatMessagesAreaProps {
   messages: Array<ChatMessage>;
   loading: boolean;
   currentUserId: string | null;
+  loadMessages: (query?: { page: number; pageSize: number }) => Promise<void>;
+  hasMore: boolean;
 }
 
-const ChatMessagesArea = ({ messages, loading, currentUserId }: ChatMessagesAreaProps) => {
+const ChatMessagesArea = ({ messages, loading, currentUserId, hasMore, loadMessages }: ChatMessagesAreaProps) => {
+  const [page, setPage] = useState(1);
   if (loading) {
     return (
       <div className={styles.messagesArea}>
@@ -34,21 +38,47 @@ const ChatMessagesArea = ({ messages, loading, currentUserId }: ChatMessagesArea
     );
   }
 
+  const getMessages = async () => {
+    await loadMessages({ page: page + 1, pageSize: 10 });
+    setPage((prev) => prev + 1);
+  };
+
   return (
-    <div className={styles.messagesArea}>
-      <SessionContextCard />
-      <div className={styles.dateSeparator}>Today</div>
-      {messages.map((msg) => {
-        return (
-          <MessageBubble
-            key={msg.messageId}
-            avatar={tutorAvatarSmall}
-            message={msg.content}
-            time={msg.createdAt}
-            isSender={currentUserId ? msg.senderId === currentUserId : false}
-          />
-        );
-      })}
+    <div
+      id="top-chat-div"
+      className={styles.messagesArea}
+      style={{
+        height: 300,
+        overflow: 'auto',
+        display: 'flex',
+        flexDirection: 'column-reverse',
+      }}
+    >
+      <InfiniteScroll
+        dataLength={messages.length}
+        next={getMessages}
+        style={{ display: 'flex', flexDirection: 'column-reverse' }}
+        inverse={true} //
+        hasMore={hasMore}
+        loader={
+          <div className="flex justify-center py-6!">
+            <Loader2 size={32} className={styles.sendingSpinner} />
+          </div>
+        }
+        scrollableTarget="top-chat-div"
+      >
+        {messages.map((msg, index) => {
+          return (
+            <MessageBubble
+              key={index}
+              avatar={tutorAvatarSmall}
+              message={msg.content}
+              time={msg.createdAt}
+              isSender={currentUserId ? msg.senderId === currentUserId : false}
+            />
+          );
+        })}
+      </InfiniteScroll>
       {/* <TypingIndicator /> */}
     </div>
   );

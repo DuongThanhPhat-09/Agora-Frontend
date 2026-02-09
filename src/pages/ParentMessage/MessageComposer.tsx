@@ -56,9 +56,9 @@ const MessageComposer = ({ onSend, disabled = false }: MessageComposerProps) => 
         title="Send Message"
       >
         {sending ? (
-          <Loader2 size={20} className={styles.sendingSpinner} color='#ffffff' />
+          <Loader2 size={20} className={styles.sendingSpinner} color="#ffffff" />
         ) : (
-          <SendHorizontal size={20} color='#ffffff' />
+          <SendHorizontal size={20} color="#ffffff" />
         )}
       </button>
     </div>

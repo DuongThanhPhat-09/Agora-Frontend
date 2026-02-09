@@ -14,6 +14,7 @@ interface ChatAreaProps {
 }
 
 const ChatArea = ({ selectedChannelId, currentUserId }: ChatAreaProps) => {
+  const [hasMore, setHasMore] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [connectionState, setConnectionState] = useState<string>('disconnected');
@@ -83,6 +84,17 @@ const ChatArea = ({ selectedChannelId, currentUserId }: ChatAreaProps) => {
     joinChannel();
   }, [selectedChannelId]);
 
+  const loadMessages = useCallback(
+    async (query: { page: number; pageSize: number } = { page: 1, pageSize: 10 }) => {
+      if (!selectedChannelId) return;
+
+      const { content } = await getChatMessages(selectedChannelId, query);
+      setMessages((prev) => [...prev, ...content]);
+      if (content.length === 0) setHasMore(false);
+    },
+    [selectedChannelId],
+  );
+
   // Lấy lịch sử tin nhắn từ API khi chọn channel
   useEffect(() => {
     if (!selectedChannelId) {
@@ -93,9 +105,7 @@ const ChatArea = ({ selectedChannelId, currentUserId }: ChatAreaProps) => {
     const fetchMessages = async () => {
       try {
         setLoading(true);
-        const { content } = await getChatMessages(selectedChannelId);
-        // API hiện tại đã được fix trả về đúng
-        setMessages(content.reverse());
+        await loadMessages({ page: 1, pageSize: 10 });
       } catch (err) {
         console.error('Error fetching messages:', err);
         message.error('Failed to load messages');
@@ -108,34 +118,37 @@ const ChatArea = ({ selectedChannelId, currentUserId }: ChatAreaProps) => {
   }, [selectedChannelId]);
 
   // Handler gửi tin nhắn - hiển thị message ngay lên đầu
-  const handleSendMessage = useCallback(async (content: string) => {
-    if (!selectedChannelId || !content.trim()) {
-      return;
-    }
+  const handleSendMessage = useCallback(
+    async (content: string) => {
+      if (!selectedChannelId || !content.trim()) {
+        return;
+      }
 
-    // Tạo message để hiển thị ngay lập tức
-    const tempMessage: ChatMessage = {
-      messageId: Date.now(), // Tạo ID tạm thời
-      channelId: selectedChannelId,
-      senderId: currentUserId || '',
-      content: content.trim(),
-      messageType: 'text',
-      createdAt: new Date().toISOString(),
-    };
+      // Tạo message để hiển thị ngay lập tức
+      const tempMessage: ChatMessage = {
+        messageId: Date.now(), // Tạo ID tạm thời
+        channelId: selectedChannelId,
+        senderId: currentUserId || '',
+        content: content.trim(),
+        messageType: 'text',
+        createdAt: new Date().toISOString(),
+      };
 
-    // Hiển thị message ngay lên đầu
-    setMessages((prev) => [...prev, tempMessage]);
+      // Hiển thị message ngay lên đầu
+      setMessages((prev) => [tempMessage, ...prev]);
 
-    try {
-      await signalRService.sendMessage(selectedChannelId, content.trim());
-      console.log(`✅ Sent message to channel ${selectedChannelId}:`, content);
-    } catch (err) {
-      console.error('Error sending message:', err);
-      // Xóa message thất bại khỏi UI
-      setMessages((prev) => prev.filter((msg) => msg.messageId !== tempMessage.messageId));
-      message.error('Failed to send message');
-    }
-  }, [selectedChannelId, currentUserId]);
+      try {
+        await signalRService.sendMessage(selectedChannelId, content.trim());
+        console.log(`✅ Sent message to channel ${selectedChannelId}:`, content);
+      } catch (err) {
+        console.error('Error sending message:', err);
+        // Xóa message thất bại khỏi UI
+        setMessages((prev) => prev.filter((msg) => msg.messageId !== tempMessage.messageId));
+        message.error('Failed to send message');
+      }
+    },
+    [selectedChannelId, currentUserId],
+  );
 
   // Handler rời channel
   const handleLeaveChannel = useCallback(async () => {
@@ -169,7 +182,13 @@ const ChatArea = ({ selectedChannelId, currentUserId }: ChatAreaProps) => {
         onLeaveChannel={handleLeaveChannel}
         connectionState={connectionState}
       />
-      <ChatMessagesArea messages={messages} loading={loading} currentUserId={currentUserId} />
+      <ChatMessagesArea
+        messages={messages}
+        loading={loading}
+        currentUserId={currentUserId}
+        loadMessages={loadMessages}
+        hasMore={hasMore}
+      />
       <div className={styles.chatFooter}>
         {/* <QuickTemplates /> */}
         <MessageComposer onSend={handleSendMessage} disabled={!signalRService.isConnected()} />
