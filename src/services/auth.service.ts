@@ -198,7 +198,8 @@ export const registerUserToBackend = async (supabaseToken: string, password: str
       role: role
     };
 
-    const response = await api.post("/registrations/register-supabase", payload);
+    // Endpoint: /api/auth/register-supabase
+    const response = await api.post("/auth/register-supabase", payload);
     console.log("✅ Backend registration successful:", response.data);
     return response.data;
   } catch (error: any) {

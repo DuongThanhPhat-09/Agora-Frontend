@@ -52,13 +52,17 @@ export interface IntroductionSection {
 }
 
 export interface Certificate {
-    id: number;
-    name: string;
-    institution: string;
-    issueYear: number | null;
-    certificateUrl?: string;
-    verificationStatus: 'pending' | 'verified' | 'rejected';
-    type: 'education' | 'license' | 'certificate';
+    certificateId: string;
+    certificateName: string;
+    certificateType: string;
+    issuingOrganization: string;
+    yearIssued: number | null;
+    credentialId: string | null;
+    credentialUrl: string | null;
+    certificateFileUrl: string;
+    createdAt: string;
+    verificationStatus: 'pending_review' | 'verified' | 'rejected';
+    verificationNote: string | null;
 }
 
 export interface CertificatesSection {

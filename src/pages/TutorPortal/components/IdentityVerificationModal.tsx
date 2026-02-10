@@ -395,51 +395,6 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
                     )}
                 </div>
 
-                {/* Show eKYC extracted data if verified */}
-                {isAlreadyVerified && formData.fullNameOnId && (
-                    <div className={styles.ekycDataSection}>
-                        <h4 className={styles.ekycTitle}>Thông tin đã xác minh</h4>
-                        <div className={styles.ekycGrid}>
-                            {formData.idNumber && (
-                                <div className={styles.ekycItem}>
-                                    <span className={styles.ekycLabel}>Số CCCD</span>
-                                    <span className={styles.ekycValue}>{formData.idNumber}</span>
-                                </div>
-                            )}
-                            {formData.fullNameOnId && (
-                                <div className={styles.ekycItem}>
-                                    <span className={styles.ekycLabel}>Họ và tên</span>
-                                    <span className={styles.ekycValue}>{formData.fullNameOnId}</span>
-                                </div>
-                            )}
-                            {formData.dateOfBirth && (
-                                <div className={styles.ekycItem}>
-                                    <span className={styles.ekycLabel}>Ngày sinh</span>
-                                    <span className={styles.ekycValue}>{formData.dateOfBirth}</span>
-                                </div>
-                            )}
-                            {formData.gender && (
-                                <div className={styles.ekycItem}>
-                                    <span className={styles.ekycLabel}>Giới tính</span>
-                                    <span className={styles.ekycValue}>{formData.gender}</span>
-                                </div>
-                            )}
-                            {formData.hometown && (
-                                <div className={styles.ekycItem}>
-                                    <span className={styles.ekycLabel}>Quê quán</span>
-                                    <span className={styles.ekycValue}>{formData.hometown}</span>
-                                </div>
-                            )}
-                            {formData.address && (
-                                <div className={styles.ekycItem}>
-                                    <span className={styles.ekycLabel}>Địa chỉ</span>
-                                    <span className={styles.ekycValue}>{formData.address}</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
                 {/* Instructions - only show if not yet verified */}
                 {!isAlreadyVerified && (
                     <div className={styles.instructions}>
@@ -458,7 +413,7 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
                     {/* Front Image */}
                     <div className={styles.uploadSection}>
                         <label className={styles.sectionLabel}>
-                            Mặt trước CCCD/CMND <span className={styles.required}>*</span>
+                            Mặt trước CCCD/CMND {!isAlreadyVerified && <span className={styles.required}>*</span>}
                         </label>
                         {previews.front ? (
                             <div className={styles.imagePreview}>
@@ -508,7 +463,7 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
                     {/* Back Image */}
                     <div className={styles.uploadSection}>
                         <label className={styles.sectionLabel}>
-                            Mặt sau CCCD/CMND <span className={styles.required}>*</span>
+                            Mặt sau CCCD/CMND {!isAlreadyVerified && <span className={styles.required}>*</span>}
                         </label>
                         {previews.back ? (
                             <div className={styles.imagePreview}>
@@ -555,6 +510,42 @@ const IdentityVerificationModal: React.FC<IdentityVerificationModalProps> = ({
                         {errors.back && <span className={styles.error}>{errors.back}</span>}
                     </div>
                 </div>
+
+                {/* eKYC Extracted Data - show below images when verified */}
+                {isAlreadyVerified && formData.idNumber && (
+                    <div className={styles.ekycDataSection}>
+                        <h4 className={styles.ekycTitle}>
+                            <CheckIcon />
+                            Thông tin trích xuất từ CCCD
+                        </h4>
+                        <div className={styles.ekycGrid}>
+                            <div className={styles.ekycItem}>
+                                <span className={styles.ekycLabel}>Số CCCD</span>
+                                <span className={styles.ekycValue}>{formData.idNumber}</span>
+                            </div>
+                            <div className={styles.ekycItem}>
+                                <span className={styles.ekycLabel}>Họ và tên</span>
+                                <span className={styles.ekycValue}>{formData.fullNameOnId || '—'}</span>
+                            </div>
+                            <div className={styles.ekycItem}>
+                                <span className={styles.ekycLabel}>Ngày sinh</span>
+                                <span className={styles.ekycValue}>{formData.dateOfBirth || '—'}</span>
+                            </div>
+                            <div className={styles.ekycItem}>
+                                <span className={styles.ekycLabel}>Giới tính</span>
+                                <span className={styles.ekycValue}>{formData.gender || '—'}</span>
+                            </div>
+                            <div className={styles.ekycItem}>
+                                <span className={styles.ekycLabel}>Quê quán</span>
+                                <span className={styles.ekycValue}>{formData.hometown || '—'}</span>
+                            </div>
+                            <div className={styles.ekycItem}>
+                                <span className={styles.ekycLabel}>Địa chỉ thường trú</span>
+                                <span className={styles.ekycValue}>{formData.address || '—'}</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Privacy Note */}
                 <div className={styles.privacyNote}>

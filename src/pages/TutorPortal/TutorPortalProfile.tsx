@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTutorProfileForm } from './hooks/useTutorProfileForm';
+import { Popconfirm } from 'antd';
+import { toast } from 'react-toastify';
+import { useTutorProfileForm, type CredentialData } from './hooks/useTutorProfileForm';
 import ProfileHeroModal from './components/ProfileHeroModal';
 import PricingModal from './components/PricingModal';
 import AboutMeModal from './components/AboutMeModal';
 import CredentialModal from './components/CredentialModal';
-import type { CredentialData } from './components/CredentialModal';
+import type { CredentialData as ModalCredentialData } from './components/CredentialModal';
 import IdentityVerificationModal from './components/IdentityVerificationModal';
 import type { IdentityVerificationData } from './components/IdentityVerificationModal';
 import IntroVideoSection from './components/IntroVideoSection';
 import ProfileCompleteness from './components/ProfileCompleteness';
 import BookingModal from './components/BookingModal';
+import { deleteCertificate } from '../../services/certificate.service';
+import { getUserIdFromToken } from '../../services/auth.service';
 import styles from '../../styles/pages/tutor-portal-profile.module.css';
 
 // Icon Components
@@ -147,9 +151,10 @@ const TutorPortalProfile: React.FC = () => {
     const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
     const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
     const [isCredentialModalOpen, setIsCredentialModalOpen] = useState(false);
-    const [editingCredential, setEditingCredential] = useState<CredentialData | null>(null);
+    const [editingCredential, setEditingCredential] = useState<ModalCredentialData | null>(null);
     const [isIdentityModalOpen, setIsIdentityModalOpen] = useState(false);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+    const [deletingCredentialId, setDeletingCredentialId] = useState<string | null>(null);
 
     // Form hook
     const {
@@ -162,6 +167,7 @@ const TutorPortalProfile: React.FC = () => {
         lastSaved,
         error,
         canPublish,
+        fetchProgress,
         updateHeroSection,
         updatePricing,
         updateAbout,
@@ -169,6 +175,7 @@ const TutorPortalProfile: React.FC = () => {
         uploadVideo,
         saveBasicInfo,
         addCredential,
+        updateCredential,
         removeCredential,
         updateIdentityVerification,
         saveDraft,
@@ -213,24 +220,91 @@ const TutorPortalProfile: React.FC = () => {
         }
     };
 
-    // Handle credential edit
+    // Handle credential edit - convert from form data to modal data format
     const handleEditCredential = (credential: CredentialData) => {
-        setEditingCredential(credential);
+        // Convert CredentialData to ModalCredentialData for the modal
+        const modalData: ModalCredentialData = {
+            id: credential.id,
+            name: credential.name,
+            certificateType: credential.certificateType || '',
+            institution: credential.institution,
+            issueYear: credential.issueYear,
+            credentialId: credential.credentialId,
+            credentialUrl: credential.credentialUrl,
+            certificateFile: null,  // File is not available for existing credentials
+            certificateUrl: credential.certificateUrl,
+            verificationStatus: credential.verificationStatus,
+            verificationNote: credential.verificationNote
+        };
+        setEditingCredential(modalData);
         setIsCredentialModalOpen(true);
     };
 
-    // Handle save credential
-    const handleSaveCredential = (data: CredentialData) => {
+    // Handle save credential - called when modal saves new/updated credential
+    const handleSaveCredential = (data: ModalCredentialData) => {
         if (editingCredential) {
-            // Update existing - for now just close
+            // Update existing credential
+            if (data.id) {
+                updateCredential(data.id, {
+                    name: data.name,
+                    certificateType: data.certificateType,
+                    institution: data.institution,
+                    issueYear: data.issueYear,
+                    credentialId: data.credentialId,
+                    credentialUrl: data.credentialUrl,
+                    certificateUrl: data.certificateUrl,
+                    verificationStatus: data.verificationStatus,
+                    verificationNote: data.verificationNote
+                });
+            }
         } else {
-            addCredential({
-                name: data.name,
-                institution: data.institution,
-                issueYear: data.issueYear,
-                type: 'certificate',
-                verificationStatus: 'pending'
-            });
+            // Add new credential (comes from API response after upload)
+            if (data.id) {
+                addCredential({
+                    id: data.id,
+                    name: data.name,
+                    certificateType: data.certificateType,
+                    institution: data.institution,
+                    issueYear: data.issueYear,
+                    credentialId: data.credentialId,
+                    credentialUrl: data.credentialUrl,
+                    certificateUrl: data.certificateUrl,
+                    verificationStatus: data.verificationStatus,
+                    verificationNote: data.verificationNote
+                });
+            }
+        }
+        // Refresh data from API to get updated list
+        fetchProgress();
+    };
+
+    // Handle delete credential - call API and refresh
+    const handleDeleteCredential = async (credentialId: string) => {
+        const userId = getUserIdFromToken();
+        if (!userId) {
+            toast.error('Không tìm thấy thông tin người dùng');
+            return;
+        }
+
+        setDeletingCredentialId(credentialId);
+
+        try {
+            const result = await deleteCertificate(userId, credentialId);
+
+            if (result.success) {
+                toast.success('Đã xóa chứng chỉ thành công!');
+                // Remove from local state
+                removeCredential(credentialId);
+                // Refresh from API to ensure sync
+                fetchProgress();
+            } else {
+                toast.error(result.message || 'Không thể xóa chứng chỉ');
+            }
+        } catch (error) {
+            console.error('Delete credential error:', error);
+            toast.error('Có lỗi xảy ra khi xóa chứng chỉ');
+        } finally {
+            setDeletingCredentialId(null);
         }
     };
 
@@ -383,81 +457,140 @@ const TutorPortalProfile: React.FC = () => {
 
                             {/* Credentials List */}
                             <div className={styles.credentialsList}>
-                                {formData.credentials.map((credential) => (
-                                    <div key={credential.id} className={styles.credentialItem}>
-                                        <div className={styles.credentialIcon}>
-                                            {credential.type === 'education' ? <GraduationIcon /> : <CertificateIcon />}
-                                        </div>
-                                        <div className={styles.credentialInfo}>
-                                            <h4 className={styles.credentialTitle}>{credential.name}</h4>
-                                            <p className={styles.credentialInstitution}>{credential.institution}</p>
-                                            <div className={styles.credentialMeta}>
-                                                {credential.issueYear && (
-                                                    <span className={styles.credentialDate}>
-                                                        Năm {credential.issueYear}
-                                                    </span>
-                                                )}
-                                                <span className={`${styles.verificationBadge} ${styles[credential.verificationStatus]}`}>
-                                                    {credential.verificationStatus === 'verified' ? 'Đã xác minh' :
-                                                        credential.verificationStatus === 'pending' ? 'Đang chờ duyệt' : 'Bị từ chối'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        {isEditMode && (
-                                            <div className={styles.credentialActions}>
-                                                <button
-                                                    className={styles.editCredentialBtn}
-                                                    onClick={() => handleEditCredential(credential as any)}
-                                                >
-                                                    <EditPencilIcon />
-                                                </button>
-                                                <button
-                                                    className={styles.deleteCredentialBtn}
-                                                    onClick={() => removeCredential(credential.id)}
-                                                >
-                                                    <TrashIcon />
-                                                </button>
-                                            </div>
-                                        )}
+                                {formData.credentials.length === 0 ? (
+                                    <div className={styles.emptyCredentials}>
+                                        <p>Chưa có chứng chỉ nào. Thêm chứng chỉ để tăng độ tin cậy.</p>
                                     </div>
-                                ))}
+                                ) : (
+                                    formData.credentials.map((credential) => (
+                                        <div key={credential.id} className={styles.credentialItem}>
+                                            <div className={styles.credentialIcon}>
+                                                <CertificateIcon />
+                                            </div>
+                                            <div className={styles.credentialInfo}>
+                                                <h4 className={styles.credentialTitle}>{credential.name}</h4>
+                                                <p className={styles.credentialInstitution}>{credential.institution}</p>
+                                                <div className={styles.credentialMeta}>
+                                                    {credential.certificateType && (
+                                                        <span className={styles.credentialType}>
+                                                            {credential.certificateType.toUpperCase()}
+                                                        </span>
+                                                    )}
+                                                    {credential.issueYear && (
+                                                        <span className={styles.credentialDate}>
+                                                            Năm {credential.issueYear}
+                                                        </span>
+                                                    )}
+                                                    <span className={`${styles.verificationBadge} ${styles[credential.verificationStatus]}`}>
+                                                        {credential.verificationStatus === 'verified' ? 'Đã xác minh' :
+                                                            credential.verificationStatus === 'pending' ? 'Đang chờ duyệt' : 'Bị từ chối'}
+                                                    </span>
+                                                </div>
+                                                {/* Show verification note if exists */}
+                                                {credential.verificationNote && (
+                                                    <p className={styles.credentialNote}>
+                                                        <strong>Ghi chú:</strong> {credential.verificationNote}
+                                                    </p>
+                                                )}
+                                                {/* Show certificate file link */}
+                                                {credential.certificateUrl && (
+                                                    <a
+                                                        href={credential.certificateUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className={styles.credentialLink}
+                                                    >
+                                                        Xem chứng chỉ
+                                                    </a>
+                                                )}
+                                            </div>
+                                            {isEditMode && (
+                                                <div className={styles.credentialActions}>
+                                                    <button
+                                                        className={styles.editCredentialBtn}
+                                                        onClick={() => handleEditCredential(credential)}
+                                                    >
+                                                        <EditPencilIcon />
+                                                    </button>
+                                                    <Popconfirm
+                                                        title="Xóa chứng chỉ"
+                                                        description={`Bạn có chắc muốn xóa chứng chỉ "${credential.name}"?`}
+                                                        onConfirm={() => handleDeleteCredential(credential.id)}
+                                                        okText="Xóa"
+                                                        cancelText="Hủy"
+                                                        okButtonProps={{
+                                                            danger: true,
+                                                            loading: deletingCredentialId === credential.id
+                                                        }}
+                                                        placement="left"
+                                                    >
+                                                        <button
+                                                            className={styles.deleteCredentialBtn}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            <TrashIcon />
+                                                        </button>
+                                                    </Popconfirm>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </div>
 
                         {/* Identity Verification Section */}
                         <div className={styles.sectionCard}>
                             <div className={styles.sectionHeader}>
-                                <h2 className={styles.sectionTitle}>Xac minh danh tinh</h2>
-                                {isEditMode && (
+                                <h2 className={styles.sectionTitle}>Xác minh danh tính</h2>
+                                {/* Only show header button when already submitted (not for 'not_submitted' status) */}
+                                {isEditMode && formData.identityVerification.verificationStatus !== 'not_submitted' && (
                                     <button
                                         className={styles.editBtnSmall}
                                         onClick={() => setIsIdentityModalOpen(true)}
                                     >
                                         <EditPencilIcon />
-                                        <span>
-                                            {formData.identityVerification.verificationStatus === 'not_submitted'
-                                                ? 'Xac minh ngay'
-                                                : 'Xem chi tiet'}
-                                        </span>
+                                        <span>Xem chi tiết</span>
                                     </button>
                                 )}
                             </div>
                             <div className={styles.identityContent}>
                                 <div className={styles.identityStatus}>
                                     {formData.identityVerification.verificationStatus === 'verified' && (
-                                        <div className={`${styles.identityBadge} ${styles.verified}`}>
-                                            <VerifiedIcon />
-                                            <span>Da xac minh danh tinh</span>
+                                        <div className={styles.identityVerified}>
+                                            <div className={`${styles.identityBadge} ${styles.verified}`}>
+                                                <CheckCircleIcon />
+                                                <span>Đã xác minh</span>
+                                            </div>
+                                            <p className={styles.identityVerifiedText}>
+                                                Danh tính của bạn đã được xác minh thành công.
+                                            </p>
                                         </div>
                                     )}
                                     {formData.identityVerification.verificationStatus === 'pending' && (
-                                        <div className={`${styles.identityBadge} ${styles.pending}`}>
-                                            <span>Đang chờ duyệt</span>
+                                        <div className={styles.identityPending}>
+                                            <div className={`${styles.identityBadge} ${styles.pending}`}>
+                                                <span>Đang chờ duyệt</span>
+                                            </div>
+                                            <p className={styles.identityPendingText}>
+                                                Hồ sơ xác minh của bạn đang được xử lý. Vui lòng chờ trong 24-48 giờ.
+                                            </p>
                                         </div>
                                     )}
                                     {formData.identityVerification.verificationStatus === 'rejected' && (
-                                        <div className={`${styles.identityBadge} ${styles.rejected}`}>
-                                            <span>Bị từ chối - Vui lòng cập nhật lại</span>
+                                        <div className={styles.identityRejected}>
+                                            <div className={`${styles.identityBadge} ${styles.rejected}`}>
+                                                <span>Bị từ chối</span>
+                                            </div>
+                                            <p className={styles.identityRejectedText}>
+                                                Hồ sơ xác minh của bạn đã bị từ chối. Vui lòng kiểm tra lại và gửi lại.
+                                            </p>
+                                            <button
+                                                className={styles.resubmitBtn}
+                                                onClick={() => setIsIdentityModalOpen(true)}
+                                            >
+                                                Gửi lại hồ sơ
+                                            </button>
                                         </div>
                                     )}
                                     {formData.identityVerification.verificationStatus === 'not_submitted' && (

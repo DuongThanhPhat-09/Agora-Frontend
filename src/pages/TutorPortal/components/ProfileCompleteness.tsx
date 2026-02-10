@@ -67,7 +67,7 @@ const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
         const hasIdentity = profileData.identityVerification?.verificationStatus === 'verified';
         items.push({
             key: 'identity',
-            label: 'Xac minh danh tinh',
+            label: 'Xác minh danh tính',
             completed: hasIdentity,
             percentage: 20
         });
@@ -76,7 +76,7 @@ const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
         const hasVideo = !!profileData.videoIntroUrl;
         items.push({
             key: 'video',
-            label: 'Video gioi thieu',
+            label: 'Video giới thiệu',
             completed: hasVideo,
             percentage: 10
         });
@@ -85,7 +85,7 @@ const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
         const hasBio = profileData.bio && profileData.bio.length >= 100;
         items.push({
             key: 'about',
-            label: 'Gioi thieu ban than',
+            label: 'Giới thiệu bản thân',
             completed: hasBio,
             percentage: 15
         });
@@ -94,7 +94,7 @@ const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
         const hasCredentials = profileData.credentials && profileData.credentials.length >= 1;
         items.push({
             key: 'credentials',
-            label: 'Bang cap, chung chi',
+            label: 'Bằng cấp, chứng chỉ',
             completed: hasCredentials,
             percentage: 15
         });
@@ -103,7 +103,7 @@ const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
         const hasSchedule = profileData.availability && profileData.availability.length >= 3;
         items.push({
             key: 'schedule',
-            label: 'Lich day (3+ khung gio)',
+            label: 'Lịch dạy (3+ khung giờ)',
             completed: hasSchedule,
             percentage: 15
         });
@@ -112,7 +112,7 @@ const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
         // For now, we'll show it but mark as optional
         items.push({
             key: 'outcomes',
-            label: 'Thanh tich hoc sinh',
+            label: 'Thành tích học sinh',
             completed: false,
             percentage: 10
         });
