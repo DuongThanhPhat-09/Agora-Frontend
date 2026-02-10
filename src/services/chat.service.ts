@@ -1,0 +1,76 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import axios from 'axios';
+import { getAuthHeaders, type ApiResponse } from './tutorProfile.service';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+export interface ChatChanel {
+  channelId: number;
+  bookingId: number;
+  otherUserId: string;
+  otherUserName: string;
+  otherUserAvatarUrl: string;
+  lastMessageAt: string;
+  lastMessagePreview: string;
+}
+
+export interface ChatMessageQuery {
+  page: number;
+  pageSize: number;
+}
+
+export interface ChatMessage {
+  messageId: number;
+  channelId: number;
+  senderId: string;
+  content: string;
+  messageType: string;
+  createdAt: string;
+}
+
+export const getChats = async (): Promise<ApiResponse<ChatChanel[]>> => {
+  try {
+    const response = await api.get(`/chat/channels`, {
+      headers: getAuthHeaders(),
+    });
+
+    console.log('✅ Verification progress fetched:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ Error fetching verification progress:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+    throw error;
+  }
+};
+
+export const getChatMessages = async (
+  channelId: number,
+  query: ChatMessageQuery = { page: 1, pageSize: 10 },
+): Promise<ApiResponse<ChatMessage[]>> => {
+  try {
+    const response = await api.get(`/chat/channels/${channelId}/messages`, {
+      headers: getAuthHeaders(),
+      params: query,
+    });
+
+    console.log('✅ Verification progress fetched:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ Error fetching verification progress:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+    throw error;
+  }
+};

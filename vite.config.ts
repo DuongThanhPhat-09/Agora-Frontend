@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:5166",
+        target: "https://d4sv20gb-5166.asse.devtunnels.ms",
         changeOrigin: true,
         secure: false,
       },
