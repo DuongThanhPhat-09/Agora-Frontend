@@ -15,7 +15,7 @@ const AddAvailabilityModal: FunctionComponent<AddAvailabilityModalProps> = ({
     onClose,
     onSuccess,
 }) => {
-    const [dayOfWeek, setDayOfWeek] = useState<number>(2);  // Default: Thứ 2
+    const [dayOfWeek, setDayOfWeek] = useState<number>(1);  // Default: Thứ 2 (Monday=1)
     const [fromTime, setFromTime] = useState('');
     const [toTime, setToTime] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -48,7 +48,7 @@ const AddAvailabilityModal: FunctionComponent<AddAvailabilityModalProps> = ({
             toast.success('Thêm lịch rảnh thành công!');
 
             // Reset form
-            setDayOfWeek(2);
+            setDayOfWeek(1);  // Monday=1
             setFromTime('');
             setToTime('');
 
@@ -69,7 +69,7 @@ const AddAvailabilityModal: FunctionComponent<AddAvailabilityModalProps> = ({
 
     const handleCancel = () => {
         // Reset form
-        setDayOfWeek(2);
+        setDayOfWeek(1);  // Monday=1
         setFromTime('');
         setToTime('');
         onClose();

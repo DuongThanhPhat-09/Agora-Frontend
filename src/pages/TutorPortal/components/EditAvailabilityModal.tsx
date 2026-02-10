@@ -10,7 +10,7 @@ interface EditAvailabilityModalProps {
     onSuccess?: () => void;
     availabilityData: {
         id: number;
-        dayOfWeek: number;  // API format: 2-8
+        dayOfWeek: number;  // API format: 0-6 (0=Sunday, 6=Saturday)
         startTime: string;
         endTime: string;
     } | null;
@@ -22,7 +22,7 @@ const EditAvailabilityModal: FunctionComponent<EditAvailabilityModalProps> = ({
     onSuccess,
     availabilityData,
 }) => {
-    const [dayOfWeek, setDayOfWeek] = useState<number>(2);
+    const [dayOfWeek, setDayOfWeek] = useState<number>(1);  // Default: Monday=1
     const [fromTime, setFromTime] = useState('');
     const [toTime, setToTime] = useState('');
     const [isLoading, setIsLoading] = useState(false);

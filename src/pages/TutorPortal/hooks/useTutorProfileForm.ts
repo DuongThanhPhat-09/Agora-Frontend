@@ -30,22 +30,26 @@ export interface SubjectSelection {
 }
 
 export interface CredentialData {
-    id: number;
-    name: string;
-    institution: string;
-    issueYear: number | null;
-    certificateUrl?: string;
-    verificationStatus: 'pending' | 'verified' | 'rejected';
-    type: 'education' | 'license' | 'certificate';
+    id: string;  // certificateId from API
+    name: string;  // certificateName
+    certificateType: string;  // certificateType (e.g., 'coursera', 'ielts', etc.)
+    institution: string;  // issuingOrganization
+    issueYear: number | null;  // yearIssued
+    credentialId?: string | null;  // credentialId (optional)
+    credentialUrl?: string | null;  // credentialUrl (optional)
+    certificateUrl?: string;  // certificateFileUrl
+    createdAt?: string;  // createdAt
+    verificationStatus: 'pending' | 'verified' | 'rejected';  // mapped from API status
+    verificationNote?: string | null;  // verificationNote (reason for rejection/pending)
 }
 
 export interface AvailabilitySlot {
     id: number;
-    dayOfWeek: number;  // 0=CN, 1=T2, 2=T3, 3=T4, 4=T5, 5=T6, 6=T7 (for display)
-    apiDayOfWeek: number;  // 2-8 (API format)
+    dayOfWeek: number;  // 0=Sunday, 1=Monday, ..., 6=Saturday (same as API format)
+    apiDayOfWeek: number;  // 0-6 (API format: 0=Sunday, 6=Saturday)
     startTime: string;
     endTime: string;
-    dayName: string;  // "Thứ 2", "Thứ 3", etc.
+    dayName: string;  // "Chủ nhật", "Thứ 2", "Thứ 3", etc.
 }
 
 // Section status from API
@@ -237,16 +241,32 @@ function mapSectionsToFormData(sections: VerificationSections): Partial<TutorPro
         gpaScale: sections.introduction.gpaScale as 4 | 10 | null,
         experience: sections.introduction.experience || '',
 
-        // Certificates section
-        credentials: sections.certificates.certificates.map(cert => ({
-            id: cert.id,
-            name: cert.name,
-            institution: cert.institution,
-            issueYear: cert.issueYear,
-            certificateUrl: cert.certificateUrl,
-            verificationStatus: cert.verificationStatus,
-            type: cert.type
-        })),
+        // Certificates section - map from API response to local format
+        credentials: sections.certificates.certificates.map(cert => {
+            // Map API verificationStatus to local format
+            let mappedStatus: 'pending' | 'verified' | 'rejected' = 'pending';
+            if (cert.verificationStatus === 'verified') {
+                mappedStatus = 'verified';
+            } else if (cert.verificationStatus === 'rejected') {
+                mappedStatus = 'rejected';
+            } else if (cert.verificationStatus === 'pending_review') {
+                mappedStatus = 'pending';
+            }
+
+            return {
+                id: cert.certificateId,
+                name: cert.certificateName,
+                certificateType: cert.certificateType,
+                institution: cert.issuingOrganization,
+                issueYear: cert.yearIssued,
+                credentialId: cert.credentialId,
+                credentialUrl: cert.credentialUrl,
+                certificateUrl: cert.certificateFileUrl,
+                createdAt: cert.createdAt,
+                verificationStatus: mappedStatus,
+                verificationNote: cert.verificationNote
+            };
+        }),
 
         // Identity card section
         identityVerification: {
@@ -337,16 +357,11 @@ export function useTutorProfileForm() {
 
             if (response.content && Array.isArray(response.content)) {
                 // Map API response to local format
-                // API dayofweek: 2=T2, 3=T3, 4=T4, 5=T5, 6=T6, 7=T7, 8=CN
-                // Display dayOfWeek: 0=CN, 1=T2, 2=T3, 3=T4, 4=T5, 5=T6, 6=T7
+                // API dayofweek: 0=Sunday, 1=Monday, 2=Tuesday, ..., 6=Saturday
                 const mappedAvailability: AvailabilitySlot[] = response.content.map((slot: ApiAvailabilitySlot) => {
-                    // Convert API day (2-8) to display day (0-6)
-                    // API 2=T2 -> display 1, API 3=T3 -> display 2, ..., API 8=CN -> display 0
-                    const displayDayOfWeek = slot.dayofweek === 8 ? 0 : slot.dayofweek - 1;
-
                     return {
                         id: slot.availabilityid,
-                        dayOfWeek: displayDayOfWeek,
+                        dayOfWeek: slot.dayofweek,  // Now same format: 0-6
                         apiDayOfWeek: slot.dayofweek,
                         startTime: slot.starttime,
                         endTime: slot.endtime,
@@ -688,17 +703,16 @@ export function useTutorProfileForm() {
         }
     }, [userId]);
 
-    // Add credential
-    const addCredential = useCallback((credential: Omit<CredentialData, 'id'>) => {
-        const newId = Math.max(0, ...formData.credentials.map(c => c.id)) + 1;
+    // Add credential (id is now string from API)
+    const addCredential = useCallback((credential: CredentialData) => {
         setFormData(prev => ({
             ...prev,
-            credentials: [...prev.credentials, { ...credential, id: newId }]
+            credentials: [...prev.credentials, credential]
         }));
-    }, [formData.credentials]);
+    }, []);
 
     // Update credential
-    const updateCredential = useCallback((id: number, data: Partial<CredentialData>) => {
+    const updateCredential = useCallback((id: string, data: Partial<CredentialData>) => {
         setFormData(prev => ({
             ...prev,
             credentials: prev.credentials.map(c =>
@@ -708,7 +722,7 @@ export function useTutorProfileForm() {
     }, []);
 
     // Remove credential
-    const removeCredential = useCallback((id: number) => {
+    const removeCredential = useCallback((id: string) => {
         setFormData(prev => ({
             ...prev,
             credentials: prev.credentials.filter(c => c.id !== id)

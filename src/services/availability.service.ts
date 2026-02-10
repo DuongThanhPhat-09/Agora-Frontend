@@ -18,7 +18,7 @@ const api = axios.create({
 export interface AvailabilitySlot {
     availabilityid: number;
     tutorid: string;
-    dayofweek: number;  // 2=T2, 3=T3, 4=T4, 5=T5, 6=T6, 7=T7, 8=CN
+    dayofweek: number;  // 0=Sunday, 1=Monday, ..., 6=Saturday
     starttime: string;  // "HH:mm" format
     endtime: string;    // "HH:mm" format
     createdat: string;
@@ -26,7 +26,7 @@ export interface AvailabilitySlot {
 }
 
 export interface CreateAvailabilityData {
-    dayofweek: number;  // 2=T2, 3=T3, 4=T4, 5=T5, 6=T6, 7=T7, 8=CN
+    dayofweek: number;  // 0=Sunday, 1=Monday, ..., 6=Saturday
     starttime: string;  // "HH:mm" format
     endtime: string;    // "HH:mm" format
 }
@@ -50,24 +50,25 @@ const getAuthHeaders = () => {
 };
 
 // Day mapping constants
+// Backend uses: 0=Sunday, 1=Monday, 2=Tuesday, ..., 6=Saturday
 export const DAY_OF_WEEK_MAP: Record<number, string> = {
-    2: 'Thứ 2',
-    3: 'Thứ 3',
-    4: 'Thứ 4',
-    5: 'Thứ 5',
-    6: 'Thứ 6',
-    7: 'Thứ 7',
-    8: 'Chủ nhật',
+    0: 'Chủ nhật',
+    1: 'Thứ 2',
+    2: 'Thứ 3',
+    3: 'Thứ 4',
+    4: 'Thứ 5',
+    5: 'Thứ 6',
+    6: 'Thứ 7',
 };
 
 export const DAY_OF_WEEK_MAP_EN: Record<number, string> = {
-    2: 'Monday',
-    3: 'Tuesday',
-    4: 'Wednesday',
-    5: 'Thursday',
-    6: 'Friday',
-    7: 'Saturday',
-    8: 'Sunday',
+    0: 'Sunday',
+    1: 'Monday',
+    2: 'Tuesday',
+    3: 'Wednesday',
+    4: 'Thursday',
+    5: 'Friday',
+    6: 'Saturday',
 };
 
 // ============================================

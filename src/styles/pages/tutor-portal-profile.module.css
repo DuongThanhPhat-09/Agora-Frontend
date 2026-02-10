@@ -534,6 +534,59 @@
     color: rgba(62, 47, 40, 0.4);
 }
 
+.credentialType {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    line-height: 14px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background-color: rgba(26, 34, 56, 0.08);
+    color: #1a2238;
+}
+
+.credentialNote {
+    font-size: 11px;
+    font-style: italic;
+    line-height: 16px;
+    color: rgba(62, 47, 40, 0.7);
+    margin: 4px 0 0 0;
+    padding: 6px 10px;
+    background-color: rgba(251, 191, 36, 0.1);
+    border-left: 2px solid #fbbf24;
+    border-radius: 0 4px 4px 0;
+}
+
+.credentialNote strong {
+    font-weight: 600;
+    color: rgba(62, 47, 40, 0.8);
+}
+
+.credentialLink {
+    font-size: 11px;
+    font-weight: 600;
+    color: #4f8cff;
+    text-decoration: none;
+    margin-top: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.2s ease;
+}
+
+.credentialLink:hover {
+    color: #3b7dff;
+    text-decoration: underline;
+}
+
+.emptyCredentials {
+    padding: 24px;
+    text-align: center;
+    color: rgba(62, 47, 40, 0.5);
+    font-size: 13px;
+    font-style: italic;
+}
+
 .deleteCredentialBtn {
     padding: 7px;
     border-radius: 7px;
@@ -1402,9 +1455,10 @@
 /* Credential Meta */
 .credentialMeta {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 12px;
-    margin-top: 4px;
+    gap: 8px;
+    margin-top: 6px;
 }
 
 .verificationBadge {
@@ -1641,6 +1695,62 @@
 
 .verifyNowBtn:hover {
     background-color: #2a3248;
+}
+
+/* Identity Verification Status Containers */
+.identityVerified,
+.identityPending,
+.identityRejected {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.identityVerifiedText,
+.identityPendingText,
+.identityRejectedText {
+    margin: 0;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    line-height: 20px;
+    color: rgba(62, 47, 40, 0.7);
+}
+
+.identityBadge.verified {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background-color: rgba(61, 74, 62, 0.1);
+    color: #3d4a3e;
+    font-size: 12px;
+    font-weight: 600;
+    width: fit-content;
+}
+
+.identityBadge.verified svg {
+    width: 14px;
+    height: 14px;
+}
+
+.resubmitBtn {
+    margin-top: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    background-color: #631b1b;
+    border: none;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    width: fit-content;
+}
+
+.resubmitBtn:hover {
+    background-color: #7a2222;
 }
 
 /* ===== RESPONSIVE DESIGN ===== */

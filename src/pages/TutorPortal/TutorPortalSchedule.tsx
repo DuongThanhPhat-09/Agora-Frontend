@@ -54,7 +54,7 @@ interface LocalAvailabilitySlot {
     apiId: number;  // Original API availabilityid
     startTime: string;
     endTime: string;
-    apiDayOfWeek: number;  // Original API dayofweek (2-8)
+    apiDayOfWeek: number;  // Original API dayofweek (0-6, Sun=0)
 }
 
 // Edit modal data interface
@@ -69,12 +69,12 @@ interface EditAvailabilityData {
 const DAYS_OF_WEEK = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 const TIME_SLOTS = Array.from({ length: 15 }, (_, i) => 7 + i); // 7:00 to 21:00
 
-// Helper: Convert API dayofweek (2-8) to ISO week day (1-7)
-// API: 2=Mon, 3=Tue, 4=Wed, 5=Thu, 6=Fri, 7=Sat, 8=Sun
+// Helper: Convert API dayofweek (0-6) to ISO week day (1-7)
+// API: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
 // ISO: 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat, 7=Sun
 const apiDayToIsoDay = (apiDay: number): number => {
-    if (apiDay === 8) return 7;  // Sunday
-    return apiDay - 1;  // Mon=1, Tue=2, etc.
+    if (apiDay === 0) return 7;  // Sunday -> ISO 7
+    return apiDay;  // Mon=1, Tue=2, etc. (same as API)
 };
 
 // Helper: Parse time string to hour
@@ -342,102 +342,8 @@ const TutorPortalSchedule: React.FC = () => {
                         </div>
                     )}
 
-                    {/* Calendar Grid */}
-                    <div className={styles.calendarGrid}>
-                        {/* Header Row */}
-                        <div className={styles.calendarHeader}>
-                            <div className={styles.timeColumn} />
-                            {weekDates.map((date, index) => (
-                                <div
-                                    key={index}
-                                    className={`${styles.dayColumn} ${isToday(date) ? styles.today : ''}`}
-                                >
-                                    <span className={styles.dayName}>{DAYS_OF_WEEK[index]}</span>
-                                    <span className={styles.dayNumber}>{date.format('DD')}</span>
-                                    <span className={styles.monthName}>{date.format('MMM')}</span>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Time Rows */}
-                        <div className={styles.calendarBody}>
-                            {TIME_SLOTS.map((hour, index) => (
-                                <div
-                                    key={hour}
-                                    className={styles.timeRow}
-                                    style={{
-                                        zIndex: TIME_SLOTS.length - index,
-                                        position: 'relative' // Explicitly set to enable z-index
-                                    }}
-                                >
-                                    <div className={styles.timeLabel}>
-                                        {hour.toString().padStart(2, '0')}:00
-                                    </div>
-                                    {weekDates.map((date, dayIndex) => {
-                                        const availabilitySlot = getAvailabilityAtTime(dayIndex, hour);
-
-                                        return (
-                                            <div
-                                                key={dayIndex}
-                                                className={`${styles.timeCell} ${isToday(date) ? styles.todayColumn : ''}`}
-                                            >
-                                                {availabilitySlot && (
-                                                    <div
-                                                        className={styles.availableBlock}
-                                                        style={{ height: `${availabilitySlot.duration * 70 - 6}px` }}
-                                                    >
-                                                        <div className={styles.availableContent}>
-                                                            <span className={styles.availableLabel}>Rảnh</span>
-                                                            <span className={styles.availableTime}>
-                                                                {availabilitySlot.startTime} - {availabilitySlot.endTime}
-                                                            </span>
-                                                        </div>
-                                                        <div className={styles.slotActions}>
-                                                            <Tooltip title="Chỉnh sửa">
-                                                                <button
-                                                                    className={styles.editSlotBtn}
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleEditAvailability(availabilitySlot);
-                                                                    }}
-                                                                >
-                                                                    <EditOutlined />
-                                                                </button>
-                                                            </Tooltip>
-                                                            <Popconfirm
-                                                                title="Xóa lịch rảnh"
-                                                                description={`Bạn có chắc muốn xóa lịch rảnh ${DAY_OF_WEEK_MAP[availabilitySlot.apiDayOfWeek]} ${availabilitySlot.startTime} - ${availabilitySlot.endTime}?`}
-                                                                onConfirm={() => handleDeleteAvailability(availabilitySlot)}
-                                                                okText="Xóa"
-                                                                cancelText="Hủy"
-                                                                okButtonProps={{
-                                                                    danger: true,
-                                                                    loading: deletingSlotId === availabilitySlot.apiId
-                                                                }}
-                                                                placement="left"
-                                                            >
-                                                                <Tooltip title="Xóa">
-                                                                    <button
-                                                                        className={styles.deleteSlotBtn}
-                                                                        onClick={(e) => e.stopPropagation()}
-                                                                    >
-                                                                        <DeleteOutlined />
-                                                                    </button>
-                                                                </Tooltip>
-                                                            </Popconfirm>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Empty State */}
-                    {!isLoadingAvailability && availability.length === 0 && (
+                    {/* Empty State - Show when no availability and not loading */}
+                    {!isLoadingAvailability && availability.length === 0 ? (
                         <div className={styles.emptyState}>
                             <div className={styles.emptyIcon}>📅</div>
                             <h3 className={styles.emptyTitle}>Chưa có lịch rảnh</h3>
@@ -451,6 +357,100 @@ const TutorPortalSchedule: React.FC = () => {
                                 <PlusIcon />
                                 <span>Thêm lịch rảnh đầu tiên</span>
                             </button>
+                        </div>
+                    ) : (
+                        /* Calendar Grid - Show when has availability or loading */
+                        <div className={styles.calendarGrid}>
+                            {/* Header Row */}
+                            <div className={styles.calendarHeader}>
+                                <div className={styles.timeColumn} />
+                                {weekDates.map((date, index) => (
+                                    <div
+                                        key={index}
+                                        className={`${styles.dayColumn} ${isToday(date) ? styles.today : ''}`}
+                                    >
+                                        <span className={styles.dayName}>{DAYS_OF_WEEK[index]}</span>
+                                        <span className={styles.dayNumber}>{date.format('DD')}</span>
+                                        <span className={styles.monthName}>{date.format('MMM')}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Time Rows */}
+                            <div className={styles.calendarBody}>
+                                {TIME_SLOTS.map((hour, index) => (
+                                    <div
+                                        key={hour}
+                                        className={styles.timeRow}
+                                        style={{
+                                            zIndex: TIME_SLOTS.length - index,
+                                            position: 'relative' // Explicitly set to enable z-index
+                                        }}
+                                    >
+                                        <div className={styles.timeLabel}>
+                                            {hour.toString().padStart(2, '0')}:00
+                                        </div>
+                                        {weekDates.map((date, dayIndex) => {
+                                            const availabilitySlot = getAvailabilityAtTime(dayIndex, hour);
+
+                                            return (
+                                                <div
+                                                    key={dayIndex}
+                                                    className={`${styles.timeCell} ${isToday(date) ? styles.todayColumn : ''}`}
+                                                >
+                                                    {availabilitySlot && (
+                                                        <div
+                                                            className={styles.availableBlock}
+                                                            style={{ height: `${availabilitySlot.duration * 70 - 6}px` }}
+                                                        >
+                                                            <div className={styles.availableContent}>
+                                                                <span className={styles.availableLabel}>Rảnh</span>
+                                                                <span className={styles.availableTime}>
+                                                                    {availabilitySlot.startTime} - {availabilitySlot.endTime}
+                                                                </span>
+                                                            </div>
+                                                            <div className={styles.slotActions}>
+                                                                <Tooltip title="Chỉnh sửa">
+                                                                    <button
+                                                                        className={styles.editSlotBtn}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleEditAvailability(availabilitySlot);
+                                                                        }}
+                                                                    >
+                                                                        <EditOutlined />
+                                                                    </button>
+                                                                </Tooltip>
+                                                                <Popconfirm
+                                                                    title="Xóa lịch rảnh"
+                                                                    description={`Bạn có chắc muốn xóa lịch rảnh ${DAY_OF_WEEK_MAP[availabilitySlot.apiDayOfWeek]} ${availabilitySlot.startTime} - ${availabilitySlot.endTime}?`}
+                                                                    onConfirm={() => handleDeleteAvailability(availabilitySlot)}
+                                                                    okText="Xóa"
+                                                                    cancelText="Hủy"
+                                                                    okButtonProps={{
+                                                                        danger: true,
+                                                                        loading: deletingSlotId === availabilitySlot.apiId
+                                                                    }}
+                                                                    placement="left"
+                                                                >
+                                                                    <Tooltip title="Xóa">
+                                                                        <button
+                                                                            className={styles.deleteSlotBtn}
+                                                                            onClick={(e) => e.stopPropagation()}
+                                                                        >
+                                                                            <DeleteOutlined />
+                                                                        </button>
+                                                                    </Tooltip>
+                                                                </Popconfirm>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>
