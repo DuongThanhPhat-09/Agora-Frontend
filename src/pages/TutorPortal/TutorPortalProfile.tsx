@@ -13,6 +13,7 @@ import type { IdentityVerificationData } from './components/IdentityVerification
 import IntroVideoSection from './components/IntroVideoSection';
 import ProfileCompleteness from './components/ProfileCompleteness';
 import BookingModal from './components/BookingModal';
+import TutorProfilePreview from './components/TutorProfilePreview';
 import { deleteCertificate } from '../../services/certificate.service';
 import { getUserIdFromToken } from '../../services/auth.service';
 import styles from '../../styles/pages/tutor-portal-profile.module.css';
@@ -310,7 +311,12 @@ const TutorPortalProfile: React.FC = () => {
 
     return (
         <div className={styles.profilePage}>
-            {/* Main Content */}
+            {/* Main Content - Conditionally render Edit or Preview mode */}
+            {!isEditMode ? (
+                /* Preview Mode - Show TutorProfilePreview component */
+                <TutorProfilePreview formData={formData} />
+            ) : (
+            /* Edit Mode - Show editable sections */
             <div className={styles.mainContent}>
                 <div className={styles.contentWrapper}>
                     {/* Left Column */}
@@ -681,6 +687,7 @@ const TutorPortalProfile: React.FC = () => {
                     </div>
                 </div>
             </div>
+            )}
 
             {/* Edit Bar - Sticky Bottom */}
             <div className={styles.editBar}>
