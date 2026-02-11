@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { searchTutors } from "../../services/tutorSearch.service";
+import type { TutorSearchResultResponse } from "../../services/tutorSearch.service";
 import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
@@ -82,8 +84,11 @@ interface Tutor {
     price: number;
 }
 
-// Sample tutors data
-const tutors: Tutor[] = [
+// ====================================================================
+// MOCK DATA – đã tắt, dùng data thật từ DB
+// ====================================================================
+/*
+const mockTutors: Tutor[] = [
     {
         id: 1,
         name: "Sarah Jenkins",
@@ -175,6 +180,63 @@ const tutors: Tutor[] = [
         price: 75,
     },
 ];
+*/
+
+// ============================================
+// Helper: Map backend response → UI Tutor type
+// ============================================
+const mapSubscriptionToType = (sub: string | null | undefined): TutorType => {
+    const map: Record<string, TutorType> = {
+        intensive: "intensive",
+        guided: "guided",
+        basic: "basic",
+        free: "basic",
+        elite: "elite",
+    };
+    return map[(sub || "").toLowerCase()] || "basic";
+};
+
+const getResultType = (type: TutorType): "success" | "primary" | "muted" | "warning" => {
+    const map: Record<TutorType, "success" | "primary" | "muted" | "warning"> = {
+        intensive: "success",
+        guided: "primary",
+        basic: "muted",
+        elite: "warning",
+    };
+    return map[type];
+};
+
+const mapApiTutorToUi = (apiTutor: TutorSearchResultResponse): Tutor => {
+    const type = mapSubscriptionToType(apiTutor.subscriptionType);
+
+    // Build subjects array from backend subjects + tags
+    const subjects: string[] = [];
+    if (apiTutor.subjects) {
+        apiTutor.subjects.forEach((s) => {
+            if (s.tags && s.tags.length > 0) {
+                subjects.push(...s.tags);
+            } else if (s.subjectName) {
+                subjects.push(s.subjectName);
+            }
+        });
+    }
+
+    return {
+        id: apiTutor.tutorId as unknown as number, // keep as string internally, cast for interface
+        name: apiTutor.fullName || "Gia sư",
+        avatar: apiTutor.avatarUrl || "https://randomuser.me/api/portraits/lego/1.jpg",
+        type,
+        credential: apiTutor.degreeLevel || "",
+        rating: apiTutor.averageRating || 0,
+        university: apiTutor.education || "",
+        subjects: subjects.length > 0 ? subjects : ["Chưa cập nhật"],
+        experience: apiTutor.yearsOfExperience ? `${apiTutor.yearsOfExperience} Năm` : "N/A",
+        result: apiTutor.successRate || apiTutor.specialty || "—",
+        resultType: getResultType(type),
+        highlights: apiTutor.highlights || [],
+        price: apiTutor.hourlyRate ? Number(apiTutor.hourlyRate) : 0,
+    };
+};
 
 // Type labels
 const typeLabels: Record<TutorType, string> = {
@@ -427,9 +489,61 @@ const TutorCard = ({ tutor }: TutorCardProps) => {
 
 // Results Section
 const ResultsSection = () => {
+    const [tutors, setTutors] = useState<Tutor[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [totalCount, setTotalCount] = useState(0);
+
+    useEffect(() => {
+        const fetchTutors = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const response = await searchTutors({ pageSize: 10 });
+                const mapped = response.content.items.map(mapApiTutorToUi);
+                setTutors(mapped);
+                setTotalCount(response.content.totalCount);
+            } catch (err) {
+                console.error('Failed to fetch tutors:', err);
+                setError('Không thể tải danh sách gia sư. Vui lòng thử lại.');
+                setTutors([]);
+                setTotalCount(0);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTutors();
+    }, []);
+
     // Split tutors into rows of 3
     const firstRow = tutors.slice(0, 3);
     const secondRow = tutors.slice(3, 6);
+
+    if (loading) {
+        return (
+            <section className="results-section">
+                <div className="results-header">
+                    <div className="results-header-left">
+                        <span className="results-label">Agora Selection</span>
+                        <h2 className="results-title">Đang tải...</h2>
+                    </div>
+                </div>
+            </section>
+        );
+    }
+
+    if (error) {
+        return (
+            <section className="results-section">
+                <div className="results-header">
+                    <div className="results-header-left">
+                        <span className="results-label">Agora Selection</span>
+                        <h2 className="results-title" style={{ color: '#ef4444' }}>{error}</h2>
+                    </div>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section className="results-section">
@@ -438,23 +552,27 @@ const ResultsSection = () => {
                     <span className="results-label">Agora Selection</span>
                     <h2 className="results-title">Chuyên gia đang online</h2>
                 </div>
-                <span className="results-count">{tutors.length} Kết quả tìm thấy</span>
+                <span className="results-count">{totalCount} Kết quả tìm thấy</span>
             </div>
             <div className="tutor-grid">
                 <div className="tutor-row">
-                    {firstRow.map((tutor) => (
-                        <TutorCard key={tutor.id} tutor={tutor} />
+                    {firstRow.map((tutor, index) => (
+                        <TutorCard key={`${tutor.id}-${index}`} tutor={tutor} />
                     ))}
                 </div>
-                <div className="tutor-row">
-                    {secondRow.map((tutor) => (
-                        <TutorCard key={tutor.id} tutor={tutor} />
-                    ))}
+                {secondRow.length > 0 && (
+                    <div className="tutor-row">
+                        {secondRow.map((tutor, index) => (
+                            <TutorCard key={`${tutor.id}-${index}`} tutor={tutor} />
+                        ))}
+                    </div>
+                )}
+            </div>
+            {tutors.length > 0 && (
+                <div className="load-more-container">
+                    <button className="btn-load-more">Khám phá thêm</button>
                 </div>
-            </div>
-            <div className="load-more-container">
-                <button className="btn-load-more">Khám phá thêm</button>
-            </div>
+            )}
         </section>
     );
 };

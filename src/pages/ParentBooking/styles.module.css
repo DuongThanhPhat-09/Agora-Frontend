@@ -1,404 +1,609 @@
-/* Main Content Area */
-.mainContent {
+/* ===== FONT & CSS VARIABLES ===== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap');
+
+:root {
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --color-bg: #fafafa;
+  --color-white: #ffffff;
+  --color-text-primary: #171717;
+  --color-text-secondary: #525252;
+  --color-text-muted: #a3a3a3;
+  --color-border: #e5e5e5;
+  --color-border-light: #f5f5f5;
+  --color-accent: #4f46e5;
+  --color-accent-hover: #4338ca;
+  --color-accent-light: rgba(79, 70, 229, 0.08);
+  --color-danger: #dc2626;
+  --color-success: #16a34a;
+  --color-amber: #d97706;
+  --color-blue: #2563eb;
+  --shadow-sm: 0 1px 2px rgba(23, 23, 23, 0.04);
+  --shadow-md: 0 4px 12px rgba(23, 23, 23, 0.06);
+  --shadow-lg: 0 8px 24px rgba(23, 23, 23, 0.1);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+}
+
+/* ===== PAGE ===== */
+.page {
+  font-family: var(--font-primary);
+  background: var(--color-bg);
+  min-height: 100vh;
   display: flex;
-  flex: 1 0 0;
   flex-direction: column;
-  align-items: flex-start;
-  padding-bottom: 32px;
-  padding-top: 32px;
-  padding-left: 40px;
-  padding-right: 40px;
-  position: relative;
   width: 100%;
-  background-color: #fafafa;
 }
 
-.container {
+/* ===== HEADER ===== */
+.header {
   display: flex;
-  gap: 24px;
-  align-items: flex-start;
-  position: relative;
-  flex-shrink: 0;
-  width: 100%;
-}
-
-/* Left Column - Children Cards */
-.leftColumn {
-  display: flex;
-  flex: 1 0 0;
-  flex-direction: column;
-  gap: 24px;
-  align-items: flex-start;
-  min-height: 1px;
-  min-width: 1px;
-  position: relative;
-  align-self: stretch;
-}
-
-/* Right Column - Tips & Pending */
-.rightColumn {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  align-items: flex-start;
-  position: relative;
-  align-self: stretch;
-  flex-shrink: 0;
-  width: 288px;
-}
-
-/* Headings */
-.heading {
-  display: flex;
-  flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  position: relative;
-  flex-shrink: 0;
-  width: 100%;
+  padding: 24px 32px;
+  background: var(--color-white);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-.headingText {
-  font-size: 20px;
-  line-height: 28px;
-  color: #171717;
-  font-family: 'Nimbus Sans', sans-serif;
-  font-weight: 400;
-  font-style: normal;
+.headerLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  font-family: var(--font-primary);
+  font-size: 14px;
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
-/* Children Container */
-.childrenContainer {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
-  flex-shrink: 0;
-  width: 100%;
-}
-
-/* Recently Linked Section */
-.recentlyLinkedSection {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  align-items: flex-start;
-  padding-top: 8px;
-  position: relative;
-  flex-shrink: 0;
-  width: 100%;
-}
-
-.subheading {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  position: relative;
-  flex-shrink: 0;
-  width: 100%;
-}
-
-.subheadingText {
-  font-size: 18px;
-  line-height: 28px;
-  color: #171717;
-  font-family: 'Nimbus Sans', sans-serif;
-  font-weight: 400;
-  font-style: normal;
-  margin: 0;
-}
-
-/* Sidebar Cards */
-.sidebarCard {
-  background-color: #ffffff;
-  border: 1px solid #e5e5e5;
-  border-style: solid;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  align-items: flex-start;
-  padding: 25px;
-  position: relative;
-  border-radius: 8px;
-  flex-shrink: 0;
-  width: 100%;
-}
-
-.sidebarCardHeader {
-  position: relative;
-  flex-shrink: 0;
-  width: 100%;
+.newBookingBtn {
   display: flex;
   align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  background: var(--color-accent);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
 }
 
-.sidebarCardIcon {
+.newBookingBtn:hover {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ===== STATS STRIP ===== */
+.statsStrip {
+  display: flex;
+  gap: 16px;
+  padding: 20px 32px;
+  background: var(--color-white);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.statCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
+  flex: 1;
+  transition: all var(--transition-fast);
+}
+
+.statCard:hover {
+  background: var(--color-white);
+  box-shadow: var(--shadow-md);
+}
+
+.statIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.statIconBlue {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--color-blue);
+}
+
+.statIconGreen {
+  background: rgba(22, 163, 74, 0.1);
+  color: var(--color-success);
+}
+
+.statIconAmber {
+  background: rgba(217, 119, 6, 0.1);
+  color: var(--color-amber);
+}
+
+.statInfo {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  position: relative;
-  flex-shrink: 0;
-  height: 16px;
-  width: 12px;
+  gap: 2px;
 }
 
-.sidebarCardTitle {
-  padding-left: 8px;
-  font-size: 16px;
-  line-height: 24px;
-  color: #171717;
-  font-family: 'Nimbus Sans', sans-serif;
-  font-weight: 400;
-  font-style: normal;
-  margin: 0;
+.statValue {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1;
 }
 
-/* Tips List */
-.tipsList {
-  position: relative;
+.statLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* ===== FILTER TABS ===== */
+.filterBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 32px;
+  background: var(--color-white);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.filterIcon {
+  color: var(--color-text-muted);
   flex-shrink: 0;
-  width: 100%;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-family: var(--font-primary);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.tab:hover {
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+}
+
+.tabActive {
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  border-color: rgba(79, 70, 229, 0.2);
+  font-weight: 600;
+}
+
+.tabCount {
+  font-size: 11px;
+  padding: 1px 7px;
+  background: var(--color-border-light);
+  border-radius: 10px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.tabActive .tabCount {
+  background: rgba(79, 70, 229, 0.15);
+  color: var(--color-accent);
+}
+
+/* ===== MAIN CONTENT ===== */
+.mainContent {
+  flex: 1;
+  padding: 24px 32px 40px;
+}
+
+/* ===== BOOKINGS LIST ===== */
+.bookingsList {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  align-items: flex-start;
+  animation: fadeIn var(--transition-normal);
 }
 
-.tipItem {
-  display: flex;
-  align-items: flex-start;
-  position: relative;
-  flex-shrink: 0;
-  width: 100%;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.tipItem:nth-child(1) .tipText {
-  height: 40px;
-}
-
-.tipIcon {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding-top: 2px;
-  position: relative;
-  flex-shrink: 0;
-}
-
-.iconCheck {
-  width: 12.25px;
-  height: 14px;
-}
-
-.tipText {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding-left: 8px;
-  padding-right: 1.45px;
-  position: relative;
-  flex-shrink: 0;
-  width: 216.3px;
-  font-size: 14px;
-  line-height: 20px;
-  color: #525252;
-  font-family: 'Nimbus Sans', sans-serif;
-  font-weight: 400;
-  font-style: normal;
-  margin: 0;
-}
-
-.tipText p {
-  margin: 0;
-}
-
-.tipTextSingle {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding-left: 8px;
-  position: relative;
-  flex-shrink: 0;
-  font-size: 14px;
-  line-height: 20px;
-  color: #525252;
-  font-family: 'Nimbus Sans', sans-serif;
-  font-weight: 400;
-  font-style: normal;
-  margin: 0;
-}
-
-.tipItem:nth-child(2) .tipTextSingle {
-  width: 210.14px;
-}
-
-.tipItem:nth-child(3) .tipTextSingle {
-  width: 158.05px;
-}
-
-.tipItem:nth-child(4) .tipTextSingle {
-  width: 179.98px;
-}
-
-/* Sidebar Subheading */
-.sidebarSubheading {
-  position: relative;
-  flex-shrink: 0;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.sidebarSubheadingText {
-  font-size: 16px;
-  line-height: 24px;
-  color: #171717;
-  font-family: 'Nimbus Sans', sans-serif;
-  font-weight: 400;
-  font-style: normal;
-  margin: 0;
-}
-
-/* Pending Invite Item */
-.pendingInviteItem {
-  position: relative;
-  flex-shrink: 0;
-  width: 100%;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-}
-
-.pendingInviteButton {
-  padding-top: 2px;
-}
-
-.pendingInviteLeft {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  position: relative;
-  flex-shrink: 0;
-}
-
-.pendingInviteName {
-  font-size: 14px;
-  line-height: 20px;
-  color: #171717;
-  font-family: 'Nimbus Sans', sans-serif;
-  font-weight: 400;
-  font-style: normal;
-  margin: 0;
-}
-
-.pendingInviteDate {
-  font-size: 12px;
-  line-height: 16px;
-  color: #525252;
-  font-family: 'Nimbus Sans', sans-serif;
-  font-weight: 400;
-  font-style: normal;
-  margin: 0;
-}
-
-.pendingInviteButton {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  flex-shrink: 0;
+/* ===== BOOKING CARD ===== */
+.bookingCard {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
   cursor: pointer;
-  background: none;
-  border: none;
-  font-family: 'Nimbus Sans', sans-serif;
+  transition: all var(--transition-fast);
+  outline: none;
 }
 
-.pendingInviteButtonText {
-  font-size: 12px;
-  line-height: 16px;
-  color: #525252;
-  text-align: center;
-  font-family: 'Nimbus Sans', sans-serif;
-  font-weight: 400;
-  font-style: normal;
-  margin: 0;
+.bookingCard:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
-.pendingInviteDivider {
-  border-top: 1px solid #e5e5e5;
-  border-top-style: solid;
-  position: relative;
-  flex-shrink: 0;
-  width: 100%;
+.bookingCard:focus-visible {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+/* Card Header */
+.cardHeader {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding-top: 17px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
 }
 
-.pendingInviteNote {
-  font-size: 12px;
-  line-height: 16px;
-  color: #737373;
-  font-family: 'Nimbus Sans', sans-serif;
-  font-weight: 400;
-  font-style: normal;
+.cardHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.tutorAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tutorAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tutorAvatar span {
+  color: var(--color-white);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.cardTitleGroup {
+  min-width: 0;
+}
+
+.cardTitle {
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardSubtitle {
+  font-size: 13px;
+  color: var(--color-text-muted);
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.pendingInviteButton:hover {
-  color: #171717;
+/* Status Badge */
+.statusBadge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-/* Responsive adjustments */
-@media (max-width: 1200px) {
-  .childrenContainer {
-    grid-template-columns: 1fr;
-  }
+.statusPending {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--color-blue);
 }
 
-@media (max-width: 768px) {
-  .container {
-    flex-direction: column;
-  }
-
-  .mainContent {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-
-  .rightColumn {
-    width: 100%;
-  }
+.statusWarning {
+  background: rgba(217, 119, 6, 0.1);
+  color: var(--color-amber);
 }
 
-/* Link Child Button - Styled similar to View Dashboard button in ChildCard */
-.linkChildButton {
-  background-color: #171717;
+.statusActive {
+  background: rgba(22, 163, 74, 0.1);
+  color: var(--color-success);
+}
+
+.statusCompleted {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
+}
+
+.statusCancelled {
+  background: rgba(220, 38, 38, 0.08);
+  color: var(--color-danger);
+}
+
+/* Card Body */
+.cardBody {
+  margin-bottom: 16px;
+}
+
+.cardMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.metaItem svg {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+/* Card Footer */
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border-light);
+}
+
+.priceGroup {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.priceOriginal {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.priceFinal {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.cardActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cardDate {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.viewBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-primary);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.viewBtn:hover {
+  background: var(--color-accent);
+  color: var(--color-white);
+  border-color: var(--color-accent);
+}
+
+/* ===== PAGINATION ===== */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.pageBtn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: var(--color-accent);
+  color: var(--color-white);
+  border-color: var(--color-accent);
+}
+
+.pageBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+/* ===== EMPTY STATE ===== */
+.emptyState {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 9px 16px;
-  position: relative;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.linkChildButton:hover {
-  background-color: #262626;
-}
-
-.linkChildButtonText {
-  font-size: 14px;
-  line-height: 20px;
-  color: #ffffff;
+  padding: 80px 24px;
   text-align: center;
-  font-family: 'Nimbus Sans', sans-serif;
-  font-weight: 400;
-  font-style: normal;
-  margin: 0;
+  min-height: 350px;
+  animation: fadeIn var(--transition-normal);
+}
+
+.emptyIcon {
+  width: 88px;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
+  border-radius: 50%;
+  margin-bottom: 24px;
+  color: var(--color-white);
+}
+
+.emptyTitle {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 8px;
+  letter-spacing: -0.5px;
+}
+
+.emptyText {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  margin: 0 0 24px;
+  max-width: 360px;
+  line-height: 1.5;
+}
+
+.emptyBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  background: var(--color-white);
+  color: var(--color-accent);
+  border: 2px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  font-family: var(--font-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.emptyBtn:hover {
+  background: var(--color-accent);
+  color: var(--color-white);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px 16px;
+  }
+
+  .statsStrip {
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .filterBar {
+    padding: 12px 16px;
+  }
+
+  .mainContent {
+    padding: 16px;
+  }
+
+  .bookingCard {
+    padding: 16px;
+  }
+
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .cardMeta {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .cardFooter {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
 }
