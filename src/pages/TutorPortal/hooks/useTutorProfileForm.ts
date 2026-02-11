@@ -391,6 +391,12 @@ export function useTutorProfileForm() {
             if (kycData) {
                 console.log('✅ User KYC data loaded:', kycData);
 
+                // Update fullName from KYC data if available
+                if (kycData.fullName) {
+                    setFormData(prev => ({ ...prev, fullName: kycData.fullName! }));
+                    setSavedData(prev => ({ ...prev, fullName: kycData.fullName! }));
+                }
+
                 // Update identity verification state based on user data
                 const identityVerification: IdentityVerificationData = {
                     idNumber: kycData.ekycData?.id || '',
