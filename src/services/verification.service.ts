@@ -3,7 +3,7 @@ import axios from 'axios';
 import type { VerificationRequest, VerificationResponse, EKYCContent } from '../types/verification.types';
 import { getCurrentUser } from './auth.service';
 
-const API_BASE_URL = 'http://192.168.1.246:5166/api';
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5166') + '/api';
 
 const api = axios.create({
     baseURL: API_BASE_URL,

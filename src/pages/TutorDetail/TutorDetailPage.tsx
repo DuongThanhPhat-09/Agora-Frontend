@@ -1,5 +1,10 @@
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import BookingModal from './BookingModal';
+import { getTutorFullProfile } from '../../services/tutorDetail.service';
+import type { TutorFullProfile, FeedbackItem, AvailabilitySlot, CertificateInfo } from '../../services/tutorDetail.service';
 import "../../styles/pages/tutor-detail.css";
 
 // SVG Icons
@@ -28,14 +33,6 @@ const HeartIcon = () => (
     </svg>
 );
 
-const GraduationIcon = () => (
-    <svg width="17.5" height="17.5" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M9 1.5L1 5.5L9 9.5L17 5.5L9 1.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M1 5.5V10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M4 7V12C4 13.5 6 15 9 15C12 15 14 13.5 14 12V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
-
 const CheckIcon = () => (
     <svg width="8.8" height="8.8" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M7.5 2.25L3.5625 6.1875L1.5 4.125" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -51,19 +48,6 @@ const CertificateIcon = () => (
     </svg>
 );
 
-const FileIcon = () => (
-    <svg width="17.5" height="17.5" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M10 1H4C3.4 1 3 1.4 3 2V16C3 16.6 3.4 17 4 17H14C14.6 17 15 16.6 15 16V6L10 1Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M10 1V6H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
-
-const ShieldIcon = () => (
-    <svg width="10.5" height="10.5" viewBox="0 0 11 11" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M5.5 1L2 2.5V5C2 7.5 3.5 9.5 5.5 10C7.5 9.5 9 7.5 9 5V2.5L5.5 1Z" stroke="#3D4A3E" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
-
 const VerifyIcon = () => (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 4L5.5 10.5L2 7" stroke="#3D4A3E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -76,179 +60,117 @@ const QuoteIcon = () => (
     </svg>
 );
 
-// Tutor Data
-const tutorData = {
-    name: "Dr. Sarah Jenkins",
-    credential: "PhD Candidate in Molecular Biology",
-    university: "Oxford University",
-    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-    interviewThumbnail: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800",
-    rating: 4.9,
-    reviews: 127,
-    tags: ["Sinh học phân tử", "IB Diploma", "A-Level", "Luyện thi Y khoa", "Cố vấn du học"],
-    about: {
-        intro: "Tôi chuyên sâu vào việc thu hẹp khoảng cách giữa chương trình trung học và kỳ vọng khắt khe của các đại học top đầu thế giới. Phương pháp của tôi tập trung vào việc học dựa trên vấn đề (Inquiry-based learning) và phân tích phê phán.",
-        experience: "Trong 5 năm qua, tôi đã cố vấn cho hơn 120 học sinh, đa số đều chuyển tiếp thành công vào ngành Y khoa, Khoa học Sinh học và Khoa học Tự nhiên tại các định chế giáo dục danh tiếng. Tôi tin rằng thành công học thuật gồm 30% kiến thức và 70% tư duy chiến lược."
-    },
-    credentials: {
-        education: { title: "Học vấn", institution: "Đại học Oxford", detail: "Tiến sĩ, Sinh học phân tử" },
-        experience: { title: "Kinh nghiệm", institution: "Cố vấn Tuyển sinh Cao cấp", detail: "Chuyên sâu Oxbridge (3 năm)" },
-        certificate: { title: "Chứng chỉ", institution: "Qualified Teacher (QTS)", detail: "Vương Quốc Anh" }
-    },
-    academicDegrees: [
-        { title: "Tiến sĩ Sinh học Phân tử", institution: "University of Oxford", verified: true },
-        { title: "Thạc sĩ Khoa học (Honors)", institution: "Imperial College London", verified: true }
-    ],
-    certificates: [
-        { title: "Qualified Teacher Status", institution: "Department for Education UK", verified: true },
-        { title: "IELTS Academic", institution: "Overall Band Score", score: "8.5", verified: true },
-        { title: "GRE Biology Subject", institution: "98th Percentile", score: "980", verified: true },
-        { title: "Higher Education Fellowship", institution: "Advance HE", verified: true }
-    ],
-    stats: [
-        { value: "+1.8", label: "GPA trung bình tăng", sublabel: "Sau 12 tuần giảng dạy" },
-        { value: "98%", label: "Học sinh đỗ nguyện vọng 1", sublabel: "Oxbridge & Ivy League" },
-        { value: "+220", label: "Tăng điểm SAT/IELTS", sublabel: "Điểm SAT trung bình tăng" },
-        { value: "12w", label: "Thời gian đạt mục tiêu", sublabel: "Lộ trình cá nhân hóa" }
-    ],
-    testimonials: [
-        {
-            id: 1,
-            name: "Lê Minh Anh",
-            initial: "L",
-            role: "Học sinh Year 13 (A-Level)",
-            quote: `"Chuyên môn của Sarah là không thể bàn cãi. Cô không chỉ dạy kiến thức mà còn dạy cách các giáo sư Oxford tư duy khi ra đề thi."`,
-            duration: "6 tháng",
-            goal: "Thi đỗ Y khoa - University of Cambridge",
-            result: "Đạt A* Biology, đỗ nguyện vọng 1"
-        },
-        {
-            id: 2,
-            name: "Chị Tuyết Mai",
-            initial: "C",
-            role: "Phụ huynh tại Hà Nội",
-            quote: `"Sự minh bạch trong báo cáo định kỳ là điều tôi hài lòng nhất. Tôi biết con mình tiến bộ từng ngày thông qua Agora LMS."`,
-            duration: "4 tháng",
-            goal: "Cải thiện IB Biology từ 4 lên 7",
-            result: "Kết quả cuối kỳ đạt điểm 7 tuyệt đối"
-        }
-    ],
-    price: "500.000đ",
-    schedule: [
-        { day: "T2", date: "21" },
-        { day: "T3", date: "22" },
-        { day: "T4", date: "23" },
-        { day: "T5", date: "24", selected: true },
-        { day: "T6", date: "25" }
-    ],
-    timeSlots: [
-        { time: "09:00", disabled: true },
-        { time: "10:30", selected: true },
-        { time: "13:30", available: true },
-        { time: "15:00", disabled: true },
-        { time: "16:30", available: true },
-        { time: "19:00", available: true }
-    ]
+// Formatter for currency
+const formatCurrency = (amount: number | null) => {
+    if (amount === null || amount === undefined) return "0đ";
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 };
 
-// Hero Section with Video Thumbnail
-const HeroSection = () => (
-    <section className="tutor-hero-section">
-        <div className="component-2">
-            <img
-                className="interview-thumbnail"
-                src={tutorData.interviewThumbnail}
-                alt="Sarah Jenkins Academic Interview"
-            />
-            <div className="gradient-overlay"></div>
+// ============================================
+// Sub-components
+// ============================================
 
-            {/* Play Button */}
-            <div className="play-button-container">
-                <div className="play-button">
-                    <PlayIcon />
-                </div>
-                <b className="click-to-view">Click to View Academic Interview</b>
-            </div>
+// Hero Section
+const HeroSection = ({ profile }: { profile: TutorFullProfile }) => {
+    // Flatten subjects tags
+    const tags = profile.subjects?.flatMap(s => s.tags || []) || [];
 
-            {/* Agora Badge */}
-            <div className="agora-badge-container">
-                <div className="agora-badge">
-                    <div className="agora-badge-dot"></div>
-                    <b className="agora-badge-text">Agora Original Interview</b>
-                </div>
-            </div>
+    return (
+        <section className="tutor-hero-section">
+            <div className="component-2">
+                <img
+                    className="interview-thumbnail"
+                    src={profile.videoIntroUrl ? `https://img.youtube.com/vi/${profile.videoIntroUrl.split('v=')[1]}/hqdefault.jpg` : "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800"}
+                    alt={profile.fullName || "Tutor Interview"}
+                />
+                <div className="gradient-overlay"></div>
 
-            {/* Tutor Info Card */}
-            <div className="tutor-info-card">
-                <div className="tutor-info-content">
-                    <div className="tutor-mini-avatar">
-                        <img src={tutorData.avatar} alt={tutorData.name} />
-                        <div className="mini-avatar-gradient"></div>
+                {/* Play Button */}
+                <div className="play-button-container">
+                    <div className="play-button">
+                        <PlayIcon />
                     </div>
-                    <div className="tutor-info-text">
-                        <div className="university-badge">
-                            <b>{tutorData.university}</b>
+                    <b className="click-to-view">Click to View Academic Interview</b>
+                </div>
+
+                {/* Agora Badge */}
+                <div className="agora-badge-container">
+                    <div className="agora-badge">
+                        <div className="agora-badge-dot"></div>
+                        <b className="agora-badge-text">Agora Original Interview</b>
+                    </div>
+                </div>
+
+                {/* Tutor Info Card */}
+                <div className="tutor-info-card">
+                    <div className="tutor-info-content">
+                        <div className="tutor-mini-avatar">
+                            <img src={profile.avatarUrl || "https://randomuser.me/api/portraits/lego/1.jpg"} alt={profile.fullName || ""} />
+                            <div className="mini-avatar-gradient"></div>
                         </div>
-                        <h1 className="tutor-name">{tutorData.name}</h1>
-                        <p className="tutor-credential">{tutorData.credential}</p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Rating Card */}
-            <div className="rating-card-container">
-                <div className="rating-card">
-                    <div className="rating-stars">
-                        <div className="stars-row">
-                            {[1, 2, 3, 4, 5].map((i) => (
-                                <StarIcon key={i} filled={true} />
-                            ))}
+                        <div className="tutor-info-text">
+                            <div className="university-badge">
+                                <b>{profile.education?.split(',')[0] || "University"}</b>
+                            </div>
+                            <h1 className="tutor-name">{profile.fullName}</h1>
+                            <p className="tutor-credential">{profile.headline}</p>
                         </div>
-                        <b className="rating-text">{tutorData.rating} ({tutorData.reviews} REVIEWS)</b>
                     </div>
-                    <div className="rating-divider"></div>
-                    <div className="favorite-button">
-                        <HeartIcon />
+                </div>
+
+                {/* Rating Card */}
+                <div className="rating-card-container">
+                    <div className="rating-card">
+                        <div className="rating-stars">
+                            <div className="stars-row">
+                                {[1, 2, 3, 4, 5].map((i) => (
+                                    <StarIcon key={i} filled={i <= Math.round(profile.averageRating || 0)} />
+                                ))}
+                            </div>
+                            <b className="rating-text">{(profile.averageRating || 0).toFixed(1)} ({profile.totalFeedbacks || 0} REVIEWS)</b>
+                        </div>
+                        <div className="rating-divider"></div>
+                        <div className="favorite-button">
+                            <HeartIcon />
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        {/* Subject Tags */}
-        <div className="subject-tags">
-            {tutorData.tags.map((tag, index) => (
-                <div key={index} className="subject-tag">
-                    <b>{tag}</b>
-                </div>
-            ))}
-        </div>
-    </section>
-);
+            {/* Subject Tags */}
+            <div className="subject-tags">
+                {tags.length > 0 ? tags.map((tag, index) => (
+                    <div key={index} className="subject-tag">
+                        <b>{tag}</b>
+                    </div>
+                )) : (
+                    <div className="subject-tag"><b>Chưa cập nhật môn học</b></div>
+                )}
+            </div>
+        </section>
+    );
+};
 
 // About Section
-const AboutSection = () => (
+const AboutSection = ({ profile }: { profile: TutorFullProfile }) => (
     <section className="about-section">
-        <h2 className="section-title">Về Mentor Sarah</h2>
+        <h2 className="section-title">Về Mentor {profile.fullName?.split(' ').pop()}</h2>
         <div className="about-content">
             <div className="about-text">
-                <p className="about-intro">{tutorData.about.intro}</p>
-                <p className="about-experience">{tutorData.about.experience}</p>
+                <p className="about-intro">{profile.bio || "Gia sư chưa cập nhật giới thiệu."}</p>
+                <p className="about-experience">{profile.experience || "Chưa cập nhật kinh nghiệm giảng dạy."}</p>
             </div>
             <div className="credentials-card">
                 <div className="credential-item">
-                    <span className="credential-label">{tutorData.credentials.education.title}</span>
-                    <b className="credential-institution">{tutorData.credentials.education.institution}</b>
-                    <i className="credential-detail">{tutorData.credentials.education.detail}</i>
+                    <span className="credential-label">Học vấn</span>
+                    <b className="credential-institution">{profile.education || "—"}</b>
+                    <i className="credential-detail">GPA: {profile.gpa || "—"}/{profile.gpaScale || "—"}</i>
                 </div>
+                {/* Additional fixed cards if you want to keep the UI symmetry, or hide if data missing */}
                 <div className="credential-item">
-                    <span className="credential-label">{tutorData.credentials.experience.title}</span>
-                    <b className="credential-institution">{tutorData.credentials.experience.institution}</b>
-                    <i className="credential-detail">{tutorData.credentials.experience.detail}</i>
-                </div>
-                <div className="credential-item">
-                    <span className="credential-label">{tutorData.credentials.certificate.title}</span>
-                    <b className="credential-institution">{tutorData.credentials.certificate.institution}</b>
-                    <i className="credential-detail">{tutorData.credentials.certificate.detail}</i>
+                    <span className="credential-label">Hình thức dạy</span>
+                    <b className="credential-institution">{profile.teachingMode || "—"}</b>
+                    <i className="credential-detail">{profile.teachingAreaCity || "Toàn quốc"}</i>
                 </div>
             </div>
         </div>
@@ -256,7 +178,7 @@ const AboutSection = () => (
 );
 
 // Academic Portfolio Section
-const AcademicPortfolioSection = () => (
+const AcademicPortfolioSection = ({ certificates }: { certificates: CertificateInfo[] | null }) => (
     <section className="portfolio-section">
         <div className="portfolio-header">
             <div className="portfolio-title-group">
@@ -269,63 +191,35 @@ const AcademicPortfolioSection = () => (
         </div>
 
         <div className="portfolio-content">
-            {/* Academic Degrees */}
-            <div className="portfolio-category">
-                <div className="category-header">
-                    <div className="category-indicator navy"></div>
-                    <span className="category-title">I. Văn bằng học thuật</span>
-                    <div className="category-divider"></div>
-                </div>
-                <div className="degrees-grid">
-                    {tutorData.academicDegrees.map((degree, index) => (
-                        <div key={index} className="degree-card">
-                            <div className="degree-icon navy">
-                                <GraduationIcon />
-                            </div>
-                            <div className="degree-info">
-                                <div className="degree-title-row">
-                                    <b className="degree-title">{degree.title}</b>
-                                    {degree.verified && (
-                                        <div className="verified-check">
-                                            <CheckIcon />
-                                        </div>
-                                    )}
-                                </div>
-                                <span className="degree-institution">{degree.institution}</span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Certificates */}
+            {/* Certificates Category */}
             <div className="portfolio-category">
                 <div className="category-header">
                     <div className="category-indicator gold"></div>
-                    <span className="category-title">II. Chứng chỉ & Khảo thí</span>
+                    <span className="category-title">Văn bằng & Chứng chỉ</span>
                     <div className="category-divider"></div>
-                    <button className="view-more-btn">XEM THÊM</button>
                 </div>
                 <div className="certificates-grid">
-                    {tutorData.certificates.map((cert, index) => (
+                    {certificates && certificates.length > 0 ? certificates.map((cert, index) => (
                         <div key={index} className="certificate-card">
                             <div className="certificate-icon">
-                                {cert.score ? <FileIcon /> : <CertificateIcon />}
+                                <CertificateIcon />
                             </div>
                             <div className="certificate-info">
                                 <div className="certificate-title-row">
-                                    <b className="certificate-title">{cert.title}</b>
-                                    {cert.verified && (
+                                    <b className="certificate-title">{cert.certificateName}</b>
+                                    {cert.verificationStatus === 'verified' && (
                                         <div className="verified-check">
                                             <CheckIcon />
                                         </div>
                                     )}
                                 </div>
-                                <span className="certificate-institution">{cert.institution}</span>
-                                {cert.score && <b className="certificate-score">{cert.score}</b>}
+                                <span className="certificate-institution">{cert.issuingOrganization}</span>
+                                {cert.yearIssued && <b className="certificate-score">Năm {cert.yearIssued}</b>}
                             </div>
                         </div>
-                    ))}
+                    )) : (
+                        <p className="empty-message">Chưa có chứng chỉ được cập nhật.</p>
+                    )}
                 </div>
             </div>
 
@@ -344,38 +238,15 @@ const AcademicPortfolioSection = () => (
     </section>
 );
 
-// Stats Section
-const StatsSection = () => (
-    <section className="stats-section">
-        <div className="stats-header">
-            <h2 className="section-title">Hiệu quả đào tạo thực tế</h2>
-            <div className="stats-badge">
-                <ShieldIcon />
-                <b>Dữ liệu xác thực từ Agora LMS</b>
-            </div>
-        </div>
-        <div className="stats-grid">
-            {tutorData.stats.map((stat, index) => (
-                <div key={index} className="stat-card">
-                    <b className="stat-value">{stat.value}</b>
-                    <b className="stat-label">{stat.label}</b>
-                    <i className="stat-sublabel">{stat.sublabel}</i>
-                </div>
-            ))}
-        </div>
-    </section>
-);
-
 // Testimonials Section
-const TestimonialsSection = () => (
+const TestimonialsSection = ({ feedbacks, totalFeedbacks }: { feedbacks: FeedbackItem[] | null, totalFeedbacks: number }) => (
     <section className="section5">
         <div className="heading-24">
             <h2 className="nht-k-thnh">Nhật ký thành công</h2>
         </div>
         <div className="container84">
-            {tutorData.testimonials.map((testimonial) => (
-                <div key={testimonial.id} className="component-8">
-                    {/* Quote Icon - positioned at top-right of card */}
+            {feedbacks && feedbacks.length > 0 ? feedbacks.map((testimonial) => (
+                <div key={testimonial.feedbackId} className="component-8">
                     <div className="container85">
                         <div className="component-122">
                             <QuoteIcon />
@@ -383,144 +254,243 @@ const TestimonialsSection = () => (
                     </div>
                     <div className="container86">
                         <div className="container87">
-                            {/* User Info */}
                             <div className="container88">
                                 <div className="background7">
-                                    <b className="l">{testimonial.initial}</b>
+                                    <b className="l">{testimonial.fromUserName?.charAt(0) || "U"}</b>
                                 </div>
                                 <div className="container89">
                                     <div className="heading-47">
-                                        <b className="l-minh-anh">{testimonial.name}</b>
+                                        <b className="l-minh-anh">{testimonial.fromUserName}</b>
                                     </div>
                                     <div className="container90">
-                                        <span className="hc-sinh-year">{testimonial.role}</span>
+                                        <span className="hc-sinh-year">Học viên</span>
                                     </div>
                                 </div>
                             </div>
-                            {/* Quote */}
                             <div className="container91">
-                                <i className="chuyn-mn-ca">{testimonial.quote}</i>
+                                <i className="chuyn-mn-ca">"{testimonial.comment || "Không có bình luận."}"</i>
                             </div>
-                            {/* Badges */}
                             <div className="container92">
                                 <div className="border2">
                                     <b className="xc-thc-bi">Xác thực bởi Agora LMS</b>
                                 </div>
-                                <div className="border2">
-                                    <b className="xc-thc-bi">Học trong {testimonial.duration}</b>
-                                </div>
+                                {testimonial.courseDuration && (
+                                    <div className="border2">
+                                        <b className="xc-thc-bi">Học trong {testimonial.courseDuration}</b>
+                                    </div>
+                                )}
                             </div>
                         </div>
-                        {/* Result Card */}
                         <div className="background8">
                             <div className="container93">
                                 <span className="mc-tiu-ban">Mục tiêu ban đầu</span>
                                 <div className="container95">
-                                    <b className="thi-y">{testimonial.goal}</b>
+                                    <b className="thi-y">{testimonial.initialGoal || "—"}</b>
                                 </div>
                             </div>
                             <div className="horizontal-divider3"></div>
                             <div className="container96">
                                 <span className="mc-tiu-ban">Kết quả thực tế</span>
                                 <div className="container98">
-                                    <b className="t-a-biology">{testimonial.result}</b>
+                                    <b className="t-a-biology">{testimonial.actualResult || "—"}</b>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            ))}
+            )) : (
+                <p className="empty-message-center">Gia sư chưa có đánh giá nào.</p>
+            )}
         </div>
-        <button className="component-9">
-            <b className="xem-tt-c">Xem tất cả lộ trình thành công (124)</b>
-        </button>
+        {totalFeedbacks > 0 && (
+            <button className="component-9">
+                <b className="xem-tt-c">Xem tất cả lộ trình thành công ({totalFeedbacks})</b>
+            </button>
+        )}
     </section>
 );
 
-
 // Booking Sidebar
-const BookingSidebar = () => (
-    <aside className="booking-sidebar">
-        <div className="booking-card">
-            {/* Price Header */}
-            <div className="booking-header">
-                <span className="booking-label">Bắt đầu lộ trình học thuật</span>
-                <div className="price-display">
-                    <b className="price-amount">{tutorData.price}</b>
-                    <b className="price-unit">/ BUỔI HỌC</b>
+const BookingSidebar = ({ hourlyRate, availabilities, onBooking }: { hourlyRate: number | null, availabilities: AvailabilitySlot[] | null, onBooking: () => void }) => {
+    // Basic day mapping
+    const dayLabels = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+
+    // For the UI grid, let's just show some unique days from availabilities or a placeholder
+    const uniqueDays = Array.from(new Set(availabilities?.map(a => a.dayofweek) || []))
+        .sort((a, b) => a - b);
+
+    return (
+        <aside className="booking-sidebar">
+            <div className="booking-card">
+                <div className="booking-header">
+                    <span className="booking-label">Bắt đầu lộ trình học thuật</span>
+                    <div className="price-display">
+                        <b className="price-amount">{formatCurrency(hourlyRate)}</b>
+                        <b className="price-unit">/ GIỜ</b>
+                    </div>
+                </div>
+
+                {/* Date Picker - Simplified for now to show available days */}
+                <div className="date-picker">
+                    <div className="date-grid">
+                        {uniqueDays.length > 0 ? uniqueDays.map((dayNum) => (
+                            <div key={dayNum} className="date-item">
+                                <span className="day-label">{dayLabels[dayNum]}</span>
+                                <b className="date-number">Available</b>
+                            </div>
+                        )) : (
+                            <p className="empty-message-small">Vui lòng liên hệ để đặt lịch.</p>
+                        )}
+                    </div>
+                </div>
+
+                {/* Time Picker - Showing some slots */}
+                <div className="time-picker-section">
+                    <span className="picker-label">LỊCH KHẢ DỤNG</span>
+                    <div className="time-grid">
+                        {availabilities?.slice(0, 6).map((slot, index) => (
+                            <button
+                                key={index}
+                                className="time-slot"
+                            >
+                                <b>{slot.starttime}</b>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="booking-actions">
+                    <button className="btn-start" onClick={onBooking}>
+                        <b>ĐẶT LỊCH NGAY</b>
+                    </button>
+                    <button className="btn-chat">
+                        <b>CHAT TƯ VẤN</b>
+                    </button>
                 </div>
             </div>
 
-            {/* Date Picker */}
-            <div className="date-picker">
-                <div className="date-grid">
-                    {tutorData.schedule.map((day, index) => (
-                        <div key={index} className={`date-item ${day.selected ? 'selected' : ''}`}>
-                            <span className="day-label">{day.day}</span>
-                            <b className="date-number">{day.date}</b>
-                        </div>
-                    ))}
+            <div className="verification-note">
+                <div className="note-header">
+                    <VerifyIcon />
+                    <b>Đã xác minh bởi Agora Council</b>
                 </div>
+                <i className="note-text">Hoàn học phí nếu không hài lòng sau buổi học đầu tiên.</i>
             </div>
-
-            {/* Time Picker */}
-            <div className="time-picker-section">
-                <span className="picker-label">TIME PICKER</span>
-                <div className="time-grid">
-                    {tutorData.timeSlots.map((slot, index) => (
-                        <button
-                            key={index}
-                            className={`time-slot ${slot.selected ? 'selected' : ''} ${slot.disabled ? 'disabled' : ''}`}
-                            disabled={slot.disabled}
-                        >
-                            <b>{slot.time}</b>
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="booking-actions">
-                <button className="btn-start">
-                    <b>BẮT ĐẦU NGAY</b>
-                </button>
-                <button className="btn-chat">
-                    <b>CHAT TƯ VẤN</b>
-                </button>
-            </div>
-        </div>
-
-        {/* Verification Note */}
-        <div className="verification-note">
-            <div className="note-header">
-                <VerifyIcon />
-                <b>Đã xác minh bởi Agora Council</b>
-            </div>
-            <i className="note-text">Hoàn học phí nếu không hài lòng sau buổi học đầu tiên.</i>
-        </div>
-    </aside>
-);
+        </aside>
+    );
+};
 
 // Main TutorDetailPage Component
 const TutorDetailPage = () => {
+    const { id } = useParams<{ id: string }>();
+    const [profile, setProfile] = useState<TutorFullProfile | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [showBooking, setShowBooking] = useState(false);
+
+    useEffect(() => {
+        let mounted = true;
+
+        const fetchProfile = async () => {
+            if (!id) return;
+            console.log("🚀 [TutorDetail] Starting fetch for:", id);
+            try {
+                // Only set loading if we don't have a profile or if ID changed completely
+                // But for simplicity, just set loading true.
+                setLoading(true);
+                const response = await getTutorFullProfile(id);
+
+                if (mounted) {
+                    console.log("✅ [TutorDetail] Mounted & Set Profile for:", id);
+                    setProfile(response.content);
+                    setError(null);
+                }
+            } catch (err) {
+                if (mounted) {
+                    console.error("❌ [TutorDetail] Failed to fetch:", err);
+                    setError("Có lỗi xảy ra khi tải thông tin gia sư.");
+                }
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        };
+
+        fetchProfile();
+
+        return () => {
+            console.log("🧹 [TutorDetail] Cleanup/Unmount for:", id);
+            mounted = false;
+        };
+    }, [id]);
+
+    console.log("🎨 [TutorDetail] Render:", { id, loading, error, hasProfile: !!profile });
+
+    if (loading) {
+        return (
+            <div className="tutor-detail-page">
+                <Header />
+                <div className="loading-container">
+                    <div className="spinner"></div>
+                    <p>Đang tải hồ sơ gia sư...</p>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
+
+    if (error || !profile) {
+        return (
+            <div className="tutor-detail-page">
+                <Header />
+                <div className="error-container">
+                    <h2>Oops!</h2>
+                    <p>{error || "Không tìm thấy thông tin gia sư."}</p>
+                    <button onClick={() => window.history.back()} className="btn-back">Quay lại</button>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
+
     return (
         <div className="tutor-detail-page">
             <Header />
             <main className="tutor-detail-main">
                 <div className="tutor-detail-container">
                     <div className="tutor-detail-content">
-                        <HeroSection />
-                        <AboutSection />
+                        <HeroSection profile={profile} />
+                        <AboutSection profile={profile} />
+
                         <div className="portfolio-stats-wrapper">
-                            <AcademicPortfolioSection />
-                            <StatsSection />
+                            <AcademicPortfolioSection certificates={profile.certificates} />
+
+                            {/* Hide StatsSection as requested since it doesn't have an API yet */}
+                            {/* <StatsSection /> */}
                         </div>
-                        <TestimonialsSection />
+
+                        <TestimonialsSection
+                            feedbacks={profile.feedbacks}
+                            totalFeedbacks={profile.totalFeedbacks}
+                        />
                     </div>
-                    <BookingSidebar />
+                    <BookingSidebar
+                        hourlyRate={profile.hourlyRate}
+                        availabilities={profile.availabilities}
+                        onBooking={() => setShowBooking(true)}
+                    />
                 </div>
             </main>
             <Footer />
+
+            <BookingModal
+                isOpen={showBooking}
+                onClose={() => setShowBooking(false)}
+                tutorName={profile.fullName || ""}
+                tutorId={id || ""}
+                hourlyRate={profile.hourlyRate || 0}
+                subjects={profile.subjects || []}
+                availabilities={profile.availabilities}
+            />
         </div>
     );
 };
