@@ -90,7 +90,7 @@ const HeroSection = ({ profile }: { profile: TutorFullProfile }) => {
                     <div className="play-button">
                         <PlayIcon />
                     </div>
-                    <b className="click-to-view">Click to View Academic Interview</b>
+                    <b className="click-to-view">Click để xem phỏng vấn học thuật</b>
                 </div>
 
                 {/* Agora Badge */}
@@ -127,7 +127,7 @@ const HeroSection = ({ profile }: { profile: TutorFullProfile }) => {
                                     <StarIcon key={i} filled={i <= Math.round(profile.averageRating || 0)} />
                                 ))}
                             </div>
-                            <b className="rating-text">{(profile.averageRating || 0).toFixed(1)} ({profile.totalFeedbacks || 0} REVIEWS)</b>
+                            <b className="rating-text">{(profile.averageRating || 0).toFixed(1)} ({profile.totalFeedbacks || 0} ĐÁNH GIÁ)</b>
                         </div>
                         <div className="rating-divider"></div>
                         <div className="favorite-button">
@@ -311,13 +311,36 @@ const TestimonialsSection = ({ feedbacks, totalFeedbacks }: { feedbacks: Feedbac
 );
 
 // Booking Sidebar
-const BookingSidebar = ({ hourlyRate, availabilities, onBooking }: { hourlyRate: number | null, availabilities: AvailabilitySlot[] | null, onBooking: () => void }) => {
-    // Basic day mapping
-    const dayLabels = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+const BookingSidebar = ({
+    hourlyRate,
+    trialLessonPrice,
+    availabilities,
+    onBooking
+}: {
+    hourlyRate: number | null,
+    trialLessonPrice: number | null,
+    availabilities: AvailabilitySlot[] | null,
+    onBooking: () => void
+}) => {
+    // Group availability by day
+    const dayLabelsMap: Record<number, string> = {
+        0: "Chủ Nhật",
+        1: "Thứ 2",
+        2: "Thứ 3",
+        3: "Thứ 4",
+        4: "Thứ 5",
+        5: "Thứ 6",
+        6: "Thứ 7"
+    };
 
-    // For the UI grid, let's just show some unique days from availabilities or a placeholder
-    const uniqueDays = Array.from(new Set(availabilities?.map(a => a.dayofweek) || []))
-        .sort((a, b) => a - b);
+    const availabilityByDay = (availabilities || []).reduce((acc, slot) => {
+        const key = slot.dayName || dayLabelsMap[slot.dayofweek] || `Thứ ${slot.dayofweek + 1}`;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(slot);
+        return acc;
+    }, {} as Record<string, AvailabilitySlot[]>);
+
+    const hasAvailability = Object.keys(availabilityByDay).length > 0;
 
     return (
         <aside className="booking-sidebar">
@@ -326,38 +349,98 @@ const BookingSidebar = ({ hourlyRate, availabilities, onBooking }: { hourlyRate:
                     <span className="booking-label">Bắt đầu lộ trình học thuật</span>
                     <div className="price-display">
                         <b className="price-amount">{formatCurrency(hourlyRate)}</b>
-                        <b className="price-unit">/ GIỜ</b>
+                        <b className="price-unit">/ BUỔI HỌC</b>
                     </div>
                 </div>
 
-                {/* Date Picker - Simplified for now to show available days */}
-                <div className="date-picker">
-                    <div className="date-grid">
-                        {uniqueDays.length > 0 ? uniqueDays.map((dayNum) => (
-                            <div key={dayNum} className="date-item">
-                                <span className="day-label">{dayLabels[dayNum]}</span>
-                                <b className="date-number">Available</b>
-                            </div>
-                        )) : (
-                            <p className="empty-message-small">Vui lòng liên hệ để đặt lịch.</p>
-                        )}
+                {/* Availability Schedule - Redesigned to match Portal Profile */}
+                {hasAvailability ? (
+                    <div className="availability-schedule-container" style={{ marginTop: '14px' }}>
+                        <div style={{
+                            fontSize: '11px',
+                            letterSpacing: '1.1px',
+                            textTransform: 'uppercase',
+                            fontWeight: 700,
+                            color: 'rgba(26, 34, 56, 0.4)',
+                            marginBottom: '14px'
+                        }}>
+                            LỊCH DẠY
+                        </div>
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '8px'
+                        }}>
+                            {Object.entries(availabilityByDay).map(([dayName, slots]) => (
+                                <div key={dayName} style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    padding: '12px 14px',
+                                    backgroundColor: 'rgba(242, 240, 228, 0.5)',
+                                    borderRadius: '12px',
+                                    border: '1px solid rgba(62, 47, 40, 0.08)'
+                                }}>
+                                    <div style={{
+                                        minWidth: '70px',
+                                        fontSize: '13px',
+                                        fontWeight: 700,
+                                        color: '#1a2238'
+                                    }}>
+                                        {dayName}
+                                    </div>
+                                    <div style={{
+                                        flex: 1,
+                                        display: 'flex',
+                                        flexWrap: 'wrap',
+                                        gap: '6px'
+                                    }}>
+                                        {slots.map((s, idx) => (
+                                            <span key={idx} style={{
+                                                padding: '4px 10px',
+                                                backgroundColor: '#fff',
+                                                borderRadius: '6px',
+                                                fontSize: '11px',
+                                                fontWeight: 600,
+                                                color: 'rgba(62, 47, 40, 0.7)',
+                                                border: '1px solid rgba(62, 47, 40, 0.1)'
+                                            }}>
+                                                {s.starttime} - {s.endtime}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <div className="empty-availability" style={{
+                        marginTop: '14px',
+                        padding: '20px 14px',
+                        backgroundColor: 'rgba(242, 240, 228, 0.5)',
+                        borderRadius: '12px',
+                        textAlign: 'center',
+                        color: 'rgba(62, 47, 40, 0.5)',
+                        fontSize: '12px',
+                        fontStyle: 'italic'
+                    }}>
+                        Chưa cập nhật lịch dạy
+                    </div>
+                )}
 
-                {/* Time Picker - Showing some slots */}
-                <div className="time-picker-section">
-                    <span className="picker-label">LỊCH KHẢ DỤNG</span>
-                    <div className="time-grid">
-                        {availabilities?.slice(0, 6).map((slot, index) => (
-                            <button
-                                key={index}
-                                className="time-slot"
-                            >
-                                <b>{slot.starttime}</b>
-                            </button>
-                        ))}
+                {/* Trial Lesson Price */}
+                {trialLessonPrice && trialLessonPrice > 0 && (
+                    <div style={{
+                        marginTop: '14px',
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        letterSpacing: '1.05px',
+                        textTransform: 'uppercase',
+                        color: 'rgba(62, 47, 40, 0.4)'
+                    }}>
+                        Buổi học thử: {formatCurrency(trialLessonPrice)}
                     </div>
-                </div>
+                )}
 
                 <div className="booking-actions">
                     <button className="btn-start" onClick={onBooking}>
@@ -475,6 +558,7 @@ const TutorDetailPage = () => {
                     </div>
                     <BookingSidebar
                         hourlyRate={profile.hourlyRate}
+                        trialLessonPrice={profile.trialLessonPrice}
                         availabilities={profile.availabilities}
                         onBooking={() => setShowBooking(true)}
                     />

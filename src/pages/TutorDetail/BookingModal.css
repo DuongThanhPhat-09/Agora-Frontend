@@ -627,6 +627,29 @@
     transform: scale(0.6);
 }
 
+/* Hover preview highlighting */
+.bm-schedule-cell.hovering::after {
+    background: rgba(212, 180, 131, 1);
+    transform: scale(1.05);
+    opacity: 0.6;
+}
+
+.bm-schedule-cell.hovering.selected::after {
+    background: var(--color-navy);
+    opacity: 0.9;
+}
+
+/* If the start of a hover range is invalid */
+.bm-schedule-cell.hover-invalid::after {
+    background: rgba(204, 78, 78, 0.4);
+    transform: scale(1.05);
+}
+
+.bm-schedule-cell.hovering:not(.unavailable) {
+    background: rgba(212, 180, 131, 0.05);
+}
+
+
 /* Slot Tags */
 .bm-selected-slots {
     margin-top: 20px;
