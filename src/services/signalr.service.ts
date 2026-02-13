@@ -23,8 +23,8 @@ class SignalRService {
   private messageHandlers: Map<string, (message: any) => void> = new Map();
 
   async connect(): Promise<void> {
-    // const user = getCurrentUser();
-    const token = import.meta.env.VITE_TOKEN;
+    const user = getCurrentUser();
+    const token = user?.accessToken || import.meta.env.VITE_TOKEN;
 
     if (!token) {
       console.error('❌ SignalR: No access token available');
@@ -41,12 +41,12 @@ class SignalRService {
 
     this.connection = new signalR.HubConnectionBuilder()
       .withUrl(HUB_URL, {
-        accessTokenFactory: () => token,
+        accessTokenFactory: () => {
+          const currentUser = getCurrentUser();
+          return currentUser?.accessToken || import.meta.env.VITE_TOKEN || '';
+        },
       })
-      .withAutomaticReconnect({
-        nextRetryDelayInMilliseconds: 3000,
-        maxNumberOfReconnectAttempts: 10,
-      })
+      .withAutomaticReconnect()
       .configureLogging(signalR.LogLevel.Information)
       .build();
 
@@ -56,7 +56,6 @@ class SignalRService {
     try {
       await this.connection.start();
       console.log('✅ SignalR Connected', this.connection.connectionId);
-      console.log('  - Transport:', this.connection.transport);
     } catch (err: any) {
       console.error('❌ SignalR Connection failed:', err);
       console.error('  - Error type:', err.name);

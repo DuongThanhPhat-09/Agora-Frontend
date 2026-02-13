@@ -3,7 +3,6 @@ import styles from './styles.module.css';
 import ChatHeader from './ChatHeader';
 import ChatMessagesArea from './ChatMessagesArea';
 import MessageComposer from './MessageComposer';
-import QuickTemplates from './QuickTemplates';
 import { getChatMessages, type ChatMessage } from '../../services/chat.service';
 import { signalRService } from '../../services/signalr.service';
 import { message } from 'antd';
@@ -11,9 +10,10 @@ import { message } from 'antd';
 interface ChatAreaProps {
   selectedChannelId: number | null;
   currentUserId: string | null;
+  isTutor?: boolean;
 }
 
-const ChatArea = ({ selectedChannelId, currentUserId }: ChatAreaProps) => {
+const ChatArea = ({ selectedChannelId, currentUserId, isTutor = false }: ChatAreaProps) => {
   const [hasMore, setHasMore] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -188,6 +188,7 @@ const ChatArea = ({ selectedChannelId, currentUserId }: ChatAreaProps) => {
         currentUserId={currentUserId}
         loadMessages={loadMessages}
         hasMore={hasMore}
+        isTutor={isTutor}
       />
       <div className={styles.chatFooter}>
         {/* <QuickTemplates /> */}

@@ -773,3 +773,10 @@
     align-items: stretch;
   }
 }
+
+.systemMessageContainer {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 12px 0;
+}

@@ -29,6 +29,7 @@ import {
   TutorPortalClasses,
   TutorPortalClassDetail,
   TutorPortalStudentProfile,
+  TutorPortalBookings,
 } from './pages/TutorPortal';
 import NotFoundPage from './pages/Error/NotFoundPage';
 import UnauthorizedPage from './pages/Error/UnauthorizedPage';
@@ -42,6 +43,7 @@ import ParentBooking from './pages/ParentBooking';
 import BookingDetail from './pages/ParentBooking/Details';
 import ParentWallet from './pages/ParentWallet';
 import ParentMessage from './pages/ParentMessage';
+import PaymentPage from './pages/ParentBooking/Payment';
 import StudentDashboard from './pages/StudentDashboard';
 import StudentCourses from './pages/StudentCourses';
 import ParentStudent from './pages/ParentStudent';
@@ -109,6 +111,7 @@ function App() {
           <Route path="classes" element={<TutorPortalClasses />} />
           <Route path="classes/:classId" element={<TutorPortalClassDetail />} />
           <Route path="students/:studentId" element={<TutorPortalStudentProfile />} />
+          <Route path="bookings" element={<TutorPortalBookings />} />
           {/* Future routes: sessions, finance, settings */}
         </Route>
 
@@ -126,6 +129,7 @@ function App() {
           <Route path="dashboard" element={<ParentDashboard />} />
           <Route path="booking" element={<ParentBooking />} />
           <Route path="booking/:id" element={<BookingDetail />} />
+          <Route path="booking/:id/payment" element={<PaymentPage />} />
           <Route path="student" element={<ParentStudent />} />
           <Route path="wallet" element={<ParentWallet />} />
           <Route path="messages" element={<ParentMessage />} />

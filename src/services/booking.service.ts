@@ -152,3 +152,101 @@ export const cancelBooking = async (bookingId: number): Promise<ApiResponse<stri
         throw error;
     }
 };
+
+/** GET /api/parent/bookings — Get list of parent bookings */
+export const getParentBookings = async (params: { page?: number; pageSize?: number; status?: string }): Promise<ApiResponse<{ content: BookingResponseDTO[], totalElements: number }>> => {
+    try {
+        const response = await api.get('/parent/bookings', {
+            headers: getAuthHeaders(),
+            params,
+        });
+        return response.data;
+    } catch (error: any) {
+        throw error;
+    }
+};
+
+/** GET /api/tutors/bookings — Get list of tutor booking requests */
+export const getTutorBookings = async (params: { page?: number; pageSize?: number; status?: string }): Promise<ApiResponse<{ content: BookingResponseDTO[], totalElements: number }>> => {
+    try {
+        const response = await api.get('/tutors/bookings', {
+            headers: getAuthHeaders(),
+            params,
+        });
+        return response.data;
+    } catch (error: any) {
+        throw error;
+    }
+};
+
+/** POST /api/tutors/bookings/:id/accept — Accept a booking request */
+export const acceptBooking = async (bookingId: number): Promise<ApiResponse<any>> => {
+    try {
+        const response = await api.post(`/tutors/bookings/${bookingId}/accept`, {}, {
+            headers: getAuthHeaders(),
+        });
+        return response.data;
+    } catch (error: any) {
+        throw error;
+    }
+};
+
+/** POST /api/tutors/bookings/:id/decline — Decline a booking request */
+export const declineBooking = async (bookingId: number, reason: string): Promise<ApiResponse<any>> => {
+    try {
+        const response = await api.post(`/tutors/bookings/${bookingId}/decline`, { reason }, {
+            headers: getAuthHeaders(),
+        });
+        return response.data;
+    } catch (error: any) {
+        throw error;
+    }
+};
+
+/** GET /api/bookings/:id/payment-info — Get payment link or wallet info */
+export interface PaymentInfoResponse {
+    bookingId: number;
+    amount: number;
+    orderCode: number;
+    checkoutUrl?: string;
+    qrCode?: string;
+    accountName?: string;
+    accountNumber?: string;
+    bin?: string;
+    walletBalance: number;
+}
+
+export const getPaymentInfo = async (bookingId: number): Promise<ApiResponse<PaymentInfoResponse>> => {
+    try {
+        const response = await api.get(`/bookings/${bookingId}/payment-info`, {
+            headers: getAuthHeaders(),
+        });
+        return response.data;
+    } catch (error: any) {
+        throw error;
+    }
+};
+
+/** POST /api/bookings/:id/pay-with-wallet — Pay using internal wallet */
+export const payWithWallet = async (bookingId: number): Promise<ApiResponse<any>> => {
+    try {
+        const response = await api.post(`/bookings/${bookingId}/pay-with-wallet`, {}, {
+            headers: getAuthHeaders(),
+        });
+        return response.data;
+    } catch (error: any) {
+        throw error;
+    }
+};
+
+/** GET /api/bookings/:id/payment-status — Check payment status */
+export const getPaymentStatus = async (bookingId: number): Promise<ApiResponse<{ status: string; paymentStatus: string }>> => {
+    try {
+        const response = await api.get(`/bookings/${bookingId}/payment-status`, {
+            headers: getAuthHeaders(),
+        });
+        return response.data;
+    } catch (error: any) {
+        throw error;
+    }
+};

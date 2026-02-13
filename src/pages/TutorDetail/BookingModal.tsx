@@ -64,52 +64,6 @@ const TIME_SLOTS = [
     '17:30', '18:00', '18:30', '19:00', '19:30', '20:00',
 ];
 
-// ===== MOCK DATA =====
-const MOCK_STUDENTS: StudentType[] = [
-    {
-        studentId: 'mock-student-1',
-        parentId: 'mock-parent-1',
-        fullName: 'Nguyễn Minh Anh',
-        birthDate: '2010-05-15',
-        school: 'THCS Lê Quý Đôn',
-        gradeLevel: 'Lớp 8',
-        learningGoals: 'Nâng cao Toán, Lý',
-        avatarURL: '',
-        studentCode: 'STU001',
-        studentCodeExpiresAt: '2027-01-01',
-        createdAt: '2024-09-01',
-        age: 14,
-    },
-    {
-        studentId: 'mock-student-2',
-        parentId: 'mock-parent-1',
-        fullName: 'Nguyễn Gia Bảo',
-        birthDate: '2012-03-22',
-        school: 'THCS Trần Đại Nghĩa',
-        gradeLevel: 'Lớp 6',
-        learningGoals: 'Luyện thi vào lớp chuyên',
-        avatarURL: '',
-        studentCode: 'STU002',
-        studentCodeExpiresAt: '2027-01-01',
-        createdAt: '2024-09-01',
-        age: 12,
-    },
-    {
-        studentId: 'mock-student-3',
-        parentId: 'mock-parent-2',
-        fullName: 'Trần Phương Linh',
-        birthDate: '2008-11-08',
-        school: 'THPT Nguyễn Thị Minh Khai',
-        gradeLevel: 'Lớp 10',
-        learningGoals: 'Chuẩn bị IELTS',
-        avatarURL: '',
-        studentCode: 'STU003',
-        studentCodeExpiresAt: '2027-01-01',
-        createdAt: '2024-10-15',
-        age: 16,
-    },
-];
-
 // ===== HELPERS =====
 const formatPrice = (amount: number) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
@@ -198,7 +152,12 @@ const StepStudentSubject = ({ formData, setFormData, students, loadingStudents, 
         {loadingStudents ? (
             <div className="bm-loading">Đang tải danh sách học sinh...</div>
         ) : students.length === 0 ? (
-            <div className="bm-empty-msg">Chưa có học sinh nào. Vui lòng thêm học sinh trước.</div>
+            <div className="bm-empty-msg">
+                <p>Chưa có hồ sơ học sinh nào.</p>
+                <a href="/parent/student" target="_blank" className="bm-btn-add-student">
+                    + Thêm hồ sơ học sinh
+                </a>
+            </div>
         ) : (
             <div className="bm-student-grid">
                 {students.map((s) => (
@@ -614,11 +573,10 @@ const StepReview = ({ formData, setFormData, hourlyRate, students, availableSubj
             } else {
                 setPromoDiscount(0);
             }
-        } catch {
-            console.error('validatePromotion failed, using mock result');
-            const mockResult = { valid: true, message: '[Mock] Mã hợp lệ! Giảm 10%', code: formData.promotionCode, discountType: 'percentage' as const, discountValue: 10 };
-            setPromoResult(mockResult);
-            setPromoDiscount(estimatedPrice * 0.1);
+        } catch (err: any) {
+            console.error('validatePromotion failed:', err);
+            const msg = err.response?.data?.message || 'Không thể kiểm tra mã khuyến mãi';
+            setPromoResult({ valid: false, message: msg });
         } finally {
             setPromoLoading(false);
         }
@@ -781,10 +739,12 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
             try {
                 const response = await getStudents();
                 const data = response.content || [];
-                setStudents(data.length > 0 ? data : MOCK_STUDENTS);
-            } catch (err) {
-                console.error('Failed to fetch students, using mock data:', err);
-                setStudents(MOCK_STUDENTS);
+                setStudents(data);
+            } catch (err: any) {
+                console.error('Failed to fetch students:', err);
+                const msg = err.response?.data?.message || 'Không thể tải danh sách học sinh';
+                alert(`Lỗi: ${msg}`);
+                setStudents([]);
             } finally {
                 setLoadingStudents(false);
             }
@@ -853,10 +813,11 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
             await createBooking(payload);
             alert('✅ Booking đã được tạo thành công! Gia sư sẽ xác nhận trong thời gian sớm nhất.');
             onClose();
-        } catch (err: unknown) {
-            console.error('createBooking failed, simulating success:', err);
-            alert('✅ [Mock] Booking đã được tạo thành công! (DB chưa sẵn sàng, dữ liệu mock)');
-            onClose();
+        } catch (err: any) {
+            console.error('createBooking failed:', err);
+            const msg = err.response?.data?.message || 'Có lỗi xảy ra khi tạo booking. Vui lòng thử lại.';
+            setSubmitError(msg);
+            // Không đóng modal để user sửa lỗi
         } finally {
             setSubmitting(false);
         }

@@ -4,6 +4,7 @@ import type { ChatMessage } from '../../services/chat.service';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import BookingRequestCard from '../../components/BookingRequestCard/BookingRequestCard';
 
 const tutorAvatarSmall = 'https://www.figma.com/api/mcp/asset/0ff4008a-fd18-4174-9e83-f377eb2a5123';
 
@@ -13,9 +14,10 @@ interface ChatMessagesAreaProps {
   currentUserId: string | null;
   loadMessages: (query?: { page: number; pageSize: number }) => Promise<void>;
   hasMore: boolean;
+  isTutor?: boolean;
 }
 
-const ChatMessagesArea = ({ messages, loading, currentUserId, hasMore, loadMessages }: ChatMessagesAreaProps) => {
+const ChatMessagesArea = ({ messages, loading, currentUserId, hasMore, loadMessages, isTutor = false }: ChatMessagesAreaProps) => {
   const [page, setPage] = useState(1);
   if (loading) {
     return (
@@ -68,6 +70,17 @@ const ChatMessagesArea = ({ messages, loading, currentUserId, hasMore, loadMessa
         scrollableTarget="top-chat-div"
       >
         {messages.map((msg, index) => {
+          if (msg.messageType === 'booking_request') {
+            return (
+              <div key={index} className={styles.systemMessageContainer}>
+                <BookingRequestCard
+                  message={msg}
+                  isTutor={isTutor}
+                />
+              </div>
+            );
+          }
+
           return (
             <MessageBubble
               key={index}

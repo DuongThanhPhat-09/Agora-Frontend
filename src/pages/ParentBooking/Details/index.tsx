@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft,
@@ -13,139 +14,12 @@ import {
     AlertCircle,
     Copy,
 } from 'lucide-react';
+import {
+    getBookingById,
+    type BookingResponseDTO
+} from '../../../services/booking.service';
 import styles from './styles.module.css';
-
-// ===== TYPES =====
-interface ScheduleItem {
-    dayOfWeek: number;
-    startTime: string;
-    endTime: string;
-}
-
-interface BookingDetail {
-    bookingId: number;
-    parentId: string;
-    student: { studentId: string; fullName: string; gradeLevel: string };
-    tutor: { tutorId: string; fullName: string; avatarUrl: string; hourlyRate: number };
-    subject: { subjectId: number; subjectName: string };
-    packageType: string;
-    sessionCount: number;
-    price: number;
-    discountApplied: number;
-    finalPrice: number;
-    platformFee: number;
-    status: string;
-    paymentStatus: string;
-    paymentCode: string;
-    schedule: ScheduleItem[];
-    createdAt: string;
-    paymentDueAt: string | null;
-}
-
-// ===== MOCK DATA =====
-const mockBookingDetail: Record<string, BookingDetail> = {
-    '1': {
-        bookingId: 1,
-        parentId: 'p1',
-        student: { studentId: 's1', fullName: 'Nguyễn Minh An', gradeLevel: 'Grade 8' },
-        tutor: { tutorId: 't1', fullName: 'Trần Thị Hương', avatarUrl: '', hourlyRate: 200000 },
-        subject: { subjectId: 1, subjectName: 'Toán' },
-        packageType: '8_sessions',
-        sessionCount: 8,
-        price: 3200000,
-        discountApplied: 320000,
-        finalPrice: 2880000,
-        platformFee: 288000,
-        status: 'active',
-        paymentStatus: 'paid',
-        paymentCode: 'BK-20250120-001',
-        schedule: [
-            { dayOfWeek: 1, startTime: '14:00', endTime: '16:00' },
-            { dayOfWeek: 4, startTime: '14:00', endTime: '16:00' },
-        ],
-        createdAt: '2025-01-20T10:30:00Z',
-        paymentDueAt: null,
-    },
-    '2': {
-        bookingId: 2,
-        parentId: 'p1',
-        student: { studentId: 's2', fullName: 'Nguyễn Minh Châu', gradeLevel: 'Grade 10' },
-        tutor: { tutorId: 't2', fullName: 'Lê Văn Đức', avatarUrl: '', hourlyRate: 250000 },
-        subject: { subjectId: 2, subjectName: 'Vật Lý' },
-        packageType: '4_sessions',
-        sessionCount: 4,
-        price: 2000000,
-        discountApplied: 0,
-        finalPrice: 2000000,
-        platformFee: 200000,
-        status: 'pending_payment',
-        paymentStatus: 'unpaid',
-        paymentCode: 'BK-20250122-002',
-        schedule: [{ dayOfWeek: 3, startTime: '09:00', endTime: '11:00' }],
-        createdAt: '2025-01-22T08:00:00Z',
-        paymentDueAt: '2025-01-23T08:00:00Z',
-    },
-    '3': {
-        bookingId: 3,
-        parentId: 'p1',
-        student: { studentId: 's1', fullName: 'Nguyễn Minh An', gradeLevel: 'Grade 8' },
-        tutor: { tutorId: 't3', fullName: 'Phạm Thị Mai', avatarUrl: '', hourlyRate: 180000 },
-        subject: { subjectId: 3, subjectName: 'Tiếng Anh' },
-        packageType: '12_sessions',
-        sessionCount: 12,
-        price: 4320000,
-        discountApplied: 432000,
-        finalPrice: 3888000,
-        platformFee: 388800,
-        status: 'pending_tutor',
-        paymentStatus: 'unpaid',
-        paymentCode: 'BK-20250125-003',
-        schedule: [
-            { dayOfWeek: 2, startTime: '15:00', endTime: '16:30' },
-            { dayOfWeek: 5, startTime: '15:00', endTime: '16:30' },
-        ],
-        createdAt: '2025-01-25T14:00:00Z',
-        paymentDueAt: null,
-    },
-    '4': {
-        bookingId: 4,
-        parentId: 'p1',
-        student: { studentId: 's2', fullName: 'Nguyễn Minh Châu', gradeLevel: 'Grade 10' },
-        tutor: { tutorId: 't1', fullName: 'Trần Thị Hương', avatarUrl: '', hourlyRate: 200000 },
-        subject: { subjectId: 4, subjectName: 'Hóa Học' },
-        packageType: '8_sessions',
-        sessionCount: 8,
-        price: 3200000,
-        discountApplied: 0,
-        finalPrice: 3200000,
-        platformFee: 320000,
-        status: 'completed',
-        paymentStatus: 'paid',
-        paymentCode: 'BK-20241210-004',
-        schedule: [{ dayOfWeek: 6, startTime: '08:00', endTime: '10:00' }],
-        createdAt: '2024-12-10T09:00:00Z',
-        paymentDueAt: null,
-    },
-    '5': {
-        bookingId: 5,
-        parentId: 'p1',
-        student: { studentId: 's1', fullName: 'Nguyễn Minh An', gradeLevel: 'Grade 8' },
-        tutor: { tutorId: 't2', fullName: 'Lê Văn Đức', avatarUrl: '', hourlyRate: 250000 },
-        subject: { subjectId: 2, subjectName: 'Vật Lý' },
-        packageType: '4_sessions',
-        sessionCount: 4,
-        price: 2000000,
-        discountApplied: 0,
-        finalPrice: 2000000,
-        platformFee: 200000,
-        status: 'cancelled',
-        paymentStatus: 'unpaid',
-        paymentCode: 'BK-20250118-005',
-        schedule: [{ dayOfWeek: 1, startTime: '10:00', endTime: '12:00' }],
-        createdAt: '2025-01-18T16:00:00Z',
-        paymentDueAt: null,
-    },
-};
+import { message as antMessage, Spin } from 'antd';
 
 // ===== HELPERS =====
 const DAY_NAMES = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
@@ -174,7 +48,7 @@ const formatPackage = (pkg: string) => {
     return map[pkg] || pkg;
 };
 
-const STATUS_CONFIG: Record<string, { label: string; className: string; icon: typeof CheckCircle2 }> = {
+const STATUS_CONFIG: Record<string, { label: string; className: string; icon: React.ElementType }> = {
     pending_tutor: { label: 'Chờ gia sư xác nhận', className: 'statusPending', icon: AlertCircle },
     pending_payment: { label: 'Chờ thanh toán', className: 'statusWarning', icon: Clock },
     active: { label: 'Đang học', className: 'statusActive', icon: CheckCircle2 },
@@ -207,10 +81,36 @@ const getTimelineProgress = (status: string) => {
 
 // ===== COMPONENT =====
 const BookingDetailPage = () => {
-    const { id } = useParams();
+    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const [booking, setBooking] = useState<BookingResponseDTO | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    const booking = mockBookingDetail[id || ''];
+    const bookingId = Number(id);
+
+    useEffect(() => {
+        const fetchBooking = async () => {
+            try {
+                setLoading(true);
+                const res = await getBookingById(bookingId);
+                setBooking(res.content);
+            } catch (error) {
+                antMessage.error('Không thể tải chi tiết đặt lịch.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (bookingId) fetchBooking();
+    }, [bookingId]);
+
+    if (loading) {
+        return (
+            <div className={styles.loadingOverlay}>
+                <Spin size="large" tip="Đang tải chi tiết..." />
+            </div>
+        );
+    }
 
     if (!booking) {
         return (
@@ -243,7 +143,7 @@ const BookingDetailPage = () => {
                 <div className={styles.topBarRight}>
                     <span className={styles.bookingCode}>
                         <Copy size={12} />
-                        {booking.paymentCode}
+                        BK-{booking.bookingId}
                     </span>
                     <span className={`${styles.statusBadgeLg} ${styles[statusCfg.className]}`}>
                         <StatusIcon size={14} />
@@ -453,7 +353,11 @@ const BookingDetailPage = () => {
                             </button>
                         )}
                         {booking.status === 'pending_payment' && (
-                            <button className={styles.payBtn} type="button">
+                            <button
+                                className={styles.payBtn}
+                                type="button"
+                                onClick={() => navigate(`/parent/booking/${booking.bookingId}/payment`)}
+                            >
                                 <CreditCard size={16} />
                                 <span>Thanh toán ngay</span>
                             </button>

@@ -1,127 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, User, BookOpen, Filter, ChevronLeft, ChevronRight, Plus, Eye } from 'lucide-react';
+import { getParentBookings, type BookingResponseDTO } from '../../services/booking.service';
 import styles from './styles.module.css';
+import { message as antMessage, Spin } from 'antd';
 
 // ===== TYPES =====
-interface ScheduleItem {
-  dayOfWeek: number;
-  startTime: string;
-  endTime: string;
-}
 
-interface BookingItem {
-  bookingId: number;
-  student: { studentId: string; fullName: string; gradeLevel: string };
-  tutor: { tutorId: string; fullName: string; avatarUrl: string; hourlyRate: number };
-  subject: { subjectId: number; subjectName: string };
-  packageType: string;
-  sessionCount: number;
-  price: number;
-  discountApplied: number;
-  finalPrice: number;
-  platformFee: number;
-  status: string;
-  paymentStatus: string;
-  schedule: ScheduleItem[];
-  createdAt: string;
-  paymentDueAt: string | null;
-}
-
-// ===== MOCK DATA =====
-const mockBookings: BookingItem[] = [
-  {
-    bookingId: 1,
-    student: { studentId: 's1', fullName: 'Nguyễn Minh An', gradeLevel: 'Grade 8' },
-    tutor: { tutorId: 't1', fullName: 'Trần Thị Hương', avatarUrl: '', hourlyRate: 200000 },
-    subject: { subjectId: 1, subjectName: 'Toán' },
-    packageType: '8_sessions',
-    sessionCount: 8,
-    price: 3200000,
-    discountApplied: 320000,
-    finalPrice: 2880000,
-    platformFee: 288000,
-    status: 'active',
-    paymentStatus: 'paid',
-    schedule: [
-      { dayOfWeek: 1, startTime: '14:00', endTime: '16:00' },
-      { dayOfWeek: 4, startTime: '14:00', endTime: '16:00' },
-    ],
-    createdAt: '2025-01-20T10:30:00Z',
-    paymentDueAt: null,
-  },
-  {
-    bookingId: 2,
-    student: { studentId: 's2', fullName: 'Nguyễn Minh Châu', gradeLevel: 'Grade 10' },
-    tutor: { tutorId: 't2', fullName: 'Lê Văn Đức', avatarUrl: '', hourlyRate: 250000 },
-    subject: { subjectId: 2, subjectName: 'Vật Lý' },
-    packageType: '4_sessions',
-    sessionCount: 4,
-    price: 2000000,
-    discountApplied: 0,
-    finalPrice: 2000000,
-    platformFee: 200000,
-    status: 'pending_payment',
-    paymentStatus: 'unpaid',
-    schedule: [{ dayOfWeek: 3, startTime: '09:00', endTime: '11:00' }],
-    createdAt: '2025-01-22T08:00:00Z',
-    paymentDueAt: '2025-01-23T08:00:00Z',
-  },
-  {
-    bookingId: 3,
-    student: { studentId: 's1', fullName: 'Nguyễn Minh An', gradeLevel: 'Grade 8' },
-    tutor: { tutorId: 't3', fullName: 'Phạm Thị Mai', avatarUrl: '', hourlyRate: 180000 },
-    subject: { subjectId: 3, subjectName: 'Tiếng Anh' },
-    packageType: '12_sessions',
-    sessionCount: 12,
-    price: 4320000,
-    discountApplied: 432000,
-    finalPrice: 3888000,
-    platformFee: 388800,
-    status: 'pending_tutor',
-    paymentStatus: 'unpaid',
-    schedule: [
-      { dayOfWeek: 2, startTime: '15:00', endTime: '16:30' },
-      { dayOfWeek: 5, startTime: '15:00', endTime: '16:30' },
-    ],
-    createdAt: '2025-01-25T14:00:00Z',
-    paymentDueAt: null,
-  },
-  {
-    bookingId: 4,
-    student: { studentId: 's2', fullName: 'Nguyễn Minh Châu', gradeLevel: 'Grade 10' },
-    tutor: { tutorId: 't1', fullName: 'Trần Thị Hương', avatarUrl: '', hourlyRate: 200000 },
-    subject: { subjectId: 4, subjectName: 'Hóa Học' },
-    packageType: '8_sessions',
-    sessionCount: 8,
-    price: 3200000,
-    discountApplied: 0,
-    finalPrice: 3200000,
-    platformFee: 320000,
-    status: 'completed',
-    paymentStatus: 'paid',
-    schedule: [{ dayOfWeek: 6, startTime: '08:00', endTime: '10:00' }],
-    createdAt: '2024-12-10T09:00:00Z',
-    paymentDueAt: null,
-  },
-  {
-    bookingId: 5,
-    student: { studentId: 's1', fullName: 'Nguyễn Minh An', gradeLevel: 'Grade 8' },
-    tutor: { tutorId: 't2', fullName: 'Lê Văn Đức', avatarUrl: '', hourlyRate: 250000 },
-    subject: { subjectId: 2, subjectName: 'Vật Lý' },
-    packageType: '4_sessions',
-    sessionCount: 4,
-    price: 2000000,
-    discountApplied: 0,
-    finalPrice: 2000000,
-    platformFee: 200000,
-    status: 'cancelled',
-    paymentStatus: 'unpaid',
-    schedule: [{ dayOfWeek: 1, startTime: '10:00', endTime: '12:00' }],
-    createdAt: '2025-01-18T16:00:00Z',
-    paymentDueAt: null,
-  },
-];
+// ===== MOCK DATA REMOVED =====
 
 // ===== HELPERS =====
 const STATUS_TABS = [
@@ -166,12 +52,34 @@ const ParentBooking = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [bookings, setBookings] = useState<BookingResponseDTO[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [loading, setLoading] = useState(true);
   const pageSize = 5;
 
-  // Filter
-  const filtered = activeTab === 'all' ? mockBookings : mockBookings.filter((b) => b.status === activeTab);
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const fetchBookings = async () => {
+    try {
+      setLoading(true);
+      const res = await getParentBookings({
+        status: activeTab === 'all' ? undefined : activeTab,
+        page: currentPage,
+        pageSize: pageSize,
+      });
+      setBookings(res.content.content);
+      setTotalItems(res.content.totalElements);
+    } catch (error) {
+      antMessage.error('Không thể tải danh sách đặt lịch.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBookings();
+  }, [activeTab, currentPage]);
+
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const paginated = bookings;
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -199,7 +107,7 @@ const ParentBooking = () => {
             <BookOpen size={20} />
           </div>
           <div className={styles.statInfo}>
-            <span className={styles.statValue}>{mockBookings.length}</span>
+            <span className={styles.statValue}>{totalItems}</span>
             <span className={styles.statLabel}>Tổng bookings</span>
           </div>
         </div>
@@ -208,7 +116,7 @@ const ParentBooking = () => {
             <Calendar size={20} />
           </div>
           <div className={styles.statInfo}>
-            <span className={styles.statValue}>{mockBookings.filter((b) => b.status === 'active').length}</span>
+            <span className={styles.statValue}>{bookings.filter((b) => b.status === 'active').length}</span>
             <span className={styles.statLabel}>Đang học</span>
           </div>
         </div>
@@ -218,7 +126,7 @@ const ParentBooking = () => {
           </div>
           <div className={styles.statInfo}>
             <span className={styles.statValue}>
-              {mockBookings.filter((b) => b.status === 'pending_tutor' || b.status === 'pending_payment').length}
+              {bookings.filter((b) => b.status === 'pending_tutor' || b.status === 'pending_payment').length}
             </span>
             <span className={styles.statLabel}>Đang chờ</span>
           </div>
@@ -237,9 +145,9 @@ const ParentBooking = () => {
               type="button"
             >
               {tab.label}
-              {tab.key !== 'all' && (
+              {tab.key !== 'all' && activeTab === tab.key && (
                 <span className={styles.tabCount}>
-                  {mockBookings.filter((b) => b.status === tab.key).length}
+                  {totalItems}
                 </span>
               )}
             </button>
@@ -249,7 +157,11 @@ const ParentBooking = () => {
 
       {/* Bookings List */}
       <main className={styles.mainContent}>
-        {paginated.length === 0 ? (
+        {loading ? (
+          <div className={styles.loadingContainer}>
+            <Spin size="large" tip="Đang tải danh sách đặt lịch..." />
+          </div>
+        ) : paginated.length === 0 ? (
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}>
               <BookOpen size={48} />

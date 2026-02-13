@@ -97,11 +97,20 @@ const CloseIcon = () => (
     </svg>
 );
 
+const BookingIcon = () => (
+    <svg className="tutor-portal-nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="M11 3V1M7 3V1M3 13V5C3 3.89543 3.89543 3 5 3H13C14.1046 3 15 3.89543 15 5V13C15 14.1046 14.1046 15 13 15H5C3.89543 15 3 14.1046 3 13Z" strokeLinecap="round" />
+        <path d="M7 8L9 10L12 7" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M3 8H15" strokeLinecap="round" />
+    </svg>
+);
+
 // Navigation items matching Figma design
 const navItems = [
     { path: '/tutor-portal/dashboard', label: 'Dashboard', icon: DashboardIcon },
     { path: '/tutor-portal/profile', label: 'Public Profile', icon: ProfileIcon },
     { path: '/tutor-portal/messages', label: 'Messages', icon: MessagesIcon },
+    { path: '/tutor-portal/bookings', label: 'Booking Requests', icon: BookingIcon },
     { path: '/tutor-portal/schedule', label: 'Teaching Schedule', icon: ScheduleIcon },
     { path: '/tutor-portal/classes', label: 'Class Management', icon: ClassIcon },
     { path: '/tutor-portal/sessions', label: 'Sessions', icon: SessionsIcon },
