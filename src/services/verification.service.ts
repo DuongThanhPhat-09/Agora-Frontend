@@ -100,6 +100,7 @@ export const getVerificationStatus = async (): Promise<VerificationResponse | nu
  * User KYC data from /api/users/{id}
  */
 export interface UserKYCData {
+    fullName: string | null;
     isIdentityVerified: boolean;
     idCardFrontUrl: string | null;
     idCardBackUrl: string | null;
@@ -114,7 +115,16 @@ export interface UserKYCData {
 export const getUserKYCData = async (userId: string): Promise<UserKYCData | null> => {
     try {
         const response = await api.get(`/users/${userId}`);
-        const userData = response.data;
+        const responseData = response.data;
+
+        // API returns { content: { ... } } format
+        const userData = responseData.content || responseData;
+
+        // Get fullname from API response
+        const fullName = userData.fullname ||
+            userData.fullName ||
+            userData.FullName ||
+            null;
 
         // Handle different casing from C# backend
         const isVerified = userData.isidentityverified ||
@@ -146,6 +156,7 @@ export const getUserKYCData = async (userId: string): Promise<UserKYCData | null
         }
 
         return {
+            fullName,
             isIdentityVerified: isVerified,
             idCardFrontUrl,
             idCardBackUrl,
