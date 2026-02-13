@@ -59,7 +59,7 @@ const DAY_NAMES = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
 const TIME_SLOTS = [
     '07:00', '07:30', '08:00', '08:30', '09:00', '09:30',
-    '10:00', '10:30', '11:00', '13:00', '13:30', '14:00',
+    '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00',
     '14:30', '15:00', '15:30', '16:00', '16:30', '17:00',
     '17:30', '18:00', '18:30', '19:00', '19:30', '20:00',
 ];
@@ -155,11 +155,11 @@ const isSlotWithinAvailability = (
 
         // Found at least one availability block that covers this 30-min chunk
         const isChunkCovered = availabilities.some((a) => {
-            const aDay = a.dayofweek ?? a.dayOfWeek;
+            const aDay = a.dayofweek;
             if (aDay !== dayOfWeek) return false;
 
-            const aStartStr = a.starttime ?? a.startTime;
-            const aEndStr = a.endtime ?? a.endTime;
+            const aStartStr = a.starttime;
+            const aEndStr = a.endtime;
             if (!aStartStr || !aEndStr) return false;
 
             const [ash, asm] = aStartStr.split(':').map(Number);
@@ -348,10 +348,10 @@ const StepSchedule = ({ formData, setFormData, slotDuration, setSlotDuration, av
         const endMins = startMins + 30;
 
         return availabilities.some((a) => {
-            const aDay = a.dayofweek ?? a.dayOfWeek;
+            const aDay = a.dayofweek;
             if (aDay !== day) return false;
-            const aStartStr = a.starttime ?? a.startTime;
-            const aEndStr = a.endtime ?? a.endTime;
+            const aStartStr = a.starttime;
+            const aEndStr = a.endtime;
             if (!aStartStr || !aEndStr) return false;
             const [ash, asm] = aStartStr.split(':').map(Number);
             const [aeh, aem] = aEndStr.split(':').map(Number);
