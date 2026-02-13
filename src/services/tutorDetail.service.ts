@@ -125,7 +125,7 @@ export const getTutorFullProfile = async (
         console.log('📄 Fetching tutor full profile for:', tutorId);
 
         const response = await api.get<ApiResponse<TutorFullProfile>>(
-            `/tutors/${tutorId}/full-profile-landing-page`
+            `/Tutor/${tutorId}/full-profile-landing-page`
         );
 
         console.log('✅ Tutor full profile fetched:', response.data);

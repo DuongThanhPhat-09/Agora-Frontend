@@ -38,7 +38,7 @@ import type {
   FilterParams,
 } from '../types/admin.types';
 
-const API_BASE_URL = 'http://192.168.1.246:5166/api';
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5166') + '/api';
 
 // Create axios instance
 const api = axios.create({

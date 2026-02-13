@@ -2,7 +2,7 @@
 /* eslint-disable no-useless-catch */
 import axios from "axios";
 
-const API_BASE_URL = "http://:5166/api";
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5166') + '/api';
 const USER_LOCAL_STORAGE_KEY = "agora_user_data"; // Key để lưu thông tin user
 
 const api = axios.create({

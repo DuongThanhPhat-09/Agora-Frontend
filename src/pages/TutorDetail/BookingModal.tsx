@@ -3,7 +3,7 @@ import { getStudents } from '../../services/student.service';
 import { createBooking, validatePromotion } from '../../services/booking.service';
 import type { StudentType } from '../../types/student.type';
 import type { CreateBookingPayload, PromotionValidateResult } from '../../services/booking.service';
-import type { SubjectInfo } from '../../services/tutorDetail.service';
+import type { SubjectInfo, AvailabilitySlot } from '../../services/tutorDetail.service';
 import './BookingModal.css';
 
 // ===== TYPES =====
@@ -21,16 +21,16 @@ interface Subject {
 interface BookingFormData {
     studentId: string;
     subjectId: number;
-    packageType: string;
-    sessionCount: number;
-    hoursPerSession: number;
+    teachingMode: 'online' | 'offline' | 'hybrid';
     schedule: ScheduleSlot[];
-    location: string;
+    locationCity: string;
+    locationDistrict: string;
+    locationWard: string;
+    locationDetail: string;
     promotionCode: string;
 }
 
 // ===== CONSTANTS =====
-// Subjects — hardcoded mapping for names since backend doesn't provide them
 const SUBJECT_MAPPING: Subject[] = [
     { id: 1, name: 'Toán' },
     { id: 2, name: 'Vật Lý' },
@@ -43,13 +43,13 @@ const SUBJECT_MAPPING: Subject[] = [
     { id: 9, name: 'Tin Học' },
 ];
 
-const PACKAGES = [
-    { key: '4_sessions', label: '4 buổi', sessions: 4, discount: 0, tag: '' },
-    { key: '8_sessions', label: '8 buổi', sessions: 8, discount: 10, tag: 'Phổ biến' },
-    { key: '12_sessions', label: '12 buổi', sessions: 12, discount: 15, tag: 'Tiết kiệm nhất' },
+const TEACHING_MODES = [
+    { key: 'online' as const, label: 'Online', icon: '💻', desc: 'Học qua video call' },
+    { key: 'offline' as const, label: 'Tại nhà', icon: '🏠', desc: 'Gia sư đến tận nơi' },
+    { key: 'hybrid' as const, label: 'Linh hoạt', icon: '🔄', desc: 'Kết hợp online & offline' },
 ];
 
-const HOURS_OPTIONS = [
+const DURATION_OPTIONS = [
     { value: 1, label: '1 giờ' },
     { value: 1.5, label: '1.5 giờ' },
     { value: 2, label: '2 giờ' },
@@ -64,7 +64,7 @@ const TIME_SLOTS = [
     '17:30', '18:00', '18:30', '19:00', '19:30', '20:00',
 ];
 
-// ===== MOCK DATA – fallback khi DB chưa sẵn sàng =====
+// ===== MOCK DATA =====
 const MOCK_STUDENTS: StudentType[] = [
     {
         studentId: 'mock-student-1',
@@ -122,6 +122,40 @@ const addHoursToTime = (time: string, hours: number): string => {
     return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
 };
 
+/** Tính tổng giờ từ schedule — giống backend: totalHours = sum(endTime - startTime) × 4 weeks */
+const calcTotalHoursFromSchedule = (schedule: ScheduleSlot[]): number => {
+    let totalHours = 0;
+    for (const slot of schedule) {
+        const [sh, sm] = slot.startTime.split(':').map(Number);
+        const [eh, em] = slot.endTime.split(':').map(Number);
+        const duration = (eh * 60 + em - sh * 60 - sm) / 60;
+        totalHours += duration * 4; // 4 weeks per month
+    }
+    return totalHours;
+};
+
+/** Check if a slot fits within tutor's availability for that day */
+const isSlotWithinAvailability = (
+    dayOfWeek: number,
+    startTime: string,
+    endTime: string,
+    availabilities: AvailabilitySlot[]
+): boolean => {
+    const [sh, sm] = startTime.split(':').map(Number);
+    const [eh, em] = endTime.split(':').map(Number);
+    const slotStart = sh * 60 + sm;
+    const slotEnd = eh * 60 + em;
+
+    return availabilities.some((a) => {
+        if (a.dayofweek !== dayOfWeek) return false;
+        const [ah, am] = a.starttime.split(':').map(Number);
+        const [bh, bm] = a.endtime.split(':').map(Number);
+        const availStart = ah * 60 + am;
+        const availEnd = bh * 60 + bm;
+        return slotStart >= availStart && slotEnd <= availEnd;
+    });
+};
+
 // ===== STEP COMPONENTS =====
 
 interface StepProps {
@@ -131,6 +165,9 @@ interface StepProps {
     students: StudentType[];
     loadingStudents: boolean;
     availableSubjects: Subject[];
+    availabilities: AvailabilitySlot[];
+    slotDuration: number;
+    setSlotDuration: React.Dispatch<React.SetStateAction<number>>;
 }
 
 // Step 1: Select Student & Subject
@@ -186,81 +223,117 @@ const StepStudentSubject = ({ formData, setFormData, students, loadingStudents, 
     </div>
 );
 
-// Step 2: Select Package & Duration
-const StepPackage = ({ formData, setFormData, hourlyRate }: StepProps) => (
-    <div className="bm-step">
-        <div className="bm-step-title">Chọn gói buổi</div>
-        <div className="bm-package-grid">
-            {PACKAGES.map((pkg) => {
-                const pricePerSession = hourlyRate * (formData.hoursPerSession || 2);
-                const totalPrice = pricePerSession * pkg.sessions;
-                const discountedPrice = totalPrice * (1 - pkg.discount / 100);
-                return (
+// Step 2: Teaching Mode & Location
+const StepTeachingMode = ({ formData, setFormData }: StepProps) => {
+    const needsLocation = formData.teachingMode === 'offline' || formData.teachingMode === 'hybrid';
+
+    return (
+        <div className="bm-step">
+            <div className="bm-step-title">Hình thức học</div>
+            <div className="bm-teaching-mode-grid">
+                {TEACHING_MODES.map((mode) => (
                     <div
-                        key={pkg.key}
-                        className={`bm-package-card ${formData.packageType === pkg.key ? 'selected' : ''}`}
-                        onClick={() =>
-                            setFormData((d) => ({ ...d, packageType: pkg.key, sessionCount: pkg.sessions }))
-                        }
+                        key={mode.key}
+                        className={`bm-teaching-mode-card ${formData.teachingMode === mode.key ? 'selected' : ''}`}
+                        onClick={() => setFormData((d) => ({
+                            ...d,
+                            teachingMode: mode.key,
+                            ...(mode.key === 'online' ? { locationCity: '', locationDistrict: '', locationWard: '', locationDetail: '' } : {})
+                        }))}
                     >
-                        {pkg.tag && <div className="bm-package-tag">{pkg.tag}</div>}
-                        <div className="bm-package-sessions">{pkg.label}</div>
-                        <div className="bm-package-price">{formatPrice(discountedPrice)}</div>
-                        {pkg.discount > 0 && (
-                            <div className="bm-package-discount">
-                                <span className="bm-package-original">{formatPrice(totalPrice)}</span>
-                                <span className="bm-package-save">-{pkg.discount}%</span>
-                            </div>
-                        )}
-                        {formData.packageType === pkg.key && <div className="bm-check">✓</div>}
+                        <div className="bm-teaching-mode-icon">{mode.icon}</div>
+                        <div className="bm-teaching-mode-info">
+                            <span className="bm-teaching-mode-label">{mode.label}</span>
+                            <span className="bm-teaching-mode-desc">{mode.desc}</span>
+                        </div>
+                        {formData.teachingMode === mode.key && <div className="bm-check">✓</div>}
                     </div>
-                );
-            })}
-        </div>
+                ))}
+            </div>
 
-        <div className="bm-step-title" style={{ marginTop: 24 }}>Thời lượng mỗi buổi</div>
-        <div className="bm-hours-grid">
-            {HOURS_OPTIONS.map((opt) => (
-                <button
-                    key={opt.value}
-                    className={`bm-hours-btn ${formData.hoursPerSession === opt.value ? 'selected' : ''}`}
-                    onClick={() => setFormData((d) => ({ ...d, hoursPerSession: opt.value }))}
-                    type="button"
-                >
-                    {opt.label}
-                </button>
-            ))}
+            {needsLocation && (
+                <div className="bm-location-section">
+                    <div className="bm-step-title" style={{ marginTop: 28 }}>
+                        Địa điểm học
+                        <span className="bm-required-badge">Bắt buộc</span>
+                    </div>
+                    <div className="bm-location-form">
+                        <div className="bm-form-row">
+                            <div className="bm-form-group">
+                                <label className="bm-form-label">Tỉnh / Thành phố *</label>
+                                <input
+                                    type="text"
+                                    className="bm-form-input"
+                                    placeholder="VD: Hồ Chí Minh"
+                                    value={formData.locationCity}
+                                    onChange={(e) => setFormData((d) => ({ ...d, locationCity: e.target.value }))}
+                                />
+                            </div>
+                            <div className="bm-form-group">
+                                <label className="bm-form-label">Quận / Huyện *</label>
+                                <input
+                                    type="text"
+                                    className="bm-form-input"
+                                    placeholder="VD: Quận 1"
+                                    value={formData.locationDistrict}
+                                    onChange={(e) => setFormData((d) => ({ ...d, locationDistrict: e.target.value }))}
+                                />
+                            </div>
+                        </div>
+                        <div className="bm-form-row">
+                            <div className="bm-form-group">
+                                <label className="bm-form-label">Phường / Xã</label>
+                                <input
+                                    type="text"
+                                    className="bm-form-input"
+                                    placeholder="VD: Phường Bến Nghé"
+                                    value={formData.locationWard}
+                                    onChange={(e) => setFormData((d) => ({ ...d, locationWard: e.target.value }))}
+                                />
+                            </div>
+                            <div className="bm-form-group">
+                                <label className="bm-form-label">Địa chỉ cụ thể</label>
+                                <input
+                                    type="text"
+                                    className="bm-form-input"
+                                    placeholder="VD: 123 Nguyễn Huệ"
+                                    value={formData.locationDetail}
+                                    onChange={(e) => setFormData((d) => ({ ...d, locationDetail: e.target.value }))}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
+    );
+};
 
-        <div className="bm-step-title" style={{ marginTop: 24 }}>Hình thức học</div>
-        <div className="bm-location-grid">
-            {['Online', 'Offline', 'Hybrid'].map((loc) => (
-                <button
-                    key={loc}
-                    className={`bm-location-btn ${formData.location === loc ? 'selected' : ''}`}
-                    onClick={() => setFormData((d) => ({ ...d, location: loc }))}
-                    type="button"
-                >
-                    {loc === 'Online' && '💻 '}
-                    {loc === 'Offline' && '🏠 '}
-                    {loc === 'Hybrid' && '🔄 '}
-                    {loc}
-                </button>
-            ))}
-        </div>
-    </div>
-);
+// Step 3: Schedule Picker — with availability validation
+const StepSchedule = ({ formData, setFormData, slotDuration, setSlotDuration, availabilities }: StepProps) => {
+    const [toast, setToast] = useState<string | null>(null);
 
-// Step 3: Schedule Picker
-const StepSchedule = ({ formData, setFormData }: StepProps) => {
+    useEffect(() => {
+        if (!toast) return;
+        const timer = setTimeout(() => setToast(null), 4000);
+        return () => clearTimeout(timer);
+    }, [toast]);
+
     const toggleSlot = (dayOfWeek: number, startTime: string) => {
-        const endTime = addHoursToTime(startTime, formData.hoursPerSession || 2);
+        const endTime = addHoursToTime(startTime, slotDuration);
         setFormData((d) => {
             const exists = d.schedule.find(
                 (s) => s.dayOfWeek === dayOfWeek && s.startTime === startTime
             );
             if (exists) {
                 return { ...d, schedule: d.schedule.filter((s) => !(s.dayOfWeek === dayOfWeek && s.startTime === startTime)) };
+            }
+            // Validate against tutor availability
+            if (availabilities.length > 0 && !isSlotWithinAvailability(dayOfWeek, startTime, endTime, availabilities)) {
+                setToast(
+                    `⚠️ ${DAY_NAMES[dayOfWeek]} ${startTime}–${endTime} vượt ngoài lịch rảnh của gia sư. Hãy chọn slot khác hoặc giảm thời lượng.`
+                );
+                return d;
             }
             return { ...d, schedule: [...d.schedule, { dayOfWeek, startTime, endTime }] };
         });
@@ -269,12 +342,57 @@ const StepSchedule = ({ formData, setFormData }: StepProps) => {
     const isSelected = (day: number, time: string) =>
         formData.schedule.some((s) => s.dayOfWeek === day && s.startTime === time);
 
+    /** Check if a cell is within tutor availability (available to book) */
+    const isSlotAvailable = (day: number, time: string): boolean => {
+        if (availabilities.length === 0) return true; // No data = allow all
+        const endTime = addHoursToTime(time, slotDuration);
+        return isSlotWithinAvailability(day, time, endTime, availabilities);
+    };
+
+    const slotsPerWeek = formData.schedule.length;
+    const sessionCount = slotsPerWeek * 4;
+
     return (
         <div className="bm-step">
+            {/* Toast warning */}
+            {toast && (
+                <div className="bm-toast-warning">
+                    <span>{toast}</span>
+                    <button className="bm-toast-close" onClick={() => setToast(null)} type="button">✕</button>
+                </div>
+            )}
+
             <div className="bm-step-title">Chọn lịch học hàng tuần</div>
             <p className="bm-step-desc">
-                Chọn ít nhất 1 slot. Mỗi buổi kéo dài {formData.hoursPerSession || 2} giờ.
+                Chọn các slot phù hợp. Hệ thống tính: <strong>{slotsPerWeek} slot/tuần × 4 tuần = {sessionCount} buổi/tháng</strong>.
             </p>
+
+            {/* Duration selector */}
+            <div className="bm-duration-section">
+                <span className="bm-duration-label">Thời lượng mỗi slot:</span>
+                <div className="bm-hours-grid">
+                    {DURATION_OPTIONS.map((opt) => (
+                        <button
+                            key={opt.value}
+                            className={`bm-hours-btn ${slotDuration === opt.value ? 'selected' : ''}`}
+                            onClick={() => {
+                                setSlotDuration(opt.value);
+                                // Update endTime for all existing slots
+                                setFormData((d) => ({
+                                    ...d,
+                                    schedule: d.schedule.map((s) => ({
+                                        ...s,
+                                        endTime: addHoursToTime(s.startTime, opt.value),
+                                    })),
+                                }));
+                            }}
+                            type="button"
+                        >
+                            {opt.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
 
             <div className="bm-schedule-table">
                 <div className="bm-schedule-header">
@@ -287,13 +405,17 @@ const StepSchedule = ({ formData, setFormData }: StepProps) => {
                     {TIME_SLOTS.map((time) => (
                         <div key={time} className="bm-schedule-row">
                             <div className="bm-schedule-time">{time}</div>
-                            {[1, 2, 3, 4, 5, 6, 0].map((day) => (
-                                <div
-                                    key={day}
-                                    className={`bm-schedule-cell ${isSelected(day, time) ? 'selected' : ''}`}
-                                    onClick={() => toggleSlot(day, time)}
-                                />
-                            ))}
+                            {[1, 2, 3, 4, 5, 6, 0].map((day) => {
+                                const available = isSlotAvailable(day, time);
+                                return (
+                                    <div
+                                        key={day}
+                                        className={`bm-schedule-cell ${isSelected(day, time) ? 'selected' : ''} ${!available ? 'unavailable' : ''}`}
+                                        onClick={() => available && toggleSlot(day, time)}
+                                        title={!available ? 'Gia sư không rảnh khung giờ này' : ''}
+                                    />
+                                );
+                            })}
                         </div>
                     ))}
                 </div>
@@ -301,7 +423,7 @@ const StepSchedule = ({ formData, setFormData }: StepProps) => {
 
             {formData.schedule.length > 0 && (
                 <div className="bm-selected-slots">
-                    <div className="bm-step-title" style={{ fontSize: 13 }}>Đã chọn ({formData.schedule.length} slot)</div>
+                    <div className="bm-step-title" style={{ fontSize: 13 }}>Đã chọn ({formData.schedule.length} slot/tuần → {sessionCount} buổi/tháng)</div>
                     <div className="bm-slot-tags">
                         {formData.schedule.map((s, i) => (
                             <span key={i} className="bm-slot-tag">
@@ -331,27 +453,29 @@ const StepSchedule = ({ formData, setFormData }: StepProps) => {
 const StepReview = ({ formData, setFormData, hourlyRate, students, availableSubjects }: StepProps) => {
     const student = students.find((s) => s.studentId === formData.studentId);
     const subject = availableSubjects.find((s) => s.id === formData.subjectId);
-    const pkg = PACKAGES.find((p) => p.key === formData.packageType);
-    const pricePerSession = hourlyRate * formData.hoursPerSession;
-    const totalPrice = pricePerSession * formData.sessionCount;
-    const discount = pkg ? totalPrice * (pkg.discount / 100) : 0;
-    const finalPrice = totalPrice - discount;
+    const teachingModeInfo = TEACHING_MODES.find((m) => m.key === formData.teachingMode);
+
+    // Replicate backend calculation: hourlyRate × totalHours
+    const totalHours = calcTotalHoursFromSchedule(formData.schedule);
+    const estimatedPrice = hourlyRate * totalHours;
 
     const [promoResult, setPromoResult] = useState<PromotionValidateResult | null>(null);
     const [promoLoading, setPromoLoading] = useState(false);
     const [promoDiscount, setPromoDiscount] = useState(0);
 
+    const slotsPerWeek = formData.schedule.length;
+    const sessionCount = slotsPerWeek * 4;
+
     const handlePromoValidate = async () => {
         if (!formData.promotionCode) return;
         setPromoLoading(true);
         try {
-            const response = await validatePromotion(formData.promotionCode, finalPrice);
+            const response = await validatePromotion(formData.promotionCode, estimatedPrice);
             const result = response.content;
             setPromoResult(result);
             if (result.valid) {
-                // Calculate discount based on type
                 if (result.discountType === 'percentage' && result.discountValue) {
-                    let calcDiscount = finalPrice * (result.discountValue / 100);
+                    let calcDiscount = estimatedPrice * (result.discountValue / 100);
                     if (result.maxDiscountAmount && calcDiscount > result.maxDiscountAmount) {
                         calcDiscount = result.maxDiscountAmount;
                     }
@@ -363,15 +487,16 @@ const StepReview = ({ formData, setFormData, hourlyRate, students, availableSubj
                 setPromoDiscount(0);
             }
         } catch {
-            // DB chưa sẵn sàng → mock promotion result
             console.error('validatePromotion failed, using mock result');
             const mockResult = { valid: true, message: '[Mock] Mã hợp lệ! Giảm 10%', code: formData.promotionCode, discountType: 'percentage' as const, discountValue: 10 };
             setPromoResult(mockResult);
-            setPromoDiscount(finalPrice * 0.1);
+            setPromoDiscount(estimatedPrice * 0.1);
         } finally {
             setPromoLoading(false);
         }
     };
+
+    const finalEstimate = estimatedPrice - promoDiscount;
 
     return (
         <div className="bm-step">
@@ -388,12 +513,26 @@ const StepReview = ({ formData, setFormData, hourlyRate, students, availableSubj
                     <span className="bm-review-value">{subject?.name}</span>
                 </div>
                 <div className="bm-review-row">
-                    <span className="bm-review-label">Gói</span>
-                    <span className="bm-review-value">{pkg?.label} • {formData.hoursPerSession}h/buổi</span>
+                    <span className="bm-review-label">Hình thức</span>
+                    <span className="bm-review-value">{teachingModeInfo?.icon} {teachingModeInfo?.label}</span>
+                </div>
+                {(formData.teachingMode === 'offline' || formData.teachingMode === 'hybrid') && (
+                    <div className="bm-review-row">
+                        <span className="bm-review-label">Địa điểm</span>
+                        <span className="bm-review-value">
+                            {[formData.locationDetail, formData.locationWard, formData.locationDistrict, formData.locationCity]
+                                .filter(Boolean)
+                                .join(', ')}
+                        </span>
+                    </div>
+                )}
+                <div className="bm-review-row">
+                    <span className="bm-review-label">Số buổi/tháng</span>
+                    <span className="bm-review-value">{sessionCount} buổi ({slotsPerWeek} slot/tuần)</span>
                 </div>
                 <div className="bm-review-row">
-                    <span className="bm-review-label">Hình thức</span>
-                    <span className="bm-review-value">{formData.location}</span>
+                    <span className="bm-review-label">Tổng giờ/tháng</span>
+                    <span className="bm-review-value">{totalHours} giờ</span>
                 </div>
                 <div className="bm-review-row">
                     <span className="bm-review-label">Lịch học</span>
@@ -439,18 +578,15 @@ const StepReview = ({ formData, setFormData, hourlyRate, students, availableSubj
                 )}
             </div>
 
-            {/* Price Breakdown */}
+            {/* Price Estimate */}
             <div className="bm-price-section">
-                <div className="bm-price-row">
-                    <span>Giá gốc ({formData.sessionCount} buổi × {formData.hoursPerSession}h × {formatPrice(hourlyRate)}/h)</span>
-                    <span>{formatPrice(totalPrice)}</span>
+                <div className="bm-price-note">
+                    💡 Giá ước tính — giá cuối cùng sẽ được tính chính xác bởi hệ thống.
                 </div>
-                {discount > 0 && (
-                    <div className="bm-price-row discount">
-                        <span>Giảm giá gói ({pkg?.discount}%)</span>
-                        <span>-{formatPrice(discount)}</span>
-                    </div>
-                )}
+                <div className="bm-price-row">
+                    <span>Giá gốc ({totalHours} giờ × {formatPrice(hourlyRate)}/h)</span>
+                    <span>{formatPrice(estimatedPrice)}</span>
+                </div>
                 {promoResult?.valid && promoDiscount > 0 && (
                     <div className="bm-price-row discount">
                         <span>Mã khuyến mãi ({promoResult.code})</span>
@@ -459,8 +595,8 @@ const StepReview = ({ formData, setFormData, hourlyRate, students, availableSubj
                 )}
                 <div className="bm-price-divider" />
                 <div className="bm-price-row total">
-                    <span>Tổng thanh toán</span>
-                    <span>{formatPrice(finalPrice - promoDiscount)}</span>
+                    <span>Ước tính thanh toán</span>
+                    <span>{formatPrice(Math.max(0, finalEstimate))}</span>
                 </div>
             </div>
         </div>
@@ -475,29 +611,32 @@ interface BookingModalProps {
     tutorId: string;
     hourlyRate: number;
     subjects: SubjectInfo[];
+    availabilities?: AvailabilitySlot[] | null;
 }
 
 const STEPS = [
     { key: 'student', label: 'Học sinh & Môn' },
-    { key: 'package', label: 'Gói & Thời lượng' },
+    { key: 'mode', label: 'Hình thức' },
     { key: 'schedule', label: 'Lịch học' },
     { key: 'review', label: 'Xác nhận' },
 ];
 
-const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subjects }: BookingModalProps) => {
+const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subjects, availabilities }: BookingModalProps) => {
     const [step, setStep] = useState(0);
     const [students, setStudents] = useState<StudentType[]>([]);
     const [loadingStudents, setLoadingStudents] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
+    const [slotDuration, setSlotDuration] = useState(2);
     const [formData, setFormData] = useState<BookingFormData>({
         studentId: '',
         subjectId: 0,
-        packageType: '',
-        sessionCount: 0,
-        hoursPerSession: 2,
+        teachingMode: 'online',
         schedule: [],
-        location: 'Online',
+        locationCity: '',
+        locationDistrict: '',
+        locationWard: '',
+        locationDetail: '',
         promotionCode: '',
     });
 
@@ -506,7 +645,7 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
         subjects.some(tutorSubj => tutorSubj.subjectId === s.id)
     );
 
-    // Fetch students on modal open – fallback to mock data if API fails
+    // Fetch students on modal open
     useEffect(() => {
         if (!isOpen) return;
         const fetchStudents = async () => {
@@ -530,14 +669,16 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
         if (!isOpen) {
             setStep(0);
             setSubmitError(null);
+            setSlotDuration(2);
             setFormData({
                 studentId: '',
                 subjectId: 0,
-                packageType: '',
-                sessionCount: 0,
-                hoursPerSession: 2,
+                teachingMode: 'online',
                 schedule: [],
-                location: 'Online',
+                locationCity: '',
+                locationDistrict: '',
+                locationWard: '',
+                locationDetail: '',
                 promotionCode: '',
             });
         }
@@ -548,7 +689,12 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
     const canNext = () => {
         switch (step) {
             case 0: return formData.studentId !== '' && formData.subjectId !== 0;
-            case 1: return formData.packageType !== '' && formData.hoursPerSession > 0;
+            case 1: {
+                if (formData.teachingMode === 'offline' || formData.teachingMode === 'hybrid') {
+                    return formData.locationCity.trim() !== '' && formData.locationDistrict.trim() !== '';
+                }
+                return true;
+            }
             case 2: return formData.schedule.length > 0;
             case 3: return true;
             default: return false;
@@ -563,15 +709,16 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
                 studentId: formData.studentId,
                 tutorId: tutorId,
                 subjectId: formData.subjectId,
-                packageType: formData.packageType as CreateBookingPayload['packageType'],
-                sessionCount: formData.sessionCount,
-                hoursPerSession: formData.hoursPerSession,
+                teachingMode: formData.teachingMode,
                 schedule: formData.schedule.map((s) => ({
                     dayOfWeek: s.dayOfWeek,
                     startTime: s.startTime,
                     endTime: s.endTime,
                 })),
-                locationDetail: formData.location, // Map Location (Online/Offline) to locationDetail
+                locationCity: formData.locationCity || undefined,
+                locationDistrict: formData.locationDistrict || undefined,
+                locationWard: formData.locationWard || undefined,
+                locationDetail: formData.locationDetail || undefined,
                 promotionCode: formData.promotionCode || undefined,
             };
 
@@ -579,7 +726,6 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
             alert('✅ Booking đã được tạo thành công! Gia sư sẽ xác nhận trong thời gian sớm nhất.');
             onClose();
         } catch (err: unknown) {
-            // DB chưa sẵn sàng → mock success
             console.error('createBooking failed, simulating success:', err);
             alert('✅ [Mock] Booking đã được tạo thành công! (DB chưa sẵn sàng, dữ liệu mock)');
             onClose();
@@ -594,7 +740,10 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
         hourlyRate,
         students,
         loadingStudents,
-        availableSubjects
+        availableSubjects,
+        availabilities: availabilities || [],
+        slotDuration,
+        setSlotDuration,
     };
 
     return (
@@ -625,7 +774,7 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
                 {/* Step Content */}
                 <div className="bm-body">
                     {step === 0 && <StepStudentSubject {...stepProps} />}
-                    {step === 1 && <StepPackage {...stepProps} />}
+                    {step === 1 && <StepTeachingMode {...stepProps} />}
                     {step === 2 && <StepSchedule {...stepProps} />}
                     {step === 3 && <StepReview {...stepProps} />}
                 </div>

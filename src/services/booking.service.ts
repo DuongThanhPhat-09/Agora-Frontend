@@ -19,18 +19,20 @@ export interface ScheduleItemPayload {
     endTime: string;    // HH:mm
 }
 
+/**
+ * Matches backend CreateBookingDTO exactly.
+ * Backend auto-calculates: sessionCount, price, finalPrice, fees.
+ */
 export interface CreateBookingPayload {
     studentId: string;
     tutorId: string;
     subjectId: number;
-    packageType: '4_sessions' | '8_sessions' | '12_sessions';
-    sessionCount: number;
-    hoursPerSession: number;
+    teachingMode: 'online' | 'offline' | 'hybrid';
     schedule: ScheduleItemPayload[];
     locationCity?: string;
     locationDistrict?: string;
     locationWard?: string;
-    locationDetail?: string; // Map "Online/Offline" here
+    locationDetail?: string;
     promotionCode?: string;
 }
 

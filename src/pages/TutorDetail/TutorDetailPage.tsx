@@ -489,6 +489,7 @@ const TutorDetailPage = () => {
                 tutorId={id || ""}
                 hourlyRate={profile.hourlyRate || 0}
                 subjects={profile.subjects || []}
+                availabilities={profile.availabilities}
             />
         </div>
     );
