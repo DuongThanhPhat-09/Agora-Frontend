@@ -1,895 +1,560 @@
-/* Main Content Area */
-.mainContent {
-    display: flex;
-    flex: 1 0 0;
-    flex-direction: column;
-    align-items: flex-start;
-    height: 100dvh;
-    min-height: 100dvh;
-    position: relative;
+/* ===== PARENT DASHBOARD ===== */
+
+.dashboard {
     width: 100%;
-    background-color: #fafafa;
+    min-height: 100%;
 }
 
 .container {
     display: flex;
     flex-direction: column;
     gap: 24px;
-    align-items: flex-start;
-    max-width: 1280px;
-    padding-left: 24px;
-    padding-right: 24px;
-    padding-top: 32px;
-    padding-bottom: 32px;
-    position: relative;
-    flex-shrink: 0;
+    padding: 32px 24px;
     width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
-/* Hero Card */
-.heroCard {
-    background-color: #ffffff;
-    border: 1px solid #e5e5e5;
+/* ===== WELCOME BANNER ===== */
+.welcomeBanner {
+    background: linear-gradient(135deg, #1a2238 0%, #631b1b 100%);
+    border-radius: 12px;
+    padding: 32px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.welcomeContent {
     display: flex;
     flex-direction: column;
-    gap: 24px;
-    align-items: flex-start;
-    padding: 33px;
-    position: relative;
-    border-radius: 12px;
-    flex-shrink: 0;
-    width: 100%;
+    gap: 4px;
 }
 
-.heroCardHeading {
-    flex-shrink: 0;
-    width: 100%;
-    margin-bottom: 0;
-}
-
-.heroCardHeading h2 {
+.welcomeTitle {
+    font-family: 'Bricolage Grotesque', 'IBM Plex Sans', sans-serif;
     font-size: 24px;
     line-height: 32px;
-    color: #171717;
-    font-family: var(--font-primary), 'Nimbus Sans', sans-serif;
-    font-weight: 400;
-    font-style: normal;
+    font-weight: 700;
+    color: #ffffff;
     margin: 0;
 }
 
-.statsContainer {
-    display: flex;
-    gap: 32px;
-    align-items: stretch;
-    justify-content: center;
-    width: 100%;
+.welcomeSubtitle {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
 }
 
-/* Attendance Stats */
-.attendanceStats {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex: 1;
+.welcomeDate {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 8px;
+}
+
+/* ===== STATS GRID ===== */
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
-}
-
-.attendanceCircle {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 128px;
-    height: 128px;
-    background-color: #e5e5e5;
-    border-radius: 9999px;
-}
-
-.attendanceValue {
-    font-size: 24px;
-    line-height: 32px;
-    color: #171717;
-    text-align: center;
-    font-family: 'Nimbus Sans', sans-serif;
-    font-weight: 400;
-}
-
-.attendanceLabel {
-    font-size: 12px;
-    line-height: 16px;
-    color: #525252;
-    text-align: center;
-    font-family: 'Nimbus Sans', sans-serif;
-    margin-top: 4px;
-}
-
-.attendanceDetails {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.attendanceTitle {
-    font-size: 14px;
-    line-height: 20px;
-    color: #171717;
-    text-align: center;
-    font-family: 'Nimbus Sans', sans-serif;
-    font-weight: 400;
-}
-
-.attendanceInfo {
-    font-size: 12px;
-    line-height: 16px;
-    color: #525252;
-    text-align: center;
-    font-family: 'Nimbus Sans', sans-serif;
-    margin-top: 4px;
-}
-
-.attendanceLink {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.attendanceLink a {
-    font-size: 12px;
-    line-height: 16px;
-    color: #404040;
-    text-decoration: underline;
-    font-family: 'Nimbus Sans', sans-serif;
-    cursor: pointer;
-}
-
-/* Grade Stats */
-.gradeStats {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex: 1;
-    gap: 16px;
-}
-
-.gradeBackground {
-    height: 128px;
-    width: 100%;
-    background-color: #e5e5e5;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-}
-
-.gradeValue {
-    font-size: 24px;
-    line-height: 32px;
-    color: #171717;
-    text-align: center;
-    font-family: 'Nimbus Sans', sans-serif;
-    font-weight: 400;
-}
-
-.gradeLabel {
-    font-size: 12px;
-    line-height: 16px;
-    color: #525252;
-    text-align: center;
-    font-family: 'Nimbus Sans', sans-serif;
-    margin-top: 4px;
-}
-
-.gradeChange {
-    font-size: 12px;
-    line-height: 16px;
-    color: #404040;
-    text-align: center;
-    font-family: 'Nimbus Sans', sans-serif;
-    margin-top: 4px;
-}
-
-.gradeTrendContainer {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    justify-content: center;
-}
-
-.gradeTrendLabel {
-    font-size: 14px;
-    line-height: 20px;
-    color: #171717;
-    text-align: center;
-    font-family: 'Nimbus Sans', sans-serif;
-    font-weight: 400;
-}
-
-.gradeTrendSelect {
-    border: 1px solid #d4d4d4;
-    border-radius: 4px;
-    height: 22px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    padding: 0 8px;
-    font-size: 12px;
-    color: #525252;
-    cursor: pointer;
-    font-family: 'Nimbus Sans', sans-serif;
-    background: transparent;
-}
-
-.gradeTrendSelect span {
-    white-space: nowrap;
-}
-
-.gradeTrendArrow {
-    margin-left: 4px;
-    width: 10px;
-    height: 12px;
-}
-
-.gradeBasis {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.gradeBasis span {
-    font-size: 12px;
-    line-height: 16px;
-    color: #525252;
-    text-align: center;
-    font-family: 'Nimbus Sans', sans-serif;
-}
-
-.gradeLink {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.gradeLink a {
-    font-size: 12px;
-    line-height: 16px;
-    color: #404040;
-    text-decoration: underline;
-    font-family: 'Nimbus Sans', sans-serif;
-    cursor: pointer;
-}
-
-/* Wallet Stats */
-.walletStats {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex: 1;
-    gap: 16px;
-}
-
-.walletBackground {
-    height: 128px;
-    width: 100%;
-    background-color: #171717;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-}
-
-.walletValue {
-    font-size: 24px;
-    line-height: 32px;
-    color: #ffffff;
-    text-align: center;
-    font-family: 'Nimbus Sans', sans-serif;
-    font-weight: 400;
-}
-
-.walletLabel {
-    font-size: 12px;
-    line-height: 16px;
-    color: #a3a3a3;
-    text-align: center;
-    font-family: 'Nimbus Sans', sans-serif;
-    margin-top: 4px;
-}
-
-.walletDue {
-    font-size: 12px;
-    line-height: 16px;
-    color: #a3a3a3;
-    text-align: center;
-    font-family: 'Nimbus Sans', sans-serif;
-    margin-top: 4px;
-}
-
-.walletStatus {
-    font-size: 12px;
-    line-height: 16px;
-    color: #a3a3a3;
-    text-align: center;
-    font-family: 'Nimbus Sans', sans-serif;
-    margin-top: 4px;
-}
-
-.walletPaymentContainer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.walletPaymentLabel {
-    font-size: 14px;
-    line-height: 20px;
-    color: #171717;
-    text-align: center;
-    font-family: 'Nimbus Sans', sans-serif;
-    font-weight: 400;
-}
-
-.walletButton {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 4px 12px;
-    border-radius: 4px;
-    background-color: #171717;
-    border: none;
-    cursor: pointer;
-}
-
-.walletButton span {
-    font-size: 12px;
-    line-height: 16px;
-    color: #ffffff;
-    text-align: center;
-    font-family: 'Nimbus Sans', sans-serif;
-}
-
-/* Insights Box */
-.insightsBox {
-    background-color: #fafafa;
-    border: 1px solid #e5e5e5;
-    border-radius: 8px;
-    flex-shrink: 0;
     width: 100%;
 }
 
-.insightsContent {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    align-items: flex-start;
-    padding: 17px;
-}
-
-.insightItem {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-}
-
-.insightItem span {
-    font-size: 14px;
-    line-height: 20px;
-    color: #404040;
-    font-family: 'Nimbus Sans', sans-serif;
-}
-
-.insightItem a {
-    font-size: 14px;
-    line-height: 20px;
-    color: #404040;
-    font-family: 'Nimbus Sans', sans-serif;
-    text-decoration: underline;
-    cursor: pointer;
-}
-
-.insightItem img {
-    width: 16px;
-    height: 20px;
-    flex-shrink: 0;
-    margin-top: 2px;
-}
-
-/* Quick Actions */
-.quickActions {
-    display: flex;
-    gap: 16px;
-    align-items: stretch;
-    flex-shrink: 0;
-    width: 100%;
-}
-
-.quickActionContainer {
-    display: flex;
-    flex: 1 0 0;
-    flex-direction: column;
-    align-items: flex-start;
-    min-height: 1px;
-    min-width: 1px;
-    position: relative;
-    align-self: stretch;
-}
-
-.quickActionButton {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    border-radius: 8px;
-    flex: 1;
-    width: 100%;
-    gap: 8px;
-    cursor: pointer;
-    border: 1px solid #e5e5e5;
-    background-color: #ffffff;
-    transition: all 0.2s ease;
-}
-
-.quickActionButton:hover {
-    border-color: #171717;
-}
-
-.quickActionButton.primary {
-    background-color: #171717;
-    border: none;
-}
-
-.quickActionButton.primary:hover {
-    background-color: #262626;
-}
-
-.quickActionButton span {
-    font-size: 16px;
-    line-height: 24px;
-    color: #171717;
-    text-align: center;
-    font-family: 'Nimbus Sans', sans-serif;
-    font-weight: 400;
-}
-
-.quickActionButton.primary span {
-    color: #ffffff;
-}
-
-.quickActionButton img {
-    width: 20px;
-    height: 20px;
-}
-
-/* Main Content Grid */
-.mainContentGrid {
-    display: flex;
-    gap: 24px;
-    align-items: flex-start;
-    justify-content: center;
-    flex-shrink: 0;
-    width: 100%;
-}
-
-/* Upcoming Lessons */
-.upcomingLessons {
+.statCard {
     background-color: #ffffff;
     border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    align-items: flex-start;
-    padding: 25px;
-    position: relative;
-    border-radius: 8px;
-    align-self: stretch;
-    flex-shrink: 0;
-    flex: 1.8;
+    gap: 8px;
+    transition: box-shadow 0.2s ease;
 }
 
-.upcomingLessonsHeader {
+.statCard:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.statHeader {
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+.statIconWrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background-color: #f2f0e4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.statBadge {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 9999px;
+}
+
+.badgeGreen {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.badgeBlue {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.statValue {
+    font-family: 'Bricolage Grotesque', 'IBM Plex Sans', sans-serif;
+    font-size: 28px;
+    line-height: 36px;
+    font-weight: 700;
+    color: #1a2238;
+}
+
+.statLabel {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 500;
+    color: #525252;
+}
+
+.statSubtitle {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    color: #a3a3a3;
+}
+
+/* ===== QUICK ACTIONS ===== */
+.quickActions {
+    display: flex;
+    gap: 12px;
     width: 100%;
+}
+
+.quickActionBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: 1px solid #e5e5e5;
+    background-color: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    color: #1a2238;
+}
+
+.quickActionBtn:hover {
+    border-color: #1a2238;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.quickActionBtn svg {
     flex-shrink: 0;
 }
 
-.upcomingLessonsHeader h3 {
+/* ===== CONTENT GRID (2 columns) ===== */
+.contentGrid {
+    display: grid;
+    grid-template-columns: 1.8fr 1fr;
+    gap: 24px;
+    width: 100%;
+}
+
+/* ===== UPCOMING LESSONS (Left) ===== */
+.lessonsCard {
+    background-color: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.lessonsHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.lessonsHeader h3 {
+    font-family: 'Bricolage Grotesque', 'IBM Plex Sans', sans-serif;
     font-size: 18px;
     line-height: 28px;
-    color: #171717;
-    font-family: var(--font-primary), 'Nimbus Sans', sans-serif;
-    font-weight: 400;
-    font-style: normal;
+    font-weight: 600;
+    color: #1a2238;
     margin: 0;
 }
 
-.upcomingLessonsHeader a {
-    font-size: 14px;
+.viewAllLink {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
     line-height: 20px;
     color: #525252;
-    font-family: 'Nimbus Sans', sans-serif;
     text-decoration: none;
-    cursor: pointer;
+    transition: color 0.2s ease;
 }
 
-.upcomingLessonsHeader a:hover {
-    color: #171717;
+.viewAllLink:hover {
+    color: #1a2238;
 }
 
 .lessonsList {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    align-items: flex-start;
-    width: 100%;
+    gap: 10px;
 }
 
-.lessonCard {
+.lessonItem {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 17px;
-    position: relative;
-    border-radius: 8px;
-    flex-shrink: 0;
-    width: 100%;
-    background-color: #ffffff;
+    padding: 14px 16px;
     border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    background-color: #ffffff;
+    transition: background-color 0.15s ease;
 }
 
-.lessonCard.highlighted {
-    background-color: #fafafa;
+.lessonHighlighted {
+    background-color: #fafaf8;
+    border-color: #d4d4d4;
 }
 
-.lessonCardMain {
+.lessonLeft {
     display: flex;
     align-items: center;
+    gap: 14px;
     flex: 1;
+    min-width: 0;
 }
 
 .lessonIcon {
-    background-color: #f5f5f5;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background-color: #f2f0e4;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
     flex-shrink: 0;
-}
-
-.lessonIcon img {
-    width: 16px;
-    height: 16px;
 }
 
 .lessonInfo {
-    margin-left: 16px;
     display: flex;
     flex-direction: column;
+    gap: 2px;
+    min-width: 0;
 }
 
-.lessonTitle {
-    font-size: 16px;
-    line-height: 24px;
-    color: #171717;
-    font-family: 'Nimbus Sans', sans-serif;
-    font-weight: 400;
+.lessonSubject {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    color: #1a2238;
 }
 
 .lessonTime {
-    font-size: 14px;
-    line-height: 20px;
-    color: #525252;
-    font-family: 'Nimbus Sans', sans-serif;
-    margin-top: 2px;
-}
-
-.lessonStatusContainer {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.lessonStatusBadge {
-    background-color: #f5f5f5;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 4px 8px;
-    border-radius: 4px;
-    flex-shrink: 0;
-}
-
-.lessonStatusBadge span {
-    font-size: 12px;
-    line-height: 16px;
-    color: #262626;
-    font-family: 'Nimbus Sans', sans-serif;
-}
-
-.lessonStatusBadge.confirmed span {
-    color: #262626;
-}
-
-.lessonViewButton span {
-    font-size: 14px;
-    line-height: 20px;
-    color: #525252;
-    text-decoration: underline;
-    cursor: pointer;
-    font-family: 'Nimbus Sans', sans-serif;
-}
-
-.lessonViewButton span:hover {
-    color: #171717;
-}
-
-/* Latest Updates */
-.latestUpdates {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    align-items: flex-start;
-    position: relative;
-    align-self: stretch;
-    flex-shrink: 0;
-    flex: 1;
-}
-
-.updateCard {
-    background-color: #ffffff;
-    border: 1px solid #e5e5e5;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    align-items: flex-start;
-    padding: 25px;
-    position: relative;
-    border-radius: 8px;
-    flex-shrink: 0;
-    width: 100%;
-}
-
-.updateCardHeader {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-right: 0.01px;
-    width: 100%;
-    flex-shrink: 0;
-}
-
-.updateCardHeader h3 {
-    font-size: 18px;
-    line-height: 28px;
-    color: #171717;
-    font-family: var(--font-primary), 'Nimbus Sans', sans-serif;
-    font-weight: 400;
-    font-style: normal;
-    margin: 0;
-}
-
-.updateCardHeader span {
+    font-family: 'IBM Plex Sans', sans-serif;
     font-size: 12px;
     line-height: 16px;
     color: #737373;
-    font-family: 'Nimbus Sans', sans-serif;
 }
 
-.updateCardContent {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    align-items: flex-start;
-    width: 100%;
-}
-
-.updateDescription {
-    font-size: 14px;
-    line-height: 20px;
-    color: #404040;
-    font-family: 'Nimbus Sans', sans-serif;
-    margin: 0;
-}
-
-.updateDescription p {
-    margin: 0;
-}
-
-.updateInfo {
+.lessonRight {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    width: 100%;
+    gap: 10px;
     flex-shrink: 0;
 }
 
-.updateInfoLabel {
-    font-size: 14px;
-    line-height: 20px;
-    color: #525252;
-    font-family: 'Nimbus Sans', sans-serif;
+.lessonBadge {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 9999px;
 }
 
-.updateInfoValue {
-    font-size: 14px;
-    line-height: 20px;
-    color: #171717;
-    font-family: 'Nimbus Sans', sans-serif;
+.badgeConfirmed {
+    background-color: #dcfce7;
+    color: #166534;
 }
 
-.updateButton {
+.badgeScheduled {
     background-color: #f5f5f5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px;
-    border-radius: 8px;
-    flex-shrink: 0;
-    width: 100%;
-    cursor: pointer;
+    color: #525252;
+}
+
+.lessonViewBtn {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    color: #525252;
+    text-decoration: underline;
+    background: none;
     border: none;
-    transition: all 0.2s ease;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s ease;
 }
 
-.updateButton:hover {
-    background-color: #e5e5e5;
+.lessonViewBtn:hover {
+    color: #1a2238;
 }
 
-.updateButton span {
-    font-size: 14px;
-    line-height: 20px;
-    color: #171717;
-    text-align: center;
-    font-family: 'Nimbus Sans', sans-serif;
-}
-
-/* Attention Card */
-.attentionCard {
+/* ===== RIGHT COLUMN ===== */
+.rightColumn {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    align-items: flex-start;
-    padding: 25px;
-    position: relative;
-    border-radius: 8px;
-    border: 1px solid #e5e5e5;
+}
+
+/* ===== LATEST SESSION CARD ===== */
+.sessionCard {
     background-color: #ffffff;
-    flex-shrink: 0;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sessionHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sessionHeader h3 {
+    font-family: 'Bricolage Grotesque', 'IBM Plex Sans', sans-serif;
+    font-size: 18px;
+    line-height: 28px;
+    font-weight: 600;
+    color: #1a2238;
+    margin: 0;
+}
+
+.sessionDate {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    color: #737373;
+}
+
+.sessionContent {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sessionDescription {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    color: #525252;
+    margin: 0;
+}
+
+.sessionInfo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sessionInfoLabel {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    color: #737373;
+}
+
+.sessionInfoValue {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 600;
+    color: #1a2238;
+}
+
+.sessionBtn {
     width: 100%;
+    padding: 8px;
+    border-radius: 8px;
+    background-color: #f2f0e4;
+    border: none;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    line-height: 20px;
+    font-weight: 500;
+    color: #1a2238;
+    text-align: center;
+    transition: background-color 0.2s ease;
+}
+
+.sessionBtn:hover {
+    background-color: #e8e5d8;
+}
+
+/* ===== NEEDS ATTENTION CARD ===== */
+.attentionCard {
+    background-color: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .attentionCard h3 {
+    font-family: 'Bricolage Grotesque', 'IBM Plex Sans', sans-serif;
     font-size: 18px;
     line-height: 28px;
-    color: #171717;
-    font-family: var(--font-primary), 'Nimbus Sans', sans-serif;
-    font-weight: 400;
-    font-style: normal;
+    font-weight: 600;
+    color: #1a2238;
     margin: 0;
 }
 
 .attentionContent {
-    background-color: #fafafa;
-    border: 1px solid #e5e5e5;
-    position: relative;
-    border-radius: 8px;
-    flex-shrink: 0;
-    width: 100%;
-    padding: 13px;
     display: flex;
     align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 8px;
+    background-color: #fffbeb;
+    border: 1px solid #fde68a;
 }
 
 .attentionIcon {
-    margin-right: 12px;
-    padding-top: 2px;
     flex-shrink: 0;
-}
-
-.attentionIcon img {
-    width: 16px;
-    height: 20px;
+    padding-top: 1px;
 }
 
 .attentionDetails {
-    flex: 1 0 0;
-    min-height: 1px;
-    min-width: 1px;
-    position: relative;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    width: 100%;
     gap: 4px;
 }
 
 .attentionTitle {
+    font-family: 'IBM Plex Sans', sans-serif;
     font-size: 14px;
     line-height: 20px;
-    color: #171717;
-    font-family: 'Nimbus Sans', sans-serif;
-    font-weight: 400;
+    font-weight: 500;
+    color: #1a2238;
 }
 
-.attentionDescription {
+.attentionDesc {
+    font-family: 'IBM Plex Sans', sans-serif;
     font-size: 12px;
     line-height: 16px;
-    color: #525252;
-    font-family: 'Nimbus Sans', sans-serif;
+    color: #737373;
 }
 
-.attentionButton {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding-top: 4px;
-    width: fit-content;
-}
-
-.attentionButton span {
+.attentionLink {
+    font-family: 'IBM Plex Sans', sans-serif;
     font-size: 12px;
     line-height: 16px;
-    color: #171717;
+    font-weight: 600;
+    color: #92400e;
     text-decoration: underline;
-    cursor: pointer;
-    font-family: 'Nimbus Sans', sans-serif;
+    margin-top: 2px;
 }
 
-.attentionButton span:hover {
-    color: #404040;
+.attentionLink:hover {
+    color: #78350f;
 }
 
-/* Responsive adjustments */
+/* ===== RESPONSIVE ===== */
 @media (max-width: 1200px) {
-    .statsContainer {
-        flex-wrap: wrap;
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
     }
 
-    .attendanceStats,
-    .gradeStats,
-    .walletStats {
-        width: calc(33.33% - 22px);
-        flex: none;
-    }
-
-    .mainContentGrid {
-        flex-direction: column;
-    }
-
-    .upcomingLessons,
-    .latestUpdates {
-        flex: none;
-        width: 100%;
+    .contentGrid {
+        grid-template-columns: 1fr;
     }
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 20px 16px;
+        gap: 16px;
+    }
+
+    .welcomeBanner {
+        padding: 24px 20px;
+    }
+
+    .welcomeTitle {
+        font-size: 20px;
+        line-height: 28px;
+    }
+
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .statCard {
+        padding: 16px;
+    }
+
+    .statValue {
+        font-size: 24px;
+        line-height: 30px;
+    }
+
     .quickActions {
         flex-wrap: wrap;
     }
 
-    .quickActionContainer {
-        width: calc(50% - 8px);
-        flex: none;
+    .quickActionBtn {
+        flex: 1;
+        min-width: 120px;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .statsGrid {
+        grid-template-columns: 1fr;
     }
 
-    .quickActionButton {
-        width: 100%;
-    }
-
-    .statsContainer {
+    .quickActions {
         flex-direction: column;
-        gap: 24px;
     }
 
-    .attendanceStats,
-    .gradeStats,
-    .walletStats {
+    .quickActionBtn {
         width: 100%;
+        justify-content: center;
+    }
+
+    .lessonRight {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
     }
 }

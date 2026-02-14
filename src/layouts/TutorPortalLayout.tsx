@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import '../styles/layouts/tutor-portal-layout.css';
 
 // Logo Icon (Agora symbol)
@@ -149,8 +149,10 @@ const TutorPortalLayout: React.FC = () => {
             <aside className={`tutor-portal-sidebar ${sidebarOpen ? 'open' : ''}`}>
                 {/* Logo Section */}
                 <div className="tutor-portal-sidebar-logo">
-                    <LogoIcon />
-                    <span className="tutor-portal-logo-text">AGORA</span>
+                    <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'inherit' }}>
+                        <LogoIcon />
+                        <span className="tutor-portal-logo-text">AGORA</span>
+                    </Link>
                     {/* Mobile Close Button */}
                     <button
                         className="tutor-portal-sidebar-close"

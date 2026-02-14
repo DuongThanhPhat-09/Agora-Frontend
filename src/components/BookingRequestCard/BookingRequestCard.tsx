@@ -22,9 +22,10 @@ interface BookingRequestData {
 
 interface BookingRequestCardProps {
     message: {
-        content: string; // JSON string
+        content: string;
         senderId: string;
         createdAt: string;
+        metadata?: any;
     };
     isTutor?: boolean;
 }
@@ -33,16 +34,29 @@ const DAY_NAMES = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
 const BookingRequestCard = ({ message, isTutor = false }: BookingRequestCardProps) => {
     let data: BookingRequestData;
-    try {
-        data = JSON.parse(message.content);
-    } catch (e) {
-        return (
-            <div className={styles.errorCard}>
-                <AlertCircle size={16} />
-                <span>Invalid booking request data</span>
-            </div>
-        );
+
+    if (message.metadata) {
+        data = message.metadata;
+    } else {
+        try {
+            data = JSON.parse(message.content);
+        } catch (e) {
+            return (
+                <div className={styles.errorCard}>
+                    <AlertCircle size={16} />
+                    <span>Invalid booking request data</span>
+                </div>
+            );
+        }
     }
+
+    // Defensive mapping for prices and names (handles backend metadata fields + PascalCase)
+    // Backend sends: price (giá gốc), finalPrice (sau phí platform), không gửi totalPrice/tutorReceivable
+    const totalPrice = (data as any).finalPrice || (data as any).FinalPrice || data.totalPrice || (data as any).TotalPrice || (data as any).price || (data as any).Price || 0;
+    const tutorReceivable = data.tutorReceivable || (data as any).TutorReceivable || (data as any).tutorFee || (data as any).TutorFee || Math.round(totalPrice * 0.85) || 0;
+    const studentName = data.studentName || (data as any).StudentName || (data as any).student?.fullName || 'Học sinh';
+    const subjectName = data.subjectName || (data as any).SubjectName || (data as any).subject?.subjectName || 'Môn học';
+    const sessionCount = data.sessionCount || (data as any).SessionCount || 0;
 
     const [status, setStatus] = useState(data.status);
     const [loading, setLoading] = useState(false);
@@ -99,12 +113,12 @@ const BookingRequestCard = ({ message, isTutor = false }: BookingRequestCardProp
                 <div className={styles.infoRow}>
                     <User size={14} className={styles.icon} />
                     <span className={styles.label}>Học sinh:</span>
-                    <span className={styles.value}>{data.studentName}</span>
+                    <span className={styles.value}>{studentName}</span>
                 </div>
                 <div className={styles.infoRow}>
                     <BookOpen size={14} className={styles.icon} />
                     <span className={styles.label}>Môn học:</span>
-                    <span className={styles.value}>{data.subjectName}</span>
+                    <span className={styles.value}>{subjectName}</span>
                 </div>
                 <div className={styles.infoRow}>
                     <Calendar size={14} className={styles.icon} />
@@ -120,17 +134,17 @@ const BookingRequestCard = ({ message, isTutor = false }: BookingRequestCardProp
                 <div className={styles.infoRow}>
                     <Clock size={14} className={styles.icon} />
                     <span className={styles.label}>Gói học:</span>
-                    <span className={styles.value}>{data.sessionCount} buổi</span>
+                    <span className={styles.value}>{sessionCount} buổi</span>
                 </div>
                 <div className={styles.priceSection}>
                     <div className={styles.priceRow}>
                         <span>Tổng cộng:</span>
-                        <span className={styles.totalPrice}>{formatPrice(data.totalPrice)}</span>
+                        <span className={styles.totalPrice}>{formatPrice(totalPrice)}</span>
                     </div>
                     {isTutor && (
                         <div className={styles.receivableRow}>
                             <span>Thu nhập dự kiến:</span>
-                            <span className={styles.receivableValue}>{formatPrice(data.tutorReceivable)}</span>
+                            <span className={styles.receivableValue}>{formatPrice(tutorReceivable)}</span>
                         </div>
                     )}
                 </div>

@@ -21,6 +21,7 @@ console.log('  - HUB_URL:', HUB_URL);
 class SignalRService {
   private connection: signalR.HubConnection | null = null;
   private messageHandlers: Map<string, (message: any) => void> = new Map();
+  private startPromise: Promise<void> | null = null;
 
   async connect(): Promise<void> {
     const user = getCurrentUser();
@@ -31,37 +32,55 @@ class SignalRService {
       throw new Error('No access token available');
     }
 
-    // Nếu đã có kết nối, không kết nối lại
-    if (this.connection?.state === signalR.HubConnectionState.Connected) {
-      console.log('✅ SignalR: Already connected, skipping...');
+    // Trả về promise đang chạy nếu có
+    if (this.startPromise) {
+      return this.startPromise;
+    }
+
+    // Nếu đã có kết nối hoặc đang kết nối, không làm gì
+    if (this.connection && (
+      this.connection.state === signalR.HubConnectionState.Connected ||
+      this.connection.state === signalR.HubConnectionState.Connecting ||
+      this.connection.state === signalR.HubConnectionState.Reconnecting
+    )) {
+      console.log('✅ SignalR: Already connected or connecting, state:', this.connection.state);
       return Promise.resolve();
     }
 
     console.log('🔗 SignalR: Starting connection...');
 
-    this.connection = new signalR.HubConnectionBuilder()
-      .withUrl(HUB_URL, {
-        accessTokenFactory: () => {
-          const currentUser = getCurrentUser();
-          return currentUser?.accessToken || import.meta.env.VITE_TOKEN || '';
-        },
-      })
-      .withAutomaticReconnect()
-      .configureLogging(signalR.LogLevel.Information)
-      .build();
+    if (!this.connection) {
+      this.connection = new signalR.HubConnectionBuilder()
+        .withUrl(HUB_URL, {
+          accessTokenFactory: () => {
+            const currentUser = getCurrentUser();
+            return currentUser?.accessToken || import.meta.env.VITE_TOKEN || '';
+          },
+        })
+        .withAutomaticReconnect()
+        .configureLogging(signalR.LogLevel.Information)
+        .build();
 
-    // Đăng ký các handler mặc định
-    this.setupDefaultHandlers();
-
-    try {
-      await this.connection.start();
-      console.log('✅ SignalR Connected', this.connection.connectionId);
-    } catch (err: any) {
-      console.error('❌ SignalR Connection failed:', err);
-      console.error('  - Error type:', err.name);
-      console.error('  - Error message:', err.message);
-      throw err;
+      // Đăng ký các handler mặc định
+      this.setupDefaultHandlers();
     }
+
+    this.startPromise = this.connection.start()
+      .then(() => {
+        console.log('✅ SignalR Connected', this.connection?.connectionId);
+        this.startPromise = null;
+      })
+      .catch((err: any) => {
+        this.startPromise = null;
+        if (err.name === 'AbortError') {
+          console.warn('⚠️ SignalR connection aborted during negotiation (common in React StrictMode)');
+        } else {
+          console.error('❌ SignalR Connection failed:', err);
+        }
+        throw err;
+      });
+
+    return this.startPromise;
   }
 
   disconnect(): void {

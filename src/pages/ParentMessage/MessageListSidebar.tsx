@@ -2,15 +2,17 @@ import { useState, useEffect } from 'react';
 import styles from './styles.module.css';
 import MessageInfoItem from './MessageInfoItem';
 import MessageSearch from './MessageSearch';
-import { getChats, type ChatChanel } from '../../services/chat.service';
+import { getChats, type ChatChannel } from '../../services/chat.service';
 
 interface MessageListSidebarProps {
     onChannelSelect: (channelId: number | null) => void;
+    onChannelObjectSelect?: (channel: ChatChannel | null) => void;
     selectedChannelId: number | null;
 }
 
 // Helper function to format date/time
-const formatTimestamp = (dateString: string): string => {
+const formatTimestamp = (dateString: string | null): string => {
+  if (!dateString) return '';
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -28,13 +30,17 @@ const formatTimestamp = (dateString: string): string => {
   return date.toLocaleDateString('en-US', options);
 };
 
-const MessageListSidebar = ({ onChannelSelect, selectedChannelId }: MessageListSidebarProps) => {
-  const [channels, setChannels] = useState<ChatChanel[]>([]);
+const MessageListSidebar = ({ onChannelSelect, onChannelObjectSelect, selectedChannelId }: MessageListSidebarProps) => {
+  const [channels, setChannels] = useState<ChatChannel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleChannelClick = (channelId: number) => {
-    onChannelSelect(channelId);
+  const handleChannelClick = (channel: ChatChannel) => {
+    onChannelSelect(channel.channelId);
+    if (onChannelObjectSelect) {
+      onChannelObjectSelect(channel);
+    }
   };
 
   useEffect(() => {
@@ -57,9 +63,14 @@ const MessageListSidebar = ({ onChannelSelect, selectedChannelId }: MessageListS
     fetchChannels();
   }, []);
 
+  const filteredChannels = channels.filter(channel => 
+    channel.otherUserName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    channel.lastMessagePreview?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <aside className={styles.sidebar}>
-      <MessageSearch />
+      <MessageSearch onSearch={setSearchQuery} />
       <div className={styles.messageList}>
         {loading ? (
           <div className={styles.loadingContainer}>
@@ -73,14 +84,16 @@ const MessageListSidebar = ({ onChannelSelect, selectedChannelId }: MessageListS
               Retry
             </button>
           </div>
-        ) : channels.length === 0 ? (
+        ) : filteredChannels.length === 0 ? (
           <div className={styles.emptyContainer}>
-            <p className={styles.emptyText}>No messages yet</p>
-            <p className={styles.emptySubtext}>Start a conversation to see messages here</p>
+            <p className={styles.emptyText}>{searchQuery ? 'No messages match your search' : 'No messages yet'}</p>
+            <p className={styles.emptySubtext}>
+              {searchQuery ? 'Try a different keyword' : 'Start a conversation to see messages here'}
+            </p>
           </div>
         ) : (
-          channels.map((channel) => (
-            <div key={channel.channelId} onClick={() => handleChannelClick(channel.channelId)}>
+          filteredChannels.map((channel) => (
+            <div key={channel.channelId} onClick={() => handleChannelClick(channel)}>
               <MessageInfoItem
                 active={selectedChannelId === channel.channelId}
                 avatar={channel.otherUserAvatarUrl || 'https://via.placeholder.com/48'}
@@ -88,6 +101,7 @@ const MessageListSidebar = ({ onChannelSelect, selectedChannelId }: MessageListS
                 preview={channel.lastMessagePreview || 'No messages yet'}
                 role="Tutor"
                 session={`Session #${channel.bookingId}`}
+                status={channel.status}
                 timestamp={formatTimestamp(channel.lastMessageAt)}
               />
             </div>

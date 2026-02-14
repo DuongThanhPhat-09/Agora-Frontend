@@ -1,134 +1,146 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import '../../styles/pages/tutor-messages.css';
-
-// Types
-interface Conversation {
-    id: string;
-    name: string;
-    avatar: string;
-    preview: string;
-    time: string;
-    hasOffer: boolean;
-    isUnread: boolean;
-    isOnline: boolean;
-}
-
-interface Message {
-    id: string;
-    text: string;
-    time: string;
-    isSent: boolean;
-}
+import { getChats, getChatMessages, type ChatChannel, type ChatMessage } from '../../services/chat.service';
+import { signalRService } from '../../services/signalr.service';
+import { getUserIdFromToken } from '../../services/auth.service';
+import BookingRequestCard from '../../components/BookingRequestCard/BookingRequestCard';
+import { message as antMessage } from 'antd';
 
 const MessagesPage: React.FC = () => {
+    const tutorId = getUserIdFromToken();
+
     // State management
-    const [activeConversationId, setActiveConversationId] = useState('1');
+    const [conversations, setConversations] = useState<ChatChannel[]>([]);
+    const [selectedChannel, setSelectedChannel] = useState<ChatChannel | null>(null);
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [messageInput, setMessageInput] = useState('');
     const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'offers'>('all');
     const [searchQuery, setSearchQuery] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [loadingChannels, setLoadingChannels] = useState(true);
+    const [connectionState, setConnectionState] = useState<string>('disconnected');
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Sample conversations data
-    const conversations: Conversation[] = [
-        {
-            id: '1',
-            name: 'Phụ huynh bé Na',
-            avatar: 'N',
-            preview: '[Lời mời dạy] Tôi muốn mời bạn dạy môn Toán...',
-            time: '10:30',
-            hasOffer: true,
-            isUnread: true,
-            isOnline: true,
-        },
-        {
-            id: '2',
-            name: 'Mẹ cu Bin',
-            avatar: 'B',
-            preview: 'Hôm nay thầy cho cháu nghỉ sớm nhé...',
-            time: 'Hôm qua',
-            hasOffer: false,
-            isUnread: false,
-            isOnline: false,
-        },
-        {
-            id: '3',
-            name: 'Phụ huynh Minh An',
-            avatar: 'M',
-            preview: 'Cảm ơn thầy đã dạy rất tốt!',
-            time: '2 ngày trước',
-            hasOffer: false,
-            isUnread: false,
-            isOnline: false,
-        },
-        {
-            id: '4',
-            name: 'Ba Tuấn Anh',
-            avatar: 'T',
-            preview: '[Lời mời dạy] Mời thầy dạy Lý 10...',
-            time: '3 ngày trước',
-            hasOffer: true,
-            isUnread: true,
-            isOnline: false,
-        },
-    ];
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    // Keep selectedChannel ref for SignalR callback
+    const selectedChannelRef = useRef<ChatChannel | null>(null);
+    useEffect(() => {
+        selectedChannelRef.current = selectedChannel;
+    }, [selectedChannel]);
+
+    // SignalR Initialization
+    useEffect(() => {
+        let mounted = true;
+        const initSignalR = async () => {
+            try {
+                await signalRService.connect();
+                if (mounted) {
+                    setConnectionState('connected');
+                    signalRService.onMessageReceived((data: any) => {
+                        console.log('📩 SignalR messageReceived:', data);
+                        if (data?.channelId === selectedChannelRef.current?.channelId) {
+                            const newMessage: ChatMessage = {
+                                messageId: data.messageId || data.MessageId,
+                                channelId: data.channelId || data.ChannelId,
+                                senderId: data.senderId || data.SenderId,
+                                content: data.content || data.Content,
+                                messageType: data.messageType || data.MessageType,
+                                createdAt: data.createdAt || data.CreatedAt,
+                                metadata: data.metadata || data.Metadata,
+                            };
+                            setMessages((prev) => [...prev, newMessage]);
+                            setTimeout(scrollToBottom, 50);
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error('SignalR connection error:', err);
+                if (mounted) setConnectionState('error');
+            }
+        };
+        initSignalR();
+        return () => {
+            mounted = false;
+            signalRService.disconnect();
+        };
+    }, []);
+
+    // Load conversations from API
+    useEffect(() => {
+        const fetchConversations = async () => {
+            try {
+                setLoadingChannels(true);
+                const res = await getChats();
+                const list = Array.isArray(res?.content) ? res.content : [];
+                setConversations(list);
+                if (list.length > 0) setSelectedChannel(list[0]);
+            } catch (err) {
+                antMessage.error('Không thể tải danh sách hội thoại');
+            } finally {
+                setLoadingChannels(false);
+            }
+        };
+        fetchConversations();
+    }, []);
+
+    // Load messages when channel is selected
+    useEffect(() => {
+        if (!selectedChannel) return;
+        const fetchMessages = async () => {
+            try {
+                setLoading(true);
+                const res = await getChatMessages(selectedChannel.channelId, { page: 1, pageSize: 50 });
+                const msgs = Array.isArray(res?.content) ? res.content : [];
+                // API returns newest first, UI wants oldest first
+                setMessages([...msgs].reverse());
+
+                try {
+                    await signalRService.connect();
+                    await signalRService.joinChannel(selectedChannel.channelId);
+                } catch (err) {
+                    console.error('❌ Failed to join channel:', err);
+                }
+            } catch (err) {
+                antMessage.error('Không thể tải tin nhắn');
+            } finally {
+                setLoading(false);
+                setTimeout(scrollToBottom, 300);
+            }
+        };
+        fetchMessages();
+    }, [selectedChannel]);
 
     // Filter conversations
-    const filteredConversations = conversations.filter((conv) => {
-        // Filter by search query
-        if (searchQuery && !conv.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+    const filteredConversations = (conversations || []).filter((conv) => {
+        if (searchQuery && !conv.otherUserName?.toLowerCase().includes(searchQuery.toLowerCase())) {
             return false;
         }
-
-        // Filter by active filter
-        if (activeFilter === 'unread' && !conv.isUnread) return false;
-        if (activeFilter === 'offers' && !conv.hasOffer) return false;
-
+        if (activeFilter === 'offers' && conv.status !== 'pending') return false;
         return true;
     });
 
-    // Get current conversation
-    const currentConversation = conversations.find((c) => c.id === activeConversationId);
-
-    // Sample messages for active conversation
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            id: '1',
-            text: 'Xin chào thầy, tôi thấy hồ sơ của thầy rất phù hợp với nhu cầu của con tôi.',
-            time: '10:25',
-            isSent: false,
-        },
-    ]);
-
     // Event handlers
-    const handleConversationClick = (conversationId: string) => {
-        setActiveConversationId(conversationId);
-        // In real app, load messages for this conversation
+    const handleConversationClick = (channel: ChatChannel) => {
+        setSelectedChannel(channel);
     };
 
-    const handleSendMessage = () => {
-        if (messageInput.trim()) {
-            const newMessage: Message = {
-                id: Date.now().toString(),
-                text: messageInput,
-                time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-                isSent: true,
-            };
-            setMessages([...messages, newMessage]);
-            setMessageInput('');
+    const handleSendMessage = async () => {
+        if (!messageInput.trim() || !selectedChannel) return;
+        const content = messageInput.trim();
+        setMessageInput('');
+
+        try {
+            await signalRService.sendMessage(selectedChannel.channelId, content);
+        } catch (err) {
+            antMessage.error('Không thể gửi tin nhắn');
         }
     };
 
     const handleQuickReply = (text: string) => {
         setMessageInput(text);
-    };
-
-    const handleAcceptOffer = () => {
-        alert('Đã chấp nhận lời mời dạy!');
-        // In real app, send API request
-    };
-
-    const handleRejectOffer = () => {
-        alert('Thương lượng hoặc từ chối lời mời');
-        // In real app, open modal or navigate to negotiation page
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -137,6 +149,23 @@ const MessagesPage: React.FC = () => {
             handleSendMessage();
         }
     };
+
+    const getInitial = (name?: string) => name ? name.charAt(0).toUpperCase() : '?';
+
+    const formatTime = (dateStr?: string) => {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffDays === 0) return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        if (diffDays === 1) return 'Hôm qua';
+        if (diffDays < 7) return `${diffDays} ngày trước`;
+        return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+    };
+
+    const pendingCount = conversations.filter(c => c.status === 'pending').length;
 
     return (
         <div className="messages-content">
@@ -155,17 +184,11 @@ const MessagesPage: React.FC = () => {
                                 Tất cả
                             </button>
                             <button
-                                className={`filter-tab ${activeFilter === 'unread' ? 'filter-tab-active' : ''}`}
-                                onClick={() => setActiveFilter('unread')}
-                            >
-                                Chưa đọc
-                            </button>
-                            <button
                                 className={`filter-tab filter-tab-jobs ${activeFilter === 'offers' ? 'filter-tab-active' : ''}`}
                                 onClick={() => setActiveFilter('offers')}
                             >
-                                Job Offers
-                                <span className="tab-badge">2</span>
+                                Booking mới
+                                {pendingCount > 0 && <span className="tab-badge">{pendingCount}</span>}
                             </button>
                         </div>
 
@@ -186,198 +209,165 @@ const MessagesPage: React.FC = () => {
 
                     {/* Conversation Items */}
                     <div className="conversation-items">
-                        {filteredConversations.map((conversation) => (
-                            <div
-                                key={conversation.id}
-                                className={`conversation-item ${activeConversationId === conversation.id ? 'conversation-item-active' : ''
-                                    }`}
-                                onClick={() => handleConversationClick(conversation.id)}
-                            >
-                                <div className="conversation-avatar">
-                                    <span className="avatar-text">{conversation.avatar}</span>
-                                    {conversation.isOnline && <span className="status-indicator status-online"></span>}
-                                </div>
-                                <div className="conversation-content">
-                                    <div className="conversation-header">
-                                        <h3 className="conversation-name">{conversation.name}</h3>
-                                        {conversation.hasOffer && <span className="offer-badge">OFFER</span>}
-                                    </div>
-                                    <div className="conversation-footer">
-                                        <p className="conversation-preview">{conversation.preview}</p>
-                                        {conversation.isUnread && <span className="unread-dot"></span>}
-                                    </div>
-                                </div>
-                                <span className="conversation-time">{conversation.time}</span>
+                        {loadingChannels ? (
+                            <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>
+                                Đang tải...
                             </div>
-                        ))}
+                        ) : filteredConversations.length === 0 ? (
+                            <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>
+                                {searchQuery ? 'Không tìm thấy hội thoại' : 'Chưa có hội thoại nào'}
+                            </div>
+                        ) : (
+                            filteredConversations.map((conversation) => (
+                                <div
+                                    key={conversation.channelId}
+                                    className={`conversation-item ${selectedChannel?.channelId === conversation.channelId ? 'conversation-item-active' : ''}`}
+                                    onClick={() => handleConversationClick(conversation)}
+                                >
+                                    <div className="conversation-avatar">
+                                        {conversation.otherUserAvatarUrl ? (
+                                            <img
+                                                src={conversation.otherUserAvatarUrl}
+                                                alt={conversation.otherUserName}
+                                                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                                            />
+                                        ) : (
+                                            <span className="avatar-text">{getInitial(conversation.otherUserName)}</span>
+                                        )}
+                                    </div>
+                                    <div className="conversation-content">
+                                        <div className="conversation-header">
+                                            <h3 className="conversation-name">{conversation.otherUserName || 'Người dùng'}</h3>
+                                            {conversation.status === 'pending' && <span className="offer-badge">MỚI</span>}
+                                        </div>
+                                        <div className="conversation-footer">
+                                            <p className="conversation-preview">{conversation.lastMessagePreview || 'Chưa có tin nhắn'}</p>
+                                        </div>
+                                    </div>
+                                    <span className="conversation-time">{formatTime(conversation.lastMessageAt)}</span>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </aside>
 
                 {/* Chat Window */}
                 <section className="chat-window">
-                    {/* Chat Header */}
-                    <div className="chat-header">
-                        <div className="chat-user-info">
-                            <div className="chat-avatar">
-                                <span className="avatar-text">{currentConversation?.avatar}</span>
-                                {currentConversation?.isOnline && <span className="status-indicator status-online"></span>}
-                            </div>
-                            <div className="chat-user-details">
-                                <h2 className="chat-user-name">{currentConversation?.name}</h2>
-                                <p className="chat-user-status">
-                                    {currentConversation?.isOnline ? '🟢 Đang hoạt động' : '⚫ Offline'}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="chat-actions">
-                            <button className="chat-action-btn" title="Gọi điện">
-                                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                                </svg>
-                            </button>
-                            <button className="chat-action-btn" title="Video call">
-                                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
-                                </svg>
-                            </button>
-                            <button className="chat-action-btn" title="Thông tin">
-                                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
-                            </button>
-                            <button className="chat-action-btn chat-action-menu" title="Menu">
-                                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Messages Area */}
-                    <div className="messages-area">
-                        {messages.map((message) => (
-                            <div
-                                key={message.id}
-                                className={`message-bubble ${message.isSent ? 'message-sent' : 'message-received'}`}
-                            >
-                                <p className="message-text">{message.text}</p>
-                                <span className="message-time">{message.time}</span>
-                            </div>
-                        ))}
-
-                        {/* Job Offer Card - Only show for conversation with offers */}
-                        {currentConversation?.hasOffer && (
-                            <div className="job-offer-card">
-                                <div className="job-offer-header">
-                                    <span className="job-offer-emoji">🎉</span>
-                                    <h3 className="job-offer-title">Lời mời dạy mới</h3>
-                                </div>
-
-                                <div className="job-offer-details">
-                                    <div className="job-detail-item">
-                                        <div className="job-detail-icon job-icon-blue">
-                                            <span>📚</span>
-                                        </div>
-                                        <div className="job-detail-content">
-                                            <p className="job-detail-label">Môn học</p>
-                                            <p className="job-detail-value">Toán 9</p>
-                                        </div>
+                    {selectedChannel ? (
+                        <>
+                            {/* Chat Header */}
+                            <div className="chat-header">
+                                <div className="chat-user-info">
+                                    <div className="chat-avatar">
+                                        {selectedChannel.otherUserAvatarUrl ? (
+                                            <img
+                                                src={selectedChannel.otherUserAvatarUrl}
+                                                alt={selectedChannel.otherUserName}
+                                                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                                            />
+                                        ) : (
+                                            <span className="avatar-text">{getInitial(selectedChannel.otherUserName)}</span>
+                                        )}
                                     </div>
-
-                                    <div className="job-detail-item">
-                                        <div className="job-detail-icon job-icon-student">
-                                            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                                                <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
-                                            </svg>
-                                        </div>
-                                        <div className="job-detail-content">
-                                            <p className="job-detail-label">Học sinh</p>
-                                            <p className="job-detail-value">Lê Văn Tèo</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="job-detail-item">
-                                        <div className="job-detail-icon job-icon-calendar">
-                                            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                                            </svg>
-                                        </div>
-                                        <div className="job-detail-content">
-                                            <p className="job-detail-label">Lịch học</p>
-                                            <p className="job-detail-value">T3, T5 (19:00 - 20:30)</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="job-salary-highlight">
-                                        <div className="salary-content">
-                                            <div className="job-detail-icon job-icon-money">
-                                                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
-                                                </svg>
-                                            </div>
-                                            <div className="job-detail-content">
-                                                <p className="job-detail-label">Mức lương</p>
-                                                <p className="salary-amount">
-                                                    <strong>250.000 đ</strong>
-                                                    <span className="salary-unit">/ buổi</span>
-                                                </p>
-                                            </div>
-                                        </div>
+                                    <div className="chat-user-details">
+                                        <h2 className="chat-user-name">{selectedChannel.otherUserName || 'Người dùng'}</h2>
+                                        <p className="chat-user-status">
+                                            {connectionState === 'connected' ? '🟢 Đang kết nối' : '⚫ Offline'}
+                                        </p>
                                     </div>
                                 </div>
 
-                                <div className="job-offer-actions">
-                                    <button className="job-btn job-btn-accept" onClick={handleAcceptOffer}>
+                                <div className="chat-actions">
+                                    <button className="chat-action-btn" title="Thông tin">
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                                         </svg>
-                                        Chấp nhận ngay
-                                    </button>
-                                    <button className="job-btn job-btn-negotiate" onClick={handleRejectOffer}>
-                                        Thương lượng / Từ chối
                                     </button>
                                 </div>
                             </div>
-                        )}
-                    </div>
 
-                    {/* Message Input */}
-                    <div className="message-input-container">
-                        <div className="quick-replies">
-                            <button className="quick-reply-btn" onClick={() => handleQuickReply('Tôi đồng ý')}>
-                                Tôi đồng ý
-                            </button>
-                            <button className="quick-reply-btn" onClick={() => handleQuickReply('Cảm ơn')}>
-                                Cảm ơn
-                            </button>
-                            <button className="quick-reply-btn" onClick={() => handleQuickReply('Để tôi xem lịch')}>
-                                Để tôi xem lịch
-                            </button>
-                        </div>
+                            {/* Messages Area */}
+                            <div className="messages-area">
+                                {loading ? (
+                                    <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>
+                                        Đang tải tin nhắn...
+                                    </div>
+                                ) : messages.length === 0 ? (
+                                    <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>
+                                        Chưa có tin nhắn. Hãy bắt đầu cuộc trò chuyện!
+                                    </div>
+                                ) : (
+                                    messages.map((msg) => {
+                                        const isBookingRequest = msg.messageType?.toLowerCase() === 'booking_request';
 
-                        <div className="message-input-wrapper">
-                            <button className="input-action-btn" title="Emoji">
-                                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z" clipRule="evenodd" />
-                                </svg>
-                            </button>
-                            <input
-                                type="text"
-                                className="message-input"
-                                placeholder="Nhập tin nhắn..."
-                                value={messageInput}
-                                onChange={(e) => setMessageInput(e.target.value)}
-                                onKeyPress={handleKeyPress}
-                            />
-                            <button className="send-btn" onClick={handleSendMessage} title="Gửi">
-                                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-                                </svg>
-                            </button>
+                                        if (isBookingRequest) {
+                                            return (
+                                                <div key={msg.messageId} style={{ margin: '12px 0' }}>
+                                                    <BookingRequestCard
+                                                        message={{
+                                                            content: msg.content,
+                                                            senderId: msg.senderId,
+                                                            createdAt: msg.createdAt,
+                                                            metadata: msg.metadata
+                                                        }}
+                                                        isTutor={true}
+                                                    />
+                                                </div>
+                                            );
+                                        }
+
+                                        return (
+                                            <div
+                                                key={msg.messageId}
+                                                className={`message-bubble ${msg.senderId === tutorId ? 'message-sent' : 'message-received'}`}
+                                            >
+                                                <p className="message-text">{msg.content}</p>
+                                                <span className="message-time">
+                                                    {new Date(msg.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                                <div ref={messagesEndRef} />
+                            </div>
+
+                            {/* Message Input */}
+                            <div className="message-input-container">
+                                <div className="quick-replies">
+                                    <button className="quick-reply-btn" onClick={() => handleQuickReply('Tôi đồng ý')}>
+                                        Tôi đồng ý
+                                    </button>
+                                    <button className="quick-reply-btn" onClick={() => handleQuickReply('Cảm ơn bạn')}>
+                                        Cảm ơn bạn
+                                    </button>
+                                    <button className="quick-reply-btn" onClick={() => handleQuickReply('Để tôi xem lịch')}>
+                                        Để tôi xem lịch
+                                    </button>
+                                </div>
+
+                                <div className="message-input-wrapper">
+                                    <input
+                                        type="text"
+                                        className="message-input"
+                                        placeholder="Nhập tin nhắn..."
+                                        value={messageInput}
+                                        onChange={(e) => setMessageInput(e.target.value)}
+                                        onKeyPress={handleKeyPress}
+                                    />
+                                    <button className="send-btn" onClick={handleSendMessage} title="Gửi" disabled={!messageInput.trim()}>
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#888' }}>
+                            {loadingChannels ? 'Đang tải...' : 'Chọn một cuộc trò chuyện để bắt đầu'}
                         </div>
-                    </div>
+                    )}
                 </section>
             </div>
         </div>

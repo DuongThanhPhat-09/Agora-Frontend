@@ -1,9 +1,27 @@
 import styles from './styles.module.css';
 
-const childAvatar = 'https://www.figma.com/api/mcp/asset/8397f283-3923-4e6f-91b5-a13184236336';
-const dropdownIcon = 'https://www.figma.com/api/mcp/asset/ab348460-d8b8-4c24-b3bc-8c3ae5d66975';
-const reportIcon = 'https://www.figma.com/api/mcp/asset/ffb87ef5-d7d8-4cdf-9f1d-30b4aa67af5e';
-const newMessageIcon = 'https://www.figma.com/api/mcp/asset/8b4d4a45-d472-42fc-8c48-b1e31d99ef7f';
+// Icons
+const DropdownIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+    <path d="M2.5 4.5l3.5 3.5 3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+  </svg>
+);
+
+const ReportIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <rect x="2" y="3" width="12" height="11" rx="2" />
+    <path d="M5 7h6M5 10h4" strokeLinecap="round" />
+    <path d="M6 3V1M10 3V1" strokeLinecap="round" />
+  </svg>
+);
+
+const NewMessageIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M14 6V3a1 1 0 00-1-1H3a1 1 0 00-1 1v7a1 1 0 001 1h4" strokeLinecap="round" />
+    <path d="M2 3l6 4 6-4" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M11 14v-4M9 12h4" strokeLinecap="round" />
+  </svg>
+);
 
 const HeaderTopBar = () => {
     return (
@@ -11,18 +29,20 @@ const HeaderTopBar = () => {
             <div className={styles.topBarLeft}>
                 <h1 className={styles.pageTitle}>Messages</h1>
                 <button className={styles.childSelector} type="button">
-                    <img alt="" className={styles.childAvatar} src={childAvatar} />
+                    <div className={styles.childAvatar}>
+                        <span>EC</span>
+                    </div>
                     <span className={styles.childName}>Emma Chen • Grade 8</span>
-                    <img alt="" className={styles.dropdownIcon} src={dropdownIcon} />
+                    <DropdownIcon />
                 </button>
             </div>
             <div className={styles.topBarActions}>
                 <button className={styles.secondaryButton} type="button">
-                    <img alt="" className={styles.buttonIcon} src={reportIcon} />
+                    <ReportIcon />
                     Auto-Reports
                 </button>
                 <button className={styles.primaryButton} type="button">
-                    <img alt="" className={styles.buttonIcon} src={newMessageIcon} />
+                    <NewMessageIcon />
                     New Message
                 </button>
             </div>

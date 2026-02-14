@@ -50,7 +50,7 @@ const ChatMessagesArea = ({ messages, loading, currentUserId, hasMore, loadMessa
       id="top-chat-div"
       className={styles.messagesArea}
       style={{
-        height: 300,
+        flex: 1,
         overflow: 'auto',
         display: 'flex',
         flexDirection: 'column-reverse',
@@ -59,12 +59,12 @@ const ChatMessagesArea = ({ messages, loading, currentUserId, hasMore, loadMessa
       <InfiniteScroll
         dataLength={messages.length}
         next={getMessages}
-        style={{ display: 'flex', flexDirection: 'column-reverse' }}
-        inverse={true} //
+        style={{ display: 'flex', flexDirection: 'column-reverse', paddingBottom: '16px' }}
+        inverse={true}
         hasMore={hasMore}
         loader={
-          <div className="flex justify-center py-6!">
-            <Loader2 size={32} className={styles.sendingSpinner} />
+          <div className="flex justify-center py-4">
+            <Loader2 size={24} className={styles.sendingSpinner} />
           </div>
         }
         scrollableTarget="top-chat-div"

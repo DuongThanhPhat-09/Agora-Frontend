@@ -1,118 +1,136 @@
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import styles from './styles.module.css';
-import { useEffect, useState } from 'react';
-import { Gauge, LayoutDashboard, MessageSquare, User, Wallet } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+// Logo Icon (Agora symbol) - same as TutorPortalLayout
+const LogoIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 28 28" fill="currentColor">
+    <path d="M14 2L2 8V20L14 26L26 20V8L14 2ZM14 4.5L22.5 9V19L14 23.5L5.5 19V9L14 4.5Z" />
+    <path d="M14 8L8 11V17L14 20L20 17V11L14 8Z" />
+  </svg>
+);
+
+// Search Icon
+const SearchIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <circle cx="6" cy="6" r="4.5" />
+    <path d="M9.5 9.5L13 13" strokeLinecap="round" />
+  </svg>
+);
+
+// Notification Bell Icon
+const NotificationIcon = () => (
+  <svg width="18" height="20" viewBox="0 0 18 20" fill="currentColor">
+    <path d="M9 0C5.68629 0 3 2.68629 3 6V11L1 14V15H17V14L15 11V6C15 2.68629 12.3137 0 9 0Z" />
+    <path d="M9 20C10.6569 20 12 18.6569 12 17H6C6 18.6569 7.34315 20 9 20Z" />
+  </svg>
+);
+
+// Clock Icon for next lesson
+const ClockIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <circle cx="7" cy="7" r="5.5" />
+    <path d="M7 4V7L9 8.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+// Dropdown Arrow
+const ChevronDown = () => (
+  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M3 4.5L6 7.5L9 4.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+// Nav Icons
+const DashboardIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
+    <path d="M2 4C2 2.89543 2.89543 2 4 2H7C7.55228 2 8 2.44772 8 3V7C8 7.55228 7.55228 8 7 8H4C2.89543 8 2 7.10457 2 6V4Z" />
+    <path d="M2 12C2 10.8954 2.89543 10 4 10H7C7.55228 10 8 10.4477 8 11V15C8 15.5523 7.55228 16 7 16H4C2.89543 16 2 15.1046 2 14V12Z" />
+    <path d="M10 3C10 2.44772 10.4477 2 11 2H14C15.1046 2 16 2.89543 16 4V6C16 7.10457 15.1046 8 14 8H11C10.4477 8 10 7.55228 10 7V3Z" />
+    <path d="M10 11C10 10.4477 10.4477 10 11 10H14C15.1046 10 16 10.8954 16 12V14C16 15.1046 15.1046 16 14 16H11C10.4477 16 10 15.5523 10 15V11Z" />
+  </svg>
+);
+
+const ChildrenIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
+    <path d="M9 8C10.6569 8 12 6.65685 12 5C12 3.34315 10.6569 2 9 2C7.34315 2 6 3.34315 6 5C6 6.65685 7.34315 8 9 8Z" />
+    <path d="M2 16C2 12.6863 5.13401 10 9 10C12.866 10 16 12.6863 16 16H2Z" />
+  </svg>
+);
+
+const MessagesIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M1 4L9 9L17 4M1 14V4C1 2.89543 1.89543 2 3 2H15C16.1046 2 17 2.89543 17 4V14C17 15.1046 16.1046 16 15 16H3C1.89543 16 1 15.1046 1 14Z" strokeLinecap="round" />
+  </svg>
+);
+
+const FinanceIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
+    <path d="M2 4C2 2.89543 2.89543 2 4 2H14C15.1046 2 16 2.89543 16 4V14C16 15.1046 15.1046 16 14 16H4C2.89543 16 2 15.1046 2 14V4Z" />
+    <path d="M9 5V13M6 8H12M6 10H12" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+const BookingIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M11 3V1M7 3V1M3 13V5C3 3.89543 3.89543 3 5 3H13C14.1046 3 15 3.89543 15 5V13C15 14.1046 14.1046 15 13 15H5C3.89543 15 3 14.1046 3 13Z" strokeLinecap="round" />
+    <path d="M7 8L9 10L12 7" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M3 8H15" strokeLinecap="round" />
+  </svg>
+);
+
+const SettingsIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <circle cx="9" cy="9" r="2.5" />
+    <path d="M9 1V3M9 15V17M1 9H3M15 9H17M3.05 3.05L4.46 4.46M13.54 13.54L14.95 14.95M3.05 14.95L4.46 13.54M13.54 4.46L14.95 3.05" strokeLinecap="round" />
+  </svg>
+);
+
+// Hamburger Menu Icon for mobile
+const MenuIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M3 5H17M3 10H17M3 15H17" strokeLinecap="round" />
+  </svg>
+);
+
+// Close Icon for mobile sidebar
+const CloseIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M5 5L15 15M15 5L5 15" strokeLinecap="round" />
+  </svg>
+);
+
+// Navigation items matching Figma design
+const navItems = [
+  { path: '/parent/dashboard', label: 'Dashboard', icon: DashboardIcon },
+  { path: '/parent/student', label: 'Children', icon: ChildrenIcon },
+  { path: '/parent/messages', label: 'Messages', icon: MessagesIcon },
+  { path: '/parent/wallet', label: 'Finance', icon: FinanceIcon },
+  { path: '/parent/booking', label: 'Booking', icon: BookingIcon },
+  { path: '/parent/settings', label: 'Settings', icon: SettingsIcon },
+];
 
 interface ParentLayoutProps {
   children?: React.ReactNode;
 }
 
-// Navigation items
-const navItems = [
-  { id: 'dashboard', label: 'Dashboard', path: '/parent/dashboard' },
-  { id: 'student', label: 'Student', path: '/parent/student' },
-  { id: 'booking', label: 'Booking', path: '/parent/booking' },
-  { id: 'monitoring', label: 'Monitoring', path: '/parent/monitoring' },
-  { id: 'wallet', label: 'Wallet', path: '/parent/wallet' },
-  { id: 'messages', label: 'Messages', path: '/parent/messages' },
-];
-
-const SettingsIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M10 3C11.6569 3 13 4.34315 13 6C13 7.65685 11.6569 9 10 9C8.34315 9 7 7.65685 7 6C7 4.34315 8.34315 3 10 3Z"
-      fill="#525252"
-    />
-    <path d="M3 18C3 14.134 6.13401 11 10 11C13.866 11 17 14.134 17 18H3Z" fill="#525252" />
-  </svg>
-);
-
-// Header icons
-const SearchIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M6 11C8.76142 11 11 8.76142 11 6C11 3.23858 8.76142 1 6 1C3.23858 1 1 3.23858 1 6C1 8.76142 3.23858 11 6 11Z"
-      stroke="#525252"
-      strokeWidth="1.5"
-    />
-    <path d="M9 9L13 13" stroke="#525252" strokeWidth="1.5" strokeLinecap="round" />
-  </svg>
-);
-
-const NotificationIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M10 2.5C10.8284 2.5 11.5 3.17157 11.5 4V4.94513C13.3699 5.40714 14.8429 6.95306 15.4602 8.95492C15.7125 9.79475 15.877 10.6705 15.9465 11.5644C16.2783 15.7583 13.0836 19.5 8.49999 19.5H8.5C3.91635 19.5 0.721676 15.7583 1.05345 11.5644C1.12297 10.6705 1.2875 9.79475 1.53983 8.95492C2.15712 6.95306 3.63009 5.40714 5.5 4.94513V4C5.5 3.17157 6.17157 2.5 7 2.5H10Z"
-      fill="#171717"
-    />
-  </svg>
-);
-
-const SettingsHeaderIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M7 1C7.55228 1 8 1.44772 8 2V4C8 4.55228 7.55228 5 7 5C6.44772 5 6 4.55228 6 4V2C6 1.44772 6 44772 1 7 1ZM1 7H2C2.55228 7 3 7.44772 3 8C3 8.55228 2.55228 9 2 9H1C0.447715 9 0 8.55228 0 8C0 7.44772 0.447715 7 1 7ZM7 9C7.55228 9 8 8.44772 8 9V12C8 12.5523 7.55228 13 7 13C6.44772 13 6 12.5523 6 12V9C6 8.44772 6 44772 8 7 8ZM11 7H12C12.5523 7 13 7.44772 13 8C13 8.55228 12.5523 9 12 9H11C10.4477 9 10 8.55228 10 8.44772 10.4477 7 11 7Z"
-      fill="#171717"
-    />
-  </svg>
-);
-
-const ProfileHeaderIcon = () => (
-  <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="18" cy="12" r="6" fill="#d4d4d4" />
-    <path d="M6 30C6 24.4772 10.4772 20 16 20H20C25.5228 20 30 24.4772 30 30H6Z" fill="#d4d4d4" />
-  </svg>
-);
-
-// Mobile menu toggle icon
-const MenuIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M3 6H21C21.5523 6 5.44772 6 5C21.5523 6 5 5.44772 6 5C21.5523 6 6 4.44772 6 6V6H17C17.5523 6 6 4.44772 6 6V18H3Z"
-      fill="#171717"
-    />
-    <path
-      d="M3 12H21C21.5523 12 11.44772 12 5C21.5523 12 5 5.44772 12 5C21.5523 12 5 5.44772 12 5V18H3Z"
-      fill="#171717"
-    />
-  </svg>
-);
-
-const CloseIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M5 5L19 5L5 19H5" stroke="#171717" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M19 5L5 19L19 5H19" stroke="#171717" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
 const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [notificationCount] = useState(3);
 
   const isActive = (path: string) => location.pathname.startsWith(path);
 
-  const handleNavClick = (path: string) => {
-    navigate(path);
-    // Close sidebar on mobile when clicking nav link
-    if (window.innerWidth < 768) {
-      setIsSidebarOpen(false);
-    }
-  };
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  // Close sidebar when route changes on mobile
+  // Close sidebar on route change
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsSidebarOpen(false);
+    setSidebarOpen(false);
   }, [location.pathname]);
 
-  // Handle scroll lock
+  // Handle scroll lock when sidebar open on mobile
   useEffect(() => {
-    if (isSidebarOpen) {
+    if (sidebarOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -120,144 +138,159 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isSidebarOpen]);
+  }, [sidebarOpen]);
+
+  // Placeholder user/student data
+  const parentData = {
+    name: 'Jen Chen',
+    initials: 'JC',
+    role: 'PARENT',
+  };
+
+  const studentData = {
+    name: 'Emma Chen',
+    grade: 'Grade 8 • Active',
+    initials: 'EC',
+  };
 
   return (
-    <div className={styles.studentLayout}>
-      {/* Mobile Menu Toggle Button */}
-      <button
-        className={styles.mobileMenuToggle}
-        onClick={toggleSidebar}
-        aria-label="Toggle menu"
-        aria-expanded={isSidebarOpen}
-      >
-        {isSidebarOpen ? <CloseIcon /> : <MenuIcon />}
-      </button>
+    <div className={styles.layout}>
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className={styles.sidebarOverlay}
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-      {/* Overlay for mobile */}
-      <div
-        className={`${styles.overlay} ${isSidebarOpen ? '' : styles.hidden}`}
-        onClick={() => setIsSidebarOpen(false)}
-      />
+      {/* Main Content (Left) */}
+      <main className={styles.main}>
+        {/* Header */}
+        <header className={styles.header}>
+          <div className={styles.headerContainer}>
+            {/* Mobile Menu Button */}
+            <button
+              className={styles.menuBtn}
+              onClick={() => setSidebarOpen(true)}
+            >
+              <MenuIcon />
+            </button>
 
-      {/* Sidebar */}
-      <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.open : ''}`}>
-        {/* Sidebar Header - Logo */}
-        <div className={styles.sidebarHeader}>
-          <h1 className={styles.logo}>TutorPortal</h1>
-        </div>
-
-        {/* Navigation Links */}
-        <nav className={styles.nav}>
-          {navItems.map((item) => {
-            let IconComponent;
-            switch (item.id) {
-              case 'dashboard':
-                IconComponent = <LayoutDashboard />;
-                break;
-              case 'student':
-                IconComponent = <User />;
-                break;
-              case 'booking':
-                IconComponent = <User />;
-                break;
-              case 'monitoring':
-                IconComponent = <Gauge />;
-                break;
-              case 'wallet':
-                IconComponent = <Wallet />;
-                break;
-              case 'messages':
-                IconComponent = <MessageSquare />;
-                break;
-              default:
-                IconComponent = undefined;
-            }
-
-            return (
-              <div
-                key={item.id}
-                className={`${styles.navLink} ${isActive(item.path) ? styles.active : ''}`}
-                onClick={() => handleNavClick(item.path)}
-                data-node-id={`nav-${item.id}`}
-              >
-                <div className={styles.iconWrapper}>{IconComponent}</div>
-                <div className={styles.textWrapper}>
-                  <p className={styles.text}>{item.label}</p>
+            {/* Left: Student Selector + Next Lesson */}
+            <div className={styles.headerLeft}>
+              {/* Student Selector */}
+              <button className={styles.studentSelector}>
+                <div className={styles.studentAvatar}>
+                  <span>{studentData.initials}</span>
                 </div>
-              </div>
-            );
-          })}
-        </nav>
-
-        {/* Sidebar Footer - Settings */}
-        <div className={styles.sidebarFooter}>
-          <div
-            className={styles.settingsLink}
-            onClick={() => handleNavClick('/student/settings')}
-            data-node-id="nav-settings"
-          >
-            <div className={styles.iconWrapper}>
-              <SettingsIcon />
-            </div>
-            <div className={styles.textWrapper}>
-              <p className={styles.text}>Settings</p>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <div className={styles.mainContent}>
-        {/* Header - Top Bar */}
-        <header className={styles.header} data-node-id="header">
-          <div className={styles.container}>
-            {/* Left: Search Bar */}
-            <div className={styles.leftContainer}>
-              {/* Search Bar */}
-              <div className={styles.searchBar}>
-                <div className={styles.background}>
-                  <div className={styles.searchIcon}>
-                    <SearchIcon />
-                  </div>
-                  <div className={styles.searchText}>
-                    <input type="text" placeholder="Search..." />
-                  </div>
+                <div className={styles.studentInfo}>
+                  <span className={styles.studentName}>{studentData.name}</span>
+                  <span className={styles.studentGrade}>{studentData.grade}</span>
                 </div>
+                <div className={styles.dropdownArrow}>
+                  <ChevronDown />
+                </div>
+              </button>
+
+              {/* Next Lesson Indicator */}
+              <div className={styles.nextLesson}>
+                <ClockIcon />
+                <span>Next: Today 4:00 PM</span>
+                <span className={styles.nextLessonDot}>•</span>
+                <span>Math with Sarah</span>
               </div>
             </div>
 
-            {/* Right: Notification, Settings, Profile */}
-            <div className={styles.headerActions}>
+            {/* Center: Search Bar */}
+            <div className={styles.headerSearch}>
+              <SearchIcon />
+              <input
+                type="text"
+                className={styles.searchInput}
+                placeholder="Search classes, students, notes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            {/* Right: Notifications + User */}
+            <div className={styles.headerRight}>
               {/* Notification Button */}
-              <div className={styles.headerActionButton} data-node-id="notification-btn">
-                <div className={styles.notificationButton}>
+              <button className={styles.notificationBtn}>
+                <div className={styles.notificationIconWrap}>
                   <NotificationIcon />
                 </div>
-              </div>
-
-              {/* Settings Button */}
-              <div className={styles.buttonMargin}>
-                <div className={styles.headerActionButton} data-node-id="settings-btn">
-                  <div className={styles.settingsButton}>
-                    <SettingsHeaderIcon />
+                {notificationCount > 0 && (
+                  <div className={styles.notificationBadge}>
+                    <span>{notificationCount}</span>
                   </div>
-                </div>
-              </div>
+                )}
+              </button>
 
-              {/* Profile Button */}
-              <div className={styles.profileButtonWrapper}>
-                <div className={styles.profileButton}>
-                  <ProfileHeaderIcon />
+              {/* User Info */}
+              <div className={styles.headerUser}>
+                <span className={styles.headerUserName}>{parentData.name}</span>
+                <div className={styles.headerAvatar}>
+                  <span>{parentData.initials}</span>
                 </div>
               </div>
             </div>
           </div>
         </header>
 
-        {/* Content Area - Children will be rendered here */}
-        <div className={styles.contentArea}>{children || <Outlet />}</div>
-      </div>
+        {/* Page Content */}
+        <div className={styles.contentArea}>
+          {children || <Outlet />}
+        </div>
+      </main>
+
+      {/* Sidebar (Right) */}
+      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
+        {/* Logo Section */}
+        <div className={styles.sidebarLogo}>
+          <Link to="/" className={styles.logoLink}>
+            <LogoIcon />
+            <span className={styles.logoText}>AGORA</span>
+          </Link>
+          {/* Mobile Close Button */}
+          <button
+            className={styles.sidebarClose}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <CloseIcon />
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className={styles.sidebarNav}>
+          {navItems.map((item) => (
+            <div
+              key={item.path}
+              className={`${styles.navItem} ${isActive(item.path) ? styles.navItemActive : ''}`}
+              onClick={() => {
+                navigate(item.path);
+                setSidebarOpen(false);
+              }}
+            >
+              <item.icon />
+              <span className={styles.navText}>{item.label}</span>
+            </div>
+          ))}
+        </nav>
+
+        {/* User Profile Card at Bottom */}
+        <div className={styles.sidebarUser}>
+          <div className={styles.userCard}>
+            <div className={styles.userAvatar}>
+              <span>{parentData.initials}</span>
+            </div>
+            <div className={styles.userInfo}>
+              <span className={styles.userName}>{parentData.name}</span>
+              <span className={styles.userRole}>{parentData.role}</span>
+            </div>
+          </div>
+        </div>
+      </aside>
     </div>
   );
 };

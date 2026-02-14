@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import styles from './styles.module.css';
-import { Send, Loader2, SendHorizontal } from 'lucide-react';
+import { Loader2, SendHorizontal } from 'lucide-react';
 
 const attachIcon = 'https://www.figma.com/api/mcp/asset/9eb5351d-9a24-43a9-8521-a6e4ca4ace17';
 

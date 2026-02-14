@@ -11,12 +11,13 @@ const api = axios.create({
   },
 });
 
-export interface ChatChanel {
+export interface ChatChannel {
   channelId: number;
   bookingId: number;
   otherUserId: string;
   otherUserName: string;
   otherUserAvatarUrl: string;
+  status: string;
   lastMessageAt: string;
   lastMessagePreview: string;
 }
@@ -33,18 +34,19 @@ export interface ChatMessage {
   content: string;
   messageType: string;
   createdAt: string;
+  metadata?: any;
 }
 
-export const getChats = async (): Promise<ApiResponse<ChatChanel[]>> => {
+export const getChats = async (): Promise<ApiResponse<ChatChannel[]>> => {
   try {
     const response = await api.get(`/chat/channels`, {
       headers: getAuthHeaders(),
     });
 
-    console.log('✅ Verification progress fetched:', response.data);
+    console.log('✅ Chat channels fetched:', response.data);
     return response.data;
   } catch (error: any) {
-    console.error('❌ Error fetching verification progress:', {
+    console.error('❌ Error fetching chat channels:', {
       status: error.response?.status,
       data: error.response?.data,
       message: error.message,
@@ -63,10 +65,10 @@ export const getChatMessages = async (
       params: query,
     });
 
-    console.log('✅ Verification progress fetched:', response.data);
+    console.log('✅ Chat messages fetched:', response.data);
     return response.data;
   } catch (error: any) {
-    console.error('❌ Error fetching verification progress:', {
+    console.error('❌ Error fetching chat messages:', {
       status: error.response?.status,
       data: error.response?.data,
       message: error.message,

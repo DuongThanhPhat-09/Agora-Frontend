@@ -3,21 +3,46 @@ import styles from './styles.module.css';
 import ChatHeader from './ChatHeader';
 import ChatMessagesArea from './ChatMessagesArea';
 import MessageComposer from './MessageComposer';
-import { getChatMessages, type ChatMessage } from '../../services/chat.service';
+import SessionContextCard from './SessionContextCard';
+import { getChatMessages, type ChatMessage, type ChatChannel } from '../../services/chat.service';
+import { getBookingById, type BookingResponseDTO } from '../../services/booking.service';
 import { signalRService } from '../../services/signalr.service';
 import { message } from 'antd';
 
 interface ChatAreaProps {
   selectedChannelId: number | null;
   currentUserId: string | null;
+  selectedChannel?: ChatChannel | null;
   isTutor?: boolean;
 }
 
-const ChatArea = ({ selectedChannelId, currentUserId, isTutor = false }: ChatAreaProps) => {
+const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor = false }: ChatAreaProps) => {
   const [hasMore, setHasMore] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [connectionState, setConnectionState] = useState<string>('disconnected');
+  const [booking, setBooking] = useState<BookingResponseDTO | null>(null);
+
+  // Fetch booking details when channel changes
+  useEffect(() => {
+    if (!selectedChannel?.bookingId) {
+      setBooking(null);
+      return;
+    }
+
+    const fetchBooking = async () => {
+      try {
+        const response = await getBookingById(selectedChannel.bookingId);
+        if (response.statusCode === 200) {
+          setBooking(response.content);
+        }
+      } catch (err) {
+        console.error('Error fetching booking:', err);
+      }
+    };
+
+    fetchBooking();
+  }, [selectedChannel?.bookingId]);
 
   // Kết nối SignalR khi component mount
   useEffect(() => {
@@ -35,12 +60,13 @@ const ChatArea = ({ selectedChannelId, currentUserId, isTutor = false }: ChatAre
             // Thêm tin nhắn mới vào list (mới nhất ở đầu)
             if (data?.channelId === selectedChannelId) {
               const newMessage: ChatMessage = {
-                messageId: data.messageId,
-                channelId: data.channelId,
-                senderId: data.senderId,
-                content: data.content,
-                messageType: data.messageType,
-                createdAt: data.createdAt,
+                messageId: data.messageId || data.MessageId,
+                channelId: data.channelId || data.ChannelId,
+                senderId: data.senderId || data.SenderId,
+                content: data.content || data.Content,
+                messageType: data.messageType || data.MessageType,
+                createdAt: data.createdAt || data.CreatedAt,
+                metadata: data.metadata || data.Metadata,
               };
               setMessages((prev) => [newMessage, ...prev]);
             }
@@ -181,15 +207,22 @@ const ChatArea = ({ selectedChannelId, currentUserId, isTutor = false }: ChatAre
         selectedChannelId={selectedChannelId}
         onLeaveChannel={handleLeaveChannel}
         connectionState={connectionState}
+        channel={selectedChannel}
+        booking={booking}
       />
-      <ChatMessagesArea
-        messages={messages}
-        loading={loading}
-        currentUserId={currentUserId}
-        loadMessages={loadMessages}
-        hasMore={hasMore}
-        isTutor={isTutor}
-      />
+      <div className={styles.messagesAreaContainer}>
+        <div className={styles.messagesArea}>
+          {booking && <SessionContextCard booking={booking} />}
+          <ChatMessagesArea
+            messages={messages}
+            loading={loading}
+            currentUserId={currentUserId}
+            loadMessages={loadMessages}
+            hasMore={hasMore}
+            isTutor={isTutor}
+          />
+        </div>
+      </div>
       <div className={styles.chatFooter}>
         {/* <QuickTemplates /> */}
         <MessageComposer onSend={handleSendMessage} disabled={!signalRService.isConnected()} />

@@ -8,7 +8,11 @@
       "mcp__plugin_figma_figma__get_screenshot",
       "mcp__plugin_figma_figma__get_metadata",
       "Bash(claude mcp:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "mcp__figma__get_figma_data",
+      "Bash(find \"C:\\\\Users\\\\lequo\\\\OneDrive\\\\Documents\\\\GitHub\\\\Agora-Frontend\\\\src\\\\pages\\\\Parent\"* -type f)",
+      "Bash(python3:*)",
+      "Bash(node -e:*)"
     ]
   }
 }

@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import styles from '../../styles/pages/tutor-portal-messages.module.css';
-import { getChats, getChatMessages, type ChatChanel, type ChatMessage } from '../../services/chat.service';
+import { getChats, getChatMessages, type ChatChannel, type ChatMessage } from '../../services/chat.service';
 import { signalRService } from '../../services/signalr.service';
+import { getUserIdFromToken } from '../../services/auth.service';
 import BookingRequestCard from '../../components/BookingRequestCard/BookingRequestCard';
 import { message as antMessage } from 'antd';
 
@@ -51,9 +52,9 @@ const smartReplies = [
 ];
 
 const TutorPortalMessages = () => {
-    const tutorId = "USR-TUT-01"; // Should come from auth context
-    const [conversations, setConversations] = useState<ChatChanel[]>([]);
-    const [selectedChannel, setSelectedChannel] = useState<ChatChanel | null>(null);
+    const tutorId = getUserIdFromToken();
+    const [conversations, setConversations] = useState<ChatChannel[]>([]);
+    const [selectedChannel, setSelectedChannel] = useState<ChatChannel | null>(null);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [messageInput, setMessageInput] = useState('');
@@ -65,6 +66,11 @@ const TutorPortalMessages = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
+    const selectedChannelRef = useRef<ChatChannel | null>(null);
+    useEffect(() => {
+        selectedChannelRef.current = selectedChannel;
+    }, [selectedChannel]);
+
     // SignalR Initialization
     useEffect(() => {
         let mounted = true;
@@ -75,16 +81,19 @@ const TutorPortalMessages = () => {
                     setConnectionState('connected');
                     signalRService.onMessageReceived((data: any) => {
                         console.log('📩 SignalR messageReceived:', data);
-                        if (data?.channelId === selectedChannel?.channelId) {
+                        // Use ref to get the current selected channel
+                        if (data?.channelId === selectedChannelRef.current?.channelId) {
                             const newMessage: ChatMessage = {
                                 messageId: data.messageId,
                                 channelId: data.channelId,
                                 senderId: data.senderId,
-                                content: data.content,
-                                messageType: data.messageType,
-                                createdAt: data.createdAt,
+                                content: data.content || data.Content,
+                                messageType: data.messageType || data.MessageType,
+                                createdAt: data.createdAt || data.CreatedAt,
+                                metadata: data.metadata || data.Metadata,
                             };
                             setMessages((prev) => [...prev, newMessage]);
+                            setTimeout(scrollToBottom, 50);
                         }
                     });
                 }
@@ -98,7 +107,7 @@ const TutorPortalMessages = () => {
             mounted = false;
             signalRService.disconnect();
         };
-    }, [selectedChannel]);
+    }, []); // Run only once on mount
 
     // Initial Load - Conversations
     useEffect(() => {
@@ -125,12 +134,19 @@ const TutorPortalMessages = () => {
                 const msgs = Array.isArray(res?.content) ? res.content : [];
                 // API returns new messages first, but UI wants them last
                 setMessages([...msgs].reverse());
-                await signalRService.joinChannel(selectedChannel.channelId);
+
+                // Ensure SignalR is connected before joining channel
+                try {
+                    await signalRService.connect();
+                    await signalRService.joinChannel(selectedChannel.channelId);
+                } catch (err) {
+                    console.error('❌ Failed to join channel:', err);
+                }
             } catch (err) {
                 antMessage.error('Failed to load messages');
             } finally {
                 setLoading(false);
-                setTimeout(scrollToBottom, 100);
+                setTimeout(scrollToBottom, 300);
             }
         };
         fetchMessages();
@@ -230,30 +246,36 @@ const TutorPortalMessages = () => {
                                 </div>
                             ) : (
                                 <>
-                                    {messages.map((message) => (
-                                        <div
-                                            key={message.messageId}
-                                            className={`${styles.messageWrapper} ${message.senderId === tutorId ? styles.outgoing : styles.incoming}`}
-                                        >
-                                            {message.messageType === 'booking_request' ? (
-                                                <BookingRequestCard
-                                                    message={{
-                                                        content: message.content,
-                                                        senderId: message.senderId,
-                                                        createdAt: message.createdAt
-                                                    }}
-                                                    isTutor={true}
-                                                />
-                                            ) : (
-                                                <div className={styles.messageBubble}>
-                                                    <p className={styles.messageContent}>{message.content}</p>
-                                                </div>
-                                            )}
-                                            <span className={styles.messageTimestamp}>
-                                                {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
-                                        </div>
-                                    ))}
+                                    {messages.map((message) => {
+                                        console.log('Rendering message:', { id: message.messageId, type: message.messageType });
+                                        const isBookingRequest = message.messageType?.toLowerCase() === 'booking_request';
+
+                                        return (
+                                            <div
+                                                key={message.messageId}
+                                                className={`${styles.messageWrapper} ${message.senderId === tutorId ? styles.outgoing : styles.incoming}`}
+                                            >
+                                                {isBookingRequest ? (
+                                                    <BookingRequestCard
+                                                        message={{
+                                                            content: message.content,
+                                                            senderId: message.senderId,
+                                                            createdAt: message.createdAt,
+                                                            metadata: message.metadata
+                                                        }}
+                                                        isTutor={true}
+                                                    />
+                                                ) : (
+                                                    <div className={styles.messageBubble}>
+                                                        <p className={styles.messageContent}>{message.content}</p>
+                                                    </div>
+                                                )}
+                                                <span className={styles.messageTimestamp}>
+                                                    {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
                                     <div ref={messagesEndRef} />
                                 </>
                             )}
