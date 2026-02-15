@@ -50,7 +50,8 @@ interface LocalAvailabilitySlot {
     id: number;
     dayOfWeek: number;  // 1-7 for ISO week (Mon=1, Sun=7)
     startHour: number;
-    duration: number;
+    startMinutes: number; // Total minutes from midnight (e.g. 7:30 = 450)
+    durationMinutes: number; // Duration in minutes
     apiId: number;  // Original API availabilityid
     startTime: string;
     endTime: string;
@@ -68,6 +69,8 @@ interface EditAvailabilityData {
 // Constants
 const DAYS_OF_WEEK = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 const TIME_SLOTS = Array.from({ length: 15 }, (_, i) => 7 + i); // 7:00 to 21:00
+const ROW_HEIGHT = 70; // px per hour row
+const PX_PER_MINUTE = ROW_HEIGHT / 60;
 
 // Helper: Convert API dayofweek (0-6) to ISO week day (1-7)
 // API: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
@@ -83,11 +86,15 @@ const parseTimeToHour = (timeStr: string): number => {
     return hours;
 };
 
-// Helper: Calculate duration in hours
-const calculateDuration = (startTime: string, endTime: string): number => {
-    const startHour = parseTimeToHour(startTime);
-    const endHour = parseTimeToHour(endTime);
-    return endHour - startHour;
+// Helper: Parse time string to total minutes from midnight
+const parseTimeToMinutes = (timeStr: string): number => {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + (minutes || 0);
+};
+
+// Helper: Calculate duration in minutes
+const calculateDurationMinutes = (startTime: string, endTime: string): number => {
+    return parseTimeToMinutes(endTime) - parseTimeToMinutes(startTime);
 };
 
 const TutorPortalSchedule: React.FC = () => {
@@ -135,7 +142,8 @@ const TutorPortalSchedule: React.FC = () => {
                 id: index + 1,
                 dayOfWeek: apiDayToIsoDay(slot.dayofweek),
                 startHour: parseTimeToHour(slot.starttime),
-                duration: calculateDuration(slot.starttime, slot.endtime),
+                startMinutes: parseTimeToMinutes(slot.starttime),
+                durationMinutes: calculateDurationMinutes(slot.starttime, slot.endtime),
                 apiId: slot.availabilityid,
                 startTime: slot.starttime,
                 endTime: slot.endtime,
@@ -210,10 +218,9 @@ const TutorPortalSchedule: React.FC = () => {
         setIsAddAvailabilityModalOpen(false);
     };
 
-    // Get availability slot at specific day and hour
+    // Get availability slot that starts in the given hour for a specific day
     // dayIndex: 0-6 (Mon-Sun in display order)
-    const getAvailabilityAtTime = (dayIndex: number, hour: number): LocalAvailabilitySlot | null => {
-        // dayIndex 0-6 maps to ISO week day 1-7
+    const getAvailabilityStartingAtHour = (dayIndex: number, hour: number): LocalAvailabilitySlot | null => {
         const isoDay = dayIndex + 1;
         return availability.find(a =>
             a.dayOfWeek === isoDay &&
@@ -384,29 +391,36 @@ const TutorPortalSchedule: React.FC = () => {
                                         className={styles.timeRow}
                                         style={{
                                             zIndex: TIME_SLOTS.length - index,
-                                            position: 'relative' // Explicitly set to enable z-index
+                                            position: 'relative'
                                         }}
                                     >
                                         <div className={styles.timeLabel}>
                                             {hour.toString().padStart(2, '0')}:00
                                         </div>
                                         {weekDates.map((date, dayIndex) => {
-                                            const availabilitySlot = getAvailabilityAtTime(dayIndex, hour);
+                                            const slot = getAvailabilityStartingAtHour(dayIndex, hour);
+                                            // Calculate minute offset within the hour (e.g. 30 min for 07:30)
+                                            const minuteOffset = slot ? (slot.startMinutes - hour * 60) : 0;
+                                            const topOffsetPx = minuteOffset * PX_PER_MINUTE;
+                                            const heightPx = slot ? slot.durationMinutes * PX_PER_MINUTE : 0;
 
                                             return (
                                                 <div
                                                     key={dayIndex}
                                                     className={`${styles.timeCell} ${isToday(date) ? styles.todayColumn : ''}`}
                                                 >
-                                                    {availabilitySlot && (
+                                                    {slot && (
                                                         <div
                                                             className={styles.availableBlock}
-                                                            style={{ height: `${availabilitySlot.duration * 70 - 6}px` }}
+                                                            style={{
+                                                                top: `${topOffsetPx + 3}px`,
+                                                                height: `${heightPx - 6}px`,
+                                                            }}
                                                         >
                                                             <div className={styles.availableContent}>
                                                                 <span className={styles.availableLabel}>Rảnh</span>
                                                                 <span className={styles.availableTime}>
-                                                                    {availabilitySlot.startTime} - {availabilitySlot.endTime}
+                                                                    {slot.startTime} - {slot.endTime}
                                                                 </span>
                                                             </div>
                                                             <div className={styles.slotActions}>
@@ -415,7 +429,7 @@ const TutorPortalSchedule: React.FC = () => {
                                                                         className={styles.editSlotBtn}
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
-                                                                            handleEditAvailability(availabilitySlot);
+                                                                            handleEditAvailability(slot);
                                                                         }}
                                                                     >
                                                                         <EditOutlined />
@@ -423,13 +437,13 @@ const TutorPortalSchedule: React.FC = () => {
                                                                 </Tooltip>
                                                                 <Popconfirm
                                                                     title="Xóa lịch rảnh"
-                                                                    description={`Bạn có chắc muốn xóa lịch rảnh ${DAY_OF_WEEK_MAP[availabilitySlot.apiDayOfWeek]} ${availabilitySlot.startTime} - ${availabilitySlot.endTime}?`}
-                                                                    onConfirm={() => handleDeleteAvailability(availabilitySlot)}
+                                                                    description={`Bạn có chắc muốn xóa lịch rảnh ${DAY_OF_WEEK_MAP[slot.apiDayOfWeek]} ${slot.startTime} - ${slot.endTime}?`}
+                                                                    onConfirm={() => handleDeleteAvailability(slot)}
                                                                     okText="Xóa"
                                                                     cancelText="Hủy"
                                                                     okButtonProps={{
                                                                         danger: true,
-                                                                        loading: deletingSlotId === availabilitySlot.apiId
+                                                                        loading: deletingSlotId === slot.apiId
                                                                     }}
                                                                     placement="left"
                                                                 >

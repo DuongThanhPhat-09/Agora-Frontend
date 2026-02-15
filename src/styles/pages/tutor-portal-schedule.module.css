@@ -482,12 +482,6 @@
     border-right: none;
 }
 
-/* Ensure cells containing blocks have a clear priority */
-.timeCell:has(.availableBlock),
-.timeCell:has(.sessionBlock) {
-    z-index: 10;
-}
-
 .timeCell.todayColumn {
     background-color: rgba(242, 240, 228, 0.1);
 }
@@ -561,7 +555,6 @@
 /* Available Block */
 .availableBlock {
     position: absolute;
-    top: 3px;
     left: 3px;
     right: 3px;
     border-radius: 10px;
