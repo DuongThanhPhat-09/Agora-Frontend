@@ -1,24 +1,21 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import { Spin } from 'antd';
+import { getPendingTutors, updateTutorApproval } from '../../services/admin.service';
 import TutorDetailModal from './components/TutorDetailModal';
-import {
-    mockGetPendingTutors as getPendingTutors,
-    mockGetTutorDetailForReview as getTutorDetailForReview,
-    mockApproveTutor as approveTutor,
-    mockRejectTutor as rejectTutor,
-} from './mockData';
-import type { TutorForReview, TutorDetailForReview } from '../../types/admin.types';
+import type { PendingTutorFromAPI } from '../../types/admin.types';
 import '../../styles/pages/admin-dashboard.css';
 import '../../styles/pages/admin-vetting.css';
 
 const AdminVettingPage = () => {
     // State management
-    const [tutors, setTutors] = useState<TutorForReview[]>([]);
+    const [tutors, setTutors] = useState<PendingTutorFromAPI[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [selectedTutorDetail, setSelectedTutorDetail] = useState<TutorDetailForReview | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [loadingDetail, setLoadingDetail] = useState(false);
+    const [selectedTutor, setSelectedTutor] = useState<PendingTutorFromAPI | null>(null);
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [rejectionNote, setRejectionNote] = useState('');
+    const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
 
     // Fetch pending tutors on mount
     useEffect(() => {
@@ -29,8 +26,8 @@ const AdminVettingPage = () => {
         try {
             setLoading(true);
             setError(null);
-            const data = await getPendingTutors();
-            setTutors(data);
+            const response = await getPendingTutors(1, 50);
+            setTutors(response.content || []);
         } catch (err) {
             console.error('Error fetching pending tutors:', err);
             setError('Không thể tải danh sách gia sư. Vui lòng thử lại.');
@@ -40,43 +37,46 @@ const AdminVettingPage = () => {
         }
     };
 
-    const handleViewDetail = async (tutorId: string) => {
-        try {
-            setLoadingDetail(true);
-            const detail = await getTutorDetailForReview(tutorId);
-            setSelectedTutorDetail(detail);
-            setIsModalOpen(true);
-        } catch (err) {
-            console.error('Error fetching tutor detail:', err);
-            toast.error('Không thể tải chi tiết gia sư. Vui lòng thử lại.');
-        } finally {
-            setLoadingDetail(false);
-        }
-    };
-
     const handleApprove = async (tutorId: string) => {
         try {
-            await approveTutor(tutorId);
+            setActionLoading(tutorId);
+            await updateTutorApproval(tutorId, true);
             toast.success('Phê duyệt gia sư thành công!');
-            // Refresh list
+            setSelectedTutor(null);
             await fetchPendingTutors();
         } catch (err) {
             console.error('Error approving tutor:', err);
             toast.error('Không thể phê duyệt gia sư. Vui lòng thử lại.');
-            throw err; // Re-throw to let modal handle it
+        } finally {
+            setActionLoading(null);
         }
     };
 
-    const handleReject = async (tutorId: string, rejectionNote: string) => {
+    const handleOpenRejectModal = (tutorId: string) => {
+        setShowRejectModal(tutorId);
+        setRejectionNote('');
+    };
+
+    const handleReject = async () => {
+        if (!showRejectModal) return;
+        if (rejectionNote.trim().length < 20) {
+            toast.error('Lý do từ chối phải có ít nhất 20 ký tự.');
+            return;
+        }
+
         try {
-            await rejectTutor(tutorId, rejectionNote);
+            setActionLoading(showRejectModal);
+            await updateTutorApproval(showRejectModal, false, rejectionNote);
             toast.success('Đã từ chối hồ sơ gia sư.');
-            // Refresh list
+            setShowRejectModal(null);
+            setRejectionNote('');
+            setSelectedTutor(null);
             await fetchPendingTutors();
         } catch (err) {
             console.error('Error rejecting tutor:', err);
             toast.error('Không thể từ chối hồ sơ. Vui lòng thử lại.');
-            throw err; // Re-throw to let modal handle it
+        } finally {
+            setActionLoading(null);
         }
     };
 
@@ -98,10 +98,16 @@ const AdminVettingPage = () => {
         }
     };
 
+    const formatCurrency = (amount: number | null): string => {
+        if (!amount) return '—';
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+        }).format(amount);
+    };
+
     return (
         <div className="admin-vetting-page">
-            {/* Main Content */}
-
             {/* Main Content */}
             <main className="admin-main">
                 {/* Header */}
@@ -159,9 +165,9 @@ const AdminVettingPage = () => {
                             </div>
 
                             <div className="vetting-actions">
-                                <button className="vetting-btn vetting-btn-outline">
-                                    <span className="material-symbols-outlined vetting-btn-icon">filter_list</span>
-                                    Bộ lọc
+                                <button className="vetting-btn vetting-btn-outline" onClick={fetchPendingTutors}>
+                                    <span className="material-symbols-outlined vetting-btn-icon">refresh</span>
+                                    Làm mới
                                 </button>
                                 <button className="vetting-btn vetting-btn-primary">
                                     <span className="material-symbols-outlined vetting-btn-icon">download</span>
@@ -175,7 +181,7 @@ const AdminVettingPage = () => {
                             <div className="vetting-tabs-nav">
                                 <button className="vetting-tab vetting-tab-active">
                                     Đang chờ
-                                    <span className="vetting-tab-count">12</span>
+                                    <span className="vetting-tab-count">{tutors.length}</span>
                                 </button>
                                 <button className="vetting-tab">
                                     Đã duyệt
@@ -191,13 +197,16 @@ const AdminVettingPage = () => {
                             {/* Loading State */}
                             {loading && (
                                 <div className="vetting-loading-state">
-                                    <p>Đang tải danh sách gia sư...</p>
+                                    <Spin size="large" tip="Đang tải danh sách gia sư...">
+                                        <div style={{ padding: '50px' }} />
+                                    </Spin>
                                 </div>
                             )}
 
                             {/* Error State */}
                             {error && !loading && (
                                 <div className="vetting-error-state">
+                                    <span className="material-symbols-outlined vetting-state-icon">error</span>
                                     <p>{error}</p>
                                     <button className="vetting-btn vetting-btn-primary" onClick={fetchPendingTutors}>
                                         Thử lại
@@ -208,6 +217,7 @@ const AdminVettingPage = () => {
                             {/* Empty State */}
                             {!loading && !error && tutors.length === 0 && (
                                 <div className="vetting-empty-state">
+                                    <span className="material-symbols-outlined vetting-state-icon">check_circle</span>
                                     <p>Không có gia sư nào đang chờ duyệt</p>
                                 </div>
                             )}
@@ -219,7 +229,8 @@ const AdminVettingPage = () => {
                                         <thead className="vetting-table-head">
                                             <tr>
                                                 <th className="vetting-table-th">Thông tin gia sư</th>
-                                                <th className="vetting-table-th">Môn học</th>
+                                                <th className="vetting-table-th">Tiêu đề</th>
+                                                <th className="vetting-table-th">Giá/giờ</th>
                                                 <th className="vetting-table-th">Đã nộp</th>
                                                 <th className="vetting-table-th">Trạng thái</th>
                                                 <th className="vetting-table-th">Hành động</th>
@@ -227,7 +238,7 @@ const AdminVettingPage = () => {
                                         </thead>
                                         <tbody className="vetting-table-body">
                                             {tutors.map((tutor) => (
-                                                <tr key={tutor.tutorid} className="vetting-table-row">
+                                                <tr key={tutor.userid} className="vetting-table-row">
                                                     <td className="vetting-table-td">
                                                         <div className="vetting-tutor-info">
                                                             <div
@@ -241,16 +252,17 @@ const AdminVettingPage = () => {
                                                         </div>
                                                     </td>
                                                     <td className="vetting-table-td">
-                                                        <div className="vetting-subjects">
-                                                            {tutor.subjects.map((subject, idx) => (
-                                                                <span key={idx} className="vetting-subject-tag">
-                                                                    {subject}
-                                                                </span>
-                                                            ))}
+                                                        <div className="vetting-headline">
+                                                            {tutor.sections?.basicInfo?.headline || 'Chưa cập nhật'}
                                                         </div>
                                                     </td>
+                                                    <td className="vetting-table-td">
+                                                        <span className="vetting-price-cell">
+                                                            {formatCurrency(tutor.sections?.pricing?.hourlyRate ?? null)}
+                                                        </span>
+                                                    </td>
                                                     <td className="vetting-table-td vetting-date">
-                                                        {formatDate(tutor.createdat)}
+                                                        {formatDate(tutor.profileCreatedAt)}
                                                     </td>
                                                     <td className="vetting-table-td">
                                                         <span className="vetting-status-badge">
@@ -259,13 +271,33 @@ const AdminVettingPage = () => {
                                                         </span>
                                                     </td>
                                                     <td className="vetting-table-td">
-                                                        <button
-                                                            className="vetting-action-btn"
-                                                            onClick={() => handleViewDetail(tutor.tutorid)}
-                                                            disabled={loadingDetail}
-                                                        >
-                                                            {loadingDetail ? 'Đang tải...' : 'Xem chi tiết'}
-                                                        </button>
+                                                        <div className="vetting-row-actions">
+                                                            <button
+                                                                className="vetting-quick-btn vetting-quick-approve"
+                                                                title="Phê duyệt"
+                                                                onClick={() => handleApprove(tutor.userid)}
+                                                                disabled={actionLoading === tutor.userid}
+                                                            >
+                                                                <span className="material-symbols-outlined">check</span>
+                                                            </button>
+                                                            <button
+                                                                className="vetting-quick-btn vetting-quick-reject"
+                                                                title="Từ chối"
+                                                                onClick={() => handleOpenRejectModal(tutor.userid)}
+                                                                disabled={actionLoading === tutor.userid}
+                                                            >
+                                                                <span className="material-symbols-outlined">close</span>
+                                                            </button>
+                                                            <button
+                                                                className="vetting-action-btn"
+                                                                onClick={() => setSelectedTutor(tutor)}
+                                                            >
+                                                                Xem chi tiết
+                                                                <span className="material-symbols-outlined" style={{ fontSize: 18, marginLeft: 4 }}>
+                                                                    open_in_new
+                                                                </span>
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))}
@@ -278,7 +310,7 @@ const AdminVettingPage = () => {
                             {!loading && !error && tutors.length > 0 && (
                                 <div className="vetting-pagination">
                                     <p className="vetting-pagination-info">
-                                        Hiển thị {tutors.length} trong {tutors.length} yêu cầu
+                                        Hiển thị {tutors.length} yêu cầu đang chờ duyệt
                                     </p>
                                     <div className="vetting-pagination-controls">
                                         <button className="vetting-pagination-btn" disabled>
@@ -297,18 +329,62 @@ const AdminVettingPage = () => {
 
             {/* Tutor Detail Modal */}
             <TutorDetailModal
-                tutorDetail={selectedTutorDetail}
-                isOpen={isModalOpen}
-                onClose={() => {
-                    setIsModalOpen(false);
-                    setSelectedTutorDetail(null);
-                }}
+                tutor={selectedTutor}
+                isOpen={selectedTutor !== null}
+                onClose={() => setSelectedTutor(null)}
                 onApprove={handleApprove}
-                onReject={handleReject}
+                onOpenReject={handleOpenRejectModal}
+                actionLoading={actionLoading}
             />
+
+            {/* Rejection Modal */}
+            {showRejectModal && (
+                <div className="vetting-modal-overlay" onClick={() => setShowRejectModal(null)}>
+                    <div className="vetting-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="vetting-modal-header">
+                            <h3>Từ chối hồ sơ gia sư</h3>
+                            <button
+                                className="vetting-modal-close"
+                                onClick={() => setShowRejectModal(null)}
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <div className="vetting-modal-body">
+                            <p className="vetting-modal-description">
+                                Vui lòng nhập lý do từ chối hồ sơ. Lý do này sẽ được gửi đến gia sư để họ có thể cải thiện hồ sơ.
+                            </p>
+                            <textarea
+                                className="vetting-rejection-textarea"
+                                placeholder="Nhập lý do từ chối (ít nhất 20 ký tự)..."
+                                value={rejectionNote}
+                                onChange={(e) => setRejectionNote(e.target.value)}
+                                rows={4}
+                            />
+                            <p className="vetting-char-count">
+                                {rejectionNote.length}/20 ký tự tối thiểu
+                            </p>
+                        </div>
+                        <div className="vetting-modal-footer">
+                            <button
+                                className="vetting-btn vetting-btn-outline"
+                                onClick={() => setShowRejectModal(null)}
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                className="vetting-btn vetting-btn-reject"
+                                onClick={handleReject}
+                                disabled={rejectionNote.trim().length < 20 || actionLoading !== null}
+                            >
+                                {actionLoading ? 'Đang xử lý...' : 'Xác nhận từ chối'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
 
 export default AdminVettingPage;
-
