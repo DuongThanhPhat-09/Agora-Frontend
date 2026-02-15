@@ -1,0 +1,560 @@
+/* ===== PARENT DASHBOARD ===== */
+
+.dashboard {
+    width: 100%;
+    min-height: 100%;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 32px 24px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ===== WELCOME BANNER ===== */
+.welcomeBanner {
+    background: linear-gradient(135deg, #1a2238 0%, #631b1b 100%);
+    border-radius: 12px;
+    padding: 32px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.welcomeContent {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.welcomeTitle {
+    font-family: 'Bricolage Grotesque', 'IBM Plex Sans', sans-serif;
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+}
+
+.welcomeSubtitle {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+}
+
+.welcomeDate {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 8px;
+}
+
+/* ===== STATS GRID ===== */
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    width: 100%;
+}
+
+.statCard {
+    background-color: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: box-shadow 0.2s ease;
+}
+
+.statCard:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.statHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.statIconWrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background-color: #f2f0e4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.statBadge {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 9999px;
+}
+
+.badgeGreen {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.badgeBlue {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.statValue {
+    font-family: 'Bricolage Grotesque', 'IBM Plex Sans', sans-serif;
+    font-size: 28px;
+    line-height: 36px;
+    font-weight: 700;
+    color: #1a2238;
+}
+
+.statLabel {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 500;
+    color: #525252;
+}
+
+.statSubtitle {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    color: #a3a3a3;
+}
+
+/* ===== QUICK ACTIONS ===== */
+.quickActions {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+.quickActionBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: 1px solid #e5e5e5;
+    background-color: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    color: #1a2238;
+}
+
+.quickActionBtn:hover {
+    border-color: #1a2238;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.quickActionBtn svg {
+    flex-shrink: 0;
+}
+
+/* ===== CONTENT GRID (2 columns) ===== */
+.contentGrid {
+    display: grid;
+    grid-template-columns: 1.8fr 1fr;
+    gap: 24px;
+    width: 100%;
+}
+
+/* ===== UPCOMING LESSONS (Left) ===== */
+.lessonsCard {
+    background-color: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.lessonsHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.lessonsHeader h3 {
+    font-family: 'Bricolage Grotesque', 'IBM Plex Sans', sans-serif;
+    font-size: 18px;
+    line-height: 28px;
+    font-weight: 600;
+    color: #1a2238;
+    margin: 0;
+}
+
+.viewAllLink {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    line-height: 20px;
+    color: #525252;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.viewAllLink:hover {
+    color: #1a2238;
+}
+
+.lessonsList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.lessonItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    background-color: #ffffff;
+    transition: background-color 0.15s ease;
+}
+
+.lessonHighlighted {
+    background-color: #fafaf8;
+    border-color: #d4d4d4;
+}
+
+.lessonLeft {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    min-width: 0;
+}
+
+.lessonIcon {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background-color: #f2f0e4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.lessonInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.lessonSubject {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    color: #1a2238;
+}
+
+.lessonTime {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    color: #737373;
+}
+
+.lessonRight {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.lessonBadge {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 9999px;
+}
+
+.badgeConfirmed {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.badgeScheduled {
+    background-color: #f5f5f5;
+    color: #525252;
+}
+
+.lessonViewBtn {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    color: #525252;
+    text-decoration: underline;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s ease;
+}
+
+.lessonViewBtn:hover {
+    color: #1a2238;
+}
+
+/* ===== RIGHT COLUMN ===== */
+.rightColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ===== LATEST SESSION CARD ===== */
+.sessionCard {
+    background-color: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sessionHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sessionHeader h3 {
+    font-family: 'Bricolage Grotesque', 'IBM Plex Sans', sans-serif;
+    font-size: 18px;
+    line-height: 28px;
+    font-weight: 600;
+    color: #1a2238;
+    margin: 0;
+}
+
+.sessionDate {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    color: #737373;
+}
+
+.sessionContent {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sessionDescription {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    color: #525252;
+    margin: 0;
+}
+
+.sessionInfo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sessionInfoLabel {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    color: #737373;
+}
+
+.sessionInfoValue {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 600;
+    color: #1a2238;
+}
+
+.sessionBtn {
+    width: 100%;
+    padding: 8px;
+    border-radius: 8px;
+    background-color: #f2f0e4;
+    border: none;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    line-height: 20px;
+    font-weight: 500;
+    color: #1a2238;
+    text-align: center;
+    transition: background-color 0.2s ease;
+}
+
+.sessionBtn:hover {
+    background-color: #e8e5d8;
+}
+
+/* ===== NEEDS ATTENTION CARD ===== */
+.attentionCard {
+    background-color: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.attentionCard h3 {
+    font-family: 'Bricolage Grotesque', 'IBM Plex Sans', sans-serif;
+    font-size: 18px;
+    line-height: 28px;
+    font-weight: 600;
+    color: #1a2238;
+    margin: 0;
+}
+
+.attentionContent {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 8px;
+    background-color: #fffbeb;
+    border: 1px solid #fde68a;
+}
+
+.attentionIcon {
+    flex-shrink: 0;
+    padding-top: 1px;
+}
+
+.attentionDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.attentionTitle {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    color: #1a2238;
+}
+
+.attentionDesc {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    color: #737373;
+}
+
+.attentionLink {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    color: #92400e;
+    text-decoration: underline;
+    margin-top: 2px;
+}
+
+.attentionLink:hover {
+    color: #78350f;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1200px) {
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .contentGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 20px 16px;
+        gap: 16px;
+    }
+
+    .welcomeBanner {
+        padding: 24px 20px;
+    }
+
+    .welcomeTitle {
+        font-size: 20px;
+        line-height: 28px;
+    }
+
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .statCard {
+        padding: 16px;
+    }
+
+    .statValue {
+        font-size: 24px;
+        line-height: 30px;
+    }
+
+    .quickActions {
+        flex-wrap: wrap;
+    }
+
+    .quickActionBtn {
+        flex: 1;
+        min-width: 120px;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .statsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .quickActions {
+        flex-direction: column;
+    }
+
+    .quickActionBtn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .lessonRight {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+    }
+}

@@ -1,0 +1,935 @@
+/* ===== PARENT STUDENT / CHILDREN PAGE ===== */
+/* Matches Figma "parent 1" frame */
+
+.page {
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    color: #1a2238;
+}
+
+/* ===== TOP BAR ===== */
+.topBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 26px 40px 26px;
+    background: transparent;
+    gap: 32px;
+    flex-wrap: wrap;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.pageTitle {
+    font-family: 'Bricolage Grotesque', 'IBM Plex Sans', sans-serif;
+    font-size: 31.5px;
+    line-height: 1.11em;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: #1a2238;
+    margin: 0;
+    flex: 1;
+}
+
+.topBarActions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Search */
+.searchWrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.searchIconPos {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(62, 47, 40, 0.4);
+    pointer-events: none;
+    display: flex;
+}
+
+.searchInput {
+    padding: 11px 16px 11px 44px;
+    border: 1px solid rgba(62, 47, 40, 0.1);
+    border-radius: 12px;
+    background: rgba(242, 240, 228, 0.6);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.3em;
+    color: #1a2238;
+    outline: none;
+    width: 256px;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.searchInput::placeholder {
+    color: rgba(62, 47, 40, 0.4);
+}
+
+.searchInput:focus {
+    border-color: rgba(62, 47, 40, 0.2);
+}
+
+/* Add Child button - matches Figma exactly */
+.addChildBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: #631b1b;
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.43em;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    white-space: nowrap;
+    box-shadow: 0px 4px 6px -4px rgba(0, 0, 0, 0.1), 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.addChildBtn:hover {
+    opacity: 0.9;
+}
+
+/* ===== CONTENT ===== */
+.content {
+    flex: 1;
+    padding: 40px 40px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* ===== QUICK STATS ===== */
+.quickStats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.statCard {
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* Stat icon circle (top-left of card) */
+.statIcon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.statIcon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.statIconGreen {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.statIconNavy {
+    background: #1a2238;
+    color: #ffffff;
+}
+
+.statIconRed {
+    background: #631b1b;
+    color: #ffffff;
+}
+
+.statValue {
+    font-family: 'Bricolage Grotesque', 'IBM Plex Sans', sans-serif;
+    font-size: 32px;
+    line-height: 38px;
+    font-weight: 700;
+    color: #1a2238;
+}
+
+.statLabel {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    color: #737373;
+}
+
+/* ===== EMPTY STATE ===== */
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 24px;
+    text-align: center;
+}
+
+.emptyIcon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f2f0e4;
+    border-radius: 16px;
+    margin-bottom: 20px;
+    color: #1a2238;
+}
+
+.emptyTitle {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a2238;
+    margin: 0 0 8px 0;
+}
+
+.emptyText {
+    font-size: 14px;
+    color: #737373;
+    line-height: 1.6;
+    max-width: 360px;
+    margin: 0 0 24px 0;
+}
+
+.emptyBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: #631b1b;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.emptyBtn:hover {
+    background: #7a2424;
+}
+
+/* ===== MAIN GRID (2 columns) ===== */
+.mainGrid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 24px;
+    align-items: start;
+}
+
+/* ===== LEFT COLUMN ===== */
+.leftColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ===== CHILD CARD ===== */
+.childCard {
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* Card Header */
+.cardHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.cardHeaderLeft {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+    min-width: 0;
+}
+
+/* Avatar with verified badge */
+.avatarWrap {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #e0d4c8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #f2f0e4;
+    position: relative;
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.avatarInitials {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a2238;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.verifiedBadge {
+    position: absolute;
+    bottom: -3px;
+    left: -3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 9999px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.verifiedBadge svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Child info */
+.childInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.childName {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 17px;
+    line-height: 24px;
+    font-weight: 600;
+    color: #1a2238;
+    margin: 0;
+}
+
+.childMeta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+}
+
+.childGrade {
+    color: #737373;
+}
+
+.metaDot {
+    color: #d4d4d4;
+}
+
+.childStatus {
+    font-weight: 600;
+    color: #16a34a;
+}
+
+/* More menu button (horizontal dots) */
+.cardMenuWrap {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.moreBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    background: none;
+    cursor: pointer;
+    color: #737373;
+    transition: all 0.15s ease;
+}
+
+.moreBtn:hover {
+    background: #f5f5f5;
+    color: #1a2238;
+}
+
+.dropdownMenu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    z-index: 20;
+    min-width: 140px;
+    padding: 4px;
+}
+
+.dropdownItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    color: #525252;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+}
+
+.dropdownItem:hover {
+    background: #f5f5f5;
+    color: #1a2238;
+}
+
+.dropdownItemDanger {
+    color: #dc2626;
+}
+
+.dropdownItemDanger:hover {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+/* ===== Stats Row (3 cols) ===== */
+.cardStats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.cardStatItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 8px;
+    background: #fafafa;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+}
+
+.cardStatLabel {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    color: #9ca3af;
+    font-weight: 500;
+}
+
+.cardStatValue {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 17px;
+    line-height: 22px;
+    font-weight: 700;
+    color: #1a2238;
+}
+
+/* ===== Next Lesson / School Bar ===== */
+.nextBar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #faf9f6;
+    border: 1px solid #ece9e0;
+    border-radius: 12px;
+}
+
+.nextBar svg {
+    flex-shrink: 0;
+}
+
+.nextBarText {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    color: #525252;
+}
+
+.nextBarText strong {
+    font-weight: 600;
+    color: #1a2238;
+}
+
+/* ===== Card Actions ===== */
+.cardActions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.viewDetailsBtn {
+    flex: 1;
+    padding: 11px 16px;
+    background: #1a2238;
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    text-align: center;
+}
+
+.viewDetailsBtn:hover {
+    background: #253050;
+}
+
+.chatBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    background: none;
+    cursor: pointer;
+    color: #737373;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+
+.chatBtn:hover {
+    background: #f5f5f5;
+    color: #1a2238;
+    border-color: #d4d4d4;
+}
+
+/* ===== RIGHT COLUMN: LINKING TIPS ===== */
+.rightColumn {
+    position: sticky;
+    top: 80px;
+}
+
+.tipsCard {
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.tipsHeader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Dark rounded icon for lightbulb (matching Figma) */
+.tipsIconWrap {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #1a2238;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.tipsTitle {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 16px;
+    line-height: 22px;
+    font-weight: 600;
+    color: #1a2238;
+    margin: 0;
+}
+
+.tipsList {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.tipItem {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.tipItem svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.tipItem p {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    line-height: 20px;
+    color: #525252;
+    margin: 0;
+}
+
+/* ===== LOADING ===== */
+.loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 20px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f2f0e4;
+    border-top-color: #1a2238;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loadingText {
+    font-size: 14px;
+    color: #737373;
+    margin: 0;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+    .mainGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .rightColumn {
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .topBar {
+        padding: 16px;
+    }
+
+    .content {
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .topBarActions {
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .searchWrap {
+        flex: 1;
+    }
+
+    .searchInput {
+        width: 100%;
+    }
+
+    .quickStats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .childCard {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .quickStats {
+        grid-template-columns: 1fr;
+    }
+
+    .topBarActions {
+        flex-direction: column;
+    }
+
+    .addChildBtn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .cardStats {
+        grid-template-columns: 1fr;
+    }
+
+    .cardActions {
+        flex-direction: column;
+    }
+
+    .viewDetailsBtn {
+        width: 100%;
+    }
+
+    .chatBtn {
+        width: 100%;
+    }
+}
+
+/* ===== MODAL STYLES (kept for sub-components) ===== */
+.modalOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(23, 23, 23, 0.6);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+}
+
+.modalContent {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    z-index: 1001;
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.modalTitle {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a2238;
+    margin: 0;
+}
+
+.modalCloseBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px; height: 32px;
+    border: none;
+    background: #f5f5f5;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #737373;
+}
+
+.modalCloseBtn:hover {
+    background: #e5e5e5;
+    color: #1a2238;
+}
+
+.addStudentForm {
+    padding: 20px 24px 24px;
+}
+
+.formRow {
+    margin-bottom: 16px;
+}
+
+.formRow:last-child {
+    margin-bottom: 0;
+}
+
+.formLabel {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1a2238;
+    margin-bottom: 6px;
+}
+
+.required {
+    color: #dc2626;
+    margin-left: 2px;
+}
+
+.formInput,
+.formTextarea {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: #1a2238;
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    transition: border-color 0.15s ease;
+    box-sizing: border-box;
+}
+
+.formInput:focus,
+.formTextarea:focus {
+    outline: none;
+    border-color: #1a2238;
+}
+
+.formInputError {
+    border-color: #dc2626;
+}
+
+.errorMessage {
+    display: block;
+    font-size: 12px;
+    color: #dc2626;
+    margin-top: 4px;
+}
+
+.formTextarea {
+    min-height: 80px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.modalActions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    padding-top: 20px;
+}
+
+.modalBtn {
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 10px;
+    border: 1px solid #e5e5e5;
+    background: #fff;
+    color: #737373;
+    cursor: pointer;
+}
+
+.modalBtn:hover {
+    background: #f5f5f5;
+    color: #1a2238;
+}
+
+.modalBtnPrimary {
+    background: #1a2238;
+    color: #fff;
+    border-color: #1a2238;
+}
+
+.modalBtnPrimary:hover {
+    background: #253050;
+}
+
+.deleteModalContent {
+    max-width: 400px;
+}
+
+.deleteModalIcon {
+    width: 64px; height: 64px;
+    margin: 0 auto 20px;
+    background: rgba(220, 38, 38, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.deleteModalIcon svg {
+    color: #dc2626;
+    width: 32px; height: 32px;
+}
+
+.deleteModalTitle {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a2238;
+    margin: 0 0 20px;
+    text-align: center;
+}
+
+.deleteModalText {
+    font-size: 14px;
+    color: #737373;
+    line-height: 1.6;
+    text-align: center;
+    margin: 0 0 12px;
+}
+
+.deleteModalText strong {
+    font-weight: 600;
+    color: #1a2238;
+}
+
+.deleteModalActions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    padding-top: 20px;
+}
+
+.modalBtnDanger {
+    background: #dc2626;
+    color: #fff;
+    border-color: #dc2626;
+}
+
+.modalBtnDanger:hover {
+    background: #b91c1c;
+}

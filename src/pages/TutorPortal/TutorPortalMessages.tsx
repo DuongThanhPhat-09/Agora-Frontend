@@ -1,26 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import styles from '../../styles/pages/tutor-portal-messages.module.css';
+import { getChats, getChatMessages, type ChatChannel, type ChatMessage } from '../../services/chat.service';
+import { signalRService } from '../../services/signalr.service';
+import { getUserIdFromToken } from '../../services/auth.service';
+import BookingRequestCard from '../../components/BookingRequestCard/BookingRequestCard';
+import { message as antMessage } from 'antd';
 
-// Types
-interface Conversation {
-    id: string;
-    name: string;
-    avatar?: string;
-    subject: string;
-    lastMessage: string;
-    timestamp: string;
-    isActive: boolean;
-    unread?: boolean;
-}
-
-interface Message {
-    id: string;
-    content: string;
-    timestamp: string;
-    isOutgoing: boolean;
-}
-
-// Icons
+// Icons ... (keep existing icons)
 const SearchIcon = () => (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
         <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.5" />
@@ -58,50 +44,6 @@ const SendIcon = () => (
     </svg>
 );
 
-// Sample data
-const sampleConversations: Conversation[] = [
-    {
-        id: '1',
-        name: 'Emma Wilson',
-        subject: 'Grade 11 Physics',
-        lastMessage: '"Thank you for the class!"',
-        timestamp: '2m ago',
-        isActive: true,
-        unread: true,
-    },
-    {
-        id: '2',
-        name: 'Alex Chen',
-        subject: 'Grade 10 Math',
-        lastMessage: '"I have a question about homework..."',
-        timestamp: '1h ago',
-        isActive: false,
-    },
-    {
-        id: '3',
-        name: 'Sarah Parker (Parent)',
-        subject: 'Grade 12 Chem',
-        lastMessage: '"How is Sarah progressing?"',
-        timestamp: 'Yesterday',
-        isActive: false,
-    },
-];
-
-const sampleMessages: Message[] = [
-    {
-        id: '1',
-        content: "Hello Alex! I was looking at the Physics homework from today's session. Could you clarify the third question?",
-        timestamp: '10:45 AM',
-        isOutgoing: false,
-    },
-    {
-        id: '2',
-        content: "Hi Emma! Of course. In Question 3, remember that the force is perpendicular to the motion. That means work done is zero.",
-        timestamp: '10:50 AM',
-        isOutgoing: true,
-    },
-];
-
 const smartReplies = [
     "I'll review your homework and get back to you soon!",
     "Great progress today, keep up the good work!",
@@ -110,42 +52,116 @@ const smartReplies = [
 ];
 
 const TutorPortalMessages = () => {
-    const [conversations] = useState<Conversation[]>(sampleConversations);
-    const [selectedConversation, setSelectedConversation] = useState<Conversation>(sampleConversations[0]);
-    const [messages, setMessages] = useState<Message[]>(sampleMessages);
+    const tutorId = getUserIdFromToken();
+    const [conversations, setConversations] = useState<ChatChannel[]>([]);
+    const [selectedChannel, setSelectedChannel] = useState<ChatChannel | null>(null);
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [messageInput, setMessageInput] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [connectionState, setConnectionState] = useState<string>('disconnected');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
+    const selectedChannelRef = useRef<ChatChannel | null>(null);
     useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+        selectedChannelRef.current = selectedChannel;
+    }, [selectedChannel]);
 
-    const handleSelectConversation = (conversation: Conversation) => {
-        setSelectedConversation(conversation);
-        // In real app, fetch messages for this conversation
-    };
-
-    const handleSmartReply = (reply: string) => {
-        setMessageInput(reply);
-    };
-
-    const handleSendMessage = () => {
-        if (!messageInput.trim()) return;
-
-        const newMessage: Message = {
-            id: Date.now().toString(),
-            content: messageInput,
-            timestamp: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
-            isOutgoing: true,
+    // SignalR Initialization
+    useEffect(() => {
+        let mounted = true;
+        const initSignalR = async () => {
+            try {
+                await signalRService.connect();
+                if (mounted) {
+                    setConnectionState('connected');
+                    signalRService.onMessageReceived((data: any) => {
+                        console.log('📩 SignalR messageReceived:', data);
+                        // Use ref to get the current selected channel
+                        if (data?.channelId === selectedChannelRef.current?.channelId) {
+                            const newMessage: ChatMessage = {
+                                messageId: data.messageId,
+                                channelId: data.channelId,
+                                senderId: data.senderId,
+                                content: data.content || data.Content,
+                                messageType: data.messageType || data.MessageType,
+                                createdAt: data.createdAt || data.CreatedAt,
+                                metadata: data.metadata || data.Metadata,
+                            };
+                            setMessages((prev) => [...prev, newMessage]);
+                            setTimeout(scrollToBottom, 50);
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error('SignalR connection error:', err);
+                if (mounted) setConnectionState('error');
+            }
         };
+        initSignalR();
+        return () => {
+            mounted = false;
+            signalRService.disconnect();
+        };
+    }, []); // Run only once on mount
 
-        setMessages([...messages, newMessage]);
+    // Initial Load - Conversations
+    useEffect(() => {
+        const fetchConversations = async () => {
+            try {
+                const res = await getChats();
+                const list = Array.isArray(res?.content) ? res.content : [];
+                setConversations(list);
+                if (list.length > 0) setSelectedChannel(list[0]);
+            } catch (err) {
+                antMessage.error('Failed to load conversations');
+            }
+        };
+        fetchConversations();
+    }, []);
+
+    // Load Messages for Selected Channel
+    useEffect(() => {
+        if (!selectedChannel) return;
+        const fetchMessages = async () => {
+            try {
+                setLoading(true);
+                const res = await getChatMessages(selectedChannel.channelId, { page: 1, pageSize: 50 });
+                const msgs = Array.isArray(res?.content) ? res.content : [];
+                // API returns new messages first, but UI wants them last
+                setMessages([...msgs].reverse());
+
+                // Ensure SignalR is connected before joining channel
+                try {
+                    await signalRService.connect();
+                    await signalRService.joinChannel(selectedChannel.channelId);
+                } catch (err) {
+                    console.error('❌ Failed to join channel:', err);
+                }
+            } catch (err) {
+                antMessage.error('Failed to load messages');
+            } finally {
+                setLoading(false);
+                setTimeout(scrollToBottom, 300);
+            }
+        };
+        fetchMessages();
+    }, [selectedChannel]);
+
+    const handleSendMessage = async () => {
+        if (!messageInput.trim() || !selectedChannel) return;
+        const content = messageInput.trim();
         setMessageInput('');
+
+        try {
+            await signalRService.sendMessage(selectedChannel.channelId, content);
+        } catch (err) {
+            antMessage.error('Failed to send message');
+        }
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -155,18 +171,14 @@ const TutorPortalMessages = () => {
         }
     };
 
-    const filteredConversations = conversations.filter(conv =>
-        conv.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        conv.subject.toLowerCase().includes(searchQuery.toLowerCase())
+    const filteredConversations = (conversations || []).filter(conv =>
+        conv.otherUserName?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const getInitial = (name: string) => {
-        return name.charAt(0).toUpperCase();
-    };
+    const getInitial = (name: string) => name ? name.charAt(0).toUpperCase() : '?';
 
     return (
         <div className={styles.messagesPage}>
-            {/* Conversation List Sidebar */}
             <aside className={styles.conversationsSidebar}>
                 <div className={styles.sidebarHeader}>
                     <h1 className={styles.sidebarTitle}>Messages</h1>
@@ -178,108 +190,123 @@ const TutorPortalMessages = () => {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
-                        <span className={styles.searchIcon}>
-                            <SearchIcon />
-                        </span>
+                        <span className={styles.searchIcon}><SearchIcon /></span>
                     </div>
                 </div>
 
                 <div className={styles.conversationsList}>
                     {filteredConversations.map((conversation) => (
                         <div
-                            key={conversation.id}
-                            className={`${styles.conversationItem} ${selectedConversation.id === conversation.id ? styles.active : ''}`}
-                            onClick={() => handleSelectConversation(conversation)}
+                            key={conversation.channelId}
+                            className={`${styles.conversationItem} ${selectedChannel?.channelId === conversation.channelId ? styles.active : ''}`}
+                            onClick={() => setSelectedChannel(conversation)}
                         >
                             <div className={styles.conversationAvatar}>
-                                <UserIcon />
+                                {conversation.otherUserAvatarUrl ? (
+                                    <img src={conversation.otherUserAvatarUrl} alt={conversation.otherUserName} />
+                                ) : <UserIcon />}
                             </div>
                             <div className={styles.conversationInfo}>
                                 <div className={styles.conversationHeader}>
-                                    <span className={styles.conversationName}>{conversation.name}</span>
-                                    <span className={styles.conversationTime}>{conversation.timestamp}</span>
+                                    <span className={styles.conversationName}>{conversation.otherUserName}</span>
+                                    <span className={styles.conversationTime}>
+                                        {new Date(conversation.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
                                 </div>
-                                <span className={styles.conversationSubject}>{conversation.subject}</span>
-                                <span className={styles.conversationPreview}>{conversation.lastMessage}</span>
+                                <span className={styles.conversationPreview}>{conversation.lastMessagePreview}</span>
                             </div>
                         </div>
                     ))}
                 </div>
             </aside>
 
-            {/* Chat Window */}
             <main className={styles.chatWindow}>
-                {/* Chat Header */}
-                <div className={styles.chatHeader}>
-                    <div className={styles.chatHeaderInfo}>
-                        <div className={styles.chatAvatar}>
-                            <span>{getInitial(selectedConversation.name)}</span>
-                        </div>
-                        <div className={styles.chatHeaderText}>
-                            <span className={styles.chatHeaderName}>{selectedConversation.name}</span>
-                            <span className={styles.chatHeaderStatus}>Active Now</span>
-                        </div>
-                    </div>
-                    <button className={styles.moreOptionsBtn} aria-label="More options">
-                        <MoreOptionsIcon />
-                    </button>
-                </div>
-
-                {/* Messages Area */}
-                <div className={styles.messagesArea}>
-                    {messages.map((message) => (
-                        <div
-                            key={message.id}
-                            className={`${styles.messageWrapper} ${message.isOutgoing ? styles.outgoing : styles.incoming}`}
-                        >
-                            <div className={styles.messageBubble}>
-                                <p className={styles.messageContent}>{message.content}</p>
+                {selectedChannel && (
+                    <>
+                        <div className={styles.chatHeader}>
+                            <div className={styles.chatHeaderInfo}>
+                                <div className={styles.chatAvatar}>
+                                    <span>{getInitial(selectedChannel.otherUserName)}</span>
+                                </div>
+                                <div className={styles.chatHeaderText}>
+                                    <span className={styles.chatHeaderName}>{selectedChannel.otherUserName}</span>
+                                    <span className={styles.chatHeaderStatus}>
+                                        {connectionState === 'connected' ? '● Online' : 'Offline'}
+                                    </span>
+                                </div>
                             </div>
-                            <span className={styles.messageTimestamp}>{message.timestamp}</span>
+                            <button className={styles.moreOptionsBtn} aria-label="More options"><MoreOptionsIcon /></button>
                         </div>
-                    ))}
-                    <div ref={messagesEndRef} />
-                </div>
 
-                {/* Smart Reply & Input Area */}
-                <div className={styles.inputArea}>
-                    <div className={styles.smartReplySection}>
-                        <div className={styles.smartReplyLabel}>
-                            <SmartReplyIcon />
-                            <span>Smart Reply</span>
+                        <div className={styles.messagesArea}>
+                            {loading ? (
+                                <div className={styles.chatLoadingContainer}>
+                                    <div className={styles.spinner} />
+                                    <p className={styles.chatLoadingText}>Loading messages...</p>
+                                </div>
+                            ) : (
+                                <>
+                                    {messages.map((message) => {
+                                        console.log('Rendering message:', { id: message.messageId, type: message.messageType });
+                                        const isBookingRequest = message.messageType?.toLowerCase() === 'booking_request';
+
+                                        return (
+                                            <div
+                                                key={message.messageId}
+                                                className={`${styles.messageWrapper} ${message.senderId === tutorId ? styles.outgoing : styles.incoming}`}
+                                            >
+                                                {isBookingRequest ? (
+                                                    <BookingRequestCard
+                                                        message={{
+                                                            content: message.content,
+                                                            senderId: message.senderId,
+                                                            createdAt: message.createdAt,
+                                                            metadata: message.metadata
+                                                        }}
+                                                        isTutor={true}
+                                                    />
+                                                ) : (
+                                                    <div className={styles.messageBubble}>
+                                                        <p className={styles.messageContent}>{message.content}</p>
+                                                    </div>
+                                                )}
+                                                <span className={styles.messageTimestamp}>
+                                                    {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                    <div ref={messagesEndRef} />
+                                </>
+                            )}
                         </div>
-                        <div className={styles.smartReplyOptions}>
-                            {smartReplies.map((reply, index) => (
-                                <button
-                                    key={index}
-                                    className={styles.smartReplyBtn}
-                                    onClick={() => handleSmartReply(reply)}
-                                >
-                                    {reply}
+
+                        <div className={styles.inputArea}>
+                            <div className={styles.smartReplySection}>
+                                <div className={styles.smartReplyLabel}><SmartReplyIcon /><span>Smart Reply</span></div>
+                                <div className={styles.smartReplyOptions}>
+                                    {smartReplies.map((reply, index) => (
+                                        <button key={index} className={styles.smartReplyBtn} onClick={() => setMessageInput(reply)}>{reply}</button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className={styles.messageInputContainer}>
+                                <input
+                                    type="text"
+                                    className={styles.messageInput}
+                                    placeholder="Type a message..."
+                                    value={messageInput}
+                                    onChange={(e) => setMessageInput(e.target.value)}
+                                    onKeyPress={handleKeyPress}
+                                />
+                                <button className={styles.sendBtn} onClick={handleSendMessage} disabled={!messageInput.trim()} aria-label="Send message">
+                                    <SendIcon />
                                 </button>
-                            ))}
+                            </div>
                         </div>
-                    </div>
-
-                    <div className={styles.messageInputContainer}>
-                        <input
-                            type="text"
-                            className={styles.messageInput}
-                            placeholder="Type a message..."
-                            value={messageInput}
-                            onChange={(e) => setMessageInput(e.target.value)}
-                            onKeyPress={handleKeyPress}
-                        />
-                        <button
-                            className={styles.sendBtn}
-                            onClick={handleSendMessage}
-                            disabled={!messageInput.trim()}
-                            aria-label="Send message"
-                        >
-                            <SendIcon />
-                        </button>
-                    </div>
-                </div>
+                    </>
+                )}
             </main>
         </div>
     );

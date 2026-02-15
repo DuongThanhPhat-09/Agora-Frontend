@@ -1,0 +1,650 @@
+:root {
+  --neutral-900: #171717;
+  --neutral-700: #404040;
+  --neutral-600: #525252;
+  --neutral-500: #737373;
+  --neutral-300: #d4d4d4;
+  --neutral-200: #e5e5e5;
+  --neutral-100: #f5f5f5;
+  --neutral-50: #fafafa;
+  --white: #ffffff;
+}
+
+.page {
+  background: var(--white);
+  color: var(--neutral-900);
+  width: 100%;
+}
+
+.loading {
+  padding: 24px;
+  color: var(--neutral-600);
+  font-size: 14px;
+}
+
+.quickStatsBar {
+  border-bottom: 1px solid var(--neutral-200);
+  padding: 16px 24px 17px;
+  background: var(--white);
+}
+
+.quickStatsRow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.quickStatItem {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.quickStatIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--neutral-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quickStatIcon img {
+  width: 18px;
+  height: 16px;
+}
+
+.quickStatContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.quickStatLabel {
+  font-size: 12px;
+  color: var(--neutral-500);
+  line-height: 16px;
+}
+
+.quickStatValue {
+  font-size: 18px;
+  color: var(--neutral-900);
+  line-height: 28px;
+}
+
+.content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sectionHeadingIcon {
+  width: 12px;
+  height: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sectionHeadingText {
+  font-size: 14px;
+  letter-spacing: 0.35px;
+  text-transform: uppercase;
+  color: var(--neutral-900);
+}
+
+.focusHero {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.focusCard {
+  background: var(--white);
+  border: 2px solid var(--neutral-300);
+  border-radius: 12px;
+  padding: 26px;
+}
+
+.focusCardInner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.7fr);
+  gap: 24px;
+}
+
+.focusSession {
+  padding-right: 25px;
+  border-right: 1px solid var(--neutral-200);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.focusSessionHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.focusSessionTitleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.focusBadge {
+  font-size: 12px;
+  padding: 4px 8px;
+  background: var(--neutral-900);
+  color: var(--white);
+  border-radius: 4px;
+  width: fit-content;
+}
+
+.focusTitle {
+  font-size: 20px;
+  line-height: 28px;
+  color: var(--neutral-900);
+  margin: 0;
+}
+
+.focusSubtitle {
+  font-size: 14px;
+  color: var(--neutral-500);
+}
+
+.focusCountdown {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.focusCountdownTime {
+  font-size: 24px;
+  line-height: 32px;
+  color: var(--neutral-900);
+}
+
+.focusCountdownLabel {
+  font-size: 12px;
+  color: var(--neutral-500);
+}
+
+.focusSessionActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--neutral-300);
+  color: var(--neutral-500);
+  border: none;
+  border-radius: 8px;
+  padding: 11px 24px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.primaryButton img {
+  width: 16px;
+  height: 14px;
+}
+
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 17px;
+  border: 1px solid var(--neutral-300);
+  border-radius: 8px;
+  background: transparent;
+  font-size: 14px;
+  color: var(--neutral-700);
+  cursor: pointer;
+}
+
+.iconButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--neutral-300);
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.iconButton img {
+  width: 12px;
+  height: 14px;
+}
+
+.focusNote {
+  background: var(--neutral-50);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  gap: 4px;
+  align-items: flex-start;
+  font-size: 12px;
+  color: var(--neutral-600);
+}
+
+.focusNote img {
+  width: 12px;
+  height: 12px;
+}
+
+.priorityTask {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.priorityBadge {
+  background: var(--neutral-100);
+  color: var(--neutral-700);
+  font-size: 12px;
+  border-radius: 4px;
+  padding: 4px 8px;
+  width: fit-content;
+}
+
+.priorityTitle {
+  font-size: 18px;
+  line-height: 28px;
+  margin: 0;
+  color: var(--neutral-900);
+}
+
+.priorityDue {
+  font-size: 14px;
+  color: var(--neutral-500);
+}
+
+.priorityAttachment {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--neutral-600);
+}
+
+.priorityAttachment img {
+  width: 14px;
+  height: 14px;
+}
+
+.darkButton {
+  background: var(--neutral-900);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.darkButton img {
+  width: 12px;
+  height: 14px;
+}
+
+.outlineButton {
+  border: 1px solid var(--neutral-300);
+  color: var(--neutral-700);
+  border-radius: 8px;
+  padding: 9px 17px;
+  font-size: 14px;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  cursor: pointer;
+}
+
+.outlineButton img {
+  width: 16px;
+  height: 14px;
+}
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 368px;
+  gap: 24px;
+}
+
+.leftColumn,
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  letter-spacing: 0.35px;
+  text-transform: uppercase;
+  color: var(--neutral-900);
+}
+
+.coursesSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.coursesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 24px;
+}
+
+.courseCard {
+  border: 1px solid var(--neutral-200);
+  border-radius: 8px;
+  padding: 20px;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.courseHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.courseTitle {
+  font-size: 16px;
+  line-height: 24px;
+  margin: 0;
+  color: var(--neutral-900);
+}
+
+.courseInstructor {
+  font-size: 12px;
+  color: var(--neutral-500);
+}
+
+.courseIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background: var(--neutral-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.courseIcon img {
+  width: 16px;
+  height: 14px;
+}
+
+.courseProgressRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.courseProgressTrack {
+  flex: 1;
+  height: 6px;
+  background: var(--neutral-100);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.courseProgressFill {
+  height: 100%;
+  background: var(--neutral-900);
+  border-radius: 9999px;
+}
+
+.courseProgressValue {
+  font-size: 12px;
+  color: var(--neutral-500);
+}
+
+.courseNextLabel {
+  font-size: 12px;
+  color: var(--neutral-500);
+}
+
+.tasksSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tasksList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.taskCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--neutral-50);
+}
+
+.taskInfo {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.taskDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: var(--neutral-500);
+}
+
+.taskTitle {
+  font-size: 16px;
+  margin: 0;
+  color: var(--neutral-900);
+}
+
+.taskDue {
+  font-size: 14px;
+  color: var(--neutral-500);
+}
+
+.taskActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.taskStatus {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--neutral-100);
+  color: var(--neutral-700);
+}
+
+.taskStatusOverdue {
+  background: var(--neutral-100);
+}
+
+.taskStatusProgress {
+  background: var(--neutral-100);
+}
+
+.taskStatusCompleted {
+  background: var(--neutral-100);
+}
+
+.darkButtonSmall {
+  background: var(--neutral-900);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.progressPanel,
+.recentSessions {
+  border: 1px solid var(--neutral-200);
+  border-radius: 12px;
+  padding: 25px;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panelTitle {
+  font-size: 18px;
+  line-height: 28px;
+  margin: 0;
+  color: var(--neutral-900);
+}
+
+.progressChartPlaceholder {
+  background: var(--neutral-100);
+  border-radius: 8px;
+  height: 128px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--neutral-500);
+  font-size: 16px;
+}
+
+.progressSummary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.progressPercent {
+  font-size: 24px;
+  color: var(--neutral-900);
+}
+
+.progressDescription {
+  font-size: 14px;
+  color: var(--neutral-500);
+  text-align: center;
+}
+
+.recentHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.linkButton {
+  background: none;
+  border: none;
+  color: var(--neutral-500);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.recentList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recentCard {
+  background: var(--neutral-50);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.recentTitle {
+  font-size: 14px;
+  margin: 0;
+  color: var(--neutral-900);
+}
+
+.recentNote {
+  font-size: 12px;
+  color: var(--neutral-500);
+}
+
+@media (max-width: 1200px) {
+  .quickStatsRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .focusCardInner {
+    grid-template-columns: 1fr;
+  }
+
+  .focusSession {
+    border-right: none;
+    padding-right: 0;
+  }
+
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .coursesGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .quickStatsRow {
+    grid-template-columns: 1fr;
+  }
+
+  .focusSessionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .focusCountdown {
+    align-items: flex-start;
+  }
+
+  .taskCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .taskActions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

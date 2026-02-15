@@ -4,8 +4,9 @@ import "./Header.css";
 // Import Supabase và kiểu dữ liệu User
 import { supabase } from "../../lib/supabase";
 import { type User } from "@supabase/supabase-js";
-import { clearUserFromStorage, getCurrentUser } from "../../services/auth.service";
+import { clearUserFromStorage, getCurrentUser, getCurrentUserRole } from "../../services/auth.service";
 import { Popconfirm } from "antd";
+import { LogOut, LayoutDashboard } from "lucide-react";
 
 const Header = () => {
   const location = useLocation();
@@ -13,6 +14,22 @@ const Header = () => {
   const [user, setUser] = useState<User | null>(null);
   const [userDisplayName, setUserDisplayName] = useState<string>("User");
   const [userAvatar, setUserAvatar] = useState<string>("");
+
+  // Determine portal path based on role
+  const getPortalPath = () => {
+    const role = getCurrentUserRole();
+    if (!role) return "/login";
+
+    switch (role.toLowerCase()) {
+      case 'admin': return "/admin/dashboard";
+      case 'tutor': return "/tutor-portal";
+      case 'parent': return "/parent/dashboard";
+      case 'student': return "/student/dashboard";
+      default: return "/";
+    }
+  };
+
+  const portalPath = getPortalPath();
 
   // Ẩn user info trên trang đăng ký/đăng nhập (vì có thể có OAuth session chưa complete)
   const isAuthPage = location.pathname === "/register" || location.pathname === "/login";
@@ -99,50 +116,53 @@ const Header = () => {
         {/* Auth Buttons - Xử lý điều kiện hiển thị */}
         <div className="auth-buttons">
           {user && !isAuthPage ? (
-            // --- GIAO DIỆN KHI ĐÃ ĐĂNG NHẬP ---
-            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-              {/* Avatar User */}
-              <img
-                src={userAvatar}
-                alt="User Avatar"
+            // --- GIAO DIỆN TỐI GIẢN KHI ĐÃ ĐĂNG NHẬP ---
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              {/* Nút Portal tương ứng theo Role - Icon version */}
+              <Link
+                to={portalPath}
+                className="btn-portal-icon"
                 style={{
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                  border: "2px solid #d4b483",
-                }}
-              />
-              {/* Tên User */}
-              <span
-                style={{
-                  fontWeight: 600,
-                  fontSize: "0.95rem",
                   color: "var(--color-navy)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "8px",
+                  borderRadius: "50%",
+                  cursor: "pointer",
+                  transition: "background 0.2s ease",
                 }}
+                title="Go to Portal"
               >
-                {userDisplayName}
-              </span>
-              {/* Nút Đăng xuất */}
+                <LayoutDashboard size={20} />
+              </Link>
+
+              {/* Nút Đăng xuất - Icon version */}
               <Popconfirm
                 title="Đăng xuất"
                 description="Bạn có chắc chắn muốn đăng xuất?"
-                onConfirm={confirmLogout} // Gọi hàm logout khi bấm Đồng ý
+                onConfirm={confirmLogout}
                 okText="Đồng ý"
                 cancelText="Hủy"
                 placement="bottomRight"
               >
                 <button
-                  className="btn-login"
+                  className="btn-logout-icon"
                   style={{
-                    border: "1px solid #ef4444",
+                    background: "none",
+                    border: "none",
                     color: "#ef4444",
-                    padding: "0.5rem 1rem",
-                    marginLeft: "0.5rem",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "8px",
+                    borderRadius: "50%",
                     cursor: "pointer",
+                    transition: "background 0.2s ease",
                   }}
+                  title="Đăng xuất"
                 >
-                  LOG OUT
+                  <LogOut size={20} />
                 </button>
               </Popconfirm>
             </div>
@@ -237,6 +257,16 @@ const Header = () => {
                     {userDisplayName}
                   </span>
                 </div>
+
+                <Link
+                  to={portalPath}
+                  className="btn-signup"
+                  style={{ width: "100%", textAlign: "center" }}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  TRANG CÁ NHÂN
+                </Link>
+
                 <Popconfirm
                   title="Đăng xuất"
                   description="Bạn có muốn đăng xuất không?"
