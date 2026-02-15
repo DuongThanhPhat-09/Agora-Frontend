@@ -75,6 +75,109 @@ export interface TutorForReview {
   subjects: string[]; // Array of subject names
 }
 
+// Interface cho API response từ /api/Tutor/pending
+// Nested sections structure matching actual API response
+
+export interface PendingTutorSubject {
+  subjectId: number;
+  subjectName: string;
+  gradeLevels: string; // JSON string e.g. '["grade_12"]'
+  tags: string; // JSON string e.g. '["Kiên nhẫn"]'
+}
+
+export interface PendingTutorCertificate {
+  certificateId: string;
+  certificateName: string;
+  certificateType: string;
+  issuingOrganization: string;
+  yearIssued: number;
+  credentialId: string | null;
+  credentialUrl: string | null;
+  certificateFileUrl: string | null;
+  createdAt: string;
+  verificationStatus: string;
+  verificationNote: string | null;
+}
+
+export interface PendingTutorSections {
+  video?: {
+    videoUrl: string | null;
+    status: string;
+    updatedAt: string;
+  };
+  basicInfo?: {
+    avatarUrl: string | null;
+    headline: string | null;
+    teachingAreaCity: string | null;
+    teachingAreaDistrict: string | null;
+    teachingMode: string | null;
+    subjects: PendingTutorSubject[];
+    status: string;
+    updatedAt: string;
+  };
+  introduction?: {
+    bio: string | null;
+    education: string | null;
+    gpa: number | null;
+    gpaScale: number | null;
+    experience: string | null;
+    status: string;
+    updatedAt: string;
+  };
+  certificates?: {
+    totalCount: number;
+    certificates: PendingTutorCertificate[];
+    status: string;
+    updatedAt: string;
+  };
+  identityCard?: {
+    frontImageUrl: string | null;
+    backImageUrl: string | null;
+    isVerified: boolean;
+    status: string;
+    updatedAt: string;
+  };
+  pricing?: {
+    hourlyRate: number | null;
+    trialLessonPrice: number | null;
+    allowPriceNegotiation: boolean;
+    status: string;
+    updatedAt: string;
+  };
+}
+
+export interface PendingTutorFromAPI {
+  userid: string;
+  username: string | null;
+  fullname: string;
+  email: string;
+  phone: string;
+  avatarurl: string | null;
+  birthdate: string | null;
+  gender: string | null;
+  address: string | null;
+  status: number;
+  createdat: string;
+  profileStatus: string;
+  rejectionNote: string | null;
+  profileCreatedAt: string;
+  profileUpdatedAt: string;
+  sections: PendingTutorSections;
+}
+
+export interface PendingTutorsAPIResponse {
+  content: PendingTutorFromAPI[];
+  statusCode: number;
+  message: string;
+  error: string | null;
+}
+
+// Interface cho API approve/reject - PUT /tutors/{id}/approval
+export interface TutorApprovalRequest {
+  isApproved: boolean;
+  reason?: string;
+}
+
 export interface EKYCContent {
   id: string; // CCCD number
   name: string; // Full name from CCCD
