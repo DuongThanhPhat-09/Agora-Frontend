@@ -57,7 +57,7 @@ export const getChats = async (): Promise<ApiResponse<ChatChannel[]>> => {
 
 export const getChatMessages = async (
   channelId: number,
-  query: ChatMessageQuery = { page: 1, pageSize: 10 },
+  query: ChatMessageQuery = { page: 1, pageSize: 50 },
 ): Promise<ApiResponse<ChatMessage[]>> => {
   try {
     const response = await api.get(`/chat/channels/${channelId}/messages`, {
@@ -76,3 +76,30 @@ export const getChatMessages = async (
     throw error;
   }
 };
+
+/** POST /api/chat/channels/:id/messages — Send message via REST API (supports messageType + metadata) */
+export const sendMessageREST = async (
+  channelId: number,
+  content: string,
+  messageType: string = 'text',
+  metadata?: any,
+): Promise<ApiResponse<ChatMessage>> => {
+  try {
+    const response = await api.post(
+      `/chat/channels/${channelId}/messages`,
+      { content, messageType, metadata },
+      { headers: getAuthHeaders() },
+    );
+
+    console.log('✅ Message sent via REST:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ Error sending message via REST:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+    throw error;
+  }
+};
+

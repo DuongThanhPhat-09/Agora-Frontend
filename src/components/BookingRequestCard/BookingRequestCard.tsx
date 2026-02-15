@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, Clock, User, BookOpen, Check, X, AlertCircle } from 'lucide-react';
 import styles from './BookingRequestCard.module.css';
-import { acceptBooking, declineBooking } from '../../services/booking.service';
+import { acceptBooking, declineBooking, getBookingById } from '../../services/booking.service';
 import { message as antMessage } from 'antd';
 
 interface BookingRequestData {
@@ -12,6 +12,7 @@ interface BookingRequestData {
     sessionCount: number;
     totalPrice: number;
     tutorReceivable: number;
+    teachingMode: string;
     schedule: Array<{
         dayOfWeek: number;
         startTime: string;
@@ -28,11 +29,12 @@ interface BookingRequestCardProps {
         metadata?: any;
     };
     isTutor?: boolean;
+    onProceedToPayment?: (bookingId: number) => void;
 }
 
 const DAY_NAMES = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
-const BookingRequestCard = ({ message, isTutor = false }: BookingRequestCardProps) => {
+const BookingRequestCard = ({ message, isTutor = false, onProceedToPayment }: BookingRequestCardProps) => {
     let data: BookingRequestData;
 
     if (message.metadata) {
@@ -57,9 +59,35 @@ const BookingRequestCard = ({ message, isTutor = false }: BookingRequestCardProp
     const studentName = data.studentName || (data as any).StudentName || (data as any).student?.fullName || 'Học sinh';
     const subjectName = data.subjectName || (data as any).SubjectName || (data as any).subject?.subjectName || 'Môn học';
     const sessionCount = data.sessionCount || (data as any).SessionCount || 0;
+    const teachingMode = data.teachingMode || (data as any).TeachingMode || (data as any).teachingmode || '';
+
+    const getTeachingModeLabel = (mode: string) => {
+        switch (mode.toLowerCase()) {
+            case 'online': return '🌐 Trực tuyến';
+            case 'offline': return '🏫 Trực tiếp';
+            case 'hybrid': return '🔄 Kết hợp';
+            default: return mode;
+        }
+    };
 
     const [status, setStatus] = useState(data.status);
     const [loading, setLoading] = useState(false);
+
+    // Fetch latest booking status on mount to handle page reload
+    useEffect(() => {
+        const fetchLatestStatus = async () => {
+            try {
+                const response = await getBookingById(data.bookingId);
+                if (response.statusCode === 200 && response.content.status !== status) {
+                    setStatus(response.content.status);
+                }
+            } catch (error) {
+                console.error('Failed to fetch latest booking status:', error);
+            }
+        };
+
+        fetchLatestStatus();
+    }, [data.bookingId]); // Only run on mount or when bookingId changes
 
     const handleAccept = async () => {
         try {
@@ -136,6 +164,13 @@ const BookingRequestCard = ({ message, isTutor = false }: BookingRequestCardProp
                     <span className={styles.label}>Gói học:</span>
                     <span className={styles.value}>{sessionCount} buổi</span>
                 </div>
+                {teachingMode && (
+                    <div className={styles.infoRow}>
+                        <BookOpen size={14} className={styles.icon} />
+                        <span className={styles.label}>Hình thức:</span>
+                        <span className={styles.value}>{getTeachingModeLabel(teachingMode)}</span>
+                    </div>
+                )}
                 <div className={styles.priceSection}>
                     <div className={styles.priceRow}>
                         <span>Tổng cộng:</span>
@@ -165,6 +200,21 @@ const BookingRequestCard = ({ message, isTutor = false }: BookingRequestCardProp
                         disabled={loading}
                     >
                         {loading ? '...' : <><X size={14} /> Từ chối</>}
+                    </button>
+                </div>
+            )}
+
+            {!isTutor && status === 'accepted' && (
+                <div className={styles.paymentPrompt}>
+                    <div className={styles.paymentText}>
+                        <Check size={16} className={styles.successIcon} />
+                        <span>Gia sư đã chấp nhận yêu cầu! Vui lòng thanh toán để xác nhận lớp học.</span>
+                    </div>
+                    <button
+                        className={styles.paymentBtn}
+                        onClick={() => onProceedToPayment?.(data.bookingId)}
+                    >
+                        Tiến hành thanh toán
                     </button>
                 </div>
             )}

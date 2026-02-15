@@ -1,6 +1,9 @@
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import styles from './styles.module.css';
 import { useState, useEffect } from 'react';
+import { getUnreadCount } from '../../services/notification.service';
+import { signalRService } from '../../services/signalr.service';
+import NotificationDropdown from '../../components/NotificationDropdown/NotificationDropdown';
 
 // Logo Icon (Agora symbol) - same as TutorPortalLayout
 const LogoIcon = () => (
@@ -119,7 +122,8 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [notificationCount] = useState(3);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
 
   const isActive = (path: string) => location.pathname.startsWith(path);
 
@@ -151,6 +155,43 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
     name: 'Emma Chen',
     grade: 'Grade 8 • Active',
     initials: 'EC',
+  };
+
+  // Fetch unread notification count on mount
+  useEffect(() => {
+    const fetchNotificationCount = async () => {
+      try {
+        const count = await getUnreadCount();
+        setNotificationCount(count);
+      } catch (error) {
+        console.error('Failed to fetch notification count:', error);
+        // Keep count at 0 on error
+      }
+    };
+
+    fetchNotificationCount();
+
+    // Setup SignalR listener for real-time notification updates
+    const handleNotificationCountUpdate = (count: number) => {
+      console.log('📬 Notification count updated via SignalR:', count);
+      setNotificationCount(count);
+    };
+
+    signalRService.onNotificationCountUpdated(handleNotificationCountUpdate);
+
+    // Cleanup
+    return () => {
+      signalRService.offNotificationCountUpdated();
+    };
+  }, []);
+
+  const handleRefreshNotificationCount = async () => {
+    try {
+      const count = await getUnreadCount();
+      setNotificationCount(count);
+    } catch (error) {
+      console.error('Failed to refresh notification count:', error);
+    }
   };
 
   return (
@@ -216,16 +257,26 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
             {/* Right: Notifications + User */}
             <div className={styles.headerRight}>
               {/* Notification Button */}
-              <button className={styles.notificationBtn}>
-                <div className={styles.notificationIconWrap}>
-                  <NotificationIcon />
-                </div>
-                {notificationCount > 0 && (
-                  <div className={styles.notificationBadge}>
-                    <span>{notificationCount}</span>
+              <div style={{ position: 'relative' }}>
+                <button
+                  className={styles.notificationBtn}
+                  onClick={() => setShowNotificationDropdown(!showNotificationDropdown)}
+                >
+                  <div className={styles.notificationIconWrap}>
+                    <NotificationIcon />
                   </div>
-                )}
-              </button>
+                  {notificationCount > 0 && (
+                    <div className={styles.notificationBadge}>
+                      <span>{notificationCount}</span>
+                    </div>
+                  )}
+                </button>
+                <NotificationDropdown
+                  isOpen={showNotificationDropdown}
+                  onClose={() => setShowNotificationDropdown(false)}
+                  onCountUpdate={handleRefreshNotificationCount}
+                />
+              </div>
 
               {/* User Info */}
               <div className={styles.headerUser}>

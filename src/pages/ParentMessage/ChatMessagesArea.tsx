@@ -2,7 +2,7 @@ import styles from './styles.module.css';
 import MessageBubble from './MessageBubble';
 import type { ChatMessage } from '../../services/chat.service';
 import InfiniteScroll from 'react-infinite-scroll-component';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Video, CheckCircle, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import BookingRequestCard from '../../components/BookingRequestCard/BookingRequestCard';
 
@@ -15,9 +15,114 @@ interface ChatMessagesAreaProps {
   loadMessages: (query?: { page: number; pageSize: number }) => Promise<void>;
   hasMore: boolean;
   isTutor?: boolean;
+  onProceedToPayment?: (bookingId: number) => void;
 }
 
-const ChatMessagesArea = ({ messages, loading, currentUserId, hasMore, loadMessages, isTutor = false }: ChatMessagesAreaProps) => {
+/** Renders a meet_link message as a clickable card */
+const MeetLinkCard = ({ message }: { message: ChatMessage }) => {
+  // Extract meeting link from content
+  const linkMatch = message.content.match(/https?:\/\/[^\s]+/);
+  const meetLink = linkMatch?.[0] || '';
+
+  return (
+    <div className={styles.systemMessageContainer}>
+      <div className={styles.systemCard} style={{ borderLeft: '3px solid #1a73e8' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+          <Video size={16} style={{ color: '#1a73e8' }} />
+          <span style={{ fontWeight: 600, fontSize: '13px', color: '#1a73e8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            Link buổi học
+          </span>
+        </div>
+        <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#3e2f28', whiteSpace: 'pre-line' }}>
+          {message.content}
+        </p>
+        {meetLink && (
+          <a
+            href={meetLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              borderRadius: '6px',
+              background: '#1a73e8',
+              color: '#fff',
+              fontSize: '12px',
+              fontWeight: 600,
+              textDecoration: 'none',
+            }}
+          >
+            <Video size={14} />
+            Tham gia buổi học
+          </a>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/** Renders a booking_accepted or booking_declined system message */
+const BookingStatusCard = ({
+  message,
+  isParent,
+  onProceedToPayment
+}: {
+  message: ChatMessage;
+  isParent: boolean;
+  onProceedToPayment?: (bookingId: number) => void;
+}) => {
+  const isAccepted = message.messageType === 'booking_accepted';
+  const color = isAccepted ? '#2e7d32' : '#c62828';
+  const Icon = isAccepted ? CheckCircle : XCircle;
+  const bookingId = message.metadata?.bookingId || message.metadata?.BookingId;
+
+  return (
+    <div className={styles.systemMessageContainer}>
+      <div className={styles.systemCard} style={{ borderLeft: `3px solid ${color}` }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Icon size={16} style={{ color }} />
+            <span style={{ fontWeight: 600, fontSize: '13px', color }}>
+              {message.content}
+            </span>
+          </div>
+
+          {isAccepted && isParent && bookingId && (
+            <button
+              onClick={() => onProceedToPayment?.(bookingId)}
+              style={{
+                background: '#059669',
+                color: 'white',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                marginTop: '4px',
+                alignSelf: 'flex-start'
+              }}
+            >
+              Tiến hành thanh toán
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ChatMessagesArea = ({
+  messages,
+  loading,
+  currentUserId,
+  hasMore,
+  loadMessages,
+  isTutor = false,
+  onProceedToPayment
+}: ChatMessagesAreaProps) => {
   const [page, setPage] = useState(1);
   if (loading) {
     return (
@@ -41,7 +146,7 @@ const ChatMessagesArea = ({ messages, loading, currentUserId, hasMore, loadMessa
   }
 
   const getMessages = async () => {
-    await loadMessages({ page: page + 1, pageSize: 10 });
+    await loadMessages({ page: page + 1, pageSize: 50 });
     setPage((prev) => prev + 1);
   };
 
@@ -70,20 +175,40 @@ const ChatMessagesArea = ({ messages, loading, currentUserId, hasMore, loadMessa
         scrollableTarget="top-chat-div"
       >
         {messages.map((msg, index) => {
+          // Booking request card
           if (msg.messageType === 'booking_request') {
             return (
-              <div key={index} className={styles.systemMessageContainer}>
+              <div key={msg.messageId || index} className={styles.systemMessageContainer}>
                 <BookingRequestCard
                   message={msg}
                   isTutor={isTutor}
+                  onProceedToPayment={onProceedToPayment}
                 />
               </div>
             );
           }
 
+          // Meet link card
+          if (msg.messageType === 'meet_link') {
+            return <MeetLinkCard key={msg.messageId || index} message={msg} />;
+          }
+
+          // Booking accepted/declined system cards
+          if (msg.messageType === 'booking_accepted' || msg.messageType === 'booking_declined') {
+            return (
+              <BookingStatusCard
+                key={msg.messageId || index}
+                message={msg}
+                isParent={!isTutor}
+                onProceedToPayment={onProceedToPayment}
+              />
+            );
+          }
+
+          // Regular text message
           return (
             <MessageBubble
-              key={index}
+              key={msg.messageId || index}
               avatar={tutorAvatarSmall}
               message={msg.content}
               time={msg.createdAt}
@@ -92,7 +217,6 @@ const ChatMessagesArea = ({ messages, loading, currentUserId, hasMore, loadMessa
           );
         })}
       </InfiniteScroll>
-      {/* <TypingIndicator /> */}
     </div>
   );
 };
