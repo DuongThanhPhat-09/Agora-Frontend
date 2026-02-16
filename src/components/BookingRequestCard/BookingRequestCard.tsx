@@ -128,7 +128,7 @@ const BookingRequestCard = ({ message, isTutor = false, onProceedToPayment }: Bo
             case 'accepted': return 'Đã chấp nhận';
             case 'pending_payment': return 'Chờ thanh toán';
             case 'paid': return 'Đã thanh toán';
-            case 'payment_timeout': return 'Hết hạn thanh toán';
+            case 'payment_timeout': return 'Đã hết hạn';
             case 'ongoing': return 'Đang diễn ra';
             case 'completed': return 'Hoàn thành';
             case 'cancelled': return 'Đã từ chối';
@@ -224,6 +224,15 @@ const BookingRequestCard = ({ message, isTutor = false, onProceedToPayment }: Bo
                     >
                         Tiến hành thanh toán
                     </button>
+                </div>
+            )}
+
+            {!isTutor && status === 'payment_timeout' && (
+                <div className={styles.paymentPrompt} style={{ backgroundColor: '#fee2e2', borderColor: '#ef4444' }}>
+                    <div className={styles.paymentText} style={{ color: '#b91c1c' }}>
+                        <AlertCircle size={16} />
+                        <span>Yêu cầu đã hết hạn thanh toán (24h) và bị hủy.</span>
+                    </div>
                 </div>
             )}
 

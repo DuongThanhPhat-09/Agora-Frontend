@@ -32,9 +32,22 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
             setError(null);
             const info = await getPaymentInfo(bookingId);
             setPaymentInfo(info);
-        } catch (err) {
+        } catch (err: any) {
             console.error('Failed to fetch payment info:', err);
-            setError('Không thể tải thông tin thanh toán. Vui lòng thử lại.');
+            const errorCode = err.response?.data?.errorCode;
+
+            if (errorCode === 'BOOKING_EXPIRED') {
+                setError('BOOKING_EXPIRED');
+            } else if (errorCode === 'BOOKING_ALREADY_PAID') {
+                setError('BOOKING_ALREADY_PAID');
+                // Auto-success after a short delay if already paid
+                setTimeout(() => {
+                    onPaymentSuccess();
+                    onClose();
+                }, 2000);
+            } else {
+                setError(err.response?.data?.message || 'Không thể tải thông tin thanh toán. Vui lòng thử lại.');
+            }
         } finally {
             setLoading(false);
         }
@@ -216,6 +229,19 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
                         <div className={styles.loaderContainer}>
                             <Loader2 className={styles.spinner} />
                             <p>Đang tải thông tin thanh toán...</p>
+                        </div>
+                    ) : error === 'BOOKING_EXPIRED' ? (
+                        <div className={styles.errorContainer}>
+                            <AlertTriangle className={styles.errorIcon} size={48} />
+                            <h3>Yêu cầu thanh toán đã hết hạn</h3>
+                            <p>Booking này đã quá hạn thanh toán (24h) và đã bị hủy tự động.</p>
+                            <button onClick={onClose} className={styles.retryBtn}>Đóng</button>
+                        </div>
+                    ) : error === 'BOOKING_ALREADY_PAID' ? (
+                        <div className={styles.successContainer}>
+                            <CheckCircle2 className={styles.successIcon} size={48} />
+                            <h3>Đã thanh toán thành công!</h3>
+                            <p>Booking này đã được thanh toán trước đó.</p>
                         </div>
                     ) : error ? (
                         <div className={styles.errorContainer}>
