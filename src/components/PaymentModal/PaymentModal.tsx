@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, Wallet, CreditCard, ExternalLink, Loader2, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
 import styles from './PaymentModal.module.css';
 import { getPaymentInfo, getPaymentStatus, payWithWallet, type PaymentInfoDTO } from '../../services/payment.service';
@@ -16,10 +16,13 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
     const [paying, setPaying] = useState(false);
     const [paymentInfo, setPaymentInfo] = useState<PaymentInfoDTO | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [waitingForPayOS, setWaitingForPayOS] = useState(false);
+    const payosWindowRef = useRef<Window | null>(null);
 
     useEffect(() => {
         if (isOpen) {
             fetchPaymentInfo();
+            setWaitingForPayOS(false);
         }
     }, [isOpen, bookingId]);
 
@@ -37,26 +40,97 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
         }
     };
 
-    // Poll for payment status every 5 seconds if modal is open and has info
+    // Listen for localStorage changes from PaymentCallback page (in new tab)
     useEffect(() => {
-        if (!isOpen || !paymentInfo || paymentInfo.status === 'PAID') return;
+        if (!waitingForPayOS) return;
+
+        console.log('[PaymentModal] Listening for localStorage payment result...');
+
+        const handleStorage = (event: StorageEvent) => {
+            if (event.key === 'payos_payment_result' && event.newValue) {
+                try {
+                    const result = JSON.parse(event.newValue);
+                    console.log('[PaymentModal] Received payment result from new tab:', result);
+
+                    if (result.isPaid) {
+                        console.log('[PaymentModal] Payment confirmed! Closing...');
+                        setWaitingForPayOS(false);
+                        // Clean up
+                        localStorage.removeItem('payos_payment_result');
+                        antMessage.success('Thanh toán thành công! Đang quay lại trang tin nhắn...');
+                        setTimeout(() => {
+                            onPaymentSuccess();
+                            onClose();
+                        }, 1500);
+                    } else if (result.cancel) {
+                        console.log('[PaymentModal] Payment cancelled.');
+                        setWaitingForPayOS(false);
+                        localStorage.removeItem('payos_payment_result');
+                        antMessage.info('Thanh toán đã bị hủy.');
+                    }
+                } catch (e) {
+                    console.error('[PaymentModal] Failed to parse payment result:', e);
+                }
+            }
+        };
+
+        window.addEventListener('storage', handleStorage);
+        return () => window.removeEventListener('storage', handleStorage);
+    }, [waitingForPayOS, onPaymentSuccess, onClose]);
+
+    // Also poll every 5s as a backup (in case storage event doesn't fire)
+    useEffect(() => {
+        if (!waitingForPayOS) return;
 
         const interval = setInterval(async () => {
             try {
                 const statusData = await getPaymentStatus(bookingId);
-                if (statusData.isPaid) {
+                console.log('[PaymentModal] Poll result:', statusData);
+                if (statusData.isPaid || statusData.status === 'PAID') {
                     clearInterval(interval);
-                    antMessage.success('Thanh toán thành công!');
-                    onPaymentSuccess();
-                    onClose();
+                    setWaitingForPayOS(false);
+                    localStorage.removeItem('payos_payment_result');
+                    antMessage.success('Thanh toán thành công! Đang quay lại trang tin nhắn...');
+                    setTimeout(() => {
+                        onPaymentSuccess();
+                        onClose();
+                    }, 1500);
                 }
             } catch (err) {
-                console.error('Status check failed:', err);
+                console.error('[PaymentModal] Status poll failed:', err);
             }
         }, 5000);
 
         return () => clearInterval(interval);
-    }, [isOpen, paymentInfo, bookingId]);
+    }, [waitingForPayOS, bookingId]);
+
+    // Check if the new tab was closed by user (poll every 2s)
+    useEffect(() => {
+        if (!waitingForPayOS) return;
+
+        const interval = setInterval(() => {
+            if (payosWindowRef.current && payosWindowRef.current.closed) {
+                console.log('[PaymentModal] PayOS tab was closed by user.');
+                // Check localStorage one more time
+                const stored = localStorage.getItem('payos_payment_result');
+                if (stored) {
+                    const result = JSON.parse(stored);
+                    if (result.isPaid) {
+                        setWaitingForPayOS(false);
+                        localStorage.removeItem('payos_payment_result');
+                        antMessage.success('Thanh toán thành công!');
+                        setTimeout(() => { onPaymentSuccess(); onClose(); }, 1500);
+                        return;
+                    }
+                }
+                // Tab closed without payment
+                setWaitingForPayOS(false);
+                payosWindowRef.current = null;
+            }
+        }, 2000);
+
+        return () => clearInterval(interval);
+    }, [waitingForPayOS]);
 
     const handleWalletPayment = async () => {
         if (!paymentInfo?.canPayWithWallet) return;
@@ -75,11 +149,58 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
         }
     };
 
+    const handleOpenPayOS = () => {
+        if (!paymentInfo?.checkoutUrl) return;
+        // Clear any old result
+        localStorage.removeItem('payos_payment_result');
+        // Open PayOS in a new tab
+        const w = window.open(paymentInfo.checkoutUrl, '_blank');
+        payosWindowRef.current = w;
+        // Show waiting overlay
+        setWaitingForPayOS(true);
+    };
+
     if (!isOpen) return null;
 
     const formatCurrency = (amount: number) =>
         new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
+    // ====== WAITING FOR PAYOS (new tab opened) ======
+    if (waitingForPayOS) {
+        return (
+            <div className={styles.fullscreenOverlay}>
+                <div className={styles.waitingContent}>
+                    <div className={styles.waitingIcon}>
+                        <Loader2 size={48} className={styles.spinner} />
+                    </div>
+                    <h2 className={styles.waitingTitle}>Đang chờ thanh toán...</h2>
+                    <p className={styles.waitingDesc}>
+                        Vui lòng hoàn tất thanh toán trong tab vừa mở.<br />
+                        Trang này sẽ tự động cập nhật khi thanh toán thành công.
+                    </p>
+                    {paymentInfo?.checkoutUrl && (
+                        <a
+                            href={paymentInfo.checkoutUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.reopenLink}
+                        >
+                            <ExternalLink size={14} />
+                            Mở lại trang thanh toán
+                        </a>
+                    )}
+                    <button
+                        onClick={() => setWaitingForPayOS(false)}
+                        className={styles.cancelWaitingBtn}
+                    >
+                        Quay lại
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // ====== NORMAL PAYMENT MODAL ======
     return (
         <div className={styles.overlay}>
             <div className={styles.modal}>
@@ -128,7 +249,7 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
                                 <div className={`${styles.optionCard} ${!paymentInfo.canPayWithWallet ? styles.disabled : ''}`}>
                                     <div className={styles.optionHeader}>
                                         <div className={styles.optionIconWrap}>
-                                            <Wallet size={20} />
+                                            <Wallet size={24} />
                                         </div>
                                         <div className={styles.optionInfo}>
                                             <div className={styles.optionName}>Thanh toán bằng ví</div>
@@ -138,48 +259,35 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
                                     {!paymentInfo.canPayWithWallet ? (
                                         <div className={styles.insufficientText}>Số dư không đủ</div>
                                     ) : (
-                                        <button
-                                            className={styles.payBtn}
-                                            onClick={handleWalletPayment}
-                                            disabled={paying}
-                                        >
-                                            {paying ? 'Đang xử lý...' : 'Thanh toán ngay'}
-                                        </button>
+                                        <div className={styles.payAction}>
+                                            <button
+                                                className={styles.payBtn}
+                                                onClick={handleWalletPayment}
+                                                disabled={paying}
+                                            >
+                                                {paying ? 'Đang xử lý...' : 'Thanh toán ngay'}
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
 
-                                {/* Option 2: PayOS */}
-                                <div className={styles.optionCard}>
+                                {/* Option 2: PayOS — opens new tab */}
+                                <div className={styles.optionCard} onClick={handleOpenPayOS}>
                                     <div className={styles.optionHeader}>
                                         <div className={styles.optionIconWrap} style={{ background: '#eff6ff', color: '#2563eb' }}>
-                                            <CreditCard size={20} />
+                                            <CreditCard size={24} />
                                         </div>
                                         <div className={styles.optionInfo}>
                                             <div className={styles.optionName}>Chuyển khoản ngân hàng (PayOS)</div>
-                                            <div className={styles.payosSub}>Hỗ trợ tất cả ngân hàng</div>
+                                            <div className={styles.payosSub}>Hỗ trợ tất cả ngân hàng, QR Code</div>
                                         </div>
                                     </div>
-
-                                    <div className={styles.qrSection}>
-                                        <img src={paymentInfo.qrCode} alt="QR Code" className={styles.qrCode} />
-                                        <div className={styles.qrInstructions}>
-                                            <p>Quét mã QR để thanh toán nhanh</p>
-                                            <div className={styles.bankStatus}>
-                                                <div className={styles.pulse} />
-                                                <span>Đang chờ thanh toán...</span>
-                                            </div>
-                                        </div>
+                                    <div className={styles.payAction}>
+                                        <button className={styles.payBtn} style={{ background: '#2563eb' }}>
+                                            <ExternalLink size={14} />
+                                            Mở trang thanh toán
+                                        </button>
                                     </div>
-
-                                    <a
-                                        href={paymentInfo.checkoutUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className={styles.externalLink}
-                                    >
-                                        <span>Mở trang thanh toán PayOS</span>
-                                        <ExternalLink size={14} />
-                                    </a>
                                 </div>
                             </div>
                         </>
@@ -189,7 +297,7 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
                 <div className={styles.footer}>
                     <div className={styles.secureInfo}>
                         <CheckCircle2 size={14} />
-                        <span>Thanh toán an toàn & bảo mật</span>
+                        <span>Thanh toán an toàn & bảo mật bởi Agora</span>
                     </div>
                 </div>
             </div>

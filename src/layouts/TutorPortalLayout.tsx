@@ -4,6 +4,7 @@ import '../styles/layouts/tutor-portal-layout.css';
 import { getUnreadCount } from '../services/notification.service';
 import { signalRService } from '../services/signalr.service';
 import NotificationDropdown from '../components/NotificationDropdown/NotificationDropdown';
+import { getUserInfoFromToken } from '../services/auth.service';
 
 // Logo Icon (Agora symbol)
 const LogoIcon = () => (
@@ -128,16 +129,55 @@ const TutorPortalLayout: React.FC = () => {
     const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [userData, setUserData] = useState({
+        name: 'User',
+        initials: 'U',
+        role: 'TUTOR',
+        avatar: 'https://ui-avatars.com/api/?name=User&background=3d4a3e&color=f2f0e4&size=128'
+    });
 
     const isActive = (path: string) => location.pathname === path;
 
-    // Placeholder user data - replace with actual user data
-    const userData = {
-        name: 'Sarah Mitchell',
-        initials: 'SM',
-        role: 'TUTOR',
-        avatar: 'https://ui-avatars.com/api/?name=Sarah+Mitchell&background=3d4a3e&color=f2f0e4&size=128'
+    // Helper function to generate avatar from name
+    const generateAvatarFromName = (name: string) => {
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3d4a3e&color=f2f0e4&size=128`;
     };
+
+    // Helper function to get initials from name
+    const getInitials = (name: string) => {
+        const parts = name.trim().split(' ');
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase();
+    };
+
+    // Load user data from auth service
+    useEffect(() => {
+        const user = getUserInfoFromToken();
+
+        console.log('🔍 TutorPortalLayout - Loading user data from token:', user);
+
+        if (user) {
+            const displayName = user.fullname ||
+                (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : null) ||
+                user.email?.split('@')[0] ||
+                'User';
+            const avatarUrl = generateAvatarFromName(displayName);
+            const initials = getInitials(displayName);
+
+            console.log('✅ TutorPortalLayout - Setting user data:', { displayName, initials, role: user.role, avatarUrl });
+
+            setUserData({
+                name: displayName,
+                initials: initials,
+                role: user.role || 'TUTOR',
+                avatar: avatarUrl
+            });
+        } else {
+            console.warn('⚠️ TutorPortalLayout - No user data found in localStorage');
+        }
+    }, []);
 
     // Fetch unread notification count on mount
     useEffect(() => {

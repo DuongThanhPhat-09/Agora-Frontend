@@ -38,11 +38,13 @@ export interface CreateBookingPayload {
 
 export interface BookingResponseDTO {
     bookingId: number;
-    student: { studentId: string; fullName: string; gradeLevel: string };
-    tutor: { tutorId: string; fullName: string; avatarUrl: string; hourlyRate: number };
-    subject: { subjectId: number; subjectName: string };
+    parentId?: string;
+    student?: { studentId: string; fullName: string; gradeLevel: string };
+    tutor?: { tutorId: string; fullName: string; avatarUrl: string; hourlyRate: number };
+    subject?: { subjectId: number; subjectName: string };
     packageType: string;
     sessionCount: number;
+    teachingMode?: string;
     price: number;
     discountApplied: number;
     finalPrice: number;
@@ -206,13 +208,19 @@ export const declineBooking = async (bookingId: number, reason: string): Promise
 /** GET /api/bookings/:id/payment-info — Get payment link or wallet info */
 export interface PaymentInfoResponse {
     bookingId: number;
+    paymentLinkId?: string;
+    paymentCode?: string;
     amount: number;
-    orderCode: number;
+    currency?: string;
     checkoutUrl?: string;
     qrCode?: string;
     accountName?: string;
     accountNumber?: string;
     bin?: string;
+    description?: string;
+    expiredAt?: string;
+    status?: string;
+    canPayWithWallet?: boolean;
     walletBalance: number;
 }
 

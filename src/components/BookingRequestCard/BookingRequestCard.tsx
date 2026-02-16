@@ -6,12 +6,13 @@ import { message as antMessage } from 'antd';
 
 interface BookingRequestData {
     bookingId: number;
-    studentName: string;
-    subjectName: string;
+    student?: { studentId: string; fullName?: string; gradeLevel?: string };
+    subject?: { subjectId: number; subjectName?: string };
     packageType: string;
     sessionCount: number;
-    totalPrice: number;
-    tutorReceivable: number;
+    price: number;
+    finalPrice: number;
+    platformFee?: number;
     teachingMode: string;
     schedule: Array<{
         dayOfWeek: number;
@@ -52,14 +53,17 @@ const BookingRequestCard = ({ message, isTutor = false, onProceedToPayment }: Bo
         }
     }
 
-    // Defensive mapping for prices and names (handles backend metadata fields + PascalCase)
-    // Backend sends: price (giá gốc), finalPrice (sau phí platform), không gửi totalPrice/tutorReceivable
-    const totalPrice = (data as any).finalPrice || (data as any).FinalPrice || data.totalPrice || (data as any).TotalPrice || (data as any).price || (data as any).Price || 0;
-    const tutorReceivable = data.tutorReceivable || (data as any).TutorReceivable || (data as any).tutorFee || (data as any).TutorFee || Math.round(totalPrice * 0.85) || 0;
-    const studentName = data.studentName || (data as any).StudentName || (data as any).student?.fullName || 'Học sinh';
-    const subjectName = data.subjectName || (data as any).SubjectName || (data as any).subject?.subjectName || 'Môn học';
-    const sessionCount = data.sessionCount || (data as any).SessionCount || 0;
-    const teachingMode = data.teachingMode || (data as any).TeachingMode || (data as any).teachingmode || '';
+    // Handle both flat metadata from chat messages (studentName, subjectName as strings)
+    // AND nested BookingResponseDTO structure from API (student.fullName, subject.subjectName)
+    const rawData = data as any;
+    const totalPrice = data.finalPrice || data.price || rawData.FinalPrice || rawData.Price || 0;
+    const tutorReceivable = data.platformFee != null
+        ? (data.finalPrice - data.platformFee)
+        : Math.round(totalPrice * 0.85);
+    const studentName = rawData.studentName || rawData.StudentName || data.student?.fullName || 'Học sinh';
+    const subjectName = rawData.subjectName || rawData.SubjectName || data.subject?.subjectName || 'Môn học';
+    const sessionCount = data.sessionCount || rawData.SessionCount || 0;
+    const teachingMode = data.teachingMode || rawData.TeachingMode || '';
 
     const getTeachingModeLabel = (mode: string) => {
         switch (mode.toLowerCase()) {
@@ -122,7 +126,11 @@ const BookingRequestCard = ({ message, isTutor = false, onProceedToPayment }: Bo
         switch (s) {
             case 'pending_tutor': return 'Chờ xác nhận';
             case 'accepted': return 'Đã chấp nhận';
+            case 'pending_payment': return 'Chờ thanh toán';
             case 'paid': return 'Đã thanh toán';
+            case 'payment_timeout': return 'Hết hạn thanh toán';
+            case 'ongoing': return 'Đang diễn ra';
+            case 'completed': return 'Hoàn thành';
             case 'cancelled': return 'Đã từ chối';
             default: return s;
         }
@@ -152,7 +160,7 @@ const BookingRequestCard = ({ message, isTutor = false, onProceedToPayment }: Bo
                     <Calendar size={14} className={styles.icon} />
                     <span className={styles.label}>Lịch học:</span>
                     <div className={styles.scheduleList}>
-                        {data.schedule.map((s, i) => (
+                        {(data.schedule || []).map((s, i) => (
                             <div key={i} className={styles.scheduleItem}>
                                 {DAY_NAMES[s.dayOfWeek]} {s.startTime}-{s.endTime}
                             </div>

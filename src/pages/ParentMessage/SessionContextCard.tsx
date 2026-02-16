@@ -19,7 +19,7 @@ const SessionContextCard = ({ booking }: SessionContextCardProps) => {
         <div className={styles.sessionContextCard}>
             <span className={styles.sessionContextCaption}>Booking #{booking.bookingId} • {formattedDate}</span>
             <span className={styles.sessionContextTitle}>
-                {booking.subject.subjectName} • {booking.student.fullName}
+                {booking.subject?.subjectName || 'N/A'} • {booking.student?.fullName || 'N/A'}
             </span>
             <div className={styles.sessionContextMeta}>
                 <span className={styles.sessionContextItem}>
@@ -31,7 +31,7 @@ const SessionContextCard = ({ booking }: SessionContextCardProps) => {
                     Status: {booking.status}
                 </span>
                 <span className={styles.sessionContextItem}>
-                    Mode: {booking.packageType}
+                    Mode: {booking.teachingMode || booking.packageType || 'N/A'}
                 </span>
             </div>
             {booking.status === 'pending_tutor' && (

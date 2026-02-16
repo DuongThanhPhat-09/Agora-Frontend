@@ -194,16 +194,16 @@ const ParentBooking = () => {
                     <div className={styles.cardHeader}>
                       <div className={styles.cardHeaderLeft}>
                         <div className={styles.tutorAvatar}>
-                          {booking.tutor.avatarUrl ? (
-                            <img src={booking.tutor.avatarUrl} alt={booking.tutor.fullName} />
+                          {booking.tutor?.avatarUrl ? (
+                            <img src={booking.tutor.avatarUrl} alt={booking.tutor?.fullName} />
                           ) : (
-                            <span>{booking.tutor.fullName.charAt(0)}</span>
+                            <span>{booking.tutor?.fullName?.charAt(0) || 'G'}</span>
                           )}
                         </div>
                         <div className={styles.cardTitleGroup}>
-                          <h3 className={styles.cardTitle}>{booking.subject.subjectName}</h3>
+                          <h3 className={styles.cardTitle}>{booking.subject?.subjectName || 'N/A'}</h3>
                           <p className={styles.cardSubtitle}>
-                            với {booking.tutor.fullName} • cho {booking.student.fullName}
+                            với {booking.tutor?.fullName || 'Gia sư'} • cho {booking.student?.fullName || 'Học sinh'}
                           </p>
                         </div>
                       </div>
@@ -230,7 +230,7 @@ const ParentBooking = () => {
                         <div className={styles.metaItem}>
                           <User size={14} />
                           <span>
-                            {booking.student.fullName} ({booking.student.gradeLevel})
+                            {booking.student?.fullName || 'N/A'} ({booking.student?.gradeLevel || ''})
                           </span>
                         </div>
                       </div>

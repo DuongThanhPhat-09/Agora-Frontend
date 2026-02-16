@@ -24,15 +24,23 @@ const NewMessageIcon = () => (
 );
 
 const HeaderTopBar = () => {
+    // TODO: Replace with actual student data from API/Context
+    // This should load the selected student's information
+    const studentData = {
+        name: 'Student',
+        grade: 'Grade 8',
+        initials: 'S'
+    };
+
     return (
         <header className={styles.topBar}>
             <div className={styles.topBarLeft}>
                 <h1 className={styles.pageTitle}>Messages</h1>
                 <button className={styles.childSelector} type="button">
                     <div className={styles.childAvatar}>
-                        <span>EC</span>
+                        <span>{studentData.initials}</span>
                     </div>
-                    <span className={styles.childName}>Emma Chen • Grade 8</span>
+                    <span className={styles.childName}>{studentData.name} • {studentData.grade}</span>
                     <DropdownIcon />
                 </button>
             </div>

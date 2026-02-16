@@ -30,7 +30,7 @@ const ChatHeader = ({ selectedChannelId, onLeaveChannel, connectionState, channe
                         <span className={styles.chatName}>{channel.otherUserName}</span>
                         <span className={styles.messageDot}>•</span>
                         <span className={styles.chatSession}>
-                            {booking ? `${booking.subject.subjectName}` : `Session #${channel.bookingId}`}
+                            {booking ? `${booking.subject?.subjectName || 'Booking'}` : `Session #${channel.bookingId}`}
                         </span>
                     </div>
                     <div className={styles.chatHeaderMetaRow}>
