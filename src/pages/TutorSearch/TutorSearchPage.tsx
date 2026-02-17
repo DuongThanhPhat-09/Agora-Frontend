@@ -641,8 +641,9 @@ const TutorSearchPage = () => {
         if (f.category && f.category !== "all") {
             params.category = f.category;
         }
-        if (f.gradeLevel) {
+        if (f.gradeLevel && f.gradeLevel !== "") {
             params.gradeLevel = f.gradeLevel;
+            console.log("🎓 GradeLevel filter applied:", f.gradeLevel);
         }
         if (f.budgetRange && f.budgetRange !== "all") {
             params.budgetRange = f.budgetRange;
