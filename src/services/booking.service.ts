@@ -38,11 +38,13 @@ export interface CreateBookingPayload {
 
 export interface BookingResponseDTO {
     bookingId: number;
-    student: { studentId: string; fullName: string; gradeLevel: string };
-    tutor: { tutorId: string; fullName: string; avatarUrl: string; hourlyRate: number };
-    subject: { subjectId: number; subjectName: string };
+    parentId?: string;
+    student?: { studentId: string; fullName: string; gradeLevel: string };
+    tutor?: { tutorId: string; fullName: string; avatarUrl: string; hourlyRate: number };
+    subject?: { subjectId: number; subjectName: string };
     packageType: string;
     sessionCount: number;
+    teachingMode?: string;
     price: number;
     discountApplied: number;
     finalPrice: number;
@@ -53,6 +55,14 @@ export interface BookingResponseDTO {
     schedule: ScheduleItemPayload[];
     createdAt: string;
     paymentDueAt: string | null;
+    // 2-stage payment fields
+    depositAmount?: number;
+    remainingAmount?: number;
+    depositPaidAt?: string | null;
+    remainingPaidAt?: string | null;
+    escrowStatus?: string | null;
+    // Channel navigation
+    channelId?: number;
 }
 
 export interface PromotionValidateResult {
@@ -206,14 +216,27 @@ export const declineBooking = async (bookingId: number, reason: string): Promise
 /** GET /api/bookings/:id/payment-info — Get payment link or wallet info */
 export interface PaymentInfoResponse {
     bookingId: number;
+    paymentLinkId?: string;
+    paymentCode?: string;
     amount: number;
-    orderCode: number;
+    currency?: string;
     checkoutUrl?: string;
     qrCode?: string;
     accountName?: string;
     accountNumber?: string;
     bin?: string;
+    description?: string;
+    expiredAt?: string;
+    status?: string;
+    canPayWithWallet?: boolean;
     walletBalance: number;
+    // 2-stage payment fields
+    paymentPhase?: 'deposit' | 'remaining';
+    totalAmount?: number;
+    depositAmount?: number;
+    remainingAmount?: number;
+    isDepositPaid?: boolean;
+    isRemainingPaid?: boolean;
 }
 
 export const getPaymentInfo = async (bookingId: number): Promise<ApiResponse<PaymentInfoResponse>> => {
@@ -239,8 +262,21 @@ export const payWithWallet = async (bookingId: number): Promise<ApiResponse<any>
     }
 };
 
+export interface PaymentStatusResponse {
+    bookingId: number;
+    status: string;
+    amount: number;
+    amountPaid?: number;
+    amountRemaining?: number;
+    isPaid: boolean;
+    depositAmount?: number;
+    remainingAmount?: number;
+    isDepositPaid?: boolean;
+    isRemainingPaid?: boolean;
+}
+
 /** GET /api/bookings/:id/payment-status — Check payment status */
-export const getPaymentStatus = async (bookingId: number): Promise<ApiResponse<{ status: string; paymentStatus: string }>> => {
+export const getPaymentStatus = async (bookingId: number): Promise<ApiResponse<PaymentStatusResponse>> => {
     try {
         const response = await api.get(`/bookings/${bookingId}/payment-status`, {
             headers: getAuthHeaders(),

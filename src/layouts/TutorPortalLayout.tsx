@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import '../styles/layouts/tutor-portal-layout.css';
+import { getUnreadCount } from '../services/notification.service';
+import { signalRService } from '../services/signalr.service';
+import NotificationDropdown from '../components/NotificationDropdown/NotificationDropdown';
+import { getUserInfoFromToken } from '../services/auth.service';
 
 // Logo Icon (Agora symbol)
 const LogoIcon = () => (
@@ -121,18 +125,95 @@ const navItems = [
 const TutorPortalLayout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const [notificationCount] = useState(3);
+    const [notificationCount, setNotificationCount] = useState(0);
+    const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [userData, setUserData] = useState({
+        name: 'User',
+        initials: 'U',
+        role: 'TUTOR',
+        avatar: 'https://ui-avatars.com/api/?name=User&background=3d4a3e&color=f2f0e4&size=128'
+    });
 
     const isActive = (path: string) => location.pathname === path;
 
-    // Placeholder user data - replace with actual user data
-    const userData = {
-        name: 'Sarah Mitchell',
-        initials: 'SM',
-        role: 'TUTOR',
-        avatar: 'https://ui-avatars.com/api/?name=Sarah+Mitchell&background=3d4a3e&color=f2f0e4&size=128'
+    // Helper function to generate avatar from name
+    const generateAvatarFromName = (name: string) => {
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3d4a3e&color=f2f0e4&size=128`;
+    };
+
+    // Helper function to get initials from name
+    const getInitials = (name: string) => {
+        const parts = name.trim().split(' ');
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase();
+    };
+
+    // Load user data from auth service
+    useEffect(() => {
+        const user = getUserInfoFromToken();
+
+        console.log('🔍 TutorPortalLayout - Loading user data from token:', user);
+
+        if (user) {
+            const displayName = user.fullname ||
+                (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : null) ||
+                user.email?.split('@')[0] ||
+                'User';
+            const avatarUrl = generateAvatarFromName(displayName);
+            const initials = getInitials(displayName);
+
+            console.log('✅ TutorPortalLayout - Setting user data:', { displayName, initials, role: user.role, avatarUrl });
+
+            setUserData({
+                name: displayName,
+                initials: initials,
+                role: user.role || 'TUTOR',
+                avatar: avatarUrl
+            });
+        } else {
+            console.warn('⚠️ TutorPortalLayout - No user data found in localStorage');
+        }
+    }, []);
+
+    // Fetch unread notification count on mount
+    useEffect(() => {
+        const fetchNotificationCount = async () => {
+            try {
+                const count = await getUnreadCount();
+                setNotificationCount(count);
+            } catch (error) {
+                console.error('Failed to fetch notification count:', error);
+                // Keep count at 0 on error
+            }
+        };
+
+        fetchNotificationCount();
+
+        // Setup SignalR listener for real-time notification updates
+        const handleNotificationCountUpdate = (count: number) => {
+            console.log('📬 Notification count updated via SignalR:', count);
+            setNotificationCount(count);
+        };
+
+        signalRService.onNotificationCountUpdated(handleNotificationCountUpdate);
+
+        // Cleanup
+        return () => {
+            signalRService.offNotificationCountUpdated();
+        };
+    }, []);
+
+    const handleRefreshNotificationCount = async () => {
+        try {
+            const count = await getUnreadCount();
+            setNotificationCount(count);
+        } catch (error) {
+            console.error('Failed to refresh notification count:', error);
+        }
     };
 
     return (
@@ -221,14 +302,24 @@ const TutorPortalLayout: React.FC = () => {
                         {/* Right: User Info + Notifications + Avatar */}
                         <div className="tutor-portal-header-right">
                             {/* Notification Button */}
-                            <button className="tutor-portal-notification-btn">
-                                <NotificationIcon />
-                                {notificationCount > 0 && (
-                                    <div className="tutor-portal-notification-badge">
-                                        <span className="tutor-portal-notification-count">{notificationCount}</span>
-                                    </div>
-                                )}
-                            </button>
+                            <div style={{ position: 'relative' }}>
+                                <button
+                                    className="tutor-portal-notification-btn"
+                                    onClick={() => setShowNotificationDropdown(!showNotificationDropdown)}
+                                >
+                                    <NotificationIcon />
+                                    {notificationCount > 0 && (
+                                        <div className="tutor-portal-notification-badge">
+                                            <span className="tutor-portal-notification-count">{notificationCount}</span>
+                                        </div>
+                                    )}
+                                </button>
+                                <NotificationDropdown
+                                    isOpen={showNotificationDropdown}
+                                    onClose={() => setShowNotificationDropdown(false)}
+                                    onCountUpdate={handleRefreshNotificationCount}
+                                />
+                            </div>
 
                             {/* User Info */}
                             <div className="tutor-portal-header-user">
@@ -247,7 +338,9 @@ const TutorPortalLayout: React.FC = () => {
                 </header>
 
                 {/* Page Content */}
-                <Outlet />
+                <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
+                    <Outlet />
+                </div>
             </main>
         </div>
     );

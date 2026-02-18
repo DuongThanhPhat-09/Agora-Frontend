@@ -47,6 +47,7 @@ import PaymentPage from './pages/ParentBooking/Payment';
 import StudentDashboard from './pages/StudentDashboard';
 import StudentCourses from './pages/StudentCourses';
 import ParentStudent from './pages/ParentStudent';
+import PaymentCallback from './pages/PaymentCallback/PaymentCallback';
 
 // ---------------------
 
@@ -149,6 +150,10 @@ function App() {
           <Route path="dashboard" element={<StudentDashboard />} />
           <Route path="courses" element={<StudentCourses />} />
         </Route>
+
+        {/* PayOS callback - loaded inside iframe after payment */}
+        <Route path="/payment/success" element={<PaymentCallback />} />
+        <Route path="/payment/cancel" element={<PaymentCallback />} />
 
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />

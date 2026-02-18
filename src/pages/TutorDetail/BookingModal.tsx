@@ -582,7 +582,9 @@ const StepReview = ({ formData, setFormData, hourlyRate, students, availableSubj
         }
     };
 
-    const finalEstimate = estimatedPrice - promoDiscount;
+    const baseAmount = estimatedPrice - promoDiscount;
+    const serviceFee = Math.round(baseAmount * 0.05);
+    const finalEstimate = baseAmount + serviceFee;
 
     return (
         <div className="bm-step">
@@ -679,9 +681,13 @@ const StepReview = ({ formData, setFormData, hourlyRate, students, availableSubj
                         <span>-{formatPrice(promoDiscount)}</span>
                     </div>
                 )}
+                <div className="bm-price-row fee">
+                    <span>Phí dịch vụ (5%)</span>
+                    <span>{formatPrice(serviceFee)}</span>
+                </div>
                 <div className="bm-price-divider" />
                 <div className="bm-price-row total">
-                    <span>Ước tính thanh toán</span>
+                    <span>Dự kiến thanh toán</span>
                     <span>{formatPrice(Math.max(0, finalEstimate))}</span>
                 </div>
             </div>

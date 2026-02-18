@@ -13,7 +13,9 @@ import { message as antMessage, Spin } from 'antd';
 const STATUS_TABS = [
   { key: 'all', label: 'Tất cả' },
   { key: 'pending_tutor', label: 'Chờ gia sư' },
-  { key: 'pending_payment', label: 'Chờ thanh toán' },
+  { key: 'accepted', label: 'Chờ đặt cọc' },
+  { key: 'deposit_paid', label: 'Đã cọc (50%)' },
+  { key: 'pending_remaining_payment', label: 'TT còn lại' },
   { key: 'active', label: 'Đang học' },
   { key: 'completed', label: 'Hoàn thành' },
   { key: 'cancelled', label: 'Đã hủy' },
@@ -21,7 +23,9 @@ const STATUS_TABS = [
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   pending_tutor: { label: 'Chờ gia sư', className: 'statusPending' },
-  pending_payment: { label: 'Chờ thanh toán', className: 'statusWarning' },
+  accepted: { label: 'Chờ đặt cọc', className: 'statusWarning' },
+  deposit_paid: { label: 'Đã cọc (50%)', className: 'statusActive' },
+  pending_remaining_payment: { label: 'TT còn lại', className: 'statusWarning' },
   active: { label: 'Đang học', className: 'statusActive' },
   completed: { label: 'Hoàn thành', className: 'statusCompleted' },
   cancelled: { label: 'Đã hủy', className: 'statusCancelled' },
@@ -194,16 +198,16 @@ const ParentBooking = () => {
                     <div className={styles.cardHeader}>
                       <div className={styles.cardHeaderLeft}>
                         <div className={styles.tutorAvatar}>
-                          {booking.tutor.avatarUrl ? (
-                            <img src={booking.tutor.avatarUrl} alt={booking.tutor.fullName} />
+                          {booking.tutor?.avatarUrl ? (
+                            <img src={booking.tutor.avatarUrl} alt={booking.tutor?.fullName} />
                           ) : (
-                            <span>{booking.tutor.fullName.charAt(0)}</span>
+                            <span>{booking.tutor?.fullName?.charAt(0) || 'G'}</span>
                           )}
                         </div>
                         <div className={styles.cardTitleGroup}>
-                          <h3 className={styles.cardTitle}>{booking.subject.subjectName}</h3>
+                          <h3 className={styles.cardTitle}>{booking.subject?.subjectName || 'N/A'}</h3>
                           <p className={styles.cardSubtitle}>
-                            với {booking.tutor.fullName} • cho {booking.student.fullName}
+                            với {booking.tutor?.fullName || 'Gia sư'} • cho {booking.student?.fullName || 'Học sinh'}
                           </p>
                         </div>
                       </div>
@@ -230,7 +234,7 @@ const ParentBooking = () => {
                         <div className={styles.metaItem}>
                           <User size={14} />
                           <span>
-                            {booking.student.fullName} ({booking.student.gradeLevel})
+                            {booking.student?.fullName || 'N/A'} ({booking.student?.gradeLevel || ''})
                           </span>
                         </div>
                       </div>
