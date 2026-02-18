@@ -40,7 +40,6 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
                 setError('BOOKING_EXPIRED');
             } else if (errorCode === 'BOOKING_ALREADY_PAID') {
                 setError('BOOKING_ALREADY_PAID');
-                // Auto-success after a short delay if already paid
                 setTimeout(() => {
                     onPaymentSuccess();
                     onClose();
@@ -57,26 +56,19 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
     useEffect(() => {
         if (!waitingForPayOS) return;
 
-        console.log('[PaymentModal] Listening for localStorage payment result...');
-
         const handleStorage = (event: StorageEvent) => {
             if (event.key === 'payos_payment_result' && event.newValue) {
                 try {
                     const result = JSON.parse(event.newValue);
-                    console.log('[PaymentModal] Received payment result from new tab:', result);
-
                     if (result.isPaid) {
-                        console.log('[PaymentModal] Payment confirmed! Closing...');
                         setWaitingForPayOS(false);
-                        // Clean up
                         localStorage.removeItem('payos_payment_result');
-                        antMessage.success('Thanh toán thành công! Đang quay lại trang tin nhắn...');
+                        antMessage.success('Thanh toán thành công! Đang cập nhật...');
                         setTimeout(() => {
                             onPaymentSuccess();
                             onClose();
                         }, 1500);
                     } else if (result.cancel) {
-                        console.log('[PaymentModal] Payment cancelled.');
                         setWaitingForPayOS(false);
                         localStorage.removeItem('payos_payment_result');
                         antMessage.info('Thanh toán đã bị hủy.');
@@ -91,19 +83,22 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
         return () => window.removeEventListener('storage', handleStorage);
     }, [waitingForPayOS, onPaymentSuccess, onClose]);
 
-    // Also poll every 5s as a backup (in case storage event doesn't fire)
+    // Poll every 5s as backup
     useEffect(() => {
         if (!waitingForPayOS) return;
 
         const interval = setInterval(async () => {
             try {
                 const statusData = await getPaymentStatus(bookingId);
-                console.log('[PaymentModal] Poll result:', statusData);
-                if (statusData.isPaid || statusData.status === 'PAID') {
+                const isPhaseComplete = paymentInfo?.paymentPhase === 'deposit'
+                    ? statusData.isDepositPaid
+                    : statusData.isRemainingPaid || statusData.isPaid;
+
+                if (isPhaseComplete || statusData.status === 'PAID') {
                     clearInterval(interval);
                     setWaitingForPayOS(false);
                     localStorage.removeItem('payos_payment_result');
-                    antMessage.success('Thanh toán thành công! Đang quay lại trang tin nhắn...');
+                    antMessage.success('Thanh toán thành công! Đang cập nhật...');
                     setTimeout(() => {
                         onPaymentSuccess();
                         onClose();
@@ -115,16 +110,14 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
         }, 5000);
 
         return () => clearInterval(interval);
-    }, [waitingForPayOS, bookingId]);
+    }, [waitingForPayOS, bookingId, paymentInfo?.paymentPhase]);
 
-    // Check if the new tab was closed by user (poll every 2s)
+    // Check if new tab was closed by user
     useEffect(() => {
         if (!waitingForPayOS) return;
 
         const interval = setInterval(() => {
             if (payosWindowRef.current && payosWindowRef.current.closed) {
-                console.log('[PaymentModal] PayOS tab was closed by user.');
-                // Check localStorage one more time
                 const stored = localStorage.getItem('payos_payment_result');
                 if (stored) {
                     const result = JSON.parse(stored);
@@ -136,7 +129,6 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
                         return;
                     }
                 }
-                // Tab closed without payment
                 setWaitingForPayOS(false);
                 payosWindowRef.current = null;
             }
@@ -151,7 +143,11 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
         try {
             setPaying(true);
             await payWithWallet(bookingId);
-            antMessage.success('Thanh toán bằng ví thành công!');
+            antMessage.success(
+                paymentInfo.paymentPhase === 'deposit'
+                    ? 'Đặt cọc thành công!'
+                    : 'Thanh toán phần còn lại thành công!'
+            );
             onPaymentSuccess();
             onClose();
         } catch (err: any) {
@@ -164,12 +160,9 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
 
     const handleOpenPayOS = () => {
         if (!paymentInfo?.checkoutUrl) return;
-        // Clear any old result
         localStorage.removeItem('payos_payment_result');
-        // Open PayOS in a new tab
         const w = window.open(paymentInfo.checkoutUrl, '_blank');
         payosWindowRef.current = w;
-        // Show waiting overlay
         setWaitingForPayOS(true);
     };
 
@@ -177,6 +170,13 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
 
     const formatCurrency = (amount: number) =>
         new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+
+    const getPhaseTitle = () => {
+        if (!paymentInfo) return 'Hoàn tất thanh toán';
+        return paymentInfo.paymentPhase === 'remaining'
+            ? '💰 Thanh toán phần còn lại'
+            : '🔒 Thanh toán đặt cọc (50%)';
+    };
 
     // ====== WAITING FOR PAYOS (new tab opened) ======
     if (waitingForPayOS) {
@@ -218,7 +218,7 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
         <div className={styles.overlay}>
             <div className={styles.modal}>
                 <div className={styles.header}>
-                    <h3>Hoàn tất thanh toán</h3>
+                    <h3>{getPhaseTitle()}</h3>
                     <button onClick={onClose} className={styles.closeBtn}>
                         <X size={20} />
                     </button>
@@ -234,7 +234,7 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
                         <div className={styles.errorContainer}>
                             <AlertTriangle className={styles.errorIcon} size={48} />
                             <h3>Yêu cầu thanh toán đã hết hạn</h3>
-                            <p>Booking này đã quá hạn thanh toán (24h) và đã bị hủy tự động.</p>
+                            <p>Booking này đã quá hạn thanh toán và đã bị hủy tự động.</p>
                             <button onClick={onClose} className={styles.retryBtn}>Đóng</button>
                         </div>
                     ) : error === 'BOOKING_ALREADY_PAID' ? (
@@ -256,8 +256,25 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
                                     <span>Mã đơn hàng:</span>
                                     <strong>#{bookingId}</strong>
                                 </div>
+                                {/* 2-stage breakdown */}
+                                {paymentInfo.totalAmount != null && paymentInfo.totalAmount > 0 && (
+                                    <div className={styles.summaryRow}>
+                                        <span>Tổng giá trị booking:</span>
+                                        <span>{formatCurrency(paymentInfo.totalAmount)}</span>
+                                    </div>
+                                )}
+                                {paymentInfo.paymentPhase === 'remaining' && paymentInfo.depositAmount != null && (
+                                    <div className={styles.summaryRow}>
+                                        <span>Đã đặt cọc (50%):</span>
+                                        <span style={{ color: '#16a34a' }}>- {formatCurrency(paymentInfo.depositAmount)}</span>
+                                    </div>
+                                )}
                                 <div className={styles.summaryRow}>
-                                    <span>Tổng số tiền:</span>
+                                    <span>
+                                        {paymentInfo.paymentPhase === 'remaining'
+                                            ? 'Số tiền còn lại cần thanh toán:'
+                                            : 'Số tiền đặt cọc (50%):'}
+                                    </span>
                                     <strong className={styles.amount}>{formatCurrency(paymentInfo.amount)}</strong>
                                 </div>
                                 {paymentInfo.expiredAt && (
@@ -323,7 +340,7 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
                 <div className={styles.footer}>
                     <div className={styles.secureInfo}>
                         <CheckCircle2 size={14} />
-                        <span>Thanh toán an toàn & bảo mật bởi Agora</span>
+                        <span>Thanh toán an toàn &amp; bảo mật bởi Agora</span>
                     </div>
                 </div>
             </div>

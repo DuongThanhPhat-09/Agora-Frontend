@@ -13,7 +13,9 @@ import { message as antMessage, Spin } from 'antd';
 const STATUS_TABS = [
   { key: 'all', label: 'Tất cả' },
   { key: 'pending_tutor', label: 'Chờ gia sư' },
-  { key: 'pending_payment', label: 'Chờ thanh toán' },
+  { key: 'accepted', label: 'Chờ đặt cọc' },
+  { key: 'deposit_paid', label: 'Đã cọc (50%)' },
+  { key: 'pending_remaining_payment', label: 'TT còn lại' },
   { key: 'active', label: 'Đang học' },
   { key: 'completed', label: 'Hoàn thành' },
   { key: 'cancelled', label: 'Đã hủy' },
@@ -21,7 +23,9 @@ const STATUS_TABS = [
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   pending_tutor: { label: 'Chờ gia sư', className: 'statusPending' },
-  pending_payment: { label: 'Chờ thanh toán', className: 'statusWarning' },
+  accepted: { label: 'Chờ đặt cọc', className: 'statusWarning' },
+  deposit_paid: { label: 'Đã cọc (50%)', className: 'statusActive' },
+  pending_remaining_payment: { label: 'TT còn lại', className: 'statusWarning' },
   active: { label: 'Đang học', className: 'statusActive' },
   completed: { label: 'Hoàn thành', className: 'statusCompleted' },
   cancelled: { label: 'Đã hủy', className: 'statusCancelled' },

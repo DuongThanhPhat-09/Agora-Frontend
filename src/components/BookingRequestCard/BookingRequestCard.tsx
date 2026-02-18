@@ -59,7 +59,7 @@ const BookingRequestCard = ({ message, isTutor = false, onProceedToPayment }: Bo
     const totalPrice = data.finalPrice || data.price || rawData.FinalPrice || rawData.Price || 0;
     const tutorReceivable = data.platformFee != null
         ? (data.finalPrice - data.platformFee)
-        : Math.round(totalPrice * 0.85);
+        : Math.round((totalPrice / 1.05) * 0.95);
     const studentName = rawData.studentName || rawData.StudentName || data.student?.fullName || 'Học sinh';
     const subjectName = rawData.subjectName || rawData.SubjectName || data.subject?.subjectName || 'Môn học';
     const sessionCount = data.sessionCount || rawData.SessionCount || 0;
@@ -127,6 +127,8 @@ const BookingRequestCard = ({ message, isTutor = false, onProceedToPayment }: Bo
             case 'pending_tutor': return 'Chờ xác nhận';
             case 'accepted': return 'Đã chấp nhận';
             case 'pending_payment': return 'Chờ thanh toán';
+            case 'deposit_paid': return 'Đã cọc (50%)';
+            case 'pending_remaining_payment': return 'Chờ TT còn lại';
             case 'paid': return 'Đã thanh toán';
             case 'payment_timeout': return 'Đã hết hạn';
             case 'ongoing': return 'Đang diễn ra';
@@ -216,13 +218,29 @@ const BookingRequestCard = ({ message, isTutor = false, onProceedToPayment }: Bo
                 <div className={styles.paymentPrompt}>
                     <div className={styles.paymentText}>
                         <Check size={16} className={styles.successIcon} />
-                        <span>Gia sư đã chấp nhận yêu cầu! Vui lòng thanh toán để xác nhận lớp học.</span>
+                        <span>Gia sư đã chấp nhận yêu cầu! Vui lòng đặt cọc 50% để xác nhận lớp học.</span>
                     </div>
                     <button
                         className={styles.paymentBtn}
                         onClick={() => onProceedToPayment?.(data.bookingId)}
                     >
-                        Tiến hành thanh toán
+                        🔒 Tiến hành đặt cọc (50%)
+                    </button>
+                </div>
+            )}
+
+            {!isTutor && (status === 'deposit_paid' || status === 'pending_remaining_payment' || status === 'ongoing') && (
+                <div className={styles.paymentPrompt} style={{ backgroundColor: '#eff6ff', borderColor: '#3b82f6' }}>
+                    <div className={styles.paymentText}>
+                        <Check size={16} className={styles.successIcon} style={{ color: '#16a34a' }} />
+                        <span style={{ color: '#1e40af' }}>Đã đặt cọc 50%. Vui lòng thanh toán phần còn lại để bắt đầu học.</span>
+                    </div>
+                    <button
+                        className={styles.paymentBtn}
+                        style={{ background: '#2563eb' }}
+                        onClick={() => onProceedToPayment?.(data.bookingId)}
+                    >
+                        💰 Thanh toán phần còn lại
                     </button>
                 </div>
             )}
