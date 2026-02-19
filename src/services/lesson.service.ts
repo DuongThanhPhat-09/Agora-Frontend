@@ -72,11 +72,11 @@ export const getNextLesson = async (): Promise<LessonResponse | null> => {
   try {
     const now = new Date().toISOString();
     const response = await getParentLessons(1, 1, now, 'upcoming');
-    
-    if (response.data && response.data.items && response.data.items.length > 0) {
-      return response.data.items[0];
+
+    if (response.content && response.content.items && response.content.items.length > 0) {
+      return response.content.items[0];
     }
-    
+
     return null;
   } catch (error) {
     console.error('❌ Error fetching next lesson:', error);
