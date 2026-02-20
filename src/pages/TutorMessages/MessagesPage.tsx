@@ -64,7 +64,8 @@ const MessagesPage: React.FC = () => {
         initSignalR();
         return () => {
             mounted = false;
-            signalRService.disconnect();
+            // ❌ Không disconnect ở đây vì React StrictMode sẽ unmount/remount
+            // và gây ra lỗi "connection stopped during negotiation"
         };
     }, []);
 

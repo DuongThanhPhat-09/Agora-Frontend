@@ -124,15 +124,15 @@ const TutorPortalBookings = () => {
                                             <User size={20} />
                                         </div>
                                         <div>
-                                            <h4>{booking.student.fullName}</h4>
-                                            <span>{booking.student.gradeLevel}</span>
+                                            <h4>{booking.student?.fullName || 'N/A'}</h4>
+                                            <span>{booking.student?.gradeLevel || ''}</span>
                                         </div>
                                     </div>
 
                                     <div className={styles.detailsGrid}>
                                         <div className={styles.detailItem}>
                                             <BookOpen size={16} />
-                                            <span>{booking.subject.subjectName}</span>
+                                            <span>{booking.subject?.subjectName || 'N/A'}</span>
                                         </div>
                                         <div className={styles.detailItem}>
                                             <Clock size={16} />
@@ -154,8 +154,8 @@ const TutorPortalBookings = () => {
                                 <div className={styles.cardFooter}>
                                     <div className={styles.priceInfo}>
                                         <span className={styles.label}>Tổng phí nhận:</span>
-                                        <span className={styles.totalPrice}>{formatPrice(booking.finalPrice * 0.95)}</span>
-                                        <span className={styles.feeNote}>(Sau phí hệ thống 5%)</span>
+                                        <span className={styles.totalPrice}>{formatPrice(booking.finalPrice - (booking.platformFee ?? 0))}</span>
+                                        <span className={styles.feeNote}>(Sau phí hệ thống)</span>
                                     </div>
 
                                     <div className={styles.actions}>

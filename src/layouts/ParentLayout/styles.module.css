@@ -158,7 +158,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    height: 100vh;
     background-color: #f2f0e4;
 }
 
@@ -418,11 +418,13 @@
 .contentArea {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 0;
     /* Constrain content width on ultra-wide screens */
     max-width: 1400px;
     width: 100%;
     margin: 0 auto;
+    min-height: 0;
 }
 
 /* ===== MOBILE MENU ===== */
@@ -547,6 +549,7 @@
 
 /* ===== PRINT ===== */
 @media print {
+
     .sidebar,
     .menuBtn,
     .sidebarOverlay {

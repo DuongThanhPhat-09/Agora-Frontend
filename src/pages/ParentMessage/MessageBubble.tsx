@@ -7,6 +7,32 @@ type MessageBubbleProps = {
     isSender?: boolean;
 };
 
+/** Format ISO timestamp to readable time */
+const formatTime = (isoString: string): string => {
+    if (!isoString) return '';
+    try {
+        const date = new Date(isoString);
+        const now = new Date();
+        const isToday =
+            date.getDate() === now.getDate() &&
+            date.getMonth() === now.getMonth() &&
+            date.getFullYear() === now.getFullYear();
+
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+
+        if (isToday) {
+            return `${hours}:${minutes}`;
+        }
+
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        return `${day}/${month} ${hours}:${minutes}`;
+    } catch {
+        return isoString;
+    }
+};
+
 const MessageBubble = ({ message, time, avatar, isSender = false }: MessageBubbleProps) => {
     return (
         <div className={`${styles.messageBubbleRow} ${isSender ? styles.messageBubbleRowSender : ''}`}>
@@ -16,7 +42,7 @@ const MessageBubble = ({ message, time, avatar, isSender = false }: MessageBubbl
                     {message}
                 </div>
                 <span className={`${styles.messageBubbleTime} ${isSender ? styles.messageBubbleTimeSender : ''}`}>
-                    {time}
+                    {formatTime(time)}
                 </span>
             </div>
         </div>

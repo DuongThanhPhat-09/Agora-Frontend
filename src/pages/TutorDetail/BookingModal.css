@@ -847,6 +847,12 @@
     font-size: 13px;
 }
 
+.bm-price-row.fee {
+    font-size: 13px;
+    color: rgba(62, 47, 40, 0.6);
+    font-weight: 500;
+}
+
 .bm-price-divider {
     height: 1px;
     background: #e4ded5;

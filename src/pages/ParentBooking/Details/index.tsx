@@ -164,21 +164,21 @@ const BookingDetailPage = () => {
                         </div>
                         <div className={styles.tutorRow}>
                             <div className={styles.tutorAvatar}>
-                                {booking.tutor.avatarUrl ? (
-                                    <img src={booking.tutor.avatarUrl} alt={booking.tutor.fullName} />
+                                {booking.tutor?.avatarUrl ? (
+                                    <img src={booking.tutor.avatarUrl} alt={booking.tutor?.fullName} />
                                 ) : (
-                                    <span>{booking.tutor.fullName.charAt(0)}</span>
+                                    <span>{booking.tutor?.fullName?.charAt(0) || 'G'}</span>
                                 )}
                             </div>
                             <div className={styles.tutorInfo}>
-                                <h4 className={styles.tutorName}>{booking.tutor.fullName}</h4>
-                                <p className={styles.tutorRate}>{formatPrice(booking.tutor.hourlyRate)}/giờ</p>
+                                <h4 className={styles.tutorName}>{booking.tutor?.fullName || 'N/A'}</h4>
+                                <p className={styles.tutorRate}>{formatPrice(booking.tutor?.hourlyRate || 0)}/giờ</p>
                             </div>
                         </div>
                         <div className={styles.infoGrid}>
                             <div className={styles.infoItem}>
                                 <span className={styles.infoLabel}>Môn học</span>
-                                <span className={styles.infoValue}>{booking.subject.subjectName}</span>
+                                <span className={styles.infoValue}>{booking.subject?.subjectName || 'N/A'}</span>
                             </div>
                             <div className={styles.infoItem}>
                                 <span className={styles.infoLabel}>Gói</span>
@@ -203,11 +203,11 @@ const BookingDetailPage = () => {
                         </div>
                         <div className={styles.studentInfo}>
                             <div className={styles.studentAvatar}>
-                                <span>{booking.student.fullName.charAt(0)}</span>
+                                <span>{booking.student?.fullName?.charAt(0) || 'H'}</span>
                             </div>
                             <div>
-                                <h4 className={styles.studentName}>{booking.student.fullName}</h4>
-                                <p className={styles.studentGrade}>{booking.student.gradeLevel}</p>
+                                <h4 className={styles.studentName}>{booking.student?.fullName || 'N/A'}</h4>
+                                <p className={styles.studentGrade}>{booking.student?.gradeLevel || ''}</p>
                             </div>
                         </div>
                     </div>
@@ -261,7 +261,7 @@ const BookingDetailPage = () => {
                                 <span>{formatPrice(booking.finalPrice)}</span>
                             </div>
                             <div className={styles.priceRow + ' ' + styles.priceFee}>
-                                <span>Phí nền tảng (10%)</span>
+                                <span>Phí nền tảng</span>
                                 <span>{formatPrice(booking.platformFee)}</span>
                             </div>
                         </div>

@@ -1,6 +1,14 @@
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import styles from './styles.module.css';
 import { useState, useEffect } from 'react';
+import { getUnreadCount } from '../../services/notification.service';
+import { signalRService } from '../../services/signalr.service';
+import NotificationDropdown from '../../components/NotificationDropdown/NotificationDropdown';
+import { getUserInfoFromToken } from '../../services/auth.service';
+import { getStudents } from '../../services/student.service';
+import { getNextLesson } from '../../services/lesson.service';
+import type { StudentType } from '../../types/student.type';
+import type { LessonResponse } from '../../services/lesson.service';
 
 // Logo Icon (Agora symbol) - same as TutorPortalLayout
 const LogoIcon = () => (
@@ -119,9 +127,89 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [notificationCount] = useState(3);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
+  const [parentData, setParentData] = useState({
+    name: 'User',
+    initials: 'U',
+    role: 'PARENT',
+  });
+  const [studentData, setStudentData] = useState({
+    name: 'Student',
+    grade: 'Grade 8 • Active',
+    initials: 'S',
+  });
+  const [nextLesson, setNextLesson] = useState<LessonResponse | null>(null);
 
   const isActive = (path: string) => location.pathname.startsWith(path);
+
+  // Helper function to get initials from name
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  // Load user data from auth service
+  useEffect(() => {
+    const user = getUserInfoFromToken();
+
+    console.log('🔍 ParentLayout - Loading user data from token:', user);
+
+    if (user) {
+      const displayName = user.fullname ||
+        (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : null) ||
+        user.email?.split('@')[0] ||
+        'User';
+      const initials = getInitials(displayName);
+
+      console.log('✅ ParentLayout - Setting parent data:', { displayName, initials, role: user.role });
+
+      setParentData({
+        name: displayName,
+        initials: initials,
+        role: user.role || 'PARENT',
+      });
+
+      // Load students data
+      loadStudentsAndLessons();
+    } else {
+      console.warn('⚠️ ParentLayout - No user data found in localStorage');
+    }
+  }, []);
+
+  // Load students and next lesson from API
+  const loadStudentsAndLessons = async () => {
+    try {
+      // Load students
+      const studentsResponse = await getStudents();
+      if (studentsResponse.content && studentsResponse.content.length > 0) {
+        const firstStudent = studentsResponse.content[0];
+        const studentName = firstStudent.fullName || 'Student';
+        const studentGrade = firstStudent.gradeLevel || 'Grade 8';
+        const studentInitials = getInitials(studentName);
+
+        setStudentData({
+          name: studentName,
+          grade: `${studentGrade} • Active`,
+          initials: studentInitials,
+        });
+
+        console.log('✅ ParentLayout - Student data loaded:', { studentName, studentGrade });
+      }
+
+      // Load next lesson
+      const lesson = await getNextLesson();
+      if (lesson) {
+        setNextLesson(lesson);
+        console.log('✅ ParentLayout - Next lesson loaded:', lesson);
+      }
+    } catch (error) {
+      console.error('❌ ParentLayout - Error loading students/lessons:', error);
+    }
+  };
 
   // Close sidebar on route change
   useEffect(() => {
@@ -140,17 +228,41 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
     };
   }, [sidebarOpen]);
 
-  // Placeholder user/student data
-  const parentData = {
-    name: 'Jen Chen',
-    initials: 'JC',
-    role: 'PARENT',
-  };
+  // Fetch unread notification count on mount
+  useEffect(() => {
+    const fetchNotificationCount = async () => {
+      try {
+        const count = await getUnreadCount();
+        setNotificationCount(count);
+      } catch (error) {
+        console.error('Failed to fetch notification count:', error);
+        // Keep count at 0 on error
+      }
+    };
 
-  const studentData = {
-    name: 'Emma Chen',
-    grade: 'Grade 8 • Active',
-    initials: 'EC',
+    fetchNotificationCount();
+
+    // Setup SignalR listener for real-time notification updates
+    const handleNotificationCountUpdate = (count: number) => {
+      console.log('📬 Notification count updated via SignalR:', count);
+      setNotificationCount(count);
+    };
+
+    signalRService.onNotificationCountUpdated(handleNotificationCountUpdate);
+
+    // Cleanup
+    return () => {
+      signalRService.offNotificationCountUpdated();
+    };
+  }, []);
+
+  const handleRefreshNotificationCount = async () => {
+    try {
+      const count = await getUnreadCount();
+      setNotificationCount(count);
+    } catch (error) {
+      console.error('Failed to refresh notification count:', error);
+    }
   };
 
   return (
@@ -193,12 +305,23 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
               </button>
 
               {/* Next Lesson Indicator */}
-              <div className={styles.nextLesson}>
-                <ClockIcon />
-                <span>Next: Today 4:00 PM</span>
-                <span className={styles.nextLessonDot}>•</span>
-                <span>Math with Sarah</span>
-              </div>
+              {nextLesson && (
+                <div className={styles.nextLesson}>
+                  <ClockIcon />
+                  <span>
+                    Next: {new Date(nextLesson.scheduledStart).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric'
+                    })} {new Date(nextLesson.scheduledStart).toLocaleTimeString('en-US', {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true
+                    })}
+                  </span>
+                  <span className={styles.nextLessonDot}>•</span>
+                  <span>{nextLesson.subjectName || 'Lesson'} with {nextLesson.tutorName || 'Tutor'}</span>
+                </div>
+              )}
             </div>
 
             {/* Center: Search Bar */}
@@ -216,16 +339,26 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
             {/* Right: Notifications + User */}
             <div className={styles.headerRight}>
               {/* Notification Button */}
-              <button className={styles.notificationBtn}>
-                <div className={styles.notificationIconWrap}>
-                  <NotificationIcon />
-                </div>
-                {notificationCount > 0 && (
-                  <div className={styles.notificationBadge}>
-                    <span>{notificationCount}</span>
+              <div style={{ position: 'relative' }}>
+                <button
+                  className={styles.notificationBtn}
+                  onClick={() => setShowNotificationDropdown(!showNotificationDropdown)}
+                >
+                  <div className={styles.notificationIconWrap}>
+                    <NotificationIcon />
                   </div>
-                )}
-              </button>
+                  {notificationCount > 0 && (
+                    <div className={styles.notificationBadge}>
+                      <span>{notificationCount}</span>
+                    </div>
+                  )}
+                </button>
+                <NotificationDropdown
+                  isOpen={showNotificationDropdown}
+                  onClose={() => setShowNotificationDropdown(false)}
+                  onCountUpdate={handleRefreshNotificationCount}
+                />
+              </div>
 
               {/* User Info */}
               <div className={styles.headerUser}>

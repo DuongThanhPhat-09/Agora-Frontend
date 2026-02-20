@@ -4,7 +4,7 @@ import "./Header.css";
 // Import Supabase và kiểu dữ liệu User
 import { supabase } from "../../lib/supabase";
 import { type User } from "@supabase/supabase-js";
-import { clearUserFromStorage, getCurrentUser, getCurrentUserRole } from "../../services/auth.service";
+import { clearUserFromStorage, getUserInfoFromToken } from "../../services/auth.service";
 import { Popconfirm } from "antd";
 import { LogOut, LayoutDashboard } from "lucide-react";
 
@@ -17,10 +17,10 @@ const Header = () => {
 
   // Determine portal path based on role
   const getPortalPath = () => {
-    const role = getCurrentUserRole();
-    if (!role) return "/login";
+    const userInfo = getUserInfoFromToken();
+    if (!userInfo?.role) return "/login";
 
-    switch (role.toLowerCase()) {
+    switch (userInfo.role.toLowerCase()) {
       case 'admin': return "/admin/dashboard";
       case 'tutor': return "/tutor-portal";
       case 'parent': return "/parent/dashboard";
@@ -46,15 +46,19 @@ const Header = () => {
       setUser(currentUser);
 
       if (currentUser) {
-        // Lấy thông tin từ localStorage (backend đã lưu)
-        const userData = getCurrentUser();
+        // Lấy thông tin từ JWT token
+        const userData = getUserInfoFromToken();
 
-        // Ưu tiên: localStorage > user_metadata > email
-        const displayName = userData?.fullname || currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || "User";
+        // Ưu tiên: JWT token > user_metadata > email
+        const displayName = userData?.fullname ||
+          (userData?.firstName && userData?.lastName ? `${userData.firstName} ${userData.lastName}` : null) ||
+          currentUser.user_metadata?.full_name ||
+          currentUser.email?.split('@')[0] ||
+          "User";
         setUserDisplayName(displayName);
 
-        // Avatar: Ưu tiên từ Backend (localStorage) → Supabase OAuth → Generate từ tên
-        const avatarUrl = userData?.avatar_url || userData?.imageUrl || currentUser.user_metadata?.avatar_url || generateAvatarFromName(displayName);
+        // Avatar: Generate từ tên
+        const avatarUrl = currentUser.user_metadata?.avatar_url || generateAvatarFromName(displayName);
         setUserAvatar(avatarUrl);
       }
     });
@@ -67,12 +71,16 @@ const Header = () => {
       setUser(currentUser);
 
       if (currentUser) {
-        const userData = getCurrentUser();
-        const displayName = userData?.fullname || currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || "User";
+        const userData = getUserInfoFromToken();
+        const displayName = userData?.fullname ||
+          (userData?.firstName && userData?.lastName ? `${userData.firstName} ${userData.lastName}` : null) ||
+          currentUser.user_metadata?.full_name ||
+          currentUser.email?.split('@')[0] ||
+          "User";
         setUserDisplayName(displayName);
 
-        // Avatar: Ưu tiên từ Backend (localStorage) → Supabase OAuth → Generate từ tên
-        const avatarUrl = userData?.avatar_url || userData?.imageUrl || currentUser.user_metadata?.avatar_url || generateAvatarFromName(displayName);
+        // Avatar: Generate từ tên
+        const avatarUrl = currentUser.user_metadata?.avatar_url || generateAvatarFromName(displayName);
         setUserAvatar(avatarUrl);
       }
     });

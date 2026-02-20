@@ -144,6 +144,32 @@ class SignalRService {
     }
   }
 
+  // ==================== NOTIFICATION METHODS ====================
+
+  /**
+   * Listen for real-time notification events from backend
+   */
+  onNotificationReceived(handler: (notification: any) => void): void {
+    this.addOrUpdateHandler('ReceiveNotification', handler);
+  }
+
+  offNotificationReceived(): void {
+    this.removeHandler('ReceiveNotification');
+  }
+
+  /**
+   * Listen for notification count updates
+   */
+  onNotificationCountUpdated(handler: (count: number) => void): void {
+    this.addOrUpdateHandler('NotificationCountUpdated', handler);
+  }
+
+  offNotificationCountUpdated(): void {
+    this.removeHandler('NotificationCountUpdated');
+  }
+
+  // ==================== CHAT METHODS ====================
+
   // Đăng ký nhận tin nhắn thực thời
   onMessageReceived(handler: (message: any) => void): void {
     this.addOrUpdateHandler('messageReceived', handler);

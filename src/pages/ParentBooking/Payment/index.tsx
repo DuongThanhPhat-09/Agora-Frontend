@@ -149,10 +149,10 @@ const PaymentPage = () => {
                     <div className={styles.card}>
                         <h2 className={styles.cardTitle}>Tóm tắt đơn hàng</h2>
                         <div className={styles.tutorBrief}>
-                            <img src={booking?.tutor.avatarUrl} alt="" className={styles.avatar} />
+                            <img src={booking?.tutor?.avatarUrl} alt="" className={styles.avatar} />
                             <div>
-                                <h3>{booking?.tutor.fullName}</h3>
-                                <p><GraduationCap size={14} /> Gia sư {booking?.subject.subjectName}</p>
+                                <h3>{booking?.tutor?.fullName || 'N/A'}</h3>
+                                <p><GraduationCap size={14} /> Gia sư {booking?.subject?.subjectName || 'N/A'}</p>
                             </div>
                         </div>
 
