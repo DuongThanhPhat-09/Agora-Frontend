@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { getTutorLessons, checkInLesson, checkOutLesson, type LessonResponse } from '../../services/lesson.service';
+import { message as antMessage, Modal, Tag } from 'antd';
 import styles from '../../styles/pages/tutor-portal-class-detail.module.css';
+import LessonReportForm from './components/LessonReportForm';
+import AttachmentUploader from './components/AttachmentUploader';
 
 // Icons
 const BackIcon = () => (
@@ -53,58 +57,115 @@ const MoreIcon = () => (
     </svg>
 );
 
-// Sample data
+// Sample data for reference (not used)
 const classData = {
     id: '1',
-    name: 'Mathematics',
-    subject: 'Mathematics',
-    grade: 'Grade 11',
-    nextLesson: 'Monday, Jan 20 at 14:00'
+    name: 'Toán học',
+    subject: 'Toán',
+    grade: 'Lớp 11',
+    nextLesson: 'Thứ Hai, 20/01 lúc 14:00'
 };
 
-const studentsData = [
-    {
-        id: 1,
-        name: 'Emma Johnson',
-        email: 'emma.johnson@email.com',
-        avatar: 'https://ui-avatars.com/api/?name=Emma+Johnson&background=3d4a3e&color=f2f0e4&size=128',
-        status: 'Active',
-        lastLesson: 'Wed, Jan\n15',
-        homeworkStatus: { count: 2, label: 'Overdue', type: 'overdue' },
-        avgScore: '87%',
-        grade: 'Grade 11'
-    },
-    {
-        id: 2,
-        name: 'Michael Chen',
-        email: 'michael.chen@email.com',
-        avatar: 'https://ui-avatars.com/api/?name=Michael+Chen&background=3d4a3e&color=f2f0e4&size=128',
-        status: 'Active',
-        lastLesson: 'Wed, Jan\n15',
-        homeworkStatus: { label: 'On Track', type: 'ontrack' },
-        avgScore: '92%',
-        grade: 'Grade 11'
-    },
-    {
-        id: 3,
-        name: 'Sarah Williams',
-        email: 'sarah.williams@email.com',
-        avatar: 'https://ui-avatars.com/api/?name=Sarah+Williams&background=3d4a3e&color=f2f0e4&size=128',
-        status: 'Paused',
-        lastLesson: 'Mon, Jan\n13',
-        homeworkStatus: { label: 'On Track', type: 'ontrack' },
-        avgScore: '85%',
-        grade: 'Grade 11'
-    }
-];
+// Type for student data
+interface StudentData {
+    id: number;
+    name: string;
+    email: string;
+    avatar: string;
+    status: string;
+    lastLesson: string;
+    homeworkStatus: {
+        count?: number;
+        label: string;
+        type: 'overdue' | 'ontrack' | 'pending';
+    };
+    avgScore: string;
+    grade: string;
+}
 
 const TutorPortalClassDetail: React.FC = () => {
     const navigate = useNavigate();
     const { classId } = useParams();
-    const [activeTab, setActiveTab] = useState<'students' | 'homework' | 'materials'>('students');
-    const [selectedStudent, setSelectedStudent] = useState<typeof studentsData[0] | null>(null);
+    const bookingId = classId ? parseInt(classId) : undefined;
+
+    const [activeTab, setActiveTab] = useState<'students' | 'homework' | 'materials' | 'lessons'>('lessons');
+    const [selectedStudent, setSelectedStudent] = useState<StudentData | null>(null);
     const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    // Lesson management state
+    const [activeLessonId, setActiveLessonId] = useState<number | null>(null);
+    const [showReportForm, setShowReportForm] = useState(false);
+    const [checkingIn, setCheckingIn] = useState(false);
+    const [checkingOut, setCheckingOut] = useState(false);
+
+    // Real data from API
+    const [lessons, setLessons] = useState<LessonResponse[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [classInfo, setClassInfo] = useState<{
+        name: string;
+        subject: string;
+        grade: string;
+        nextLesson: string;
+        studentName: string;
+        studentEmail: string;
+    } | null>(null);
+
+    useEffect(() => {
+        if (bookingId) {
+            fetchClassData();
+        }
+    }, [bookingId]);
+
+    const fetchClassData = async () => {
+        try {
+            setLoading(true);
+            console.log('🔄 Fetching lessons for bookingId:', bookingId);
+            const response = await getTutorLessons(1, 100);
+
+            // Get lessons data
+            const allLessons = Array.isArray(response.content)
+                ? response.content
+                : response.content?.items || [];
+
+            // Filter by bookingId
+            const classLessons = allLessons.filter(l => l.bookingId === bookingId);
+            console.log('✅ Found', classLessons.length, 'lessons for this class');
+
+            setLessons(classLessons);
+
+            // Extract class info from first lesson
+            if (classLessons.length > 0) {
+                const firstLesson = classLessons[0];
+                const sortedLessons = [...classLessons].sort((a, b) =>
+                    new Date(a.scheduledStart).getTime() - new Date(b.scheduledStart).getTime()
+                );
+                const nextLesson = sortedLessons.find(l => new Date(l.scheduledStart) > new Date());
+
+                setClassInfo({
+                    name: firstLesson.subject?.subjectName || 'N/A',
+                    subject: firstLesson.subject?.subjectName || 'N/A',
+                    grade: firstLesson.student?.gradeLevel || 'N/A',
+                    nextLesson: nextLesson
+                        ? new Date(nextLesson.scheduledStart).toLocaleString('vi-VN', {
+                            weekday: 'long',
+                            day: '2-digit',
+                            month: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
+                        : 'Không có',
+                    studentName: firstLesson.student?.fullName || 'Unknown',
+                    studentEmail: '' // TODO: Add email if available in API
+                });
+            }
+        } catch (error: any) {
+            console.error('❌ Error fetching class data:', error);
+            antMessage.error('Không thể tải dữ liệu lớp học');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleBack = () => {
         navigate('/tutor-portal/classes');
@@ -119,14 +180,14 @@ const TutorPortalClassDetail: React.FC = () => {
     };
 
     const toggleSelectAll = () => {
-        if (selectedStudents.length === studentsData.length) {
+        if (selectedStudents.length === studentsDataComputed.length) {
             setSelectedStudents([]);
         } else {
-            setSelectedStudents(studentsData.map(s => s.id));
+            setSelectedStudents(studentsDataComputed.map(s => s.id));
         }
     };
 
-    const handleOpenStudentDetails = (student: typeof studentsData[0]) => {
+    const handleOpenStudentDetails = (student: typeof studentsDataComputed[0]) => {
         setSelectedStudent(student);
         setIsSidebarOpen(true);
     };
@@ -141,6 +202,110 @@ const TutorPortalClassDetail: React.FC = () => {
         }
     };
 
+    // === Lesson Management Functions ===
+    const canCheckIn = (lesson: LessonResponse): boolean => {
+        if (lesson.status !== 'scheduled') return false;
+        const now = new Date();
+        const start = new Date(lesson.scheduledStart);
+        const diffMinutes = (start.getTime() - now.getTime()) / (1000 * 60);
+        return diffMinutes <= 15 && diffMinutes >= -15;
+    };
+
+    const handleCheckIn = async (lessonId: number) => {
+        try {
+            setCheckingIn(true);
+            await checkInLesson(lessonId);
+            antMessage.success('Check-in thành công!');
+            await fetchClassData();
+        } catch (error: any) {
+            antMessage.error(error.response?.data?.message || 'Không thể check-in. Vui lòng thử lại.');
+        } finally {
+            setCheckingIn(false);
+        }
+    };
+
+    const handleCheckOut = async (lessonId: number) => {
+        try {
+            setCheckingOut(true);
+            await checkOutLesson(lessonId);
+            antMessage.success('Check-out thành công!');
+            await fetchClassData();
+        } catch (error: any) {
+            antMessage.error(error.response?.data?.message || 'Không thể check-out. Vui lòng thử lại.');
+        } finally {
+            setCheckingOut(false);
+        }
+    };
+
+    const handleReportSuccess = async () => {
+        setShowReportForm(false);
+        setActiveLessonId(null);
+        antMessage.success('Báo cáo đã được nộp thành công!');
+        await fetchClassData();
+    };
+
+    const getLessonStatusLabel = (status?: string): { text: string; color: string } => {
+        switch (status) {
+            case 'scheduled': return { text: 'Đã lên lịch', color: '#1890ff' };
+            case 'checked_in': return { text: 'Đã check-in', color: '#52c41a' };
+            case 'checked_out': return { text: 'Đã check-out', color: '#faad14' };
+            case 'pending_confirmation': return { text: 'Chờ xác nhận', color: '#722ed1' };
+            case 'completed': return { text: 'Hoàn thành', color: '#52c41a' };
+            case 'disputed': return { text: 'Đang khiếu nại', color: '#ff4d4f' };
+            case 'cancelled': return { text: 'Đã hủy', color: '#999' };
+            default: return { text: status || 'N/A', color: '#999' };
+        }
+    };
+
+    const sortedLessons = React.useMemo(() => {
+        return [...lessons].sort((a, b) =>
+            new Date(a.scheduledStart).getTime() - new Date(b.scheduledStart).getTime()
+        );
+    }, [lessons]);
+
+    // Create student data from classInfo and lessons
+    const studentsDataComputed = React.useMemo(() => {
+        console.log('📊 Computing students:', { hasClassInfo: !!classInfo, lessonsCount: lessons.length });
+        if (!classInfo || lessons.length === 0) {
+            console.log('⚠️ No students - returning empty array');
+            return [];
+        }
+
+        const sortedLessons = [...lessons].sort((a, b) =>
+            new Date(a.scheduledStart).getTime() - new Date(b.scheduledStart).getTime()
+        );
+
+        const lastCompletedLesson = sortedLessons
+            .filter(l => l.status === 'completed' || l.status === 'pending_parent_confirmation')
+            .slice(-1)[0];
+
+        const completedCount = lessons.filter(l => l.status === 'completed' || l.status === 'pending_parent_confirmation').length;
+        const totalCount = lessons.length;
+
+        const result: StudentData[] = [{
+            id: 1,
+            name: classInfo.studentName,
+            email: classInfo.studentEmail || 'email@example.com',
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(classInfo.studentName)}&background=3d4a3e&color=f2f0e4&size=128`,
+            status: 'Đang học',
+            lastLesson: lastCompletedLesson
+                ? new Date(lastCompletedLesson.scheduledStart).toLocaleDateString('vi-VN', {
+                    weekday: 'short',
+                    day: '2-digit',
+                    month: '2-digit'
+                  })
+                : 'Chưa có',
+            homeworkStatus: {
+                label: 'Đúng tiến độ',
+                type: 'ontrack' as const
+            },
+            avgScore: `${Math.round((completedCount / totalCount) * 100)}%`,
+            grade: classInfo.grade
+        }];
+        console.log('✅ Computed students:', result);
+        return result;
+    }, [classInfo, lessons]);
+
     return (
         <div className={styles.classDetail}>
             <div className={`${styles.mainContent} ${isSidebarOpen ? styles.withSidebar : ''}`}>
@@ -152,22 +317,30 @@ const TutorPortalClassDetail: React.FC = () => {
                                 <BackIcon />
                             </button>
                             <div className={styles.classInfo}>
-                                <div className={styles.classHeader}>
-                                    <h1 className={styles.className}>{classData.name}</h1>
-                                    <span className={styles.subjectTag}>{classData.subject}</span>
-                                    <span className={styles.gradeTag}>{classData.grade}</span>
-                                </div>
-                                <p className={styles.nextLesson}>Next lesson: {classData.nextLesson}</p>
+                                {loading ? (
+                                    <div>Đang tải...</div>
+                                ) : classInfo ? (
+                                    <>
+                                        <div className={styles.classHeader}>
+                                            <h1 className={styles.className}>{classInfo.name}</h1>
+                                            <span className={styles.subjectTag}>{classInfo.subject}</span>
+                                            <span className={styles.gradeTag}>{classInfo.grade}</span>
+                                        </div>
+                                        <p className={styles.nextLesson}>Buổi học tiếp theo: {classInfo.nextLesson}</p>
+                                    </>
+                                ) : (
+                                    <div>Không tìm thấy dữ liệu</div>
+                                )}
                             </div>
                         </div>
                         <div className={styles.headerActions}>
                             <button className={styles.actionBtn}>
                                 <MessageIcon />
-                                <span>Message Class</span>
+                                <span>Nhắn tin lớp</span>
                             </button>
                             <button className={styles.actionBtn}>
                                 <PlusIcon />
-                                <span>Add Student</span>
+                                <span>Thêm học sinh</span>
                             </button>
                         </div>
                     </div>
@@ -175,22 +348,28 @@ const TutorPortalClassDetail: React.FC = () => {
                     {/* Tabs */}
                     <div className={styles.tabs}>
                         <button
+                            className={`${styles.tab} ${activeTab === 'lessons' ? styles.active : ''}`}
+                            onClick={() => setActiveTab('lessons')}
+                        >
+                            Buổi học ({lessons.length})
+                        </button>
+                        <button
                             className={`${styles.tab} ${activeTab === 'students' ? styles.active : ''}`}
                             onClick={() => setActiveTab('students')}
                         >
-                            Students
+                            Học sinh
                         </button>
                         <button
                             className={`${styles.tab} ${activeTab === 'homework' ? styles.active : ''}`}
                             onClick={() => setActiveTab('homework')}
                         >
-                            Homework
+                            Bài tập về nhà
                         </button>
                         <button
                             className={`${styles.tab} ${activeTab === 'materials' ? styles.active : ''}`}
                             onClick={() => setActiveTab('materials')}
                         >
-                            Materials
+                            Tài liệu
                         </button>
                     </div>
                 </div>
@@ -198,114 +377,367 @@ const TutorPortalClassDetail: React.FC = () => {
                 {/* Content */}
                 <div className={styles.content}>
                     <div className={styles.contentContainer}>
-                        {/* Toolbar */}
-                        <div className={styles.toolbar}>
-                            <div className={styles.searchWrapper}>
-                                <SearchIcon />
-                                <input
-                                    type="text"
-                                    className={styles.searchInput}
-                                    placeholder="Search students..."
-                                />
-                            </div>
-                            <div className={styles.toolbarActions}>
-                                <button className={styles.toolbarBtn}>
-                                    <MessageIcon />
-                                    <span>Message Selected</span>
-                                </button>
-                                <button className={styles.toolbarBtn}>
-                                    <ExportIcon />
-                                    <span>Export List</span>
-                                </button>
-                            </div>
-                        </div>
+                        {/* === LESSONS TAB === */}
+                        {activeTab === 'lessons' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                {loading ? (
+                                    <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+                                        Đang tải buổi học...
+                                    </div>
+                                ) : sortedLessons.length === 0 ? (
+                                    <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+                                        Chưa có buổi học nào
+                                    </div>
+                                ) : (
+                                    sortedLessons.map((lesson) => {
+                                        const statusInfo = getLessonStatusLabel(lesson.status);
+                                        const isExpanded = activeLessonId === lesson.lessonId;
+                                        const startTime = new Date(lesson.scheduledStart);
+                                        const endTime = new Date(lesson.scheduledEnd);
+                                        const isPast = startTime < new Date();
 
-                        {/* Students Table */}
-                        <div className={styles.tableContainer}>
-                            <table className={styles.table}>
-                                <thead>
-                                    <tr>
-                                        <th>
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedStudents.length === studentsData.length}
-                                                onChange={toggleSelectAll}
-                                            />
-                                        </th>
-                                        <th>STUDENT</th>
-                                        <th>STATUS</th>
-                                        <th>LAST<br />LESSON</th>
-                                        <th>HOMEWORK<br />STATUS</th>
-                                        <th>AVG<br />SCORE</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {studentsData.map((student) => (
-                                        <tr
-                                            key={student.id}
-                                            className={selectedStudent?.id === student.id ? styles.selected : ''}
-                                        >
-                                            <td>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedStudents.includes(student.id)}
-                                                    onChange={(e) => {
-                                                        e.stopPropagation();
-                                                        toggleStudentSelection(student.id);
+                                        return (
+                                            <div
+                                                key={lesson.lessonId}
+                                                style={{
+                                                    background: '#fff',
+                                                    borderRadius: '12px',
+                                                    border: isExpanded ? '2px solid #3e2f28' : '1px solid rgba(26,34,56,0.1)',
+                                                    overflow: 'hidden',
+                                                    transition: 'border-color 0.2s',
+                                                }}
+                                            >
+                                                {/* Lesson Card Header */}
+                                                <div
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        padding: '16px 20px',
+                                                        cursor: 'pointer',
+                                                        background: isPast && lesson.status === 'completed' ? '#f6fff6' : undefined,
                                                     }}
-                                                />
-                                            </td>
-                                            <td>
-                                                <div className={styles.studentCell}>
-                                                    <img src={student.avatar} alt={student.name} className={styles.avatar} />
-                                                    <div className={styles.studentInfo}>
-                                                        <div className={styles.studentName}>{student.name}</div>
-                                                        <div className={styles.studentEmail}>{student.email}</div>
+                                                    onClick={() => setActiveLessonId(isExpanded ? null : lesson.lessonId)}
+                                                >
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                                        <div style={{
+                                                            width: '48px', height: '48px',
+                                                            borderRadius: '10px',
+                                                            background: '#f2f0e4',
+                                                            display: 'flex', flexDirection: 'column',
+                                                            alignItems: 'center', justifyContent: 'center',
+                                                            fontSize: '11px', fontWeight: 600, color: '#1a2238',
+                                                        }}>
+                                                            <span style={{ fontSize: '16px', lineHeight: 1 }}>
+                                                                {startTime.getDate()}
+                                                            </span>
+                                                            <span style={{ fontSize: '10px', textTransform: 'uppercase' }}>
+                                                                {startTime.toLocaleDateString('vi-VN', { month: 'short' })}
+                                                            </span>
+                                                        </div>
+                                                        <div>
+                                                            <div style={{ fontWeight: 600, fontSize: '14px', color: '#1a2238' }}>
+                                                                Buổi {sortedLessons.indexOf(lesson) + 1}
+                                                                {lesson.subject?.subjectName && ` - ${lesson.subject.subjectName}`}
+                                                            </div>
+                                                            <div style={{ fontSize: '13px', color: '#666', marginTop: '2px' }}>
+                                                                {startTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                                                                {' - '}
+                                                                {endTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                                                                {' · '}
+                                                                {startTime.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                        <Tag color={statusInfo.color} style={{ margin: 0, borderRadius: '6px' }}>
+                                                            {statusInfo.text}
+                                                        </Tag>
+
+                                                        {/* Action Buttons */}
+                                                        {lesson.status === 'scheduled' && canCheckIn(lesson) && (
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleCheckIn(lesson.lessonId); }}
+                                                                disabled={checkingIn}
+                                                                style={{
+                                                                    padding: '6px 16px', borderRadius: '8px',
+                                                                    background: '#52c41a', color: '#fff',
+                                                                    border: 'none', cursor: 'pointer',
+                                                                    fontSize: '13px', fontWeight: 600,
+                                                                    opacity: checkingIn ? 0.6 : 1,
+                                                                }}
+                                                            >
+                                                                {checkingIn ? 'Đang xử lý...' : 'Check-in'}
+                                                            </button>
+                                                        )}
+
+                                                        {lesson.status === 'checked_in' && (
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleCheckOut(lesson.lessonId); }}
+                                                                disabled={checkingOut}
+                                                                style={{
+                                                                    padding: '6px 16px', borderRadius: '8px',
+                                                                    background: '#faad14', color: '#fff',
+                                                                    border: 'none', cursor: 'pointer',
+                                                                    fontSize: '13px', fontWeight: 600,
+                                                                    opacity: checkingOut ? 0.6 : 1,
+                                                                }}
+                                                            >
+                                                                {checkingOut ? 'Đang xử lý...' : 'Check-out'}
+                                                            </button>
+                                                        )}
+
+                                                        {lesson.status === 'checked_out' && (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setActiveLessonId(lesson.lessonId);
+                                                                    setShowReportForm(true);
+                                                                }}
+                                                                style={{
+                                                                    padding: '6px 16px', borderRadius: '8px',
+                                                                    background: '#3e2f28', color: '#fff',
+                                                                    border: 'none', cursor: 'pointer',
+                                                                    fontSize: '13px', fontWeight: 600,
+                                                                }}
+                                                            >
+                                                                Nộp báo cáo
+                                                            </button>
+                                                        )}
+
+                                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#999" strokeWidth="1.5"
+                                                            style={{ transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+                                                            <path d="M4 6L8 10L12 6" strokeLinecap="round" strokeLinejoin="round" />
+                                                        </svg>
                                                     </div>
                                                 </div>
-                                            </td>
-                                            <td>
-                                                <span className={`${styles.statusBadge} ${styles[student.status.toLowerCase()]}`}>
-                                                    {student.status}
-                                                </span>
-                                            </td>
-                                            <td className={styles.lessonDate}>
-                                                {student.lastLesson.split('\n').map((line, i) => (
-                                                    <div key={i}>{line}</div>
-                                                ))}
-                                            </td>
-                                            <td>
-                                                {student.homeworkStatus.count ? (
-                                                    <span className={`${styles.hwStatusBadge} ${styles[student.homeworkStatus.type]}`}>
-                                                        <span className={styles.hwCount}>{student.homeworkStatus.count}</span>
-                                                        <span className={styles.hwLabel}>{student.homeworkStatus.label}</span>
-                                                    </span>
-                                                ) : (
-                                                    <span className={`${styles.statusBadge} ${styles[student.homeworkStatus.type]}`}>
-                                                        {student.homeworkStatus.label}
-                                                    </span>
+
+                                                {/* Expanded Detail */}
+                                                {isExpanded && (
+                                                    <div style={{ padding: '0 20px 20px', borderTop: '1px solid rgba(26,34,56,0.06)' }}>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', paddingTop: '16px' }}>
+                                                            <div>
+                                                                <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Học sinh</div>
+                                                                <div style={{ fontSize: '14px', color: '#1a2238' }}>
+                                                                    {lesson.student?.fullName || classInfo?.studentName || 'N/A'}
+                                                                </div>
+                                                            </div>
+                                                            <div>
+                                                                <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Giá buổi học</div>
+                                                                <div style={{ fontSize: '14px', color: '#1a2238', fontWeight: 600 }}>
+                                                                    {lesson.lessonPrice ? `${lesson.lessonPrice.toLocaleString('vi-VN')}đ` : 'N/A'}
+                                                                </div>
+                                                            </div>
+                                                            {lesson.checkInTime && (
+                                                                <div>
+                                                                    <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Check-in lúc</div>
+                                                                    <div style={{ fontSize: '14px', color: '#52c41a' }}>
+                                                                        {new Date(lesson.checkInTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            {lesson.checkOutTime && (
+                                                                <div>
+                                                                    <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Check-out lúc</div>
+                                                                    <div style={{ fontSize: '14px', color: '#faad14' }}>
+                                                                        {new Date(lesson.checkOutTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            {lesson.meetingLink && (
+                                                                <div style={{ gridColumn: '1 / -1' }}>
+                                                                    <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Link học online</div>
+                                                                    <a href={lesson.meetingLink} target="_blank" rel="noopener noreferrer"
+                                                                        style={{ fontSize: '14px', color: '#1890ff' }}>
+                                                                        {lesson.meetingLink}
+                                                                    </a>
+                                                                </div>
+                                                            )}
+                                                            {lesson.lessonContent && (
+                                                                <div style={{ gridColumn: '1 / -1' }}>
+                                                                    <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Nội dung đã dạy</div>
+                                                                    <div style={{ fontSize: '14px', color: '#1a2238', whiteSpace: 'pre-wrap' }}>
+                                                                        {lesson.lessonContent}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            {lesson.homework && (
+                                                                <div style={{ gridColumn: '1 / -1' }}>
+                                                                    <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Bài tập về nhà</div>
+                                                                    <div style={{ fontSize: '14px', color: '#1a2238', whiteSpace: 'pre-wrap' }}>
+                                                                        {lesson.homework}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            {lesson.confirmDeadline && (
+                                                                <div style={{ gridColumn: '1 / -1' }}>
+                                                                    <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Hạn xác nhận</div>
+                                                                    <div style={{ fontSize: '14px', color: '#722ed1' }}>
+                                                                        {new Date(lesson.confirmDeadline).toLocaleString('vi-VN')}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Report Form (shown after check-out) */}
+                                                        {showReportForm && activeLessonId === lesson.lessonId && lesson.status === 'checked_out' && (
+                                                            <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                                                <LessonReportForm
+                                                                    lessonId={lesson.lessonId}
+                                                                    onSubmitSuccess={handleReportSuccess}
+                                                                    onCancel={() => setShowReportForm(false)}
+                                                                />
+                                                                <AttachmentUploader lessonId={lesson.lessonId} />
+                                                            </div>
+                                                        )}
+
+                                                        {/* Check-in hint for scheduled lessons */}
+                                                        {lesson.status === 'scheduled' && !canCheckIn(lesson) && (
+                                                            <div style={{
+                                                                marginTop: '16px', padding: '12px 16px',
+                                                                background: '#f2f0e4', borderRadius: '8px',
+                                                                fontSize: '13px', color: '#666',
+                                                            }}>
+                                                                Check-in chỉ khả dụng trong vòng 15 phút trước và sau giờ bắt đầu buổi học.
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 )}
-                                            </td>
-                                            <td className={styles.avgScore}>{student.avgScore}</td>
-                                            <td>
-                                                <div className={styles.rowActions}>
-                                                    <button
-                                                        className={styles.iconBtn}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleOpenStudentDetails(student);
-                                                        }}
-                                                    >
-                                                        <MoreIcon />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        )}
+
+                        {/* === STUDENTS TAB === */}
+                        {activeTab === 'students' && (
+                            <>
+                                {/* Toolbar */}
+                                <div className={styles.toolbar}>
+                                    <div className={styles.searchWrapper}>
+                                        <SearchIcon />
+                                        <input
+                                            type="text"
+                                            className={styles.searchInput}
+                                            placeholder="Tìm kiếm học sinh..."
+                                        />
+                                    </div>
+                                    <div className={styles.toolbarActions}>
+                                        <button className={styles.toolbarBtn}>
+                                            <MessageIcon />
+                                            <span>Nhắn tin đã chọn</span>
+                                        </button>
+                                        <button className={styles.toolbarBtn}>
+                                            <ExportIcon />
+                                            <span>Xuất danh sách</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Students Table */}
+                                <div className={styles.tableContainer}>
+                                    <table className={styles.table}>
+                                        <thead>
+                                            <tr>
+                                                <th>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedStudents.length === studentsDataComputed.length}
+                                                        onChange={toggleSelectAll}
+                                                    />
+                                                </th>
+                                                <th>HỌC SINH</th>
+                                                <th>TRẠNG THÁI</th>
+                                                <th>BUỔI HỌC<br />CUỐI</th>
+                                                <th>TRẠNG THÁI<br />BÀI TẬP</th>
+                                                <th>ĐIỂM TB</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {studentsDataComputed.map((student) => (
+                                                <tr
+                                                    key={student.id}
+                                                    className={selectedStudent?.id === student.id ? styles.selected : ''}
+                                                >
+                                                    <td>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedStudents.includes(student.id)}
+                                                            onChange={(e) => {
+                                                                e.stopPropagation();
+                                                                toggleStudentSelection(student.id);
+                                                            }}
+                                                        />
+                                                    </td>
+                                                    <td>
+                                                        <div className={styles.studentCell}>
+                                                            <img src={student.avatar} alt={student.name} className={styles.avatar} />
+                                                            <div className={styles.studentInfo}>
+                                                                <div className={styles.studentName}>{student.name}</div>
+                                                                <div className={styles.studentEmail}>{student.email}</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <span className={`${styles.statusBadge} ${styles[student.status.toLowerCase()]}`}>
+                                                            {student.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className={styles.lessonDate}>
+                                                        {student.lastLesson.split('\n').map((line, i) => (
+                                                            <div key={i}>{line}</div>
+                                                        ))}
+                                                    </td>
+                                                    <td>
+                                                        {student.homeworkStatus.count ? (
+                                                            <span className={`${styles.hwStatusBadge} ${styles[student.homeworkStatus.type]}`}>
+                                                                <span className={styles.hwCount}>{student.homeworkStatus.count}</span>
+                                                                <span className={styles.hwLabel}>{student.homeworkStatus.label}</span>
+                                                            </span>
+                                                        ) : (
+                                                            <span className={`${styles.statusBadge} ${styles[student.homeworkStatus.type]}`}>
+                                                                {student.homeworkStatus.label}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className={styles.avgScore}>{student.avgScore}</td>
+                                                    <td>
+                                                        <div className={styles.rowActions}>
+                                                            <button
+                                                                className={styles.iconBtn}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleOpenStudentDetails(student);
+                                                                }}
+                                                            >
+                                                                <MoreIcon />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
+                        )}
+
+                        {/* === HOMEWORK TAB === */}
+                        {activeTab === 'homework' && (
+                            <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+                                Tính năng bài tập về nhà đang được phát triển
+                            </div>
+                        )}
+
+                        {/* === MATERIALS TAB === */}
+                        {activeTab === 'materials' && (
+                            <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+                                Tính năng tài liệu đang được phát triển
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -334,83 +766,83 @@ const TutorPortalClassDetail: React.FC = () => {
                     <div className={styles.quickActions}>
                         <button className={styles.quickActionBtn}>
                             <MessageIcon />
-                            <span>Message</span>
+                            <span>Nhắn tin</span>
                         </button>
                         <button className={styles.quickActionBtn}>
                             <NoteIcon />
-                            <span>Add Note</span>
+                            <span>Thêm ghi chú</span>
                         </button>
                         <button className={styles.quickActionBtn}>
                             <BookIcon />
-                            <span>Assign HW</span>
+                            <span>Giao BTVN</span>
                         </button>
                     </div>
 
                     {/* Overview */}
                     <div className={styles.section}>
-                        <h4 className={styles.sectionTitle}>Overview</h4>
+                        <h4 className={styles.sectionTitle}>Tổng quan</h4>
                         <div className={styles.overviewCard}>
                             <div className={styles.overviewRow}>
                                 <span className={styles.overviewLabel}>Email</span>
                                 <span className={styles.overviewValue}>{selectedStudent.email}</span>
                             </div>
                             <div className={styles.overviewRow}>
-                                <span className={styles.overviewLabel}>Last Lesson</span>
-                                <span className={styles.overviewValue}>Wed, Jan 15</span>
+                                <span className={styles.overviewLabel}>Buổi học cuối</span>
+                                <span className={styles.overviewValue}>T4, 15/01</span>
                             </div>
                             <div className={styles.overviewRow}>
-                                <span className={styles.overviewLabel}>Next Lesson</span>
-                                <span className={styles.overviewValue}>Mon, Jan 20 at 14:00</span>
+                                <span className={styles.overviewLabel}>Buổi học tiếp theo</span>
+                                <span className={styles.overviewValue}>T2, 20/01 lúc 14:00</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Attendance */}
                     <div className={styles.section}>
-                        <h4 className={styles.sectionTitle}>Attendance (Last 4 sessions)</h4>
+                        <h4 className={styles.sectionTitle}>Điểm danh (4 buổi gần nhất)</h4>
                         <div className={styles.attendanceGrid}>
                             <div className={styles.attendanceItem}>
-                                <div className={styles.attendanceDate}>Wed 15</div>
-                                <div className={`${styles.attendanceStatus} ${styles.present}`}>Present</div>
+                                <div className={styles.attendanceDate}>T4 15</div>
+                                <div className={`${styles.attendanceStatus} ${styles.present}`}>Có mặt</div>
                             </div>
                             <div className={styles.attendanceItem}>
-                                <div className={styles.attendanceDate}>Mon 13</div>
-                                <div className={`${styles.attendanceStatus} ${styles.present}`}>Present</div>
+                                <div className={styles.attendanceDate}>T2 13</div>
+                                <div className={`${styles.attendanceStatus} ${styles.present}`}>Có mặt</div>
                             </div>
                             <div className={styles.attendanceItem}>
-                                <div className={styles.attendanceDate}>Wed 8</div>
-                                <div className={`${styles.attendanceStatus} ${styles.absent}`}>Absent</div>
+                                <div className={styles.attendanceDate}>T4 8</div>
+                                <div className={`${styles.attendanceStatus} ${styles.absent}`}>Vắng mặt</div>
                             </div>
                             <div className={styles.attendanceItem}>
-                                <div className={styles.attendanceDate}>Mon 6</div>
-                                <div className={`${styles.attendanceStatus} ${styles.present}`}>Present</div>
+                                <div className={styles.attendanceDate}>T2 6</div>
+                                <div className={`${styles.attendanceStatus} ${styles.present}`}>Có mặt</div>
                             </div>
                         </div>
                     </div>
 
                     {/* Homework Status */}
                     <div className={styles.section}>
-                        <h4 className={styles.sectionTitle}>Homework Status</h4>
+                        <h4 className={styles.sectionTitle}>Trạng thái bài tập</h4>
                         <div className={styles.homeworkList}>
                             <div className={styles.homeworkItem}>
                                 <div className={styles.homeworkInfo}>
-                                    <div className={styles.homeworkTitle}>Chapter 5 Problems</div>
-                                    <div className={styles.homeworkDue}>Due: Jan 16</div>
+                                    <div className={styles.homeworkTitle}>Bài tập Chương 5</div>
+                                    <div className={styles.homeworkDue}>Hạn nộp: 16/01</div>
                                 </div>
-                                <span className={`${styles.homeworkBadge} ${styles.overdueBadge}`}>Overdue</span>
+                                <span className={`${styles.homeworkBadge} ${styles.overdueBadge}`}>Quá hạn</span>
                             </div>
                             <div className={styles.homeworkItem}>
                                 <div className={styles.homeworkInfo}>
-                                    <div className={styles.homeworkTitle}>Practice Test 3</div>
-                                    <div className={styles.homeworkDue}>Due: Jan 18</div>
+                                    <div className={styles.homeworkTitle}>Kiểm tra thực hành 3</div>
+                                    <div className={styles.homeworkDue}>Hạn nộp: 18/01</div>
                                 </div>
-                                <span className={`${styles.homeworkBadge} ${styles.inProgressBadge}`}>In Progress</span>
+                                <span className={`${styles.homeworkBadge} ${styles.inProgressBadge}`}>Đang làm</span>
                             </div>
                         </div>
                     </div>
 
                     {/* View Profile Button */}
-                    <button className={styles.viewProfileBtn} onClick={handleViewProfile}>VIEW PROFILE</button>
+                    <button className={styles.viewProfileBtn} onClick={handleViewProfile}>XEM HỒ SƠ</button>
                 </div>
             </aside>
             )}

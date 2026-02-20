@@ -85,8 +85,10 @@ const BookingRequestCard = ({ message, isTutor = false, onProceedToPayment }: Bo
                 if (response.statusCode === 200 && response.content.status !== status) {
                     setStatus(response.content.status);
                 }
-            } catch (error) {
-                console.error('Failed to fetch latest booking status:', error);
+            } catch (error: any) {
+                if (error?.response?.status !== 404) {
+                    console.error('Failed to fetch latest booking status:', error);
+                }
             }
         };
 

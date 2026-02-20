@@ -33,7 +33,7 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
             const info = await getPaymentInfo(bookingId);
             setPaymentInfo(info);
         } catch (err: any) {
-            console.error('Failed to fetch payment info:', err);
+            console.warn('Failed to fetch payment info:', err?.response?.status, err?.response?.data);
             const errorCode = err.response?.data?.errorCode;
 
             if (errorCode === 'BOOKING_EXPIRED') {

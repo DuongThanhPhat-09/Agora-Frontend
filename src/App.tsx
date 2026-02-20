@@ -5,13 +5,6 @@ import LoginPage from './pages/Login/LoginPage';
 import RegisterPage from './pages/Register/RegisterPage';
 import ResetPasswordPage from './pages/Login/ResetPasswordPage';
 import { TutorDetailPage } from './pages/TutorDetail';
-import TutorLayout from './layouts/TutorLayout';
-import TutorDashboard from './pages/TutorWorkspace/TutorDashboard';
-import TutorSchedulePage from './pages/TutorSchedule';
-import MessagesPage from './pages/TutorMessages';
-import { TutorWalletPage } from './pages/TutorWallet';
-import { TutorClassesPage } from './pages/TutorClasses';
-import { TutorProfilePage } from './pages/TutorProfile';
 import { AdminDashboardPage } from './pages/AdminDashboard';
 import { UserManagementPage } from './pages/AdminUserManagement';
 import { AdminVettingPage } from './pages/AdminVetting';
@@ -19,6 +12,7 @@ import { AdminDisputesPage } from './pages/AdminDisputes';
 import AdminDisputeDetailPageExpanded from './pages/AdminDisputes/AdminDisputeDetailPageExpanded';
 import { AdminFinancialsPage } from './pages/AdminFinancials';
 import { AdminSettingsPage } from './pages/AdminSettings';
+import AdminWarningsPage from './pages/AdminWarnings/AdminWarningsPage';
 import AdminLayout from './layouts/AdminLayout';
 import TutorPortalLayout from './layouts/TutorPortalLayout';
 import {
@@ -48,6 +42,9 @@ import StudentDashboard from './pages/StudentDashboard';
 import StudentCourses from './pages/StudentCourses';
 import ParentStudent from './pages/ParentStudent';
 import PaymentCallback from './pages/PaymentCallback/PaymentCallback';
+import ParentLessons from './pages/ParentLessons';
+import ParentLessonDetail from './pages/ParentLessons/ParentLessonDetail';
+import ParentDisputes from './pages/ParentDisputes';
 
 // ---------------------
 
@@ -63,24 +60,6 @@ function App() {
         <Route path="/tutor-search" element={<TutorSearchPage />} />
         <Route path="/tutor-detail" element={<TutorDetailPage />} />
         <Route path="/tutor-detail/:id" element={<TutorDetailPage />} />
-
-        {/* Tutor Layout with nested routes - PROTECTED */}
-        <Route
-          path="/tutor"
-          element={
-            // <ProtectedRoute allowedRoles={["Tutor"]}>
-            //   <TutorLayout />
-            // </ProtectedRoute>
-            <TutorLayout />
-          }
-        >
-          <Route path="workspace" element={<TutorDashboard />} />
-          <Route path="schedule" element={<TutorSchedulePage />} />
-          <Route path="classes" element={<TutorClassesPage />} />
-          <Route path="messages" element={<MessagesPage />} />
-          <Route path="wallet" element={<TutorWalletPage />} />
-          <Route path="profile" element={<TutorProfilePage />} />
-        </Route>
 
         {/* Admin Layout - PROTECTED */}
         <Route
@@ -99,6 +78,7 @@ function App() {
           <Route path="disputes" element={<AdminDisputesPage />} />
           <Route path="disputes/:disputeId" element={<AdminDisputeDetailPageExpanded />} />
           <Route path="financials" element={<AdminFinancialsPage />} />
+          <Route path="warnings" element={<AdminWarningsPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
 
@@ -134,6 +114,9 @@ function App() {
           <Route path="student" element={<ParentStudent />} />
           <Route path="wallet" element={<ParentWallet />} />
           <Route path="messages" element={<ParentMessage />} />
+          <Route path="lessons" element={<ParentLessons />} />
+          <Route path="lessons/:lessonId" element={<ParentLessonDetail />} />
+          <Route path="disputes" element={<ParentDisputes />} />
         </Route>
 
         {/* Student Layout - PROTECTED */}
