@@ -73,16 +73,72 @@ const trendingTags = ["SAT Prep", "Calculus III", "UX Design", "Ancient History"
 // ============================================
 // Filter options (khớp với backend TutorSearchParameters)
 // ============================================
-const gradeLevelOptions = [
-    { value: "", label: "Tất cả" },
-    { value: "tieu_hoc", label: "Tiểu học" },
-    { value: "thcs", label: "THCS" },
-    { value: "thpt", label: "THPT" },
-    { value: "dai_hoc", label: "Đại học" },
-    { value: "sau_dai_hoc", label: "Sau đại học" },
-    { value: "ielts", label: "IELTS" },
-    { value: "toeic", label: "TOEIC" },
-    { value: "sat", label: "SAT" },
+// Grade level options grouped by school level, values match DB (Grade_1, Grade_2, ...)
+const gradeLevelGroups = [
+    {
+        label: "Tiểu học",
+        options: [
+            { value: "Grade_1", label: "Lớp 1" },
+            { value: "Grade_2", label: "Lớp 2" },
+            { value: "Grade_3", label: "Lớp 3" },
+            { value: "Grade_4", label: "Lớp 4" },
+            { value: "Grade_5", label: "Lớp 5" },
+        ],
+    },
+    {
+        label: "THCS",
+        options: [
+            { value: "Grade_6", label: "Lớp 6" },
+            { value: "Grade_7", label: "Lớp 7" },
+            { value: "Grade_8", label: "Lớp 8" },
+            { value: "Grade_9", label: "Lớp 9" },
+        ],
+    },
+    {
+        label: "THPT",
+        options: [
+            { value: "Grade_10", label: "Lớp 10" },
+            { value: "Grade_11", label: "Lớp 11" },
+            { value: "Grade_12", label: "Lớp 12" },
+        ],
+    },
+    {
+        label: "Đại học",
+        options: [
+            { value: "University", label: "Đại học" },
+        ],
+    },
+
+    // Split international certificates into separate optgroups for clarity
+    {
+        label: "IELTS",
+        options: [
+            { value: "IELTS_5.0", label: "IELTS 5.0+" },
+            { value: "IELTS_6.0", label: "IELTS 6.0+" },
+            { value: "IELTS_7.0", label: "IELTS 7.0+" },
+            { value: "IELTS_8.0", label: "IELTS 8.0+" },
+            { value: "IELTS_9.0", label: "IELTS 9.0" },
+        ],
+    },
+    {
+        label: "TOEIC",
+        options: [
+            { value: "TOEIC_500", label: "TOEIC 500+" },
+            { value: "TOEIC_600", label: "TOEIC 600+" },
+            { value: "TOEIC_700", label: "TOEIC 700+" },
+            { value: "TOEIC_800", label: "TOEIC 800+" },
+            { value: "TOEIC_900", label: "TOEIC 900+" },
+        ],
+    },
+    {
+        label: "SAT",
+        options: [
+            { value: "SAT_1200", label: "SAT 1200+" },
+            { value: "SAT_1300", label: "SAT 1300+" },
+            { value: "SAT_1400", label: "SAT 1400+" },
+            { value: "SAT_1500", label: "SAT 1500+" },
+        ],
+    },
 ];
 
 const budgetRangeOptions = [
@@ -358,8 +414,13 @@ const FilterBar = ({
                                 value={gradeLevel}
                                 onChange={(e) => onGradeLevelChange(e.target.value)}
                             >
-                                {gradeLevelOptions.map((opt) => (
-                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                <option value="">Tất cả</option>
+                                {gradeLevelGroups.map((group) => (
+                                    <optgroup key={group.label} label={group.label}>
+                                        {group.options.map((opt) => (
+                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                        ))}
+                                    </optgroup>
                                 ))}
                             </select>
                         </div>
