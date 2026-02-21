@@ -5,13 +5,15 @@ import IssueWarningModal from './components/IssueWarningModal';
 import SuspendTutorModal from './components/SuspendTutorModal';
 import LockAccountConfirmDialog from './components/LockAccountConfirmDialog';
 import {
-    mockGetDisputeDetail,
-    mockResolveDispute,
-    mockIssueWarning,
-    mockSuspendTutor,
-    mockLockAccount,
-} from './mockData';
-import type { DisputeDetail } from '../../types/admin.types';
+    getDisputeDetail,
+    resolveDispute,
+    investigateDispute,
+    getDisputeChatHistory,
+    issueWarning,
+    suspendTutor,
+    lockAccount,
+} from '../../services/admin.service';
+import type { DisputeDetail, ResolutionType } from '../../types/admin.types';
 import { formatCurrency, formatDateTime, formatRelativeTime, formatDisputeType } from '../../utils/formatters';
 
 import '../../styles/pages/admin-dashboard.css';
@@ -27,8 +29,12 @@ const AdminDisputeDetailPageExpanded = () => {
 
     // Tab states
     const [activeTab, setActiveTab] = useState('evidence');
-    const [verdict, setVerdict] = useState('refund_100');
+    const [verdict, setVerdict] = useState<ResolutionType>('refund_100');
     const [adminNotes, setAdminNotes] = useState('');
+
+    // Chat history
+    const [chatMessages, setChatMessages] = useState<any[]>([]);
+    const [chatLoading, setChatLoading] = useState(false);
 
     // Modal states
     const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
@@ -49,7 +55,7 @@ const AdminDisputeDetailPageExpanded = () => {
         try {
             setLoading(true);
             setError(null);
-            const data = await mockGetDisputeDetail(id);
+            const data = await getDisputeDetail(id);
             setDisputeDetail(data);
         } catch (err) {
             console.error('Error fetching dispute detail:', err);
@@ -59,20 +65,44 @@ const AdminDisputeDetailPageExpanded = () => {
         }
     };
 
-    const handleResolveDispute = async () => {
-        if (!disputeDetail) return;
+    // Fetch chat history when switching to chat tab
+    const fetchChatHistory = async () => {
+        if (!disputeId) return;
+        try {
+            setChatLoading(true);
+            const data = await getDisputeChatHistory(disputeId);
+            setChatMessages(data);
+        } catch (err) {
+            console.error('Error fetching chat history:', err);
+            setChatMessages([]);
+        } finally {
+            setChatLoading(false);
+        }
+    };
 
-        if (adminNotes.trim().length < 20) {
-            toast.error('Ghi chú phải có ít nhất 20 ký tự');
+    useEffect(() => {
+        if (activeTab === 'chat' && chatMessages.length === 0) {
+            fetchChatHistory();
+        }
+    }, [activeTab]);
+
+    const handleResolveDispute = async () => {
+        if (!disputeDetail || !disputeId) return;
+
+        if (adminNotes.trim().length < 10) {
+            toast.error('Ghi chú phải có ít nhất 10 ký tự');
             return;
         }
 
         try {
             setIsSubmitting(true);
-            await mockResolveDispute(disputeDetail.disputeid, verdict, adminNotes);
+            await resolveDispute(disputeDetail.disputeId, {
+                resolutionType: verdict,
+                resolutionNote: adminNotes,
+            });
             toast.success('Đã giải quyết khiếu nại thành công!');
             // Refresh data
-            await fetchDisputeDetail(disputeDetail.disputeid);
+            await fetchDisputeDetail(disputeId);
         } catch (err) {
             console.error('Error resolving dispute:', err);
             toast.error('Không thể giải quyết khiếu nại');
@@ -81,23 +111,43 @@ const AdminDisputeDetailPageExpanded = () => {
         }
     };
 
-    // Parse evidence files
-    const parseEvidenceFiles = (jsonString: string | null) => {
-        if (!jsonString) return [];
+    const handleInvestigate = async () => {
+        if (!disputeDetail || !disputeId) return;
         try {
-            return JSON.parse(jsonString);
-        } catch {
-            return [];
+            setIsSubmitting(true);
+            await investigateDispute(disputeDetail.disputeId);
+            toast.success('Đã bắt đầu điều tra khiếu nại');
+            await fetchDisputeDetail(disputeId);
+        } catch (err) {
+            console.error('Error investigating dispute:', err);
+            toast.error('Không thể bắt đầu điều tra');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
-    const parseScreenshots = (jsonString: string | null): string[] => {
-        if (!jsonString) return [];
-        try {
-            return JSON.parse(jsonString);
-        } catch {
-            return [];
-        }
+    // Wrapper functions for modal callbacks
+    const handleIssueWarning = async (_disputeId: string, _tutorId: string, reason: string, severity: 'low' | 'medium' | 'high') => {
+        const warninglevel = severity === 'high' ? 2 : 1;
+        await issueWarning({
+            userid: _tutorId,
+            reason,
+            warninglevel,
+            relatedbookingid: _disputeId,
+        });
+    };
+
+    const handleSuspendTutor = async (tutorId: string, reason: string, durationDays: number) => {
+        await suspendTutor({
+            userid: tutorId,
+            reason,
+            suspensiontype: durationDays > 30 ? 'account_locked' : 'hidden_1_week',
+            durationDays,
+        });
+    };
+
+    const handleLockAccount = async (userId: string, reason: string) => {
+        await lockAccount(userId, reason);
     };
 
     if (loading) {
@@ -120,11 +170,12 @@ const AdminDisputeDetailPageExpanded = () => {
         );
     }
 
-    const evidenceFiles = parseEvidenceFiles(disputeDetail.evidencefiles);
-    const screenshots = parseScreenshots(disputeDetail.screenshots);
-    const booking = disputeDetail.bookingcontext;
-    const lesson = disputeDetail.lessoncontext;
-    const warnings = disputeDetail.tutorwarnings || [];
+    // Evidence from backend (string array of URLs)
+    const evidenceUrls = disputeDetail.evidence || [];
+    const lesson = disputeDetail.lesson;
+    const tutor = disputeDetail.tutor;
+    const createdBy = disputeDetail.createdBy;
+    const lessonPrice = lesson?.lessonPrice || 0;
 
     return (
         <>
@@ -137,15 +188,13 @@ const AdminDisputeDetailPageExpanded = () => {
                                 <div className="dispute-breadcrumbs">
                                     <span className="dispute-breadcrumb-item">Giải quyết khiếu nại</span>
                                     <span style={{ color: '#81786a' }}>•</span>
-                                    <span className="dispute-breadcrumb-item">Hồ sơ #{disputeDetail.disputeid}</span>
+                                    <span className="dispute-breadcrumb-item">Hồ sơ #{disputeDetail.disputeId}</span>
                                 </div>
                                 <h1 className="dispute-detail-title">
-                                    Hồ sơ #{disputeDetail.disputeid}: {formatDisputeType(disputeDetail.disputetype)}
+                                    Hồ sơ #{disputeDetail.disputeId}: {formatDisputeType(disputeDetail.disputeType || '')}
                                 </h1>
                                 <div className="dispute-detail-meta">
-                                    <span>Tạo {formatRelativeTime(disputeDetail.createdat)}</span>
-                                    <span>•</span>
-                                    <span>Ưu tiên {disputeDetail.priority === 'high' ? 'cao' : disputeDetail.priority === 'medium' ? 'trung bình' : 'thấp'}</span>
+                                    <span>{disputeDetail.timeSinceCreation || (disputeDetail.createdAt ? `Tạo ${formatRelativeTime(disputeDetail.createdAt)}` : 'N/A')}</span>
                                     <span>•</span>
                                     <span className="dispute-action-required">
                                         {disputeDetail.status === 'pending' ? 'Cần xử lý' : disputeDetail.status === 'investigating' ? 'Đang điều tra' : 'Đã giải quyết'}
@@ -158,13 +207,23 @@ const AdminDisputeDetailPageExpanded = () => {
                                     Đang xem xét trực tiếp
                                 </div>
                                 <div className="dispute-escrow-badge">
-                                    Tiền giữ: {formatCurrency(disputeDetail.escrowamount)}
+                                    Số tiền: {formatCurrency(lessonPrice)}
                                 </div>
                             </div>
                         </div>
 
                         {/* Admin Action Buttons */}
                         <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }}>
+                            {disputeDetail.status === 'pending' && (
+                                <button
+                                    className="vetting-btn vetting-btn-secondary"
+                                    onClick={handleInvestigate}
+                                    disabled={isSubmitting}
+                                    style={{ fontSize: '13px', padding: '8px 16px' }}
+                                >
+                                    🔍 Bắt đầu điều tra
+                                </button>
+                            )}
                             <button
                                 className="vetting-btn vetting-btn-secondary"
                                 onClick={() => setIsWarningModalOpen(true)}
@@ -194,9 +253,9 @@ const AdminDisputeDetailPageExpanded = () => {
                 <div className="dispute-detail-content">
                     <div className="dispute-detail-container">
                         <div className="dispute-grid">
-                            {/* LEFT COLUMN: Parties + Booking + Lesson + Warnings */}
+                            {/* LEFT COLUMN: Parties + Lesson Info */}
                             <div className="dispute-col-left">
-                                {/* Plaintiff Card */}
+                                {/* Plaintiff Card (Created By) */}
                                 <div className="dispute-party-card">
                                     <div className="dispute-border-indicator dispute-indicator-blue"></div>
                                     <div className="dispute-party-header">
@@ -206,16 +265,18 @@ const AdminDisputeDetailPageExpanded = () => {
                                     <div className="dispute-party-info">
                                         <div
                                             className="dispute-party-avatar"
-                                            style={{ backgroundImage: `url('${booking.studentavatar}')` }}
+                                            style={{ backgroundImage: createdBy?.avatarUrl ? `url('${createdBy.avatarUrl}')` : undefined, backgroundColor: '#e2e8f0' }}
                                         ></div>
                                         <div>
-                                            <h3 className="dispute-party-name">{booking.studentname}</h3>
-                                            <p className="dispute-party-id">ID: {booking.studentid}</p>
+                                            <h3 className="dispute-party-name">{createdBy?.fullName || 'N/A'}</h3>
+                                            <p className="dispute-party-id">{createdBy?.email || ''}</p>
                                         </div>
                                     </div>
-                                    <div className="dispute-party-stats" style={{ marginTop: '12px', fontSize: '13px', color: '#64748b' }}>
-                                        Tham gia: {formatDateTime(booking.studentjoinedat)}
-                                    </div>
+                                    {createdBy?.phone && (
+                                        <div className="dispute-party-stats" style={{ marginTop: '12px', fontSize: '13px', color: '#64748b' }}>
+                                            SĐT: {createdBy.phone}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Arrow Connector */}
@@ -223,153 +284,126 @@ const AdminDisputeDetailPageExpanded = () => {
                                     <span className="material-symbols-outlined dispute-connector-icon">arrow_downward</span>
                                 </div>
 
-                                {/* Defendant Card */}
+                                {/* Defendant Card (Tutor) */}
                                 <div className="dispute-party-card">
                                     <div className="dispute-border-indicator dispute-indicator-orange"></div>
                                     <div className="dispute-party-header">
-                                        <span className="dispute-role-badge dispute-role-defendant">Bị đơn</span>
+                                        <span className="dispute-role-badge dispute-role-defendant">Bị đơn (Gia sư)</span>
                                         <span className="material-symbols-outlined dispute-party-icon dispute-icon-orange">school</span>
                                     </div>
                                     <div className="dispute-party-info">
                                         <div
                                             className="dispute-party-avatar"
-                                            style={{ backgroundImage: `url('${booking.tutoravatar}')` }}
+                                            style={{ backgroundColor: '#e2e8f0' }}
                                         ></div>
                                         <div>
-                                            <h3 className="dispute-party-name">{booking.tutorname}</h3>
-                                            <p className="dispute-party-id">ID: {booking.tutorid}</p>
+                                            <h3 className="dispute-party-name">{tutor?.fullName || 'N/A'}</h3>
+                                            <p className="dispute-party-id">{tutor?.email || ''}</p>
                                         </div>
                                     </div>
                                     <div className="dispute-party-details">
                                         <div className="dispute-stat-row">
-                                            <span style={{ color: '#81786a' }}>Môn học</span>
-                                            <span className="dispute-stat-bold">{booking.subjectname} - {booking.gradelevel}</span>
-                                        </div>
-                                        <div className="dispute-stat-row">
                                             <span style={{ color: '#81786a' }}>Đánh giá</span>
-                                            <span className="dispute-stat-green">⭐ {booking.tutorrating} ({booking.tutortotalclasses} buổi)</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Booking Info Section */}
-                                <div className="dispute-party-card" style={{ marginTop: '24px' }}>
-                                    <h4 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 700, color: 'var(--color-navy)' }}>
-                                        📅 Thông tin đặt buổi học
-                                    </h4>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px' }}>
-                                        <div className="dispute-stat-row">
-                                            <span style={{ color: '#81786a' }}>Mã đặt buổi</span>
-                                            <span className="dispute-stat-bold">{booking.bookingid}</span>
+                                            <span className="dispute-stat-green">⭐ {tutor?.averageRating?.toFixed(1) || 'N/A'}</span>
                                         </div>
                                         <div className="dispute-stat-row">
-                                            <span style={{ color: '#81786a' }}>Ngày học</span>
-                                            <span className="dispute-stat-bold">{formatDateTime(booking.scheduleddate)}</span>
-                                        </div>
-                                        <div className="dispute-stat-row">
-                                            <span style={{ color: '#81786a' }}>Thời lượng</span>
-                                            <span className="dispute-stat-bold">{booking.durationminutes} phút</span>
-                                        </div>
-                                        <div className="dispute-stat-row">
-                                            <span style={{ color: '#81786a' }}>Tổng tiền</span>
-                                            <span className="dispute-stat-bold" style={{ color: 'var(--color-gold)' }}>
-                                                {formatCurrency(booking.totalprice)}
+                                            <span style={{ color: '#81786a' }}>Cảnh báo</span>
+                                            <span className="dispute-stat-bold" style={{ color: (tutor?.warningCount || 0) > 0 ? '#dc2626' : '#10b981' }}>
+                                                {tutor?.warningCount || 0} lần
                                             </span>
                                         </div>
-                                        <div className="dispute-stat-row">
-                                            <span style={{ color: '#81786a' }}>Trạng thái</span>
-                                            <span className="vetting-badge pending">{booking.bookingstatus}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Lesson Info Section */}
-                                <div className="dispute-party-card">
-                                    <h4 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 700, color: 'var(--color-navy)' }}>
-                                        🎓 Thông tin buổi học
-                                    </h4>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px' }}>
-                                        <div className="dispute-stat-row">
-                                            <span style={{ color: '#81786a' }}>Mã buổi học</span>
-                                            <span className="dispute-stat-bold">{lesson.lessonid}</span>
-                                        </div>
-                                        <div className="dispute-stat-row">
-                                            <span style={{ color: '#81786a' }}>Thời gian dự kiến</span>
-                                            <span className="dispute-stat-bold" style={{ fontSize: '13px' }}>
-                                                {formatDateTime(lesson.scheduledstarttime)} - {formatDateTime(lesson.scheduledendtime)}
-                                            </span>
-                                        </div>
-                                        <div className="dispute-stat-row">
-                                            <span style={{ color: '#81786a' }}>Thời gian thực tế</span>
-                                            <span className="dispute-stat-bold">
-                                                {lesson.actualstarttime ? formatDateTime(lesson.actualstarttime) : 'Không bắt đầu'}
-                                            </span>
-                                        </div>
-                                        <div className="dispute-stat-row">
-                                            <span style={{ color: '#81786a' }}>Điểm danh gia sư</span>
-                                            <span className={lesson.tutorarrived ? 'dispute-stat-green' : 'dispute-stat-bold'} style={{ color: lesson.tutorarrived ? '#166534' : '#dc2626' }}>
-                                                {lesson.tutorarrived ? '✓ Có mặt' : '✗ Vắng mặt'}
-                                            </span>
-                                        </div>
-                                        <div className="dispute-stat-row">
-                                            <span style={{ color: '#81786a' }}>Điểm danh học viên</span>
-                                            <span className={lesson.studentarrived ? 'dispute-stat-green' : 'dispute-stat-bold'} style={{ color: lesson.studentarrived ? '#166534' : '#dc2626' }}>
-                                                {lesson.studentarrived ? '✓ Có mặt' : '✗ Vắng mặt'}
-                                            </span>
-                                        </div>
-                                        {lesson.studentwaitedminutes !== undefined && lesson.studentwaitedminutes > 0 && (
+                                        {tutor?.phone && (
                                             <div className="dispute-stat-row">
-                                                <span style={{ color: '#81786a' }}>Thời gian chờ</span>
-                                                <span className="dispute-stat-bold" style={{ color: '#ea580c' }}>
-                                                    {lesson.studentwaitedminutes} phút
-                                                </span>
+                                                <span style={{ color: '#81786a' }}>SĐT</span>
+                                                <span className="dispute-stat-bold">{tutor.phone}</span>
                                             </div>
                                         )}
                                     </div>
                                 </div>
 
-                                {/* Tutor Warnings History */}
-                                {warnings.length > 0 && (
-                                    <div className="dispute-party-card">
+                                {/* Lesson Info Section */}
+                                {lesson && (
+                                    <div className="dispute-party-card" style={{ marginTop: '24px' }}>
                                         <h4 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 700, color: 'var(--color-navy)' }}>
-                                            ⚠️ Lịch sử cảnh báo ({warnings.length})
+                                            🎓 Thông tin buổi học
                                         </h4>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                            {warnings.map((warning) => (
-                                                <div
-                                                    key={warning.warningid}
-                                                    style={{
-                                                        padding: '12px',
-                                                        background: warning.severity === 'high' ? '#fee2e2' : warning.severity === 'medium' ? '#fef3c7' : '#f1f5f9',
-                                                        borderRadius: '8px',
-                                                        fontSize: '13px',
-                                                    }}
-                                                >
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                                                        <span style={{ fontWeight: 700, color: warning.severity === 'high' ? '#991b1b' : warning.severity === 'medium' ? '#92400e' : '#475569' }}>
-                                                            {warning.severity === 'high' ? '🔴 Cao' : warning.severity === 'medium' ? '🟡 Trung bình' : '🟢 Thấp'}
-                                                        </span>
-                                                        <span style={{ color: '#64748b' }}>{formatRelativeTime(warning.issuedat)}</span>
-                                                    </div>
-                                                    <p style={{ margin: '0 0 6px', color: '#1e293b' }}>{warning.reason}</p>
-                                                    <div style={{ fontSize: '12px', color: '#64748b' }}>
-                                                        Bởi: {warning.issuedby}
-                                                        {warning.relatedbookingid && ` • Booking: ${warning.relatedbookingid}`}
-                                                    </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px' }}>
+                                            <div className="dispute-stat-row">
+                                                <span style={{ color: '#81786a' }}>Mã buổi học</span>
+                                                <span className="dispute-stat-bold">{lesson.lessonId}</span>
+                                            </div>
+                                            <div className="dispute-stat-row">
+                                                <span style={{ color: '#81786a' }}>Thời gian dự kiến</span>
+                                                <span className="dispute-stat-bold" style={{ fontSize: '13px' }}>
+                                                    {formatDateTime(lesson.scheduledStart)} - {formatDateTime(lesson.scheduledEnd)}
+                                                </span>
+                                            </div>
+                                            <div className="dispute-stat-row">
+                                                <span style={{ color: '#81786a' }}>Trạng thái</span>
+                                                <span className="vetting-badge pending">{lesson.status || 'N/A'}</span>
+                                            </div>
+                                            <div className="dispute-stat-row">
+                                                <span style={{ color: '#81786a' }}>Điểm danh gia sư</span>
+                                                <span style={{ color: lesson.isTutorPresent ? '#166534' : '#dc2626', fontWeight: 600 }}>
+                                                    {lesson.isTutorPresent === null ? 'Không xác định' : lesson.isTutorPresent ? '✓ Có mặt' : '✗ Vắng mặt'}
+                                                </span>
+                                            </div>
+                                            <div className="dispute-stat-row">
+                                                <span style={{ color: '#81786a' }}>Điểm danh học viên</span>
+                                                <span style={{ color: lesson.isStudentPresent ? '#166534' : '#dc2626', fontWeight: 600 }}>
+                                                    {lesson.isStudentPresent === null ? 'Không xác định' : lesson.isStudentPresent ? '✓ Có mặt' : '✗ Vắng mặt'}
+                                                </span>
+                                            </div>
+                                            <div className="dispute-stat-row">
+                                                <span style={{ color: '#81786a' }}>Học phí</span>
+                                                <span className="dispute-stat-bold" style={{ color: 'var(--color-gold)' }}>
+                                                    {formatCurrency(lesson.lessonPrice || 0)}
+                                                </span>
+                                            </div>
+                                            {lesson.lessonContent && (
+                                                <div className="dispute-stat-row">
+                                                    <span style={{ color: '#81786a' }}>Nội dung</span>
+                                                    <span className="dispute-stat-bold">{lesson.lessonContent}</span>
                                                 </div>
-                                            ))}
+                                            )}
                                         </div>
                                     </div>
                                 )}
 
                                 {/* Claim Summary */}
-                                <div className="dispute-claim-summary">
-                                    <h4 className="dispute-claim-label">Nội dung khiếu nại</h4>
-                                    <p className="dispute-claim-text">"{disputeDetail.description}"</p>
-                                </div>
+                                {disputeDetail.reason && (
+                                    <div className="dispute-claim-summary">
+                                        <h4 className="dispute-claim-label">Nội dung khiếu nại</h4>
+                                        <p className="dispute-claim-text">"{disputeDetail.reason}"</p>
+                                    </div>
+                                )}
+
+                                {/* Resolution info if resolved */}
+                                {disputeDetail.status === 'resolved' && disputeDetail.resolutionNote && (
+                                    <div className="dispute-party-card" style={{ marginTop: '24px', borderLeft: '4px solid #10b981' }}>
+                                        <h4 style={{ margin: '0 0 12px', fontSize: '16px', fontWeight: 700, color: '#10b981' }}>
+                                            ✅ Đã giải quyết
+                                        </h4>
+                                        <p style={{ margin: '0 0 8px', fontSize: '14px', color: '#1e293b' }}>
+                                            {disputeDetail.resolutionNote}
+                                        </p>
+                                        {disputeDetail.refundAmount !== null && disputeDetail.refundAmount !== undefined && (
+                                            <p style={{ margin: 0, fontSize: '14px', color: '#64748b' }}>
+                                                Hoàn tiền: {formatCurrency(disputeDetail.refundAmount)}
+                                                {disputeDetail.refundPercentage !== null && ` (${disputeDetail.refundPercentage}%)`}
+                                            </p>
+                                        )}
+                                        {disputeDetail.resolvedBy && (
+                                            <p style={{ margin: '8px 0 0', fontSize: '13px', color: '#64748b' }}>
+                                                Bởi: {disputeDetail.resolvedBy.fullName}
+                                                {disputeDetail.resolvedAt && ` • ${formatRelativeTime(disputeDetail.resolvedAt)}`}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
-                            {/* CENTER COLUMN: Evidence */}
+                            {/* CENTER COLUMN: Evidence & Chat */}
                             <div className="dispute-col-center">
                                 {/* Tabs */}
                                 <div className="dispute-evidence-tabs">
@@ -378,7 +412,7 @@ const AdminDisputeDetailPageExpanded = () => {
                                         onClick={() => setActiveTab('evidence')}
                                     >
                                         <span className="material-symbols-outlined dispute-evidence-tab-icon">folder</span>
-                                        Bằng chứng ({evidenceFiles.length + screenshots.length})
+                                        Bằng chứng ({evidenceUrls.length})
                                     </button>
                                     <button
                                         className={`dispute-evidence-tab ${activeTab === 'chat' ? 'active' : ''}`}
@@ -396,79 +430,66 @@ const AdminDisputeDetailPageExpanded = () => {
                                             📂 Tài liệu bằng chứng
                                         </h3>
 
-                                        {/* Screenshots */}
-                                        {screenshots.length > 0 && (
-                                            <div style={{ marginBottom: '24px' }}>
-                                                <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#64748b', marginBottom: '12px' }}>
-                                                    Ảnh chụp màn hình ({screenshots.length})
-                                                </h4>
-                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
-                                                    {screenshots.map((url, idx) => (
-                                                        <div key={idx} style={{ position: 'relative', paddingBottom: '75%', borderRadius: '8px', overflow: 'hidden', border: '2px solid #e2e8f0' }}>
-                                                            <img
-                                                                src={url}
-                                                                alt={`Screenshot ${idx + 1}`}
-                                                                style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
-                                                                onClick={() => window.open(url, '_blank')}
-                                                            />
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* Evidence Files */}
-                                        {evidenceFiles.length > 0 && (
+                                        {evidenceUrls.length > 0 ? (
                                             <div>
                                                 <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#64748b', marginBottom: '12px' }}>
-                                                    Tệp tin đính kèm ({evidenceFiles.length})
+                                                    Tệp tin ({evidenceUrls.length})
                                                 </h4>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                                    {evidenceFiles.map((file: any, idx: number) => (
-                                                        <div
-                                                            key={idx}
-                                                            style={{
-                                                                padding: '16px',
-                                                                background: '#f8fafc',
-                                                                borderRadius: '8px',
-                                                                border: '1px solid #e2e8f0',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: '12px',
-                                                            }}
-                                                        >
-                                                            <span className="material-symbols-outlined" style={{ fontSize: '32px', color: '#64748b' }}>
-                                                                {file.filetype.startsWith('image/') ? 'image' : 'description'}
-                                                            </span>
-                                                            <div style={{ flex: 1 }}>
-                                                                <p style={{ margin: '0 0 4px', fontWeight: 600, color: 'var(--color-navy)' }}>{file.filename}</p>
-                                                                <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
-                                                                    {(file.filesize / 1024).toFixed(1)} KB • {formatDateTime(file.uploadedat)}
-                                                                </p>
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
+                                                    {evidenceUrls.map((url, idx) => {
+                                                        const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
+                                                        return isImage ? (
+                                                            <div key={idx} style={{ position: 'relative', paddingBottom: '75%', borderRadius: '8px', overflow: 'hidden', border: '2px solid #e2e8f0' }}>
+                                                                <img
+                                                                    src={url}
+                                                                    alt={`Evidence ${idx + 1}`}
+                                                                    style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
+                                                                    onClick={() => window.open(url, '_blank')}
+                                                                />
                                                             </div>
-                                                            <a
-                                                                href={file.fileurl}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
+                                                        ) : (
+                                                            <div
+                                                                key={idx}
                                                                 style={{
-                                                                    padding: '8px 16px',
-                                                                    background: 'var(--color-gold)',
-                                                                    color: 'var(--color-navy)',
-                                                                    borderRadius: '6px',
-                                                                    textDecoration: 'none',
-                                                                    fontSize: '13px',
-                                                                    fontWeight: 600,
+                                                                    padding: '16px',
+                                                                    background: '#f8fafc',
+                                                                    borderRadius: '8px',
+                                                                    border: '1px solid #e2e8f0',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '12px',
                                                                 }}
                                                             >
-                                                                Xem
-                                                            </a>
-                                                        </div>
-                                                    ))}
+                                                                <span className="material-symbols-outlined" style={{ fontSize: '32px', color: '#64748b' }}>
+                                                                    description
+                                                                </span>
+                                                                <div style={{ flex: 1 }}>
+                                                                    <p style={{ margin: 0, fontWeight: 600, color: 'var(--color-navy)', fontSize: '13px' }}>
+                                                                        Tệp {idx + 1}
+                                                                    </p>
+                                                                </div>
+                                                                <a
+                                                                    href={url}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    style={{
+                                                                        padding: '8px 16px',
+                                                                        background: 'var(--color-gold)',
+                                                                        color: 'var(--color-navy)',
+                                                                        borderRadius: '6px',
+                                                                        textDecoration: 'none',
+                                                                        fontSize: '13px',
+                                                                        fontWeight: 600,
+                                                                    }}
+                                                                >
+                                                                    Xem
+                                                                </a>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
-                                        )}
-
-                                        {evidenceFiles.length === 0 && screenshots.length === 0 && (
+                                        ) : (
                                             <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
                                                 <span className="material-symbols-outlined" style={{ fontSize: '48px', marginBottom: '12px', display: 'block' }}>
                                                     folder_off
@@ -479,12 +500,47 @@ const AdminDisputeDetailPageExpanded = () => {
                                     </div>
                                 )}
 
-                                {/* Chat Log (existing) */}
+                                {/* Chat Log */}
                                 {activeTab === 'chat' && (
                                     <div className="dispute-chat-area">
-                                        <p style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
-                                            Tính năng nhật ký chat sẽ được tích hợp sau
-                                        </p>
+                                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-navy)', margin: '0 0 20px' }}>
+                                            💬 Nhật ký chat
+                                        </h3>
+                                        {chatLoading ? (
+                                            <p style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+                                                Đang tải lịch sử chat...
+                                            </p>
+                                        ) : chatMessages.length === 0 ? (
+                                            <p style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+                                                Không có tin nhắn chat nào
+                                            </p>
+                                        ) : (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '500px', overflowY: 'auto' }}>
+                                                {chatMessages.map((msg, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        style={{
+                                                            padding: '12px 16px',
+                                                            background: '#f8fafc',
+                                                            borderRadius: '8px',
+                                                            border: '1px solid #e2e8f0',
+                                                        }}
+                                                    >
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                                            <span style={{ fontWeight: 600, color: 'var(--color-navy)', fontSize: '13px' }}>
+                                                                {msg.senderName || msg.senderId || 'Unknown'}
+                                                            </span>
+                                                            <span style={{ fontSize: '12px', color: '#64748b' }}>
+                                                                {msg.sentAt ? formatDateTime(msg.sentAt) : ''}
+                                                            </span>
+                                                        </div>
+                                                        <p style={{ margin: 0, fontSize: '14px', color: '#1e293b' }}>
+                                                            {msg.content || msg.message || ''}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -500,101 +556,82 @@ const AdminDisputeDetailPageExpanded = () => {
                                         <p className="dispute-verdict-subtitle">Xem xét bằng chứng và đưa ra quyết định cuối cùng.</p>
                                     </div>
 
-                                    <div className="dispute-verdict-form">
-                                        <div className="dispute-options-group">
-                                            {/* 5 Resolution Options */}
-                                            <label className="dispute-radio-label">
-                                                <input
-                                                    type="radio"
-                                                    name="verdict"
-                                                    className="dispute-radio-input"
-                                                    checked={verdict === 'refund_100'}
-                                                    onChange={() => setVerdict('refund_100')}
-                                                />
-                                                <div className="dispute-radio-content">
-                                                    <span className="dispute-radio-title">Hoàn tiền 100% cho Học viên</span>
-                                                    <span className="dispute-radio-desc">Hoàn lại {formatCurrency(disputeDetail.escrowamount)} về nguồn</span>
-                                                </div>
-                                            </label>
-
-                                            <label className="dispute-radio-label">
-                                                <input
-                                                    type="radio"
-                                                    name="verdict"
-                                                    className="dispute-radio-input"
-                                                    checked={verdict === 'refund_50'}
-                                                    onChange={() => setVerdict('refund_50')}
-                                                />
-                                                <div className="dispute-radio-content">
-                                                    <span className="dispute-radio-title">Hoàn tiền 50% cho Học viên</span>
-                                                    <span className="dispute-radio-desc">Hoàn {formatCurrency(disputeDetail.escrowamount / 2)}</span>
-                                                </div>
-                                            </label>
-
-                                            <label className="dispute-radio-label">
-                                                <input
-                                                    type="radio"
-                                                    name="verdict"
-                                                    className="dispute-radio-input"
-                                                    checked={verdict === 'release'}
-                                                    onChange={() => setVerdict('release')}
-                                                />
-                                                <div className="dispute-radio-content">
-                                                    <span className="dispute-radio-title">Chuyển tiền cho Gia sư</span>
-                                                    <span className="dispute-radio-desc">Chuyển {formatCurrency(disputeDetail.escrowamount)} cho {booking.tutorname}</span>
-                                                </div>
-                                            </label>
-
-                                            <label className="dispute-radio-label">
-                                                <input
-                                                    type="radio"
-                                                    name="verdict"
-                                                    className="dispute-radio-input"
-                                                    checked={verdict === 'free_credit'}
-                                                    onChange={() => setVerdict('free_credit')}
-                                                />
-                                                <div className="dispute-radio-content">
-                                                    <span className="dispute-radio-title">Tặng Buổi học Miễn phí</span>
-                                                    <span className="dispute-radio-desc">Học viên nhận credit miễn phí</span>
-                                                </div>
-                                            </label>
-
-                                            <label className="dispute-radio-label">
-                                                <input
-                                                    type="radio"
-                                                    name="verdict"
-                                                    className="dispute-radio-input"
-                                                    checked={verdict === 'makeup'}
-                                                    onChange={() => setVerdict('makeup')}
-                                                />
-                                                <div className="dispute-radio-content">
-                                                    <span className="dispute-radio-title">Sắp xếp Buổi học Bù</span>
-                                                    <span className="dispute-radio-desc">Gia sư phải tổ chức buổi học bù</span>
-                                                </div>
-                                            </label>
+                                    {disputeDetail.status === 'resolved' ? (
+                                        <div style={{ padding: '20px', textAlign: 'center', color: '#10b981' }}>
+                                            <span className="material-symbols-outlined" style={{ fontSize: '48px', marginBottom: '12px', display: 'block' }}>
+                                                check_circle
+                                            </span>
+                                            <p style={{ fontWeight: 700, fontSize: '16px' }}>Khiếu nại đã được giải quyết</p>
                                         </div>
+                                    ) : (
+                                        <div className="dispute-verdict-form">
+                                            <div className="dispute-options-group">
+                                                {/* 3 Resolution Options matching backend */}
+                                                <label className="dispute-radio-label">
+                                                    <input
+                                                        type="radio"
+                                                        name="verdict"
+                                                        className="dispute-radio-input"
+                                                        checked={verdict === 'refund_100'}
+                                                        onChange={() => setVerdict('refund_100')}
+                                                    />
+                                                    <div className="dispute-radio-content">
+                                                        <span className="dispute-radio-title">Hoàn tiền 100% cho Học viên</span>
+                                                        <span className="dispute-radio-desc">Hoàn lại {formatCurrency(lessonPrice)} về nguồn</span>
+                                                    </div>
+                                                </label>
 
-                                        <div className="dispute-reasoning-group">
-                                            <span className="dispute-label">Ghi chú của Admin (tối thiểu 20 ký tự)</span>
-                                            <textarea
-                                                className="dispute-textarea"
-                                                placeholder="Vui lòng trích dẫn bằng chứng cụ thể và giải thích quyết định..."
-                                                value={adminNotes}
-                                                onChange={(e) => setAdminNotes(e.target.value)}
-                                                rows={5}
-                                            ></textarea>
+                                                <label className="dispute-radio-label">
+                                                    <input
+                                                        type="radio"
+                                                        name="verdict"
+                                                        className="dispute-radio-input"
+                                                        checked={verdict === 'refund_50'}
+                                                        onChange={() => setVerdict('refund_50')}
+                                                    />
+                                                    <div className="dispute-radio-content">
+                                                        <span className="dispute-radio-title">Hoàn tiền 50% cho Học viên</span>
+                                                        <span className="dispute-radio-desc">Hoàn {formatCurrency(lessonPrice / 2)}</span>
+                                                    </div>
+                                                </label>
+
+                                                <label className="dispute-radio-label">
+                                                    <input
+                                                        type="radio"
+                                                        name="verdict"
+                                                        className="dispute-radio-input"
+                                                        checked={verdict === 'release'}
+                                                        onChange={() => setVerdict('release')}
+                                                    />
+                                                    <div className="dispute-radio-content">
+                                                        <span className="dispute-radio-title">Chuyển tiền cho Gia sư</span>
+                                                        <span className="dispute-radio-desc">Chuyển {formatCurrency(lessonPrice)} cho {tutor?.fullName || 'Gia sư'}</span>
+                                                    </div>
+                                                </label>
+                                            </div>
+
+                                            <div className="dispute-reasoning-group">
+                                                <span className="dispute-label">Ghi chú của Admin (tối thiểu 10 ký tự)</span>
+                                                <textarea
+                                                    className="dispute-textarea"
+                                                    placeholder="Vui lòng trích dẫn bằng chứng cụ thể và giải thích quyết định..."
+                                                    value={adminNotes}
+                                                    onChange={(e) => setAdminNotes(e.target.value)}
+                                                    rows={5}
+                                                ></textarea>
+                                            </div>
+
+                                            <button
+                                                className="dispute-submit-btn"
+                                                onClick={handleResolveDispute}
+                                                disabled={isSubmitting || adminNotes.trim().length < 10}
+                                                style={{ opacity: adminNotes.trim().length < 10 ? 0.5 : 1 }}
+                                            >
+                                                <span className="material-symbols-outlined" style={{ fontWeight: 'bold' }}>check_circle</span>
+                                                {isSubmitting ? 'Đang xử lý...' : 'Thực thi quyết định'}
+                                            </button>
                                         </div>
-
-                                        <button
-                                            className="dispute-submit-btn"
-                                            onClick={handleResolveDispute}
-                                            disabled={isSubmitting || adminNotes.trim().length < 20}
-                                            style={{ opacity: adminNotes.trim().length < 20 ? 0.5 : 1 }}
-                                        >
-                                            <span className="material-symbols-outlined" style={{ fontWeight: 'bold' }}>check_circle</span>
-                                            {isSubmitting ? 'Đang xử lý...' : 'Thực thi quyết định'}
-                                        </button>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -606,26 +643,26 @@ const AdminDisputeDetailPageExpanded = () => {
             <IssueWarningModal
                 isOpen={isWarningModalOpen}
                 onClose={() => setIsWarningModalOpen(false)}
-                tutorId={booking.tutorid}
-                tutorName={booking.tutorname}
-                disputeId={disputeDetail.disputeid}
-                onIssueWarning={mockIssueWarning}
+                tutorId={tutor?.tutorId || ''}
+                tutorName={tutor?.fullName || ''}
+                disputeId={String(disputeDetail.disputeId)}
+                onIssueWarning={handleIssueWarning}
             />
 
             <SuspendTutorModal
                 isOpen={isSuspendModalOpen}
                 onClose={() => setIsSuspendModalOpen(false)}
-                tutorId={booking.tutorid}
-                tutorName={booking.tutorname}
-                onSuspend={mockSuspendTutor}
+                tutorId={tutor?.tutorId || ''}
+                tutorName={tutor?.fullName || ''}
+                onSuspend={handleSuspendTutor}
             />
 
             <LockAccountConfirmDialog
                 isOpen={isLockModalOpen}
                 onClose={() => setIsLockModalOpen(false)}
-                userId={booking.tutorid}
-                userName={booking.tutorname}
-                onLockAccount={mockLockAccount}
+                userId={tutor?.tutorId || ''}
+                userName={tutor?.fullName || ''}
+                onLockAccount={handleLockAccount}
             />
         </>
     );

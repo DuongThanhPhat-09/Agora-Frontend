@@ -11,13 +11,14 @@ import { AddAvailabilityModal, EditAvailabilityModal } from './components';
 import { getAvailability, deleteAvailability, DAY_OF_WEEK_MAP } from '../../services/availability.service';
 import type { AvailabilitySlot } from '../../services/availability.service';
 import { getUserIdFromToken } from '../../services/auth.service';
+import { getTutorLessons, type LessonResponse } from '../../services/lesson.service';
 
-// Extend dayjs with plugins
+// Mở rộng dayjs với các plugin
 dayjs.extend(weekday);
 dayjs.extend(isoWeek);
 dayjs.locale('vi');
 
-// Icons
+// Biểu tượng
 const CalendarSyncIcon = () => (
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
         <path d="M6 1.5V3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
@@ -45,20 +46,21 @@ const ChevronRightIcon = () => (
     </svg>
 );
 
-// Local interface for display (mapped from API response)
+// Interface cục bộ để hiển thị (ánh xạ từ phản hồi API)
+// MERGED: Dùng startMinutes + durationMinutes từ develop để hỗ trợ slot giữa giờ (7:30, 8:15...)
 interface LocalAvailabilitySlot {
     id: number;
-    dayOfWeek: number;  // 1-7 for ISO week (Mon=1, Sun=7)
+    dayOfWeek: number;  // 1-7 cho tuần ISO (Thứ Hai=1, Chủ Nhật=7)
     startHour: number;
-    startMinutes: number; // Total minutes from midnight (e.g. 7:30 = 450)
-    durationMinutes: number; // Duration in minutes
+    startMinutes: number; // Tổng số phút từ 00:00 (VD: 7:30 = 450)
+    durationMinutes: number; // Thời lượng theo phút
     apiId: number;  // Original API availabilityid
     startTime: string;
     endTime: string;
-    apiDayOfWeek: number;  // Original API dayofweek (0-6, Sun=0)
+    apiDayOfWeek: number;  // dayofweek gốc từ API (0-6, Chủ Nhật=0)
 }
 
-// Edit modal data interface
+// Interface dữ liệu modal chỉnh sửa
 interface EditAvailabilityData {
     id: number;
     dayOfWeek: number;
@@ -66,39 +68,40 @@ interface EditAvailabilityData {
     endTime: string;
 }
 
-// Constants
+// Hằng số
 const DAYS_OF_WEEK = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-const TIME_SLOTS = Array.from({ length: 15 }, (_, i) => 7 + i); // 7:00 to 21:00
-const ROW_HEIGHT = 70; // px per hour row
-const PX_PER_MINUTE = ROW_HEIGHT / 60;
+const TIME_SLOTS = Array.from({ length: 15 }, (_, i) => 7 + i); // 7:00 đến 21:00
+const ROW_HEIGHT = 70; // px cho mỗi hàng giờ
+const PX_PER_MINUTE = ROW_HEIGHT / 60; // px cho mỗi phút
 
-// Helper: Convert API dayofweek (0-6) to ISO week day (1-7)
-// API: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
-// ISO: 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat, 7=Sun
+// Hàm trợ giúp: Chuyển đổi API dayofweek (0-6) sang ISO week day (1-7)
+// API: 0=Chủ Nhật, 1=Thứ Hai, 2=Thứ Ba, 3=Thứ Tư, 4=Thứ Năm, 5=Thứ Sáu, 6=Thứ Bảy
+// ISO: 1=Thứ Hai, 2=Thứ Ba, 3=Thứ Tư, 4=Thứ Năm, 5=Thứ Sáu, 6=Thứ Bảy, 7=Chủ Nhật
 const apiDayToIsoDay = (apiDay: number): number => {
-    if (apiDay === 0) return 7;  // Sunday -> ISO 7
-    return apiDay;  // Mon=1, Tue=2, etc. (same as API)
+    if (apiDay === 0) return 7;  // Chủ Nhật -> ISO 7
+    return apiDay;  // Thứ Hai=1, Thứ Ba=2, v.v. (giống như API)
 };
 
-// Helper: Parse time string to hour
+// Hàm trợ giúp: Phân tích chuỗi thời gian thành giờ
 const parseTimeToHour = (timeStr: string): number => {
     const [hours] = timeStr.split(':').map(Number);
     return hours;
 };
 
-// Helper: Parse time string to total minutes from midnight
+// Hàm trợ giúp: Phân tích chuỗi thời gian thành tổng số phút từ 00:00
 const parseTimeToMinutes = (timeStr: string): number => {
     const [hours, minutes] = timeStr.split(':').map(Number);
     return hours * 60 + (minutes || 0);
 };
 
-// Helper: Calculate duration in minutes
+// Hàm trợ giúp: Tính thời lượng theo phút
 const calculateDurationMinutes = (startTime: string, endTime: string): number => {
     return parseTimeToMinutes(endTime) - parseTimeToMinutes(startTime);
 };
 
 const TutorPortalSchedule: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'schedule' | 'settings'>('schedule');
+    // FROM MILESTONE_3: 2 tabs - settings (lịch rảnh) + lessons (lịch dạy)
+    const [activeTab, setActiveTab] = useState<'settings' | 'lessons'>('lessons');
     const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('week');
     const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
     const [availability, setAvailability] = useState<LocalAvailabilitySlot[]>([]);
@@ -108,13 +111,17 @@ const TutorPortalSchedule: React.FC = () => {
     const [editingAvailability, setEditingAvailability] = useState<EditAvailabilityData | null>(null);
     const [deletingSlotId, setDeletingSlotId] = useState<number | null>(null);
 
-    // Get week dates using dayjs
+    // FROM MILESTONE_3: State cho lessons tab
+    const [lessons, setLessons] = useState<LessonResponse[]>([]);
+    const [isLoadingLessons, setIsLoadingLessons] = useState(false);
+
+    // Lấy các ngày trong tuần sử dụng dayjs
     const weekDates = useMemo(() => {
-        const startOfWeek = currentDate.startOf('isoWeek'); // Monday
+        const startOfWeek = currentDate.startOf('isoWeek'); // Thứ Hai
         return Array.from({ length: 7 }, (_, i) => startOfWeek.add(i, 'day'));
     }, [currentDate]);
 
-    // Format week range for display
+    // Định dạng khoảng tuần để hiển thị
     const weekRange = useMemo(() => {
         const start = weekDates[0];
         const end = weekDates[6];
@@ -125,7 +132,8 @@ const TutorPortalSchedule: React.FC = () => {
         return `${start.format('DD MMM')} - ${end.format('DD MMM, YYYY')}`;
     }, [weekDates]);
 
-    // Fetch availability from API
+    // Lấy lịch rảnh từ API
+    // MERGED: Dùng minutes precision từ develop
     const fetchAvailability = useCallback(async () => {
         const userId = getUserIdFromToken();
 
@@ -137,7 +145,7 @@ const TutorPortalSchedule: React.FC = () => {
         try {
             const response = await getAvailability(userId);
 
-            // Map API response to local format
+            // Ánh xạ phản hồi API sang định dạng cục bộ (dùng phút cho chính xác)
             const mappedAvailability: LocalAvailabilitySlot[] = (response.content || []).map((slot: AvailabilitySlot, index: number) => ({
                 id: index + 1,
                 dayOfWeek: apiDayToIsoDay(slot.dayofweek),
@@ -152,7 +160,7 @@ const TutorPortalSchedule: React.FC = () => {
 
             setAvailability(mappedAvailability);
         } catch (error: unknown) {
-            // Don't show error toast if 404 (no availability yet)
+            // Không hiển thị thông báo lỗi nếu 404 (chưa có lịch rảnh)
             const axiosError = error as { response?: { status?: number } };
             if (axiosError.response?.status !== 404) {
                 toast.error('Không thể tải lịch rảnh. Vui lòng thử lại.');
@@ -162,12 +170,35 @@ const TutorPortalSchedule: React.FC = () => {
         }
     }, []);
 
-    // Load availability on mount
+    // FROM MILESTONE_3: Fetch lessons từ API
+    const fetchLessons = useCallback(async () => {
+        setIsLoadingLessons(true);
+        try {
+            const response = await getTutorLessons(1, 100);
+            const lessonsData = Array.isArray(response.content)
+                ? response.content
+                : response.content?.items || [];
+            setLessons(lessonsData);
+        } catch (error) {
+            toast.error('Không thể tải lịch dạy. Vui lòng thử lại.');
+        } finally {
+            setIsLoadingLessons(false);
+        }
+    }, []);
+
+    // Tải lịch rảnh khi khởi tạo component
     useEffect(() => {
         fetchAvailability();
     }, [fetchAvailability]);
 
-    // Handle delete availability with Popconfirm
+    // FROM MILESTONE_3: Fetch lessons khi chuyển sang tab lessons
+    useEffect(() => {
+        if (activeTab === 'lessons') {
+            fetchLessons();
+        }
+    }, [activeTab, fetchLessons]);
+
+    // Xử lý xóa lịch rảnh với Popconfirm
     const handleDeleteAvailability = async (slot: LocalAvailabilitySlot) => {
         setDeletingSlotId(slot.apiId);
         try {
@@ -181,7 +212,7 @@ const TutorPortalSchedule: React.FC = () => {
         }
     };
 
-    // Handle edit availability
+    // Xử lý chỉnh sửa lịch rảnh
     const handleEditAvailability = (slot: LocalAvailabilitySlot) => {
         setEditingAvailability({
             id: slot.apiId,
@@ -197,7 +228,7 @@ const TutorPortalSchedule: React.FC = () => {
         setEditingAvailability(null);
     };
 
-    // Navigation handlers
+    // Xử lý điều hướng
     const handlePrevWeek = () => {
         setCurrentDate(currentDate.subtract(1, 'week'));
     };
@@ -218,8 +249,8 @@ const TutorPortalSchedule: React.FC = () => {
         setIsAddAvailabilityModalOpen(false);
     };
 
-    // Get availability slot that starts in the given hour for a specific day
-    // dayIndex: 0-6 (Mon-Sun in display order)
+    // FROM DEVELOP: Tìm slot rảnh bắt đầu trong giờ cụ thể
+    // dayIndex: 0-6 (Thứ Hai-Chủ Nhật theo thứ tự hiển thị)
     const getAvailabilityStartingAtHour = (dayIndex: number, hour: number): LocalAvailabilitySlot | null => {
         const isoDay = dayIndex + 1;
         return availability.find(a =>
@@ -228,12 +259,12 @@ const TutorPortalSchedule: React.FC = () => {
         ) || null;
     };
 
-    // Check if a date is today
+    // Kiểm tra một ngày có phải hôm nay không
     const isToday = (date: Dayjs) => {
         return date.isSame(dayjs(), 'day');
     };
 
-    // Check if current week is this week
+    // Kiểm tra tuần hiện tại có phải tuần này không
     const isCurrentWeek = useMemo(() => {
         const today = dayjs();
         const startOfCurrentWeek = today.startOf('isoWeek');
@@ -243,9 +274,9 @@ const TutorPortalSchedule: React.FC = () => {
 
     return (
         <div className={styles.schedulePage}>
-            {/* Main Content */}
+            {/* Nội dung chính */}
             <div className={styles.mainContainer}>
-                {/* Header Section */}
+                {/* Phần đầu trang */}
                 <div className={styles.headerSection}>
                     <div className={styles.headerTop}>
                         <h1 className={styles.pageTitle}>Lịch dạy</h1>
@@ -261,223 +292,375 @@ const TutorPortalSchedule: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Tabs */}
+                    {/* Các tab - FROM MILESTONE_3 */}
                     <div className={styles.tabs}>
-                        <button
-                            className={`${styles.tab} ${activeTab === 'schedule' ? styles.active : ''}`}
-                            onClick={() => setActiveTab('schedule')}
-                        >
-                            Lịch & Thời gian rảnh
-                        </button>
                         <button
                             className={`${styles.tab} ${activeTab === 'settings' ? styles.active : ''}`}
                             onClick={() => setActiveTab('settings')}
                         >
                             Cài đặt lịch
                         </button>
+                        <button
+                            className={`${styles.tab} ${activeTab === 'lessons' ? styles.active : ''}`}
+                            onClick={() => setActiveTab('lessons')}
+                        >
+                            Lịch dạy
+                        </button>
                     </div>
                 </div>
 
-                {/* Calendar Container */}
-                <div className={styles.calendarContainer}>
-                    {/* Calendar Controls */}
-                    <div className={styles.calendarControls}>
-                        {/* View Mode Toggle */}
-                        <div className={styles.viewToggle}>
-                            <button
-                                className={`${styles.viewBtn} ${viewMode === 'day' ? styles.active : ''}`}
-                                onClick={() => setViewMode('day')}
-                            >
-                                Ngày
-                            </button>
-                            <button
-                                className={`${styles.viewBtn} ${viewMode === 'week' ? styles.active : ''}`}
-                                onClick={() => setViewMode('week')}
-                            >
-                                Tuần
-                            </button>
-                            <button
-                                className={`${styles.viewBtn} ${viewMode === 'month' ? styles.active : ''}`}
-                                onClick={() => setViewMode('month')}
-                            >
-                                Tháng
-                            </button>
-                        </div>
-
-                        {/* Date Navigation */}
-                        <div className={styles.dateNav}>
-                            <button className={styles.navBtn} onClick={handlePrevWeek}>
-                                <ChevronLeftIcon />
-                            </button>
-                            <span className={styles.dateRange}>{weekRange}</span>
-                            <button className={styles.navBtn} onClick={handleNextWeek}>
-                                <ChevronRightIcon />
-                            </button>
-                            <button
-                                className={`${styles.nowBtn} ${isCurrentWeek ? styles.active : ''}`}
-                                onClick={handleToday}
-                                disabled={isCurrentWeek}
-                            >
-                                Hôm nay
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Legend */}
-                    <div className={styles.legend}>
-                        <div className={styles.legendItem}>
-                            <div className={styles.legendDot} />
-                            <span>Buổi học</span>
-                        </div>
-                        <div className={styles.legendItem}>
-                            <div className={styles.legendBorder} />
-                            <span>Rảnh</span>
-                        </div>
-                        <div className={styles.legendItem}>
-                            <div className={styles.legendBlocked} />
-                            <span>Bận</span>
-                        </div>
-                        <div className={styles.timezone}>
-                            UTC+7 • Giờ Việt Nam
-                        </div>
-                    </div>
-
-                    {/* Loading State */}
-                    {isLoadingAvailability && (
-                        <div className={styles.loadingOverlay}>
-                            <Spin size="large" />
-                        </div>
-                    )}
-
-                    {/* Empty State - Show when no availability and not loading */}
-                    {!isLoadingAvailability && availability.length === 0 ? (
-                        <div className={styles.emptyState}>
-                            <div className={styles.emptyIcon}>📅</div>
-                            <h3 className={styles.emptyTitle}>Chưa có lịch rảnh</h3>
-                            <p className={styles.emptyDescription}>
-                                Thêm lịch rảnh để học viên có thể đặt lịch học với bạn
-                            </p>
-                            <button
-                                className={styles.emptyBtn}
-                                onClick={handleAddAvailabilityClick}
-                            >
-                                <PlusIcon />
-                                <span>Thêm lịch rảnh đầu tiên</span>
-                            </button>
-                        </div>
-                    ) : (
-                        /* Calendar Grid - Show when has availability or loading */
-                        <div className={styles.calendarGrid}>
-                            {/* Header Row */}
-                            <div className={styles.calendarHeader}>
-                                <div className={styles.timeColumn} />
-                                {weekDates.map((date, index) => (
-                                    <div
-                                        key={index}
-                                        className={`${styles.dayColumn} ${isToday(date) ? styles.today : ''}`}
-                                    >
-                                        <span className={styles.dayName}>{DAYS_OF_WEEK[index]}</span>
-                                        <span className={styles.dayNumber}>{date.format('DD')}</span>
-                                        <span className={styles.monthName}>{date.format('MMM')}</span>
-                                    </div>
-                                ))}
+                {/* Tab Content */}
+                {activeTab === 'settings' ? (
+                    /* Tab Cài đặt lịch (Availability) - MERGED: dùng minutes precision từ develop */
+                    <div className={styles.calendarContainer}>
+                        {/* Điều khiển lịch */}
+                        <div className={styles.calendarControls}>
+                            {/* Chuyển đổi chế độ xem */}
+                            <div className={styles.viewToggle}>
+                                <button
+                                    className={`${styles.viewBtn} ${viewMode === 'day' ? styles.active : ''}`}
+                                    onClick={() => setViewMode('day')}
+                                >
+                                    Ngày
+                                </button>
+                                <button
+                                    className={`${styles.viewBtn} ${viewMode === 'week' ? styles.active : ''}`}
+                                    onClick={() => setViewMode('week')}
+                                >
+                                    Tuần
+                                </button>
+                                <button
+                                    className={`${styles.viewBtn} ${viewMode === 'month' ? styles.active : ''}`}
+                                    onClick={() => setViewMode('month')}
+                                >
+                                    Tháng
+                                </button>
                             </div>
 
-                            {/* Time Rows */}
-                            <div className={styles.calendarBody}>
-                                {TIME_SLOTS.map((hour, index) => (
-                                    <div
-                                        key={hour}
-                                        className={styles.timeRow}
-                                        style={{
-                                            zIndex: TIME_SLOTS.length - index,
-                                            position: 'relative'
-                                        }}
-                                    >
-                                        <div className={styles.timeLabel}>
-                                            {hour.toString().padStart(2, '0')}:00
-                                        </div>
-                                        {weekDates.map((date, dayIndex) => {
-                                            const slot = getAvailabilityStartingAtHour(dayIndex, hour);
-                                            // Calculate minute offset within the hour (e.g. 30 min for 07:30)
-                                            const minuteOffset = slot ? (slot.startMinutes - hour * 60) : 0;
-                                            const topOffsetPx = minuteOffset * PX_PER_MINUTE;
-                                            const heightPx = slot ? slot.durationMinutes * PX_PER_MINUTE : 0;
+                            {/* Điều hướng ngày */}
+                            <div className={styles.dateNav}>
+                                <button className={styles.navBtn} onClick={handlePrevWeek}>
+                                    <ChevronLeftIcon />
+                                </button>
+                                <span className={styles.dateRange}>{weekRange}</span>
+                                <button className={styles.navBtn} onClick={handleNextWeek}>
+                                    <ChevronRightIcon />
+                                </button>
+                                <button
+                                    className={`${styles.nowBtn} ${isCurrentWeek ? styles.active : ''}`}
+                                    onClick={handleToday}
+                                    disabled={isCurrentWeek}
+                                >
+                                    Hôm nay
+                                </button>
+                            </div>
+                        </div>
 
-                                            return (
-                                                <div
-                                                    key={dayIndex}
-                                                    className={`${styles.timeCell} ${isToday(date) ? styles.todayColumn : ''}`}
-                                                >
-                                                    {slot && (
-                                                        <div
-                                                            className={styles.availableBlock}
-                                                            style={{
-                                                                top: `${topOffsetPx + 3}px`,
-                                                                height: `${heightPx - 6}px`,
-                                                            }}
-                                                        >
-                                                            <div className={styles.availableContent}>
-                                                                <span className={styles.availableLabel}>Rảnh</span>
-                                                                <span className={styles.availableTime}>
-                                                                    {slot.startTime} - {slot.endTime}
-                                                                </span>
-                                                            </div>
-                                                            <div className={styles.slotActions}>
-                                                                <Tooltip title="Chỉnh sửa">
-                                                                    <button
-                                                                        className={styles.editSlotBtn}
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            handleEditAvailability(slot);
-                                                                        }}
-                                                                    >
-                                                                        <EditOutlined />
-                                                                    </button>
-                                                                </Tooltip>
-                                                                <Popconfirm
-                                                                    title="Xóa lịch rảnh"
-                                                                    description={`Bạn có chắc muốn xóa lịch rảnh ${DAY_OF_WEEK_MAP[slot.apiDayOfWeek]} ${slot.startTime} - ${slot.endTime}?`}
-                                                                    onConfirm={() => handleDeleteAvailability(slot)}
-                                                                    okText="Xóa"
-                                                                    cancelText="Hủy"
-                                                                    okButtonProps={{
-                                                                        danger: true,
-                                                                        loading: deletingSlotId === slot.apiId
-                                                                    }}
-                                                                    placement="left"
-                                                                >
-                                                                    <Tooltip title="Xóa">
+                        {/* Chú giải */}
+                        <div className={styles.legend}>
+                            <div className={styles.legendItem}>
+                                <div className={styles.legendDot} />
+                                <span>Buổi học</span>
+                            </div>
+                            <div className={styles.legendItem}>
+                                <div className={styles.legendBorder} />
+                                <span>Rảnh</span>
+                            </div>
+                            <div className={styles.legendItem}>
+                                <div className={styles.legendBlocked} />
+                                <span>Bận</span>
+                            </div>
+                            <div className={styles.timezone}>
+                                UTC+7 • Giờ Việt Nam
+                            </div>
+                        </div>
+
+                        {/* Trạng thái đang tải */}
+                        {isLoadingAvailability && (
+                            <div className={styles.loadingOverlay}>
+                                <Spin size="large" />
+                            </div>
+                        )}
+
+                        {/* Trạng thái trống - Hiển thị khi không có lịch rảnh và không đang tải */}
+                        {!isLoadingAvailability && availability.length === 0 ? (
+                            <div className={styles.emptyState}>
+                                <div className={styles.emptyIcon}>📅</div>
+                                <h3 className={styles.emptyTitle}>Chưa có lịch rảnh</h3>
+                                <p className={styles.emptyDescription}>
+                                    Thêm lịch rảnh để học viên có thể đặt lịch học với bạn
+                                </p>
+                                <button
+                                    className={styles.emptyBtn}
+                                    onClick={handleAddAvailabilityClick}
+                                >
+                                    <PlusIcon />
+                                    <span>Thêm lịch rảnh đầu tiên</span>
+                                </button>
+                            </div>
+                        ) : (
+                            /* Lưới lịch - MERGED: dùng pixel-perfect positioning từ develop */
+                            <div className={styles.calendarGrid}>
+                                {/* Hàng tiêu đề */}
+                                <div className={styles.calendarHeader}>
+                                    <div className={styles.timeColumn} />
+                                    {weekDates.map((date, index) => (
+                                        <div
+                                            key={index}
+                                            className={`${styles.dayColumn} ${isToday(date) ? styles.today : ''}`}
+                                        >
+                                            <span className={styles.dayName}>{DAYS_OF_WEEK[index]}</span>
+                                            <span className={styles.dayNumber}>{date.format('DD')}</span>
+                                            <span className={styles.monthName}>{date.format('MMM')}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Các hàng thời gian - FROM DEVELOP: tính toán theo phút */}
+                                <div className={styles.calendarBody}>
+                                    {TIME_SLOTS.map((hour, index) => (
+                                        <div
+                                            key={hour}
+                                            className={styles.timeRow}
+                                            style={{
+                                                zIndex: TIME_SLOTS.length - index,
+                                                position: 'relative'
+                                            }}
+                                        >
+                                            <div className={styles.timeLabel}>
+                                                {hour.toString().padStart(2, '0')}:00
+                                            </div>
+                                            {weekDates.map((date, dayIndex) => {
+                                                const slot = getAvailabilityStartingAtHour(dayIndex, hour);
+                                                // FROM DEVELOP: Tính offset phút trong giờ (VD: 30 phút cho 07:30)
+                                                const minuteOffset = slot ? (slot.startMinutes - hour * 60) : 0;
+                                                const topOffsetPx = minuteOffset * PX_PER_MINUTE;
+                                                const heightPx = slot ? slot.durationMinutes * PX_PER_MINUTE : 0;
+
+                                                return (
+                                                    <div
+                                                        key={dayIndex}
+                                                        className={`${styles.timeCell} ${isToday(date) ? styles.todayColumn : ''}`}
+                                                    >
+                                                        {slot && (
+                                                            <div
+                                                                className={styles.availableBlock}
+                                                                style={{
+                                                                    top: `${topOffsetPx + 3}px`,
+                                                                    height: `${heightPx - 6}px`,
+                                                                }}
+                                                            >
+                                                                <div className={styles.availableContent}>
+                                                                    <span className={styles.availableLabel}>Rảnh</span>
+                                                                    <span className={styles.availableTime}>
+                                                                        {slot.startTime} - {slot.endTime}
+                                                                    </span>
+                                                                </div>
+                                                                <div className={styles.slotActions}>
+                                                                    <Tooltip title="Chỉnh sửa">
                                                                         <button
-                                                                            className={styles.deleteSlotBtn}
-                                                                            onClick={(e) => e.stopPropagation()}
+                                                                            className={styles.editSlotBtn}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                handleEditAvailability(slot);
+                                                                            }}
                                                                         >
-                                                                            <DeleteOutlined />
+                                                                            <EditOutlined />
                                                                         </button>
                                                                     </Tooltip>
-                                                                </Popconfirm>
+                                                                    <Popconfirm
+                                                                        title="Xóa lịch rảnh"
+                                                                        description={`Bạn có chắc muốn xóa lịch rảnh ${DAY_OF_WEEK_MAP[slot.apiDayOfWeek]} ${slot.startTime} - ${slot.endTime}?`}
+                                                                        onConfirm={() => handleDeleteAvailability(slot)}
+                                                                        okText="Xóa"
+                                                                        cancelText="Hủy"
+                                                                        okButtonProps={{
+                                                                            danger: true,
+                                                                            loading: deletingSlotId === slot.apiId
+                                                                        }}
+                                                                        placement="left"
+                                                                    >
+                                                                        <Tooltip title="Xóa">
+                                                                            <button
+                                                                                className={styles.deleteSlotBtn}
+                                                                                onClick={(e) => e.stopPropagation()}
+                                                                            >
+                                                                                <DeleteOutlined />
+                                                                            </button>
+                                                                        </Tooltip>
+                                                                    </Popconfirm>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                ))}
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    /* FROM MILESTONE_3: Tab Lịch dạy (Lessons) */
+                    <div className={styles.calendarContainer}>
+                        {/* Calendar controls */}
+                        <div className={styles.calendarControls}>
+                            <div className={styles.viewToggle}>
+                                <button
+                                    className={`${styles.viewBtn} ${viewMode === 'day' ? styles.active : ''}`}
+                                    onClick={() => setViewMode('day')}
+                                >
+                                    Ngày
+                                </button>
+                                <button
+                                    className={`${styles.viewBtn} ${viewMode === 'week' ? styles.active : ''}`}
+                                    onClick={() => setViewMode('week')}
+                                >
+                                    Tuần
+                                </button>
+                                <button
+                                    className={`${styles.viewBtn} ${viewMode === 'month' ? styles.active : ''}`}
+                                    onClick={() => setViewMode('month')}
+                                >
+                                    Tháng
+                                </button>
+                            </div>
+
+                            <div className={styles.dateNav}>
+                                <button className={styles.navBtn} onClick={handlePrevWeek}>
+                                    <ChevronLeftIcon />
+                                </button>
+                                <span className={styles.dateRange}>{weekRange}</span>
+                                <button className={styles.navBtn} onClick={handleNextWeek}>
+                                    <ChevronRightIcon />
+                                </button>
+                                <button
+                                    className={`${styles.nowBtn} ${isCurrentWeek ? styles.active : ''}`}
+                                    onClick={handleToday}
+                                    disabled={isCurrentWeek}
+                                >
+                                    Hôm nay
+                                </button>
                             </div>
                         </div>
-                    )}
-                </div>
+
+                        {/* Legend */}
+                        <div className={styles.legend}>
+                            <div className={styles.legendItem}>
+                                <div className={styles.legendDot} style={{ backgroundColor: '#3d4a3e' }} />
+                                <span>Buổi học</span>
+                            </div>
+                            <div className={styles.timezone}>
+                                UTC+7 • Giờ Việt Nam
+                            </div>
+                        </div>
+
+                        {isLoadingLessons ? (
+                            <div className={styles.loadingOverlay}>
+                                <Spin size="large" />
+                            </div>
+                        ) : lessons.length === 0 ? (
+                            <div className={styles.emptyState}>
+                                <div className={styles.emptyIcon}>📚</div>
+                                <h3 className={styles.emptyTitle}>Chưa có lịch dạy</h3>
+                                <p className={styles.emptyDescription}>
+                                    Các buổi học đã được đặt sẽ hiển thị tại đây
+                                </p>
+                            </div>
+                        ) : (
+                            /* Calendar Grid */
+                            <div className={styles.calendarGrid}>
+                                {/* Header row */}
+                                <div className={styles.calendarHeader}>
+                                    <div className={styles.timeColumn} />
+                                    {weekDates.map((date, index) => (
+                                        <div
+                                            key={index}
+                                            className={`${styles.dayColumn} ${isToday(date) ? styles.today : ''}`}
+                                        >
+                                            <span className={styles.dayName}>{DAYS_OF_WEEK[index]}</span>
+                                            <span className={styles.dayNumber}>{date.format('DD')}</span>
+                                            <span className={styles.monthName}>{date.format('MMM')}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Time rows */}
+                                <div className={styles.calendarBody}>
+                                    {TIME_SLOTS.map((hour, index) => (
+                                        <div
+                                            key={hour}
+                                            className={styles.timeRow}
+                                            style={{
+                                                zIndex: TIME_SLOTS.length - index,
+                                                position: 'relative'
+                                            }}
+                                        >
+                                            <div className={styles.timeLabel}>
+                                                {hour.toString().padStart(2, '0')}:00
+                                            </div>
+                                            {weekDates.map((date, dayIndex) => {
+                                                // Find lessons for this time slot
+                                                const lessonsInSlot = lessons.filter(lesson => {
+                                                    const lessonDate = dayjs(lesson.scheduledStart);
+                                                    const lessonHour = lessonDate.hour();
+
+                                                    // Check if lesson is on the same DATE (not just same day of week) and same hour
+                                                    return lessonDate.isSame(date, 'day') && lessonHour === hour;
+                                                });
+
+                                                return (
+                                                    <div
+                                                        key={dayIndex}
+                                                        className={`${styles.timeCell} ${isToday(date) ? styles.todayColumn : ''}`}
+                                                    >
+                                                        {lessonsInSlot.map(lesson => {
+                                                            const start = dayjs(lesson.scheduledStart);
+                                                            const end = dayjs(lesson.scheduledEnd);
+                                                            const duration = end.diff(start, 'hour', true);
+                                                            const heightPx = duration * 70 - 6;
+
+                                                            return (
+                                                                <div
+                                                                    key={lesson.lessonId}
+                                                                    className={styles.lessonBlock}
+                                                                    style={{ height: `${heightPx}px` }}
+                                                                >
+                                                                    <div className={styles.lessonContent}>
+                                                                        <span className={styles.lessonLabel}>
+                                                                            {lesson.subject?.subjectName || 'N/A'}
+                                                                        </span>
+                                                                        <span className={styles.lessonTime}>
+                                                                            {start.format('HH:mm')} - {end.format('HH:mm')}
+                                                                        </span>
+                                                                        <span className={styles.lessonStudent}>
+                                                                            {lesson.student?.fullName || 'Unknown'}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
-            {/* Add Availability Modal */}
+            {/* Modal thêm lịch rảnh */}
             <AddAvailabilityModal
                 isOpen={isAddAvailabilityModalOpen}
                 onClose={handleCloseAddAvailabilityModal}
                 onSuccess={fetchAvailability}
             />
 
-            {/* Edit Availability Modal */}
+            {/* Modal chỉnh sửa lịch rảnh */}
             <EditAvailabilityModal
                 isOpen={isEditAvailabilityModalOpen}
                 onClose={handleCloseEditAvailabilityModal}

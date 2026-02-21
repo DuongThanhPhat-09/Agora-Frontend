@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
-import type { UserDetail } from '../../../types/admin.types';
+import type { FlatUserDetail } from '../mockData';
 
 interface BlockUserModalProps {
     isOpen: boolean;
     onClose: () => void;
-    user: UserDetail | null;
+    user: FlatUserDetail | null;
     onBlock: (userId: string, reason: string) => Promise<void>;
 }
 

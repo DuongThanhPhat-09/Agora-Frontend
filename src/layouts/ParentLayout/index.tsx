@@ -109,12 +109,29 @@ const CloseIcon = () => (
 );
 
 // Navigation items matching Figma design
+// Lessons Icon
+const LessonsIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M2 4C2 2.89543 2.89543 2 4 2H14C15.1046 2 16 2.89543 16 4V14C16 15.1046 15.1046 16 14 16H4C2.89543 16 2 15.1046 2 14V4Z" strokeLinecap="round" />
+    <path d="M6 6H12M6 9H12M6 12H9" strokeLinecap="round" />
+  </svg>
+);
+
+// Dispute Icon
+const DisputeIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M9 6V9M9 12H9.01M3 14V4C3 2.89543 3.89543 2 5 2H13C14.1046 2 15 2.89543 15 4V14C15 15.1046 14.1046 16 13 16H5C3.89543 16 3 15.1046 3 14Z" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 const navItems = [
   { path: '/parent/dashboard', label: 'Dashboard', icon: DashboardIcon },
   { path: '/parent/student', label: 'Children', icon: ChildrenIcon },
+  { path: '/parent/lessons', label: 'Buổi học', icon: LessonsIcon },
   { path: '/parent/messages', label: 'Messages', icon: MessagesIcon },
   { path: '/parent/wallet', label: 'Finance', icon: FinanceIcon },
   { path: '/parent/booking', label: 'Booking', icon: BookingIcon },
+  { path: '/parent/disputes', label: 'Khiếu nại', icon: DisputeIcon },
   { path: '/parent/settings', label: 'Settings', icon: SettingsIcon },
 ];
 

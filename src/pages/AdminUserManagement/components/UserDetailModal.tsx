@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import type { UserDetail, UserWarning, UserSuspension } from '../../../types/admin.types';
 import { formatCurrency, formatDateTime } from '../../../utils/formatters';
 import { mockGetUserWarnings, mockGetUserSuspensions } from '../mockData';
+import type { FlatUserDetail } from '../mockData';
 
 interface UserDetailModalProps {
     isOpen: boolean;
     onClose: () => void;
-    user: UserDetail | null;
+    user: FlatUserDetail | null;
     onBlockUser: () => void;
     onUnblockUser: () => void;
     onIssueWarning: () => void;
@@ -24,8 +24,8 @@ const UserDetailModal = ({
     onSuspendUser,
     onResetPassword,
 }: UserDetailModalProps) => {
-    const [warnings, setWarnings] = useState<UserWarning[]>([]);
-    const [suspensions, setSuspensions] = useState<UserSuspension[]>([]);
+    const [warnings, setWarnings] = useState<any[]>([]);
+    const [suspensions, setSuspensions] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
 
     // Fetch warnings and suspensions when modal opens
@@ -110,8 +110,8 @@ const UserDetailModal = ({
                                     {user.accountstatus === 'active'
                                         ? 'Hoạt động'
                                         : user.accountstatus === 'suspended'
-                                        ? 'Tạm ngưng'
-                                        : 'Bị chặn'}
+                                            ? 'Tạm ngưng'
+                                            : 'Bị chặn'}
                                 </span>
                                 {user.isidentityverified && (
                                     <span className="user-detail-verified">

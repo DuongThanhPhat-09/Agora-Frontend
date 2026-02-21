@@ -1,7 +1,23 @@
-import type { UserDetail, UserWarning, UserSuspension } from '../../types/admin.types';
+export interface FlatUserDetail {
+    userid: string;
+    fullname: string;
+    email: string;
+    phone: string;
+    avatarurl: string;
+    primaryrole: string;
+    accountstatus: string;
+    isidentityverified: boolean;
+    createdat: string;
+    lastloginat: string;
+    warningcount: number;
+    suspensioncount: number;
+    walletbalance?: number;
+    escrowbalance?: number;
+    totalearnings?: number;
+}
 
 // Mock user list data
-export const mockUsers: UserDetail[] = [
+export const mockUsers: FlatUserDetail[] = [
     {
         userid: 'USR-001',
         fullname: 'Nguyễn Văn A',
@@ -133,7 +149,7 @@ export const mockUsers: UserDetail[] = [
 ];
 
 // Mock warnings data
-export const mockWarnings: Record<string, UserWarning[]> = {
+export const mockWarnings: Record<string, any[]> = {
     'USR-002': [
         {
             warningid: 'WARN-001',
@@ -197,7 +213,7 @@ export const mockWarnings: Record<string, UserWarning[]> = {
 };
 
 // Mock suspensions data
-export const mockSuspensions: Record<string, UserSuspension[]> = {
+export const mockSuspensions: Record<string, any[]> = {
     'USR-004': [
         {
             suspensionid: 'SUSP-001',
@@ -244,7 +260,7 @@ export const mockGetAllUsers = async (
     search?: string,
     limit: number = 50,
     offset: number = 0
-): Promise<{ users: UserDetail[]; total: number }> => {
+): Promise<{ users: FlatUserDetail[]; total: number }> => {
     // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, 600));
 
@@ -280,7 +296,7 @@ export const mockGetAllUsers = async (
     };
 };
 
-export const mockGetUserDetail = async (userId: string): Promise<UserDetail | null> => {
+export const mockGetUserDetail = async (userId: string): Promise<FlatUserDetail | null> => {
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     const user = mockUsers.find((u) => u.userid === userId);
@@ -289,12 +305,12 @@ export const mockGetUserDetail = async (userId: string): Promise<UserDetail | nu
     return user;
 };
 
-export const mockGetUserWarnings = async (userId: string): Promise<UserWarning[]> => {
+export const mockGetUserWarnings = async (userId: string): Promise<any[]> => {
     await new Promise((resolve) => setTimeout(resolve, 400));
     return mockWarnings[userId] || [];
 };
 
-export const mockGetUserSuspensions = async (userId: string): Promise<UserSuspension[]> => {
+export const mockGetUserSuspensions = async (userId: string): Promise<any[]> => {
     await new Promise((resolve) => setTimeout(resolve, 400));
     return mockSuspensions[userId] || [];
 };

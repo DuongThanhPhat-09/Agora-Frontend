@@ -138,9 +138,9 @@ const DISTRICT_LABELS: Record<string, Record<string, string>> = {
 };
 
 const TEACHING_MODE_LABELS: Record<string, string> = {
-    'Online': 'Day Online',
-    'Offline': 'Day truc tiep',
-    'Hybrid': 'Online & Truc tiep',
+    'Online': 'Dạy Online',
+    'Offline': 'Dạy trực tiếp',
+    'Hybrid': 'Online & Trực tiếp',
 };
 
 const TutorPortalProfile: React.FC = () => {
@@ -465,7 +465,7 @@ const TutorPortalProfile: React.FC = () => {
                             <div className={styles.credentialsList}>
                                 {formData.credentials.length === 0 ? (
                                     <div className={styles.emptyCredentials}>
-                                        <p>Chưa có chứng chỉ nào. Thêm chứng chỉ để tăng độ tin cậy.</p>
+                                        <p>Chưa có chứng chỉ nào. Thêm chứng chỉ để tăng độ tin cậy của bạn.</p>
                                     </div>
                                 ) : (
                                     formData.credentials.map((credential) => (
@@ -579,7 +579,7 @@ const TutorPortalProfile: React.FC = () => {
                                                 <span>Đang chờ duyệt</span>
                                             </div>
                                             <p className={styles.identityPendingText}>
-                                                Hồ sơ xác minh của bạn đang được xử lý. Vui lòng chờ trong 24-48 giờ.
+                                                Hồ sơ xác minh của bạn đang được xem xét. Vui lòng chờ trong 24-48 giờ.
                                             </p>
                                         </div>
                                     )}

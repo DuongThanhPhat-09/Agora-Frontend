@@ -252,11 +252,9 @@ export interface TutorDetailForReview {
 // ============================================
 
 export type DisputeType =
-  | 'no_show_tutor'
-  | 'no_show_student'
-  | 'poor_quality'
-  | 'inappropriate_behavior'
-  | 'payment_issue'
+  | 'no_show'
+  | 'quality'
+  | 'payment'
   | 'other';
 
 export type DisputeStatus =
@@ -267,10 +265,108 @@ export type DisputeStatus =
 
 export type DisputePriority = 'low' | 'medium' | 'high';
 
+// ---- Backend-compatible types (matching DisputeListDto) ----
+
+export interface DisputeForAdmin {
+  disputeId: number;
+  lessonId: number | null;
+  bookingId: number | null;
+  disputeType: string | null;
+  status: string | null;
+  reason: string | null;
+  createdByName: string | null;
+  tutorName: string | null;
+  lessonPrice: number | null;
+  createdAt: string | null;
+  disputeTypeDisplay: string;
+  statusDisplay: string;
+  statusColor: string;
+}
+
+export interface DisputeQueryParams {
+  status?: string;
+  disputeType?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface DisputeStatsDto {
+  totalPending: number;
+  totalInvestigating: number;
+  resolvedThisMonth: number;
+  totalRefundedThisMonth: number;
+}
+
+// ---- Backend-compatible types (matching DisputeDetailDto) ----
+
+export interface DisputeUserDto {
+  userId: string | null;
+  fullName: string | null;
+  email: string | null;
+  phone: string | null;
+  avatarUrl: string | null;
+}
+
+export interface DisputeLessonDto {
+  lessonId: number;
+  scheduledStart: string;
+  scheduledEnd: string;
+  status: string | null;
+  lessonPrice: number | null;
+  lessonContent: string | null;
+  homework: string | null;
+  isTutorPresent: boolean | null;
+  isStudentPresent: boolean | null;
+}
+
+export interface DisputeTutorDto {
+  tutorId: string | null;
+  fullName: string | null;
+  email: string | null;
+  phone: string | null;
+  warningCount: number;
+  averageRating: number | null;
+}
+
+export interface DisputeDetail {
+  disputeId: number;
+  bookingId: number | null;
+  lessonId: number | null;
+  disputeType: string | null;
+  reason: string | null;
+  status: string | null;
+  evidence: string[] | null;
+  createdAt: string | null;
+  resolvedAt: string | null;
+  resolutionNote: string | null;
+  refundAmount: number | null;
+  refundPercentage: number | null;
+  createdBy: DisputeUserDto | null;
+  resolvedBy: DisputeUserDto | null;
+  lesson: DisputeLessonDto | null;
+  tutor: DisputeTutorDto | null;
+  timeSinceCreation: string | null;
+}
+
+export type ResolutionType =
+  | 'refund_100'
+  | 'refund_50'
+  | 'release';
+
+export interface ResolveDisputeRequest {
+  resolutionType: ResolutionType;
+  resolutionNote: string;
+  createTutorWarning?: boolean;
+  warningLevel?: number;
+}
+
+// Legacy types kept for backward compatibility
 export interface DisputeListItem {
   disputeid: string;
-  disputetype: DisputeType;
-  createdby: string; // userid
+  disputetype: string;
+  createdby: string;
   creatorName: string;
   creatorRole: 'student' | 'tutor' | 'parent';
   bookingid: string;
@@ -279,24 +375,6 @@ export interface DisputeListItem {
   escrowAmount: number;
   priority: DisputePriority;
   isUrgent: boolean;
-}
-
-export interface DisputeInfo {
-  disputeid: string;
-  disputetype: DisputeType;
-  reason: string;
-  description: string;
-  filedby: string; // userid
-  status: DisputeStatus;
-  createdat: string;
-  resolvedat: string | null;
-  resolutiontype: string | null;
-  resolutionnote: string | null;
-  refundpercentage: number | null;
-  refundamount: number | null;
-  refundissued: boolean;
-  resolvedby: string | null;
-  evidence: any; // JSONB array of evidence objects
 }
 
 export interface BookingInfo {
@@ -339,30 +417,6 @@ export interface TutorWarning {
   issuedby: string;
   issuedByName: string;
   relatedbookingid: string | null;
-}
-
-export interface DisputeDetail {
-  dispute: DisputeInfo;
-  booking: BookingInfo;
-  lesson: LessonInfo | null;
-  tutorWarnings: TutorWarning[];
-}
-
-export type ResolutionType =
-  | 'refund_100'
-  | 'refund_50'
-  | 'release'
-  | 'free_session'
-  | 'makeup';
-
-export interface ResolveDisputeRequest {
-  resolutionType: ResolutionType;
-  resolutionNote: string;
-  issueWarning?: boolean;
-  warningLevel?: number;
-  suspendProfile?: boolean;
-  suspendDays?: number;
-  lockAccount?: boolean;
 }
 
 // ============================================

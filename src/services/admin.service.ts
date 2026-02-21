@@ -19,12 +19,16 @@ import type {
   PendingTutorFromAPI,
   PendingTutorsAPIResponse,
   TutorApprovalRequest,
-  // Disputes
-  DisputeListItem,
+  // Disputes (backend-compatible)
+  DisputeForAdmin,
   DisputeDetail,
+  DisputeStatsDto,
+  DisputeQueryParams,
   ResolveDisputeRequest,
   IssueWarningRequest,
   SuspendUserRequest,
+  // Legacy
+  DisputeListItem,
   // Financials
   FinancialMetrics,
   WithdrawalRequest,
@@ -313,14 +317,16 @@ export const verifyCredential = async (
 
 /**
  * Get list of disputes with optional filtering
- * @param filters - Status filter (pending, investigating, resolved)
+ * Backend: GET /api/admin/dispute?status=&page=&pageSize=
+ * Returns APIResponse<PagedList<DisputeListDto>>
  */
 export const getDisputes = async (
-  filters?: FilterParams
-): Promise<DisputeListItem[]> => {
+  params?: DisputeQueryParams
+): Promise<DisputeForAdmin[]> => {
   try {
-    const { data } = await api.get('/admin/disputes', { params: filters });
-    return data;
+    const { data } = await api.get('/admin/dispute', { params });
+    // Backend returns APIResponse<PagedList<T>> where PagedList serializes as array with pagination metadata
+    return data.content || [];
   } catch (error) {
     console.error('getDisputes error:', error);
     throw error;
@@ -328,15 +334,31 @@ export const getDisputes = async (
 };
 
 /**
+ * Get list of disputes (legacy wrapper using old types)
+ */
+export const getDisputesLegacy = async (
+  filters?: FilterParams
+): Promise<DisputeListItem[]> => {
+  try {
+    const { data } = await api.get('/admin/dispute', { params: filters });
+    return data.content || [];
+  } catch (error) {
+    console.error('getDisputesLegacy error:', error);
+    throw error;
+  }
+};
+
+/**
  * Get detailed dispute information
- * Includes: dispute info, booking, lesson, tutor warnings
+ * Backend: GET /api/admin/dispute/{disputeId}
+ * Returns APIResponse<DisputeDetailDto>
  */
 export const getDisputeDetail = async (
-  disputeId: string
+  disputeId: string | number
 ): Promise<DisputeDetail> => {
   try {
-    const { data } = await api.get(`/admin/disputes/${disputeId}`);
-    return data;
+    const { data } = await api.get(`/admin/dispute/${disputeId}`);
+    return data.content;
   } catch (error) {
     console.error('getDisputeDetail error:', error);
     throw error;
@@ -345,15 +367,16 @@ export const getDisputeDetail = async (
 
 /**
  * Resolve dispute with admin decision
- * Creates transaction, updates dispute status
+ * Backend: PUT /api/admin/dispute/{disputeId}/resolve
+ * Returns APIResponse<DisputeDetailDto>
  */
 export const resolveDispute = async (
-  disputeId: string,
+  disputeId: string | number,
   request: ResolveDisputeRequest
-): Promise<ApiResponse<any>> => {
+): Promise<DisputeDetail> => {
   try {
-    const { data } = await api.post(`/admin/disputes/${disputeId}/resolve`, request);
-    return data;
+    const { data } = await api.put(`/admin/dispute/${disputeId}/resolve`, request);
+    return data.content;
   } catch (error) {
     console.error('resolveDispute error:', error);
     throw error;
@@ -705,14 +728,15 @@ export const exportToCSV = async (
 
 /**
  * Get chat history for dispute
- * @param bookingId - Booking ID related to dispute
+ * Backend: GET /api/admin/dispute/{disputeId}/chat
+ * Returns APIResponse<List<ChatMessageResponseDTO>>
  */
 export const getDisputeChatHistory = async (
-  bookingId: string
+  disputeId: string | number
 ): Promise<any[]> => {
   try {
-    const { data } = await api.get(`/admin/disputes/chat/${bookingId}`);
-    return data;
+    const { data } = await api.get(`/admin/dispute/${disputeId}/chat`);
+    return data.content || [];
   } catch (error) {
     console.error('getDisputeChatHistory error:', error);
     throw error;
@@ -744,6 +768,90 @@ export const uploadDisputeEvidence = async (
     return data;
   } catch (error) {
     console.error('uploadDisputeEvidence error:', error);
+    throw error;
+  }
+};
+
+// ============================================
+// M3 ADDITIONS: Investigate, Stats, Warnings, Suspensions
+// ============================================
+
+/**
+ * Start investigating a dispute
+ * Backend: PUT /api/admin/dispute/{disputeId}/investigate
+ * Returns APIResponse<DisputeDetailDto>
+ */
+export const investigateDispute = async (
+  disputeId: string | number
+): Promise<DisputeDetail> => {
+  try {
+    const { data } = await api.put(`/admin/dispute/${disputeId}/investigate`);
+    return data.content;
+  } catch (error) {
+    console.error('investigateDispute error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get dispute statistics
+ * Backend: GET /api/admin/dispute/stats
+ * Returns APIResponse<DisputeStatsDto>
+ */
+export const getDisputeStats = async (): Promise<DisputeStatsDto> => {
+  try {
+    const { data } = await api.get('/admin/dispute/stats');
+    return data.content;
+  } catch (error) {
+    console.error('getDisputeStats error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get user warning summary
+ */
+export const getUserWarnings = async (
+  userId: string
+): Promise<ApiResponse<any>> => {
+  try {
+    const { data } = await api.get(`/admin/warning/user/${userId}`);
+    return data;
+  } catch (error) {
+    console.error('getUserWarnings error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Unsuspend a user
+ */
+export const unsuspendUser = async (
+  userId: string
+): Promise<ApiResponse<any>> => {
+  try {
+    const { data } = await api.put(`/admin/warning/user/${userId}/unsuspend`);
+    return data;
+  } catch (error) {
+    console.error('unsuspendUser error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get all active suspensions
+ */
+export const getActiveSuspensions = async (
+  page: number = 1,
+  pageSize: number = 10
+): Promise<ApiResponse<any>> => {
+  try {
+    const { data } = await api.get('/admin/warning/suspensions', {
+      params: { page, pageSize },
+    });
+    return data;
+  } catch (error) {
+    console.error('getActiveSuspensions error:', error);
     throw error;
   }
 };

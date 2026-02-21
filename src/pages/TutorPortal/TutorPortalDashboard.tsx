@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from '../../styles/pages/tutor-portal-dashboard.module.css';
+import { getTutorDashboardStats, getTutorCalendar, type TutorDashboardStats, type CalendarDay, type CalendarLesson } from '../../services/lesson.service';
+import { getTutorFeedbacks, type FeedbackDto } from '../../services/feedback.service';
+import { getCurrentUser } from '../../services/auth.service';
+import ReplyFeedbackModal from './components/ReplyFeedbackModal';
 
 // Icons
 const ClockIcon = () => (
@@ -102,82 +106,25 @@ const CheckedBoxIcon = () => (
     </svg>
 );
 
-// Sample data
-const todaysLessons = [
-    {
-        id: 1,
-        time: '2:30 PM',
-        subject: 'Mathematics - Grade 10',
-        student: 'Alex Chen',
-        status: 'starting_soon',
-        statusLabel: 'Starting soon'
-    },
-    {
-        id: 2,
-        time: '4:00 PM',
-        subject: 'Physics - Grade 11',
-        student: 'Emma Wilson',
-        status: 'ongoing',
-        statusLabel: 'Ongoing'
-    },
-    {
-        id: 3,
-        time: '6:30 PM',
-        subject: 'Chemistry - Grade 12',
-        student: 'David Park',
-        status: 'completed',
-        statusLabel: 'Completed'
-    }
-];
-
-const actionQueueItems = [
-    {
-        id: 1,
-        title: 'Check-in pending',
-        description: 'Physics class with Emma Wilson - 4:00 PM',
-        type: 'warning',
-        action: 'Check-in'
-    },
-    {
-        id: 2,
-        title: '5 homework assignments to review',
-        description: 'Math (3) and Chemistry (2) classes',
-        type: 'info',
-        action: 'Review'
-    },
-    {
-        id: 3,
-        title: '2 scores to enter',
-        description: "Yesterday's completed sessions",
-        type: 'info',
-        action: 'Enter Scores'
-    }
-];
-
-const requestsData = [
-    { id: 1, title: 'New booking requests', count: 2 },
-    { id: 2, title: 'Reschedule requests', count: 1 },
-    { id: 3, title: 'Cancellations', count: 0 }
-];
 
 const tasksData = [
     {
         id: 1,
-        title: "Review Alex's progress report",
-        date: 'JAN 22, 2025',
+        title: 'Xem báo cáo tiến độ của Nguyễn Văn A',
+        date: '22 THÁNG 1, 2025',
         completed: false
     },
     {
         id: 2,
-        title: 'Prepare Chemistry quiz materials',
-        date: 'JAN 23, 2025',
+        title: 'Chuẩn bị tài liệu kiểm tra Hóa học',
+        date: '23 THÁNG 1, 2025',
         completed: false
     }
 ];
 
 const personalNote = {
-    text: "Remember to update teaching materials for next week's Physics lessons.",
-    date: 'Jan 20, 2025'
+    text: 'Nhớ cập nhật tài liệu giảng dạy cho các buổi học Vật lý tuần tới.',
+    date: '20 Tháng 1, 2025'
 };
 
 const TutorPortalDashboard: React.FC = () => {
@@ -185,11 +132,73 @@ const TutorPortalDashboard: React.FC = () => {
     const [currentMonth] = useState(new Date(2025, 0, 1)); // January 2025
     const [tasks, setTasks] = useState(tasksData);
 
+    // API data states
+    const [stats, setStats] = useState<TutorDashboardStats | null>(null);
+    const [calendarData, setCalendarData] = useState<CalendarDay[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [recentFeedbacks, setRecentFeedbacks] = useState<FeedbackDto[]>([]);
+    const [replyModal, setReplyModal] = useState<{ open: boolean; feedback: FeedbackDto | null }>({ open: false, feedback: null });
+
+
+    // Fetch dashboard data
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                setLoading(true);
+
+                // Fetch dashboard stats
+                const statsResponse = await getTutorDashboardStats();
+                if (statsResponse.content) {
+                    setStats(statsResponse.content);
+                }
+
+                // Fetch calendar for current month
+                const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+                const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+
+                const calendarResponse = await getTutorCalendar(
+                    firstDay.toISOString(),
+                    lastDay.toISOString()
+                );
+                if (calendarResponse.content) {
+                    setCalendarData(calendarResponse.content);
+                }
+
+                // Fetch recent feedbacks
+                const user = getCurrentUser();
+                if (user?.userId) {
+                    try {
+                        const fbResponse = await getTutorFeedbacks(user.userId, 1, 3);
+                        if (fbResponse.content?.items) {
+                            setRecentFeedbacks(fbResponse.content.items);
+                        } else if (Array.isArray(fbResponse.content)) {
+                            setRecentFeedbacks(fbResponse.content as unknown as FeedbackDto[]);
+                        }
+                    } catch { /* feedback is optional */ }
+                }
+            } catch (err: any) {
+                console.error('Error fetching dashboard data:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, [currentMonth]);
+
     // Generate calendar days
     const generateCalendarDays = () => {
         const days = [];
         const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
         const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+        const today = new Date();
+
+        // Get days with sessions from calendar data
+        const daysWithSessions = new Set(
+            calendarData
+                .filter(day => day.lessons && day.lessons.length > 0)
+                .map(day => new Date(day.date).getDate())
+        );
 
         // Days from previous month
         const startDay = firstDay.getDay();
@@ -204,11 +213,15 @@ const TutorPortalDashboard: React.FC = () => {
 
         // Days of current month
         for (let i = 1; i <= lastDay.getDate(); i++) {
+            const isToday = today.getDate() === i &&
+                today.getMonth() === currentMonth.getMonth() &&
+                today.getFullYear() === currentMonth.getFullYear();
+
             days.push({
                 day: i,
                 isCurrentMonth: true,
-                hasSession: [6, 7, 8, 14, 15, 20, 21].includes(i),
-                isToday: i === 21
+                hasSession: daysWithSessions.has(i),
+                isToday
             });
         }
 
@@ -243,12 +256,47 @@ const TutorPortalDashboard: React.FC = () => {
         ));
     };
 
+    // Get lessons based on selected tab
+    const getFilteredLessons = (): CalendarLesson[] => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const weekEnd = new Date(today);
+        weekEnd.setDate(weekEnd.getDate() + 7);
+
+        return calendarData
+            .filter(day => {
+                const dayDate = new Date(day.date);
+                dayDate.setHours(0, 0, 0, 0);
+
+                if (selectedTab === 'today') {
+                    return dayDate.getTime() === today.getTime();
+                } else if (selectedTab === 'tomorrow') {
+                    return dayDate.getTime() === tomorrow.getTime();
+                } else {
+                    return dayDate >= today && dayDate <= weekEnd;
+                }
+            })
+            .flatMap(day => day.lessons || [])
+            .sort((a, b) => new Date(a.scheduledStart).getTime() - new Date(b.scheduledStart).getTime());
+    };
+
+    const formatTime = (dateString: string) => {
+        return new Date(dateString).toLocaleTimeString('vi-VN', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
     return (
         <div className={styles.dashboard}>
             {/* Header */}
             <div className={styles.header}>
-                <h1 className={styles.title}>Dashboard</h1>
-                <span className={styles.date}>Tuesday, January 21, 2025</span>
+                <h1 className={styles.title}>Bảng điều khiển</h1>
+                <span className={styles.date}>Thứ Ba, 21 Tháng 1, 2025</span>
             </div>
 
             {/* Profile Under Review Banner */}
@@ -259,89 +307,93 @@ const TutorPortalDashboard: React.FC = () => {
                     </div>
                     <div className={styles.bannerText}>
                         <div className={styles.bannerTitleRow}>
-                            <span className={styles.bannerTitle}>Your profile is under review</span>
-                            <span className={styles.pendingBadge}>Pending</span>
+                            <span className={styles.bannerTitle}>Hồ sơ của bạn đang được xem xét</span>
+                            <span className={styles.pendingBadge}>Đang chờ</span>
                         </div>
                         <p className={styles.bannerDescription}>
-                            Admin is verifying your credentials. You'll appear on the marketplace once approved.
+                            Admin đang xác minh thông tin của bạn. Bạn sẽ xuất hiện trên marketplace sau khi được phê duyệt.
                         </p>
                     </div>
                 </div>
                 <button className={styles.viewDetailsBtn}>
-                    View Details
+                    Xem chi tiết
                     <ArrowRightIcon />
                 </button>
             </div>
 
             {/* Stats Cards */}
-            <div className={styles.statsGrid}>
-                <div className={styles.statCard}>
-                    <div className={styles.statHeader}>
-                        <div className={styles.statIcon}>
-                            <CalendarIcon />
-                        </div>
-                        <span className={styles.statChange}>+12%</span>
-                    </div>
-                    <div className={styles.statValue}>3</div>
-                    <div className={styles.statLabel}>Today Sessions</div>
+            {loading ? (
+                <div style={{ padding: '2rem', textAlign: 'center' }}>
+                    <p>Đang tải dữ liệu...</p>
                 </div>
-                <div className={styles.statCard}>
-                    <div className={styles.statHeader}>
-                        <div className={styles.statIcon}>
-                            <SessionsIcon />
+            ) : stats ? (
+                <div className={styles.statsGrid}>
+                    <div className={styles.statCard}>
+                        <div className={styles.statHeader}>
+                            <div className={styles.statIcon}>
+                                <CalendarIcon />
+                            </div>
                         </div>
-                        <span className={styles.statChange}>+12%</span>
+                        <div className={styles.statValue}>{stats.upcomingLessons}</div>
+                        <div className={styles.statLabel}>Buổi học sắp tới</div>
                     </div>
-                    <div className={styles.statValue}>8</div>
-                    <div className={styles.statLabel}>Classes Activity</div>
-                </div>
-                <div className={styles.statCard}>
-                    <div className={styles.statHeader}>
-                        <div className={styles.statIcon}>
-                            <StarIcon />
+                    <div className={styles.statCard}>
+                        <div className={styles.statHeader}>
+                            <div className={styles.statIcon}>
+                                <SessionsIcon />
+                            </div>
                         </div>
-                        <span className={styles.statChange}>+12%</span>
+                        <div className={styles.statValue}>{stats.completedThisMonth}</div>
+                        <div className={styles.statLabel}>Hoàn thành tháng này</div>
                     </div>
-                    <div className={styles.statValue}>12h</div>
-                    <div className={styles.statLabel}>Total Rating</div>
-                </div>
-                <div className={styles.statCard}>
-                    <div className={styles.statHeader}>
-                        <div className={styles.statIcon}>
-                            <DollarIcon />
+                    <div className={styles.statCard}>
+                        <div className={styles.statHeader}>
+                            <div className={styles.statIcon}>
+                                <StarIcon />
+                            </div>
                         </div>
-                        <span className={styles.statChange}>+12%</span>
+                        <div className={styles.statValue}>{stats.averageRating.toFixed(1)}</div>
+                        <div className={styles.statLabel}>Đánh giá trung bình ({stats.totalReviews} đánh giá)</div>
                     </div>
-                    <div className={styles.statValue}>$240</div>
-                    <div className={styles.statLabel}>Monthly Revenue</div>
+                    <div className={styles.statCard}>
+                        <div className={styles.statHeader}>
+                            <div className={styles.statIcon}>
+                                <DollarIcon />
+                            </div>
+                        </div>
+                        <div className={styles.statValue}>
+                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(stats.earningsThisMonth)}
+                        </div>
+                        <div className={styles.statLabel}>Doanh thu tháng</div>
+                    </div>
                 </div>
-            </div>
+            ) : null}
 
             {/* Quick Actions */}
             <div className={styles.quickActions}>
                 <button className={styles.actionBtn}>
                     <CheckInIcon />
-                    <span>Start Check-in</span>
+                    <span>Bắt đầu điểm danh</span>
                 </button>
                 <button className={styles.actionBtn}>
                     <PlusIcon />
-                    <span>Add Availability</span>
+                    <span>Thêm lịch rảnh</span>
                 </button>
                 <button className={styles.actionBtn}>
                     <BookIcon />
-                    <span>Create Class</span>
+                    <span>Tạo lớp học</span>
                 </button>
                 <button className={styles.actionBtn}>
                     <MessageIcon />
-                    <span>Message</span>
+                    <span>Tin nhắn</span>
                 </button>
                 <button className={styles.actionBtn}>
                     <NoteIcon />
-                    <span>Quick Note</span>
+                    <span>Ghi chú nhanh</span>
                 </button>
                 <button className={styles.actionBtn}>
                     <WithdrawIcon />
-                    <span>Withdraw</span>
+                    <span>Rút tiền</span>
                 </button>
             </div>
 
@@ -351,65 +403,64 @@ const TutorPortalDashboard: React.FC = () => {
                 <div className={styles.leftColumn}>
                     <div className={styles.sectionCard}>
                         <div className={styles.sectionHeader}>
-                            <h2 className={styles.sectionTitle}>Today's Lessons</h2>
+                            <h2 className={styles.sectionTitle}>Các buổi học hôm nay</h2>
                             <div className={styles.tabGroup}>
                                 <button
                                     className={`${styles.tabBtn} ${selectedTab === 'today' ? styles.active : ''}`}
                                     onClick={() => setSelectedTab('today')}
                                 >
-                                    Today
+                                    Hôm nay
                                 </button>
                                 <button
                                     className={`${styles.tabBtn} ${selectedTab === 'tomorrow' ? styles.active : ''}`}
                                     onClick={() => setSelectedTab('tomorrow')}
                                 >
-                                    Tomorrow
+                                    Ngày mai
                                 </button>
                                 <button
                                     className={`${styles.tabBtn} ${selectedTab === 'week' ? styles.active : ''}`}
                                     onClick={() => setSelectedTab('week')}
                                 >
-                                    Week
+                                    Tuần
                                 </button>
                             </div>
                         </div>
 
                         <div className={styles.lessonsList}>
-                            {todaysLessons.map((lesson) => (
-                                <div key={lesson.id} className={styles.lessonItem}>
-                                    <div className={styles.lessonInfo}>
-                                        <div className={styles.lessonTime}>{lesson.time}</div>
-                                        <div className={styles.lessonDetails}>
-                                            <h4 className={styles.lessonSubject}>{lesson.subject}</h4>
-                                            <p className={styles.lessonStudent}>{lesson.student}</p>
-                                            <span className={`${styles.lessonStatus} ${getStatusClass(lesson.status)}`}>
-                                                {lesson.statusLabel}
-                                            </span>
+                            {getFilteredLessons().length > 0 ? (
+                                getFilteredLessons().map((lesson) => (
+                                    <div key={lesson.lessonId} className={styles.lessonItem}>
+                                        <div className={styles.lessonInfo}>
+                                            <div className={styles.lessonTime}>{formatTime(lesson.scheduledStart)}</div>
+                                            <div className={styles.lessonDetails}>
+                                                <h4 className={styles.lessonSubject}>{lesson.subjectName || 'Chưa xác định'}</h4>
+                                                <p className={styles.lessonStudent}>{lesson.studentName || 'Chưa có học sinh'}</p>
+                                                <span className={`${styles.lessonStatus} ${getStatusClass(lesson.status || '')}`}>
+                                                    {lesson.status || 'Đã lên lịch'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className={styles.lessonActions}>
+                                            {lesson.meetingLink && (
+                                                <button className={styles.primaryBtn} onClick={() => window.open(lesson.meetingLink!, '_blank')}>
+                                                    Vào lớp
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
-                                    <div className={styles.lessonActions}>
-                                        {lesson.status === 'starting_soon' && (
-                                            <button className={styles.primaryBtn}>Start Check-in</button>
-                                        )}
-                                        {lesson.status === 'ongoing' && (
-                                            <button className={styles.secondaryBtn}>Open Session</button>
-                                        )}
-                                        {lesson.status === 'completed' && (
-                                            <>
-                                                <button className={styles.outlineBtn}>Assign HW</button>
-                                                <button className={styles.outlineBtn}>Enter Score</button>
-                                            </>
-                                        )}
-                                    </div>
+                                ))
+                            ) : (
+                                <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
+                                    <p>Không có buổi học nào trong khoảng thời gian này</p>
                                 </div>
-                            ))}
+                            )}
                         </div>
                     </div>
 
-                    {/* Action Queue */}
-                    <div className={styles.sectionCard}>
+                    {/* Action Queue - COMMENTED OUT (waiting for API) */}
+                    {/* <div className={styles.sectionCard}>
                         <div className={styles.actionQueueSection}>
-                            <h2 className={styles.sectionTitle}>Action Queue</h2>
+                            <h2 className={styles.sectionTitle}>Hàng đợi hành động</h2>
                             <div className={styles.actionQueueList}>
                                 {actionQueueItems.map((item) => (
                                     <div key={item.id} className={styles.actionQueueItem}>
@@ -428,27 +479,27 @@ const TutorPortalDashboard: React.FC = () => {
                                 ))}
                             </div>
                         </div>
-                    </div>
+                    </div> */}
 
-                    {/* Requests */}
-                    <div className={styles.sectionCard}>
+                    {/* Requests - COMMENTED OUT (waiting for API) */}
+                    {/* <div className={styles.sectionCard}>
                         <div className={styles.requestsSection}>
-                            <h2 className={styles.sectionTitle}>Requests</h2>
+                            <h2 className={styles.sectionTitle}>Yêu cầu</h2>
                             <div className={styles.requestsCard}>
                                 <div className={styles.requestsList}>
                                     {requestsData.map((request) => (
                                         <div key={request.id} className={styles.requestItem}>
                                             <div className={styles.requestInfo}>
                                                 <span className={styles.requestTitle}>{request.title}</span>
-                                                <span className={styles.requestCount}>{request.count} pending</span>
+                                                <span className={styles.requestCount}>{request.count} đang chờ</span>
                                             </div>
-                                            <button className={styles.reviewBtn}>Review</button>
+                                            <button className={styles.reviewBtn}>Xem xét</button>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Right Column - Calendar & Notes */}
@@ -456,7 +507,7 @@ const TutorPortalDashboard: React.FC = () => {
                     {/* Calendar */}
                     <div className={`${styles.sectionCard} ${styles.calendarSection}`}>
                         <div className={styles.calendarHeader}>
-                            <h3 className={styles.calendarMonth}>January 2025</h3>
+                            <h3 className={styles.calendarMonth}>Tháng 1, 2025</h3>
                             <div className={styles.calendarNav}>
                                 <button className={styles.calendarNavBtn}>
                                     <ChevronLeftIcon />
@@ -488,23 +539,111 @@ const TutorPortalDashboard: React.FC = () => {
                         <div className={styles.calendarLegend}>
                             <div className={styles.legendItem}>
                                 <div className={`${styles.legendDot} ${styles.classDay}`} />
-                                <span className={styles.legendText}>Class Day</span>
+                                <span className={styles.legendText}>Ngày có lớp</span>
                             </div>
                             <div className={styles.legendItem}>
                                 <div className={`${styles.legendDot} ${styles.todayDot}`} />
-                                <span className={styles.legendText}>Today</span>
+                                <span className={styles.legendText}>Hôm nay</span>
                             </div>
                         </div>
                     </div>
+
+                    {/* Recent Feedbacks */}
+                    {recentFeedbacks.length > 0 && (
+                        <div className={styles.sectionCard}>
+                            <div style={{ padding: '20px' }}>
+                                <h2 className={styles.sectionTitle} style={{ marginBottom: '16px' }}>Đánh giá gần đây</h2>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {recentFeedbacks.map((fb) => (
+                                        <div key={fb.feedbackId} style={{
+                                            padding: '12px 16px', borderRadius: '10px',
+                                            background: '#f9fafb', border: '1px solid rgba(26,34,56,0.06)',
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <div style={{
+                                                        width: '28px', height: '28px', borderRadius: '50%',
+                                                        background: '#E8E5FF', display: 'flex', alignItems: 'center',
+                                                        justifyContent: 'center', fontSize: '12px', fontWeight: 600, color: '#4F46E5',
+                                                    }}>
+                                                        {fb.parentName?.charAt(0)?.toUpperCase() || 'P'}
+                                                    </div>
+                                                    <span style={{ fontWeight: 600, fontSize: '13px', color: '#1a2238' }}>
+                                                        {fb.parentName || 'Phụ huynh'}
+                                                    </span>
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                                    {[1, 2, 3, 4, 5].map(s => (
+                                                        <svg key={s} width="12" height="12" viewBox="0 0 18 18" fill={s <= fb.rating ? '#faad14' : '#e8e8e8'}>
+                                                            <path d="M9 1L11.09 6.26L17 6.97L12.82 10.72L14.18 16.5L9 13.27L3.82 16.5L5.18 10.72L1 6.97L6.91 6.26L9 1Z" />
+                                                        </svg>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            {fb.comment && (
+                                                <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#666', lineHeight: 1.5 }}>
+                                                    "{fb.comment}"
+                                                </p>
+                                            )}
+                                            {fb.reply ? (
+                                                <div style={{
+                                                    padding: '8px 12px', background: '#f0f0ff', borderRadius: '8px',
+                                                    fontSize: '12px', color: '#4F46E5', fontStyle: 'italic',
+                                                }}>
+                                                    Đã phản hồi: "{fb.reply}"
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    onClick={() => setReplyModal({ open: true, feedback: fb })}
+                                                    style={{
+                                                        padding: '4px 12px', borderRadius: '6px',
+                                                        border: '1px solid #4F46E5', background: 'transparent',
+                                                        color: '#4F46E5', fontSize: '12px', cursor: 'pointer',
+                                                        fontWeight: 500,
+                                                    }}
+                                                >
+                                                    Phản hồi
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Reply Feedback Modal */}
+                    <ReplyFeedbackModal
+                        open={replyModal.open}
+                        onClose={() => setReplyModal({ open: false, feedback: null })}
+                        onSuccess={async () => {
+                            setReplyModal({ open: false, feedback: null });
+                            // Refresh feedbacks
+                            const user = getCurrentUser();
+                            if (user?.userId) {
+                                try {
+                                    const fbResponse = await getTutorFeedbacks(user.userId, 1, 3);
+                                    if (fbResponse.content?.items) {
+                                        setRecentFeedbacks(fbResponse.content.items);
+                                    }
+                                } catch { /* ignore */ }
+                            }
+                        }}
+                        feedbackId={replyModal.feedback?.feedbackId || 0}
+                        parentName={replyModal.feedback?.parentName}
+                        rating={replyModal.feedback?.rating}
+                        comment={replyModal.feedback?.comment}
+                        createdAt={replyModal.feedback?.createdAt}
+                    />
 
                     {/* Notes & Tasks */}
                     <div className={styles.sectionCard}>
                         <div className={styles.notesSection}>
                             <div className={styles.notesSectionHeader}>
-                                <h2 className={styles.sectionTitle}>Notes & Tasks</h2>
+                                <h2 className={styles.sectionTitle}>Ghi chú & Nhiệm vụ</h2>
                                 <button className={styles.addTaskBtn}>
                                     <PlusIcon />
-                                    Add Task
+                                    Thêm nhiệm vụ
                                 </button>
                             </div>
 
@@ -530,7 +669,7 @@ const TutorPortalDashboard: React.FC = () => {
 
                             {/* Personal Note */}
                             <div className={styles.personalNoteSection}>
-                                <span className={styles.personalNoteLabel}>Personal Note</span>
+                                <span className={styles.personalNoteLabel}>Ghi chú cá nhân</span>
                                 <p className={styles.personalNoteText}>
                                     "{personalNote.text}"
                                 </p>
@@ -539,7 +678,7 @@ const TutorPortalDashboard: React.FC = () => {
 
                             {/* View All Records Button */}
                             <button className={styles.viewAllRecordsBtn}>
-                                View All Records
+                                Xem tất cả hồ sơ
                             </button>
                         </div>
                     </div>

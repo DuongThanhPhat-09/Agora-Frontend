@@ -28,9 +28,26 @@ const AdminVettingPage = () => {
             setError(null);
             const response = await getPendingTutors(1, 50);
             setTutors(response.content || []);
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error fetching pending tutors:', err);
-            setError('Không thể tải danh sách gia sư. Vui lòng thử lại.');
+
+            // Phân biệt loại lỗi để hiển thị message rõ ràng
+            if (err?.response?.status === 401) {
+                setError('⚠️ Bạn cần đăng nhập với quyền Admin để xem danh sách này.');
+            } else if (err?.response?.status === 403) {
+                setError('🚫 Bạn không có quyền truy cập trang này.');
+            } else if (err?.response?.status === 404) {
+                // 404 = endpoint không tồn tại hoặc không có data
+                setError(null); // Không hiển thị lỗi, để empty state xử lý
+                setTutors([]);
+            } else if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
+                setError('⏱️ Yêu cầu quá lâu. Vui lòng kiểm tra kết nối mạng.');
+            } else if (err?.code === 'ERR_NETWORK') {
+                setError('📡 Không thể kết nối đến server. Vui lòng kiểm tra backend đang chạy.');
+            } else {
+                setError('❌ Không thể tải danh sách gia sư. Vui lòng thử lại sau.');
+            }
+
             setTutors([]);
         } finally {
             setLoading(false);
