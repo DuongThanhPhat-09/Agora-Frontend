@@ -50,15 +50,30 @@ export const formatDateTime = (dateString: string | null): string => {
  * @returns Relative time string
  */
 export const formatRelativeTime = (dateString: string): string => {
+  console.log('🔍 formatRelativeTime - Input dateString:', dateString);
+
   const date = new Date(dateString);
   const now = new Date();
+
+  console.log('🔍 formatRelativeTime - Parsed date:', date.toISOString());
+  console.log('🔍 formatRelativeTime - Current time:', now.toISOString());
+
   const diffMs = now.getTime() - date.getTime();
+  console.log('🔍 formatRelativeTime - Diff in ms:', diffMs);
 
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   const diffMonths = Math.floor(diffDays / 30);
   const diffYears = Math.floor(diffDays / 365);
+
+  console.log('🔍 formatRelativeTime - Calculated:', {
+    diffMinutes,
+    diffHours,
+    diffDays,
+    diffMonths,
+    diffYears
+  });
 
   if (diffMinutes < 1) {
     return 'Vừa xong';

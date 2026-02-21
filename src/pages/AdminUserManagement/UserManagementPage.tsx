@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import type { UserDetail } from '../../types/admin.types';
 import { formatDateTime } from '../../utils/formatters';
 import {
     mockGetAllUsers,
@@ -10,15 +9,17 @@ import {
     mockSuspendUser,
     mockResetPassword,
 } from './mockData';
+import type { FlatUserDetail } from './mockData';
 import UserDetailModal from './components/UserDetailModal';
 import BlockUserModal from './components/BlockUserModal';
 import IssueWarningModal from './components/IssueWarningModal';
 import SuspendUserModal from './components/SuspendUserModal';
 import '../../styles/pages/admin-user-management.css';
+import '../../styles/pages/admin-vetting-modal.css';
 
 const UserManagementPage = () => {
     // State
-    const [users, setUsers] = useState<UserDetail[]>([]);
+    const [users, setUsers] = useState<FlatUserDetail[]>([]);
     const [loading, setLoading] = useState(true);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
@@ -30,7 +31,7 @@ const UserManagementPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
 
     // Modals
-    const [selectedUser, setSelectedUser] = useState<UserDetail | null>(null);
+    const [selectedUser, setSelectedUser] = useState<FlatUserDetail | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
     const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
@@ -64,7 +65,7 @@ const UserManagementPage = () => {
     };
 
     // Handlers
-    const handleUserClick = (user: UserDetail) => {
+    const handleUserClick = (user: FlatUserDetail) => {
         setSelectedUser(user);
         setIsDetailModalOpen(true);
     };
@@ -263,13 +264,12 @@ const UserManagementPage = () => {
                                         </div>
                                         <div className="user-mgmt-col-role">
                                             <span
-                                                className={`user-mgmt-badge ${
-                                                    user.primaryrole === 'tutor'
-                                                        ? 'user-mgmt-badge-tutor'
-                                                        : user.primaryrole === 'admin'
+                                                className={`user-mgmt-badge ${user.primaryrole === 'tutor'
+                                                    ? 'user-mgmt-badge-tutor'
+                                                    : user.primaryrole === 'admin'
                                                         ? 'user-mgmt-badge-admin'
                                                         : 'user-mgmt-badge-student'
-                                                }`}
+                                                    }`}
                                             >
                                                 {user.primaryrole === 'tutor' ? 'Gia sư' : user.primaryrole === 'admin' ? 'Quản trị' : 'Học viên'}
                                             </span>
@@ -297,8 +297,8 @@ const UserManagementPage = () => {
                                                 {user.accountstatus === 'active'
                                                     ? 'Hoạt động'
                                                     : user.accountstatus === 'suspended'
-                                                    ? 'Tạm ngưng'
-                                                    : 'Bị chặn'}
+                                                        ? 'Tạm ngưng'
+                                                        : 'Bị chặn'}
                                             </span>
                                         </div>
                                         <div className="user-mgmt-col-actions">
