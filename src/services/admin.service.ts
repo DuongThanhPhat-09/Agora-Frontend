@@ -16,6 +16,9 @@ import type {
   RejectTutorResponse,
   VerifyIdentityResponse,
   VerifyCredentialResponse,
+  PendingTutorFromAPI,
+  PendingTutorsAPIResponse,
+  TutorApprovalRequest,
   // Disputes (backend-compatible)
   DisputeForAdmin,
   DisputeDetail,
@@ -160,13 +163,64 @@ export const getRecentActivities = async (
 
 /**
  * Get list of pending tutors for review
+ * API: GET /api/Tutor/pending
  */
-export const getPendingTutors = async (): Promise<TutorForReview[]> => {
+export const getPendingTutors = async (
+  pageNumber: number = 1,
+  pageSize: number = 10
+): Promise<PendingTutorsAPIResponse> => {
   try {
-    const { data } = await api.get('/admin/vetting/pending');
+    const { data } = await api.get<PendingTutorsAPIResponse>('/Tutor/pending', {
+      params: { PageNumber: pageNumber, PageSize: pageSize },
+    });
     return data;
   } catch (error) {
     console.error('getPendingTutors error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get single pending tutor (từ danh sách pending đã fetch)
+ * Không cần API riêng vì data đã đầy đủ từ /api/Tutor/pending
+ */
+export const getPendingTutorById = async (
+  tutorId: string
+): Promise<PendingTutorFromAPI | null> => {
+  try {
+    const response = await getPendingTutors(1, 100);
+    const tutor = response.content.find((t) => t.userid === tutorId);
+    return tutor || null;
+  } catch (error) {
+    console.error('getPendingTutorById error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Approve or Reject tutor profile
+ * API: PUT /tutors/{id}/approval
+ * @param tutorId - User ID của tutor
+ * @param isApproved - true = approve, false = reject
+ * @param reason - Lý do (bắt buộc khi reject)
+ */
+export const updateTutorApproval = async (
+  tutorId: string,
+  isApproved: boolean,
+  reason?: string
+): Promise<any> => {
+  try {
+    const requestBody: TutorApprovalRequest = {
+      isApproved,
+      reason: reason || '',
+    };
+    // AdminController không có [Route("api")] nên endpoint thực tế là /tutors/{id}/approval
+    const { data } = await api.put(`/tutors/${tutorId}/approval`, requestBody, {
+      baseURL: 'http://localhost:5166',
+    });
+    return data;
+  } catch (error) {
+    console.error('updateTutorApproval error:', error);
     throw error;
   }
 };

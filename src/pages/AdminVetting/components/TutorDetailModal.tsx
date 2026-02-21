@@ -1,471 +1,410 @@
 import { useState } from 'react';
-import type { TutorDetailForReview } from '../../../types/admin.types';
-import '../../../styles/pages/admin-vetting-modal.css';
+import type { PendingTutorFromAPI } from '../../../types/admin.types';
+import '../../../styles/pages/admin-vetting.css';
 
 interface TutorDetailModalProps {
-  tutorDetail: TutorDetailForReview | null;
+  tutor: PendingTutorFromAPI | null;
   isOpen: boolean;
   onClose: () => void;
   onApprove: (tutorId: string) => Promise<void>;
-  onReject: (tutorId: string, rejectionNote: string) => Promise<void>;
+  onOpenReject: (tutorId: string) => void;
+  actionLoading: string | null;
 }
 
-type TabType = 'personal' | 'identity' | 'profile' | 'subjects' | 'availability' | 'credentials';
-
 const TutorDetailModal: React.FC<TutorDetailModalProps> = ({
-  tutorDetail,
+  tutor,
   isOpen,
   onClose,
   onApprove,
-  onReject,
+  onOpenReject,
+  actionLoading,
 }) => {
-  const [activeTab, setActiveTab] = useState<TabType>('personal');
-  const [isRejecting, setIsRejecting] = useState(false);
-  const [isApproving, setIsApproving] = useState(false);
-  const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  if (!isOpen || !tutorDetail) return null;
+  if (!isOpen || !tutor) return null;
 
-  const { user, profile, subjects, availability } = tutorDetail;
+  // Destructure sections for easy access
+  const { sections } = tutor;
+  const basicInfo = sections?.basicInfo;
+  const introduction = sections?.introduction;
+  const pricing = sections?.pricing;
+  const video = sections?.video;
+  const identityCard = sections?.identityCard;
+  const certificates = sections?.certificates;
 
-  // Tab configuration
-  const tabs: { id: TabType; label: string; icon: string }[] = [
-    { id: 'personal', label: 'Thông tin cá nhân', icon: 'person' },
-    { id: 'identity', label: 'Xác minh danh tính', icon: 'badge' },
-    { id: 'profile', label: 'Hồ sơ gia sư', icon: 'school' },
-    { id: 'subjects', label: 'Môn học', icon: 'menu_book' },
-    { id: 'availability', label: 'Lịch rảnh', icon: 'event' },
-    { id: 'credentials', label: 'Bằng cấp', icon: 'workspace_premium' },
-  ];
+  const formatCurrency = (amount: number | null | undefined): string => {
+    if (!amount) return 'Chưa cập nhật';
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+    }).format(amount);
+  };
 
-  // Handlers
-  const handleApprove = async () => {
-    if (!profile.tutorid) return;
-
-    const confirmed = window.confirm(
-      'Bạn có chắc chắn muốn phê duyệt hồ sơ gia sư này?\n\n' +
-      'Profile sẽ được công khai và gia sư có thể bắt đầu nhận học viên.'
-    );
-
-    if (!confirmed) return;
-
-    setIsApproving(true);
-    try {
-      await onApprove(profile.tutorid);
-      onClose();
-    } catch (error) {
-      console.error('Error approving tutor:', error);
-      alert('Có lỗi xảy ra khi phê duyệt. Vui lòng thử lại.');
-    } finally {
-      setIsApproving(false);
+  const formatTeachingMode = (mode: string | null | undefined): string => {
+    switch (mode) {
+      case 'Online': return 'Trực tuyến';
+      case 'Offline': return 'Tại nhà';
+      case 'Both': return 'Trực tuyến & Tại nhà';
+      default: return 'Chưa cập nhật';
     }
   };
 
-  const handleRejectClick = () => {
-    setShowRejectionModal(true);
-  };
-
-  const handleRejectSubmit = async (rejectionNote: string) => {
-    if (!profile.tutorid) return;
-
-    setIsRejecting(true);
-    try {
-      await onReject(profile.tutorid, rejectionNote);
-      setShowRejectionModal(false);
-      onClose();
-    } catch (error) {
-      console.error('Error rejecting tutor:', error);
-      alert('Có lỗi xảy ra khi từ chối. Vui lòng thử lại.');
-    } finally {
-      setIsRejecting(false);
+  const formatGender = (gender: string | null): string => {
+    switch (gender?.toUpperCase()) {
+      case 'NAM': return 'Nam';
+      case 'NU':
+      case 'NỮ': return 'Nữ';
+      default: return 'Khác';
     }
   };
 
-  // Format date helper
   const formatDate = (dateString: string | null): string => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN');
+    if (!dateString) return 'Chưa cập nhật';
+    return new Date(dateString).toLocaleDateString('vi-VN');
   };
 
-  // Format day of week helper
-  const formatDayOfWeek = (day: number): string => {
-    const days = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
-    return days[day] || 'N/A';
+  const parseGradeLevels = (gradeLevels: string): string => {
+    try {
+      const parsed = JSON.parse(gradeLevels) as string[];
+      return parsed.map(g => {
+        const match = g.match(/grade_(\d+)/);
+        return match ? `Lớp ${match[1]}` : g;
+      }).join(', ');
+    } catch {
+      return gradeLevels;
+    }
   };
+
+  const parseTags = (tags: string): string[] => {
+    try {
+      return JSON.parse(tags) as string[];
+    } catch {
+      return [];
+    }
+  };
+
+  const isLoading = actionLoading === tutor.userid;
+  const isVerified = identityCard?.isVerified ?? false;
 
   return (
     <>
-      {/* Modal Overlay */}
-      <div className="vetting-modal-overlay" onClick={onClose}>
-        <div className="vetting-modal-container" onClick={(e) => e.stopPropagation()}>
+      {/* Detail Modal Overlay */}
+      <div className="detail-modal-overlay" onClick={onClose}>
+        <div className="detail-modal" onClick={(e) => e.stopPropagation()}>
+
           {/* Modal Header */}
-          <div className="vetting-modal-header">
-            <div className="vetting-modal-title-section">
-              <h2 className="vetting-modal-title">Xem xét hồ sơ gia sư</h2>
-              <p className="vetting-modal-subtitle">{user.fullname}</p>
+          <div className="detail-modal-header">
+            <div className="detail-modal-header-left">
+              <div
+                className="detail-modal-avatar"
+                style={{ backgroundImage: `url(${tutor.avatarurl || basicInfo?.avatarUrl || ''})` }}
+              />
+              <div className="detail-modal-header-info">
+                <h2 className="detail-modal-name">{tutor.fullname}</h2>
+                <p className="detail-modal-email">{tutor.email}</p>
+                <div className="detail-modal-badges">
+                  <span className="detail-modal-status-badge pending">
+                    <span className="detail-modal-status-dot"></span>
+                    Chờ xem xét
+                  </span>
+                  {isVerified ? (
+                    <span className="detail-modal-status-badge verified">
+                      <span className="material-symbols-outlined" style={{ fontSize: 14 }}>verified</span>
+                      CCCD đã xác minh
+                    </span>
+                  ) : (
+                    <span className="detail-modal-status-badge unverified">
+                      <span className="material-symbols-outlined" style={{ fontSize: 14 }}>pending</span>
+                      CCCD chưa xác minh
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
-            <button className="vetting-modal-close-btn" onClick={onClose}>
+            <button className="detail-modal-close" onClick={onClose}>
               <span className="material-symbols-outlined">close</span>
             </button>
           </div>
 
-          {/* Tabs Navigation */}
-          <div className="vetting-modal-tabs">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                className={`vetting-modal-tab ${activeTab === tab.id ? 'active' : ''}`}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                <span className="material-symbols-outlined">{tab.icon}</span>
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </div>
+          {/* Scrollable Body */}
+          <div className="detail-modal-body">
 
-          {/* Tab Content */}
-          <div className="vetting-modal-body">
-            {/* Tab 1: Personal Info */}
-            {activeTab === 'personal' && (
-              <div className="vetting-tab-content">
-                <h3 className="vetting-section-title">Thông tin cá nhân</h3>
-                <div className="vetting-info-grid">
-                  <div className="vetting-info-item">
-                    <label>Họ và tên</label>
-                    <p>{user.fullname}</p>
-                  </div>
-                  <div className="vetting-info-item">
-                    <label>Email</label>
-                    <p>{user.email}</p>
-                  </div>
-                  <div className="vetting-info-item">
-                    <label>Số điện thoại</label>
-                    <p>{user.phone}</p>
-                  </div>
-                  <div className="vetting-info-item">
-                    <label>Ngày sinh</label>
-                    <p>{formatDate(user.birthdate)}</p>
-                  </div>
-                  <div className="vetting-info-item">
-                    <label>Giới tính</label>
-                    <p>{user.gender || 'N/A'}</p>
-                  </div>
-                  <div className="vetting-info-item">
-                    <label>Địa chỉ</label>
-                    <p>{user.address || 'N/A'}</p>
-                  </div>
-                  <div className="vetting-info-item">
-                    <label>Số CCCD</label>
-                    <p>{user.identitynumber || 'N/A'}</p>
-                  </div>
-                  <div className="vetting-info-item">
-                    <label>Trạng thái xác minh</label>
-                    <span className={`vetting-badge ${user.isidentityverified ? 'verified' : 'pending'}`}>
-                      {user.isidentityverified ? '✓ Đã xác minh' : '⏳ Chưa xác minh'}
-                    </span>
-                  </div>
+            {/* Section 1: Personal Info */}
+            <div className="detail-section">
+              <h3 className="detail-section-title">
+                <span className="material-symbols-outlined">person</span>
+                Thông tin cá nhân
+              </h3>
+              <div className="detail-grid">
+                <div className="detail-field">
+                  <span className="detail-label">Họ và tên</span>
+                  <span className="detail-value">{tutor.fullname}</span>
+                </div>
+                <div className="detail-field">
+                  <span className="detail-label">Email</span>
+                  <span className="detail-value">{tutor.email}</span>
+                </div>
+                <div className="detail-field">
+                  <span className="detail-label">Số điện thoại</span>
+                  <span className="detail-value">{tutor.phone || 'Chưa cập nhật'}</span>
+                </div>
+                <div className="detail-field">
+                  <span className="detail-label">Giới tính</span>
+                  <span className="detail-value">{formatGender(tutor.gender)}</span>
+                </div>
+                <div className="detail-field">
+                  <span className="detail-label">Ngày sinh</span>
+                  <span className="detail-value">{formatDate(tutor.birthdate)}</span>
+                </div>
+                <div className="detail-field">
+                  <span className="detail-label">Địa chỉ</span>
+                  <span className="detail-value">{tutor.address || 'Chưa cập nhật'}</span>
                 </div>
               </div>
-            )}
+            </div>
 
-            {/* Tab 2: Identity Verification */}
-            {activeTab === 'identity' && (
-              <div className="vetting-tab-content">
-                <h3 className="vetting-section-title">Xác minh danh tính (CCCD)</h3>
-
-                <div className="vetting-identity-status">
-                  <span className={`vetting-badge ${user.isidentityverified ? 'verified' : 'pending'}`}>
-                    {user.isidentityverified ? '✓ Đã xác minh' : '⏳ Chờ xác minh'}
+            {/* Section 2: Identity Verification */}
+            <div className="detail-section">
+              <h3 className="detail-section-title">
+                <span className="material-symbols-outlined">badge</span>
+                Xác minh danh tính (CCCD)
+                {isVerified ? (
+                  <span className="detail-verified-tag">
+                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>verified</span>
+                    Đã xác minh
                   </span>
-                </div>
-
-                <div className="vetting-cccd-section">
-                  <p className="vetting-cccd-label">Số CCCD: <strong>{user.identitynumber || 'N/A'}</strong></p>
-
-                  <div className="vetting-cccd-images">
-                    {/* CCCD Front */}
-                    <div className="vetting-cccd-image-wrapper">
-                      <label>CCCD Mặt trước</label>
-                      {user.idcardfronturl ? (
-                        <img
-                          src={user.idcardfronturl}
-                          alt="CCCD mặt trước"
-                          className="vetting-cccd-image"
-                        />
-                      ) : (
-                        <div className="vetting-cccd-placeholder">Chưa có ảnh</div>
-                      )}
-                    </div>
-
-                    {/* CCCD Back */}
-                    <div className="vetting-cccd-image-wrapper">
-                      <label>CCCD Mặt sau</label>
-                      {user.idcardbackurl ? (
-                        <img
-                          src={user.idcardbackurl}
-                          alt="CCCD mặt sau"
-                          className="vetting-cccd-image"
-                        />
-                      ) : (
-                        <div className="vetting-cccd-placeholder">Chưa có ảnh</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* eKYC Data - TODO: Parse and display */}
-                {user.ekycRawData && (
-                  <div className="vetting-ekyc-section">
-                    <h4 className="vetting-subsection-title">Dữ liệu eKYC</h4>
-                    <div className="vetting-info-box">
-                      <p className="vetting-info-note">
-                        Dữ liệu được trích xuất tự động từ CCCD
-                      </p>
-                      {/* TODO: Parse ekycRawData JSON and display formatted */}
-                      <pre className="vetting-ekyc-data">{user.ekycRawData}</pre>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Tab 3: Tutor Profile */}
-            {activeTab === 'profile' && (
-              <div className="vetting-tab-content">
-                <h3 className="vetting-section-title">Hồ sơ gia sư</h3>
-
-                <div className="vetting-info-grid">
-                  <div className="vetting-info-item full-width">
-                    <label>Tiêu đề</label>
-                    <p>{profile.headline || 'N/A'}</p>
-                  </div>
-
-                  <div className="vetting-info-item full-width">
-                    <label>Giới thiệu bản thân</label>
-                    <p className="vetting-multiline">{profile.bio || 'N/A'}</p>
-                  </div>
-
-                  <div className="vetting-info-item">
-                    <label>Học phí/giờ</label>
-                    <p className="vetting-price">{profile.hourlyrate.toLocaleString('vi-VN')} VND</p>
-                  </div>
-
-                  <div className="vetting-info-item">
-                    <label>Kinh nghiệm</label>
-                    <p>{profile.experience} năm</p>
-                  </div>
-
-                  <div className="vetting-info-item">
-                    <label>Học vấn</label>
-                    <p>{profile.education || 'N/A'}</p>
-                  </div>
-
-                  <div className="vetting-info-item">
-                    <label>GPA</label>
-                    <p>{profile.gpa || 'N/A'}</p>
-                  </div>
-
-                  <div className="vetting-info-item">
-                    <label>Khu vực dạy</label>
-                    <p>{profile.teachingareacity || 'N/A'} - {profile.teachingareadistrict || 'N/A'}</p>
-                  </div>
-
-                  <div className="vetting-info-item">
-                    <label>Hình thức dạy</label>
-                    <p>{profile.teachingmode || 'N/A'}</p>
-                  </div>
-                </div>
-
-                {/* Video intro */}
-                {profile.videointrourl && (
-                  <div className="vetting-video-section">
-                    <label>Video giới thiệu</label>
-                    <video
-                      controls
-                      className="vetting-video-player"
-                      src={profile.videointrourl}
-                    >
-                      Trình duyệt không hỗ trợ video
-                    </video>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Tab 4: Subjects */}
-            {activeTab === 'subjects' && (
-              <div className="vetting-tab-content">
-                <h3 className="vetting-section-title">Môn học giảng dạy</h3>
-
-                {subjects.length > 0 ? (
-                  <div className="vetting-subjects-table">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Môn học</th>
-                          <th>Cấp lớp</th>
-                          <th>Chuyên môn</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {subjects.map((subject) => (
-                          <tr key={subject.subjectid}>
-                            <td>{subject.subjectname}</td>
-                            <td>{subject.gradelevels}</td>
-                            <td>{subject.specialization || 'N/A'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
                 ) : (
-                  <p className="vetting-empty-message">Chưa có môn học nào</p>
+                  <span className="detail-unverified-tag">
+                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>pending</span>
+                    Chưa xác minh
+                  </span>
                 )}
-              </div>
-            )}
-
-            {/* Tab 5: Availability */}
-            {activeTab === 'availability' && (
-              <div className="vetting-tab-content">
-                <h3 className="vetting-section-title">Lịch rảnh</h3>
-
-                {availability.length > 0 ? (
-                  <div className="vetting-availability-list">
-                    {availability.map((slot) => (
-                      <div key={slot.availabilityid} className="vetting-availability-item">
-                        <div className="vetting-availability-day">
-                          <span className="material-symbols-outlined">event</span>
-                          <strong>{formatDayOfWeek(slot.dayofweek)}</strong>
-                        </div>
-                        <div className="vetting-availability-time">
-                          <span className="material-symbols-outlined">schedule</span>
-                          <span>{slot.starttime} - {slot.endtime}</span>
-                        </div>
-                        <div className={`vetting-availability-status ${slot.isavailable ? 'available' : 'unavailable'}`}>
-                          {slot.isavailable ? 'Có thể dạy' : 'Không có thể'}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="vetting-empty-message">Chưa có lịch rảnh nào</p>
-                )}
-              </div>
-            )}
-
-            {/* Tab 6: Credentials */}
-            {activeTab === 'credentials' && (
-              <div className="vetting-tab-content">
-                <h3 className="vetting-section-title">Bằng cấp / Chứng chỉ</h3>
-
-                {/* TODO: Parse certificateurl JSONB and display */}
-                <div className="vetting-info-box">
-                  <p className="vetting-info-note">
-                    Hiển thị danh sách bằng cấp từ JSONB certificateurl
-                  </p>
-                  {profile.certificateurl && (
-                    <pre className="vetting-credentials-data">
-                      {JSON.stringify(profile.certificateurl, null, 2)}
-                    </pre>
+              </h3>
+              <div className="detail-id-cards">
+                <div className="detail-id-card">
+                  <p className="detail-id-label">Mặt trước CCCD</p>
+                  {identityCard?.frontImageUrl ? (
+                    <img
+                      src={identityCard.frontImageUrl}
+                      alt="CCCD Mặt trước"
+                      className="detail-id-img"
+                      onClick={() => setImagePreview(identityCard.frontImageUrl)}
+                    />
+                  ) : (
+                    <div className="detail-id-placeholder">
+                      <span className="material-symbols-outlined">image_not_supported</span>
+                      <p>Chưa tải lên</p>
+                    </div>
+                  )}
+                </div>
+                <div className="detail-id-card">
+                  <p className="detail-id-label">Mặt sau CCCD</p>
+                  {identityCard?.backImageUrl ? (
+                    <img
+                      src={identityCard.backImageUrl}
+                      alt="CCCD Mặt sau"
+                      className="detail-id-img"
+                      onClick={() => setImagePreview(identityCard.backImageUrl)}
+                    />
+                  ) : (
+                    <div className="detail-id-placeholder">
+                      <span className="material-symbols-outlined">image_not_supported</span>
+                      <p>Chưa tải lên</p>
+                    </div>
                   )}
                 </div>
               </div>
+            </div>
+
+            {/* Section 3: Tutor Profile */}
+            <div className="detail-section">
+              <h3 className="detail-section-title">
+                <span className="material-symbols-outlined">school</span>
+                Thông tin gia sư
+              </h3>
+              <div className="detail-grid">
+                <div className="detail-field full-width">
+                  <span className="detail-label">Tiêu đề</span>
+                  <span className="detail-value">{basicInfo?.headline || 'Chưa cập nhật'}</span>
+                </div>
+                <div className="detail-field full-width">
+                  <span className="detail-label">Giới thiệu bản thân</span>
+                  <span className="detail-value bio">{introduction?.bio || 'Chưa cập nhật'}</span>
+                </div>
+                <div className="detail-field">
+                  <span className="detail-label">Học vấn</span>
+                  <span className="detail-value">{introduction?.education || 'Chưa cập nhật'}</span>
+                </div>
+                <div className="detail-field">
+                  <span className="detail-label">GPA</span>
+                  <span className="detail-value">
+                    {introduction?.gpa ? `${introduction.gpa}/${introduction.gpaScale || 10}` : 'Chưa cập nhật'}
+                  </span>
+                </div>
+                <div className="detail-field full-width">
+                  <span className="detail-label">Kinh nghiệm</span>
+                  <span className="detail-value">{introduction?.experience || 'Chưa cập nhật'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 4: Teaching Info */}
+            <div className="detail-section">
+              <h3 className="detail-section-title">
+                <span className="material-symbols-outlined">payments</span>
+                Thông tin dạy học
+              </h3>
+              <div className="detail-grid">
+                <div className="detail-field">
+                  <span className="detail-label">Giá theo giờ</span>
+                  <span className="detail-value price">{formatCurrency(pricing?.hourlyRate)}</span>
+                </div>
+                <div className="detail-field">
+                  <span className="detail-label">Giá buổi học thử</span>
+                  <span className="detail-value">{formatCurrency(pricing?.trialLessonPrice)}</span>
+                </div>
+                <div className="detail-field">
+                  <span className="detail-label">Hình thức dạy</span>
+                  <span className="detail-value">{formatTeachingMode(basicInfo?.teachingMode)}</span>
+                </div>
+                <div className="detail-field">
+                  <span className="detail-label">Cho phép thương lượng giá</span>
+                  <span className="detail-value">{pricing?.allowPriceNegotiation ? 'Có' : 'Không'}</span>
+                </div>
+                <div className="detail-field">
+                  <span className="detail-label">Khu vực dạy</span>
+                  <span className="detail-value">
+                    {basicInfo?.teachingAreaCity && basicInfo?.teachingAreaDistrict
+                      ? `${basicInfo.teachingAreaDistrict}, ${basicInfo.teachingAreaCity}`
+                      : 'Chưa cập nhật'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 5: Subjects */}
+            {basicInfo?.subjects && basicInfo.subjects.length > 0 && (
+              <div className="detail-section">
+                <h3 className="detail-section-title">
+                  <span className="material-symbols-outlined">menu_book</span>
+                  Môn học giảng dạy
+                </h3>
+                <div className="detail-subjects-list">
+                  {basicInfo.subjects.map((subject, index) => (
+                    <div key={index} className="detail-subject-item">
+                      <div className="detail-subject-header">
+                        <span className="detail-subject-id">{subject.subjectName}</span>
+                        <span className="detail-subject-levels">{parseGradeLevels(subject.gradeLevels)}</span>
+                      </div>
+                      {subject.tags && (
+                        <div className="detail-subject-tags">
+                          {parseTags(subject.tags).map((tag, i) => (
+                            <span key={i} className="detail-tag">{tag}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Section 6: Certificates */}
+            {certificates && certificates.totalCount > 0 && (
+              <div className="detail-section">
+                <h3 className="detail-section-title">
+                  <span className="material-symbols-outlined">workspace_premium</span>
+                  Bằng cấp / Chứng chỉ
+                  <span className="detail-count-tag">{certificates.totalCount}</span>
+                </h3>
+                <div className="detail-certificates-list">
+                  {certificates.certificates.map((cert) => (
+                    <div key={cert.certificateId} className="detail-cert-item">
+                      <div className="detail-cert-header">
+                        <div className="detail-cert-info">
+                          <span className="detail-cert-name">{cert.certificateName}</span>
+                          <span className="detail-cert-org">{cert.issuingOrganization} · {cert.yearIssued}</span>
+                        </div>
+                        <span className={`detail-cert-status ${cert.verificationStatus === 'pending_review' ? 'pending' : cert.verificationStatus}`}>
+                          {cert.verificationStatus === 'pending_review' ? 'Chờ xác minh' : cert.verificationStatus}
+                        </span>
+                      </div>
+                      {cert.verificationNote && (
+                        <p className="detail-cert-note">{cert.verificationNote}</p>
+                      )}
+                      {cert.certificateFileUrl && (
+                        <a href={cert.certificateFileUrl} target="_blank" rel="noopener noreferrer" className="detail-cert-link">
+                          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>open_in_new</span>
+                          Xem chứng chỉ
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Section 7: Video Introduction */}
+            {video?.videoUrl && (
+              <div className="detail-section">
+                <h3 className="detail-section-title">
+                  <span className="material-symbols-outlined">videocam</span>
+                  Video giới thiệu
+                </h3>
+                <div className="detail-video-wrapper">
+                  <video src={video.videoUrl} controls className="detail-video">
+                    Trình duyệt không hỗ trợ video.
+                  </video>
+                </div>
+              </div>
             )}
           </div>
 
-          {/* Modal Footer */}
-          <div className="vetting-modal-footer">
-            <button
-              className="vetting-btn vetting-btn-secondary"
-              onClick={onClose}
-            >
+          {/* Sticky Footer */}
+          <div className="detail-modal-footer">
+            <button className="vetting-btn vetting-btn-outline" onClick={onClose}>
               Đóng
             </button>
-            <button
-              className="vetting-btn vetting-btn-danger"
-              onClick={handleRejectClick}
-              disabled={isRejecting || isApproving}
-            >
-              {isRejecting ? 'Đang xử lý...' : 'Từ chối hồ sơ'}
-            </button>
-            <button
-              className="vetting-btn vetting-btn-primary"
-              onClick={handleApprove}
-              disabled={isRejecting || isApproving}
-            >
-              {isApproving ? 'Đang xử lý...' : '✓ Phê duyệt & Công khai'}
-            </button>
+            <div className="detail-modal-footer-actions">
+              <button
+                className="vetting-btn vetting-btn-reject"
+                onClick={() => { onOpenReject(tutor.userid); onClose(); }}
+                disabled={isLoading}
+              >
+                <span className="material-symbols-outlined">close</span>
+                Từ chối
+              </button>
+              <button
+                className="vetting-btn vetting-btn-approve"
+                onClick={() => onApprove(tutor.userid)}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  'Đang xử lý...'
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined">check</span>
+                    Phê duyệt
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Rejection Modal - TODO: Create separate component */}
-      {showRejectionModal && (
-        <RejectionModalPlaceholder
-          isOpen={showRejectionModal}
-          onClose={() => setShowRejectionModal(false)}
-          onSubmit={handleRejectSubmit}
-          isSubmitting={isRejecting}
-        />
+      {/* Image Preview Overlay */}
+      {imagePreview && (
+        <div className="detail-image-preview-overlay" onClick={() => setImagePreview(null)}>
+          <div className="detail-image-preview-container">
+            <button className="detail-image-preview-close" onClick={() => setImagePreview(null)}>
+              <span className="material-symbols-outlined">close</span>
+            </button>
+            <img src={imagePreview} alt="Preview" className="detail-image-preview-img" />
+          </div>
+        </div>
       )}
     </>
-  );
-};
-
-// Temporary Rejection Modal Placeholder
-const RejectionModalPlaceholder: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (note: string) => void;
-  isSubmitting: boolean;
-}> = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
-  const [rejectionNote, setRejectionNote] = useState('');
-  const [error, setError] = useState('');
-
-  const handleSubmit = () => {
-    if (rejectionNote.trim().length < 20) {
-      setError('Lý do từ chối phải có ít nhất 20 ký tự');
-      return;
-    }
-    onSubmit(rejectionNote);
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="vetting-modal-overlay" onClick={onClose}>
-      <div className="vetting-rejection-modal" onClick={(e) => e.stopPropagation()}>
-        <h3>Từ chối hồ sơ</h3>
-        <p>Vui lòng nhập lý do từ chối hồ sơ gia sư này:</p>
-
-        <textarea
-          className="vetting-rejection-textarea"
-          value={rejectionNote}
-          onChange={(e) => {
-            setRejectionNote(e.target.value);
-            setError('');
-          }}
-          placeholder="Nhập lý do từ chối (tối thiểu 20 ký tự)..."
-          rows={5}
-        />
-
-        {error && <p className="vetting-error-message">{error}</p>}
-
-        <div className="vetting-rejection-footer">
-          <button className="vetting-btn vetting-btn-secondary" onClick={onClose}>
-            Hủy
-          </button>
-          <button
-            className="vetting-btn vetting-btn-danger"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Đang xử lý...' : 'Xác nhận từ chối'}
-          </button>
-        </div>
-      </div>
-    </div>
   );
 };
 
