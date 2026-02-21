@@ -13,7 +13,7 @@ const TutorPortalMessages = () => {
         <div className={styles.page}>
             <header className={styles.topBar}>
                 <div className={styles.topBarLeft}>
-                    <h1 className={styles.pageTitle}>Messages</h1>
+                    <h1 className={styles.pageTitle}>Tin nhắn</h1>
                 </div>
             </header>
             <div className={styles.mainContent}>

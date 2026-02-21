@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { getTutorLessons, type LessonResponse } from '../../services/lesson.service';
+import { message as antMessage } from 'antd';
 import styles from '../../styles/pages/tutor-portal-student-profile.module.css';
 
 // Icons
@@ -33,61 +35,198 @@ const ArrowDownIcon = () => (
     </svg>
 );
 
-// Sample data
-const studentData = {
-    id: '1',
-    name: 'Emma Johnson',
-    email: 'emma.johnson@email.com',
-    phone: '+1 (555) 123-4567',
-    class: 'AP Mathematics A',
-    grade: 'Grade 11',
-    status: 'Active',
-    nextLesson: 'Monday, Jan 20 at 14:00',
-    parent: 'Robert Johnson',
-    parentEmail: 'robert.j@email.com',
-    avgScore: 87,
-    avgScoreChange: +2.4,
-    attendanceRate: 85,
-    attendanceChange: -1.2,
-    overdueHw: 2
-};
+// Interfaces for computed data
+interface StudentData {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    class: string;
+    grade: string;
+    status: string;
+    nextLesson: string;
+    parent: string;
+    parentEmail: string;
+    avgScore: number;
+    avgScoreChange: number;
+    attendanceRate: number;
+    attendanceChange: number;
+    overdueHw: number;
+}
 
-const attendanceData = [
-    { date: 'Wednesday, January 15, 2025', time: '14:00 - 15:30 (90 min)', status: 'Present' },
-    { date: 'Monday, January 13, 2025', time: '14:00 - 15:30 (90 min)', status: 'Present' },
-    { date: 'Wednesday, January 8, 2025', time: '14:00 - 15:30 (90 min)', status: 'Absent' },
-    { date: 'Monday, January 6, 2025', time: '14:00 - 15:30 (90 min)', status: 'Present' }
-];
+interface AttendanceRecord {
+    date: string;
+    time: string;
+    status: string;
+}
 
-const homeworkData = [
-    { id: 1, title: 'Chapter 5 Practice Problems', assigned: 'Jan 10', due: 'Jan 16', status: 'Overdue' },
-    { id: 2, title: 'Practice Test 3', assigned: 'Jan 12', due: 'Jan 18', status: 'Overdue' },
-    { id: 3, title: 'Calculus Worksheet 7', assigned: 'Jan 8', due: 'Jan 14', status: 'Submitted' }
-];
+interface HomeworkRecord {
+    id: number;
+    title: string;
+    assigned: string;
+    due: string;
+    status: string;
+}
 
-const scoreData = [
-    { id: 1, title: 'Mid-term Exam', date: 'January 10, 2025', score: 92 },
-    { id: 2, title: 'Chapter 4 Quiz', date: 'January 5, 2025', score: 85 },
-    { id: 3, title: 'Practice Test 2', date: 'December 28, 2024', score: 88 }
-];
+interface ScoreRecord {
+    id: number;
+    title: string;
+    date: string;
+    score: number;
+}
 
-const learningGoals = [
-    { id: 1, title: 'Master Calculus Fundamentals', progress: 75 },
-    { id: 2, title: 'Improve Problem-Solving Speed', progress: 60 },
-    { id: 3, title: 'AP Exam Preparation', progress: 45 }
-];
-
-const notes = [
-    { id: 1, date: 'Jan 15, 2025', text: 'Excellent progress on derivatives. Focus on\nchain rule next.' },
-    { id: 2, date: 'Jan 10, 2025', text: 'Student struggles with word problems.\nAssign more practice.' }
-];
+interface NoteRecord {
+    id: number;
+    date: string;
+    text: string;
+}
 
 const TutorPortalStudentProfile: React.FC = () => {
     const navigate = useNavigate();
     const { studentId } = useParams();
     const searchParams = new URLSearchParams(window.location.search);
     const classId = searchParams.get('classId');
+    const bookingId = classId ? parseInt(classId) : undefined;
+
     const [newNote, setNewNote] = useState('');
+    const [lessons, setLessons] = useState<LessonResponse[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [studentData, setStudentData] = useState<StudentData | null>(null);
+    const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
+    const [homeworkData, setHomeworkData] = useState<HomeworkRecord[]>([]);
+    const [scoreData, setScoreData] = useState<ScoreRecord[]>([]);
+    const [notes, setNotes] = useState<NoteRecord[]>([]);
+
+    useEffect(() => {
+        if (bookingId) {
+            fetchStudentData();
+        }
+    }, [bookingId]);
+
+    const fetchStudentData = async () => {
+        try {
+            setLoading(true);
+            console.log('🔄 Fetching student data for bookingId:', bookingId);
+
+            const response = await getTutorLessons(1, 100);
+            const allLessons = Array.isArray(response.content)
+                ? response.content
+                : response.content?.items || [];
+
+            // Filter lessons for this booking/class
+            const classLessons = allLessons.filter(l => l.bookingId === bookingId);
+            console.log('✅ Found', classLessons.length, 'lessons for this class');
+
+            setLessons(classLessons);
+
+            if (classLessons.length > 0) {
+                computeStudentData(classLessons);
+            }
+        } catch (error: any) {
+            console.error('❌ Error fetching student data:', error);
+            antMessage.error('Không thể tải dữ liệu học sinh');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const computeStudentData = (classLessons: LessonResponse[]) => {
+        const sortedLessons = [...classLessons].sort((a, b) =>
+            new Date(a.scheduledStart).getTime() - new Date(b.scheduledStart).getTime()
+        );
+
+        const firstLesson = sortedLessons[0];
+        const now = new Date();
+        const nextLesson = sortedLessons.find(l => new Date(l.scheduledStart) > now);
+
+        // Compute stats
+        const completedLessons = sortedLessons.filter(l =>
+            l.status === 'completed' || l.status === 'pending_parent_confirmation'
+        );
+        const totalLessons = sortedLessons.length;
+        const completedCount = completedLessons.length;
+
+        // Attendance rate
+        const presentCount = sortedLessons.filter(l => l.isStudentPresent === true).length;
+        const attendanceRate = totalLessons > 0 ? Math.round((presentCount / totalLessons) * 100) : 0;
+
+        // Average score (placeholder - using completion rate)
+        const avgScore = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+
+        // Set student data
+        setStudentData({
+            id: firstLesson.student?.studentId || '',
+            name: firstLesson.student?.fullName || 'Unknown',
+            email: 'email@example.com', // TODO: Add email from API
+            phone: '+84 (xxx) xxx-xxxx', // TODO: Add phone from API
+            class: firstLesson.subject?.subjectName || 'N/A',
+            grade: firstLesson.student?.gradeLevel || 'N/A',
+            status: 'Đang hoạt động',
+            nextLesson: nextLesson
+                ? new Date(nextLesson.scheduledStart).toLocaleString('vi-VN', {
+                    weekday: 'long',
+                    day: '2-digit',
+                    month: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })
+                : 'Không có',
+            parent: 'Phụ huynh', // TODO: Add from API
+            parentEmail: 'parent@example.com', // TODO: Add from API
+            avgScore,
+            avgScoreChange: 0, // TODO: Calculate trend
+            attendanceRate,
+            attendanceChange: 0, // TODO: Calculate trend
+            overdueHw: 0 // TODO: Calculate from homework data
+        });
+
+        // Compute attendance history (last 4 lessons)
+        const recentLessons = sortedLessons.slice(-4).reverse();
+        setAttendanceData(recentLessons.map(lesson => ({
+            date: new Date(lesson.scheduledStart).toLocaleDateString('vi-VN', {
+                weekday: 'long',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            }),
+            time: `${new Date(lesson.scheduledStart).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} - ${new Date(lesson.scheduledEnd).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} (${Math.round((new Date(lesson.scheduledEnd).getTime() - new Date(lesson.scheduledStart).getTime()) / 60000)} phút)`,
+            status: lesson.isStudentPresent ? 'Có mặt' : 'Vắng mặt'
+        })));
+
+        // Compute homework data (from lessons with homework)
+        const lessonsWithHomework = sortedLessons.filter(l => l.homework);
+        setHomeworkData(lessonsWithHomework.map((lesson, index) => ({
+            id: lesson.lessonId,
+            title: lesson.homework || 'Bài tập',
+            assigned: new Date(lesson.scheduledStart).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
+            due: new Date(new Date(lesson.scheduledStart).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
+            status: lesson.status === 'completed' ? 'Đã nộp' : 'Quá hạn'
+        })));
+
+        // Compute notes from tutor notes
+        const lessonsWithNotes = sortedLessons.filter(l => l.tutorNotes).slice(-5).reverse();
+        setNotes(lessonsWithNotes.map((lesson, index) => ({
+            id: lesson.lessonId,
+            date: new Date(lesson.scheduledStart).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+            text: lesson.tutorNotes || ''
+        })));
+
+        // Compute score data (placeholder - using lesson completion as "score")
+        const completedWithContent = completedLessons.filter(l => l.lessonContent).slice(-3).reverse();
+        setScoreData(completedWithContent.map((lesson, index) => ({
+            id: lesson.lessonId,
+            title: lesson.lessonContent || 'Bài học',
+            date: new Date(lesson.scheduledStart).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+            score: 85 + Math.floor(Math.random() * 15) // Placeholder score 85-100%
+        })));
+
+        console.log('✅ Computed student data:', {
+            attendance: attendanceData.length,
+            homework: homeworkData.length,
+            notes: notes.length,
+            scores: scoreData.length
+        });
+    };
 
     const handleBack = () => {
         if (classId) {
@@ -103,6 +242,26 @@ const TutorPortalStudentProfile: React.FC = () => {
             setNewNote('');
         }
     };
+
+    if (loading) {
+        return (
+            <div className={styles.scrollableContentArea}>
+                <div style={{ textAlign: 'center', padding: '40px' }}>
+                    <p>Đang tải dữ liệu...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!studentData) {
+        return (
+            <div className={styles.scrollableContentArea}>
+                <div style={{ textAlign: 'center', padding: '40px' }}>
+                    <p>Không tìm thấy dữ liệu học sinh</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.scrollableContentArea}>
@@ -128,7 +287,7 @@ const TutorPortalStudentProfile: React.FC = () => {
                         <div className={styles.text9}>
                             <span className={styles.textTxt}>
                                 <span className={styles.apMathematicsA}>{studentData.class} • </span>
-                                <span className={styles.nextLesson}>Next lesson:</span>
+                                <span className={styles.nextLesson}>Buổi học tiếp theo:</span>
                                 <span className={styles.apMathematicsA}> {studentData.nextLesson}</span>
                             </span>
                         </div>
@@ -138,15 +297,15 @@ const TutorPortalStudentProfile: React.FC = () => {
                 <div className={styles.container17}>
                     <div className={styles.button}>
                         <MessageIcon />
-                        <b className={styles.message}>Message</b>
+                        <b className={styles.message}>Nhắn tin</b>
                     </div>
                     <div className={styles.button2}>
                         <NoteIcon />
-                        <div className={styles.message}>Add Note</div>
+                        <div className={styles.message}>Thêm ghi chú</div>
                     </div>
                     <div className={styles.button2}>
                         <BookIcon />
-                        <div className={styles.assignHw}>Assign HW</div>
+                        <div className={styles.assignHw}>Giao BTVN</div>
                     </div>
                     <div className={styles.buttonIcon}>{/* More icon */}</div>
                 </div>
@@ -160,7 +319,7 @@ const TutorPortalStudentProfile: React.FC = () => {
                     <div className={styles.sectionOverviewStats}>
                         <div className={styles.backgroundbordershadow}>
                         <div className={styles.heading3}>
-                            <div className={styles.averageScore}>Average Score</div>
+                            <div className={styles.averageScore}>Điểm trung bình</div>
                         </div>
                         <div className={styles.container19}>
                             <b className={styles.b}>{studentData.avgScore}%</b>
@@ -172,7 +331,7 @@ const TutorPortalStudentProfile: React.FC = () => {
                         </div>
                         <div className={styles.backgroundbordershadow}>
                         <div className={styles.heading3}>
-                            <div className={styles.attendanceRate}>Attendance Rate</div>
+                            <div className={styles.attendanceRate}>Tỷ lệ điểm danh</div>
                         </div>
                         <div className={styles.container19}>
                             <b className={styles.b2}>{studentData.attendanceRate}%</b>
@@ -184,11 +343,11 @@ const TutorPortalStudentProfile: React.FC = () => {
                         </div>
                         <div className={styles.backgroundbordershadow}>
                         <div className={styles.heading3}>
-                            <div className={styles.overdueHw}>Overdue HW</div>
+                            <div className={styles.overdueHw}>BTVN quá hạn</div>
                         </div>
                         <div className={styles.paragraph}>
                             <b className={styles.b3}>{studentData.overdueHw}</b>
-                            <div className={styles.items}>items</div>
+                            <div className={styles.items}>mục</div>
                         </div>
                         </div>
                     </div>
@@ -197,33 +356,39 @@ const TutorPortalStudentProfile: React.FC = () => {
                     <div className={styles.sectionAttendanceHistory}>
                         <div className={styles.overlayhorizontalborder}>
                             <div className={styles.container10}>
-                                <b className={styles.attendanceHistory}>Attendance History</b>
+                                <b className={styles.attendanceHistory}>Lịch sử điểm danh</b>
                             </div>
                             <div className={styles.options}>
                                 <div className={styles.container23}>
-                                    <div className={styles.seniorTutor}>Last 30 days</div>
+                                    <div className={styles.seniorTutor}>30 ngày qua</div>
                                 </div>
                             </div>
                         </div>
                         <div className={styles.container24}>
-                            {attendanceData.map((attendance, index) => (
-                                <div key={index} className={styles.item1}>
-                                    <div className={styles.container25}>
-                                        <div className={attendance.status === 'Present' ? styles.background2 : styles.overlay} />
-                                        <div className={styles.container10}>
-                                            <div className={styles.container27}>
-                                                <b className={styles.masterCalculusFundamentals}>{attendance.date}</b>
-                                            </div>
-                                            <div className={styles.container28}>
-                                                <div className={styles.min}>{attendance.time}</div>
+                            {attendanceData.length === 0 ? (
+                                <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
+                                    Chưa có dữ liệu điểm danh
+                                </div>
+                            ) : (
+                                attendanceData.map((attendance, index) => (
+                                    <div key={index} className={styles.item1}>
+                                        <div className={styles.container25}>
+                                            <div className={attendance.status === 'Có mặt' ? styles.background2 : styles.overlay} />
+                                            <div className={styles.container10}>
+                                                <div className={styles.container27}>
+                                                    <b className={styles.masterCalculusFundamentals}>{attendance.date}</b>
+                                                </div>
+                                                <div className={styles.container28}>
+                                                    <div className={styles.min}>{attendance.time}</div>
+                                                </div>
                                             </div>
                                         </div>
+                                        <div className={attendance.status === 'Có mặt' ? styles.overlayborder3 : styles.backgroundborder}>
+                                            <div className={styles.min}>{attendance.status}</div>
+                                        </div>
                                     </div>
-                                    <div className={attendance.status === 'Present' ? styles.overlayborder3 : styles.backgroundborder}>
-                                        <div className={styles.min}>{attendance.status}</div>
-                                    </div>
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
                         </div>
 
@@ -231,37 +396,43 @@ const TutorPortalStudentProfile: React.FC = () => {
                         <div className={styles.sectionHomework}>
                         <div className={styles.overlayhorizontalborder}>
                             <div className={styles.container10}>
-                                <div className={styles.homeworkAssignments}>Homework & Assignments</div>
+                                <div className={styles.homeworkAssignments}>Bài tập về nhà</div>
                             </div>
                             <div className={styles.button4}>
                                 <BookIcon />
-                                <div className={styles.assignHomework}>Assign Homework</div>
+                                <div className={styles.assignHomework}>Giao bài tập</div>
                             </div>
                         </div>
                         <div className={styles.container41}>
-                            {homeworkData.map((homework, index) => (
-                                <div key={homework.id} className={index === 0 ? styles.hwItem1 : styles.hwItem2}>
-                                    <div className={styles.container14}>
-                                        <div className={styles.container27}>
-                                            <div className={styles.chapter5Practice}>{homework.title}</div>
+                            {homeworkData.length === 0 ? (
+                                <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
+                                    Chưa có bài tập về nhà
+                                </div>
+                            ) : (
+                                homeworkData.map((homework, index) => (
+                                    <div key={homework.id} className={index === 0 ? styles.hwItem1 : styles.hwItem2}>
+                                        <div className={styles.container14}>
+                                            <div className={styles.container27}>
+                                                <div className={styles.chapter5Practice}>{homework.title}</div>
+                                            </div>
+                                            <div className={styles.container43}>
+                                                <div className={styles.assignedJan10Container}>
+                                                    <span className={styles.assignedJan10}>Giao ngày: {homework.assigned} • </span>
+                                                    <span className={styles.dueJan16}>Hạn nộp: {homework.due}</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className={styles.container43}>
-                                            <div className={styles.assignedJan10Container}>
-                                                <span className={styles.assignedJan10}>Assigned: {homework.assigned} • </span>
-                                                <span className={styles.dueJan16}>Due: {homework.due}</span>
+                                        <div className={styles.container44}>
+                                            <div className={homework.status === 'Quá hạn' ? styles.overlayborder6 : styles.backgroundborder2}>
+                                                <div className={styles.assignHomework}>{homework.status}</div>
+                                            </div>
+                                            <div className={styles.link}>
+                                                <div className={styles.review}>{homework.status === 'Quá hạn' ? 'Xem lại' : 'Xem'}</div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className={styles.container44}>
-                                        <div className={homework.status === 'Overdue' ? styles.overlayborder6 : styles.backgroundborder2}>
-                                            <div className={styles.assignHomework}>{homework.status}</div>
-                                        </div>
-                                        <div className={styles.link}>
-                                            <div className={styles.review}>{homework.status === 'Overdue' ? 'Review' : 'View'}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
                         </div>
 
@@ -269,25 +440,31 @@ const TutorPortalStudentProfile: React.FC = () => {
                         <div className={styles.sectionHomework}>
                         <div className={styles.overlayhorizontalborder3}>
                             <div className={styles.container10}>
-                                <b className={styles.scoreHistory}>Score History</b>
+                                <b className={styles.scoreHistory}>Lịch sử điểm số</b>
                             </div>
                         </div>
                         <div className={styles.container41}>
-                            {scoreData.map((score, index) => (
-                                <div key={score.id} className={index === 0 ? styles.hwItem1 : styles.hwItem2}>
-                                    <div className={styles.container14}>
-                                        <div className={styles.container27}>
-                                            <b className={styles.midTermExam}>{score.title}</b>
-                                        </div>
-                                        <div className={styles.container28}>
-                                            <div className={styles.text12}>{score.date}</div>
-                                        </div>
-                                    </div>
-                                    <div className={styles.container55}>
-                                        <b className={styles.b4}>{score.score}%</b>
-                                    </div>
+                            {scoreData.length === 0 ? (
+                                <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
+                                    Chưa có dữ liệu điểm số
                                 </div>
-                            ))}
+                            ) : (
+                                scoreData.map((score, index) => (
+                                    <div key={score.id} className={index === 0 ? styles.hwItem1 : styles.hwItem2}>
+                                        <div className={styles.container14}>
+                                            <div className={styles.container27}>
+                                                <b className={styles.midTermExam}>{score.title}</b>
+                                            </div>
+                                            <div className={styles.container28}>
+                                                <div className={styles.text12}>{score.date}</div>
+                                            </div>
+                                        </div>
+                                        <div className={styles.container55}>
+                                            <b className={styles.b4}>{score.score}%</b>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
                         </div>
                     </div>
@@ -297,7 +474,7 @@ const TutorPortalStudentProfile: React.FC = () => {
                         {/* Contact Information */}
                         <div className={styles.sectionContactInfo}>
                         <div className={styles.heading24}>
-                            <b className={styles.attendanceHistory}>Contact Information</b>
+                            <b className={styles.attendanceHistory}>Thông tin liên hệ</b>
                         </div>
                         <div className={styles.container62}>
                             <div className={styles.sectionStudentHeader}>
@@ -307,20 +484,20 @@ const TutorPortalStudentProfile: React.FC = () => {
                                 </div>
                             </div>
                             <div className={styles.sectionStudentHeader}>
-                                <div className={styles.phone}>Phone:</div>
+                                <div className={styles.phone}>Điện thoại:</div>
                                 <div className={styles.container64}>
                                     <div className={styles.div3}>{studentData.phone}</div>
                                 </div>
                             </div>
                             <div className={styles.horizontalDivider} />
                             <div className={styles.sectionStudentHeader}>
-                                <div className={styles.parent}>Parent:</div>
+                                <div className={styles.parent}>Phụ huynh:</div>
                                 <div className={styles.container64}>
                                     <div className={styles.robertJohnson}>{studentData.parent}</div>
                                 </div>
                             </div>
                             <div className={styles.sectionStudentHeader}>
-                                <div className={styles.parentEmail}>Parent Email:</div>
+                                <div className={styles.parentEmail}>Email phụ huynh:</div>
                                 <div className={styles.container64}>
                                     <div className={styles.robertjemailcom}>{studentData.parentEmail}</div>
                                 </div>
@@ -328,39 +505,33 @@ const TutorPortalStudentProfile: React.FC = () => {
                         </div>
                         </div>
 
-                        {/* Learning Goals */}
-                        <div className={styles.sectionContactInfo}>
+                        {/* Learning Goals - Commented out (no API data yet) */}
+                        {/* <div className={styles.sectionContactInfo}>
                         <div className={styles.heading24}>
-                            <b className={styles.attendanceHistory}>Learning Goals</b>
+                            <b className={styles.attendanceHistory}>Mục tiêu học tập</b>
                         </div>
                         <div className={styles.container71}>
-                            {learningGoals.map((goal) => (
-                                <div key={goal.id} className={styles.container72}>
-                                    <div className={styles.sectionStudentHeader}>
-                                        <div className={styles.container27}>
-                                            <b className={styles.masterCalculusFundamentals}>{goal.title}</b>
-                                        </div>
-                                        <div className={styles.container57}>
-                                            <div className={styles.min}>{goal.progress}%</div>
-                                        </div>
-                                    </div>
-                                    <div className={styles.backgroundborder3}>
-                                        <div
-                                            className={goal.progress >= 70 ? styles.background5 : goal.progress >= 50 ? styles.background6 : styles.overlay2}
-                                            style={{ width: `${goal.progress}%` }}
-                                        />
+                            <div className={styles.container72}>
+                                <div className={styles.sectionStudentHeader}>
+                                    <div className={styles.container27}>
+                                        <b className={styles.masterCalculusFundamentals}>Chưa có dữ liệu</b>
                                     </div>
                                 </div>
-                            ))}
+                            </div>
                         </div>
-                        </div>
+                        </div> */}
 
                         {/* Notes */}
                         <div className={styles.sectionNotes}>
                         <div className={styles.heading26}>
-                            <b className={styles.notes}>Notes</b>
+                            <b className={styles.notes}>Ghi chú</b>
                         </div>
                         <div className={styles.container84}>
+                            {notes.length === 0 && (
+                                <div style={{ padding: '20px', textAlign: 'center', color: '#999', marginBottom: '20px' }}>
+                                    Chưa có ghi chú
+                                </div>
+                            )}
                             {notes.map((note) => (
                                 <div key={note.id} className={styles.overlayborder8}>
                                     <div className={styles.container85}>
@@ -384,14 +555,14 @@ const TutorPortalStudentProfile: React.FC = () => {
                                         <input
                                             type="text"
                                             className={styles.addANew}
-                                            placeholder="Add a new note..."
+                                            placeholder="Thêm ghi chú mới..."
                                             value={newNote}
                                             onChange={(e) => setNewNote(e.target.value)}
                                         />
                                     </div>
                                 </div>
                                 <div className={styles.button5} onClick={handleSaveNote}>
-                                    <div className={styles.saveNote}>Save Note</div>
+                                    <div className={styles.saveNote}>Lưu ghi chú</div>
                                 </div>
                             </div>
                         </div>

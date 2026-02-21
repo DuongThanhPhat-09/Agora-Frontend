@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
-import type { UserDetail } from '../../../types/admin.types';
+import type { FlatUserDetail } from '../mockData';
 
 interface IssueWarningModalProps {
     isOpen: boolean;
     onClose: () => void;
-    user: UserDetail | null;
+    user: FlatUserDetail | null;
     onIssue: (userId: string, reason: string, severity: string, relatedBookingId?: string) => Promise<void>;
 }
 

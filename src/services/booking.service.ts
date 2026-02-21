@@ -120,11 +120,13 @@ export const getBookingById = async (id: number): Promise<ApiResponse<BookingRes
         });
         return response.data;
     } catch (error: any) {
-        console.error('❌ Error fetching booking:', {
-            status: error.response?.status,
-            data: error.response?.data,
-            message: error.message,
-        });
+        if (error.response?.status !== 404) {
+            console.error('❌ Error fetching booking:', {
+                status: error.response?.status,
+                data: error.response?.data,
+                message: error.message,
+            });
+        }
         throw error;
     }
 };
