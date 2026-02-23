@@ -181,7 +181,7 @@ export const getNextLesson = async (): Promise<LessonResponse | null> => {
  */
 export const getTutorDashboardStats = async (): Promise<ApiResponse<TutorDashboardStats>> => {
   try {
-    const response = await api.get('/tutor/lessons/dashboard', {
+    const response = await api.get('/tutorlesson/dashboard', {
       headers: getAuthHeaders(),
     });
 
