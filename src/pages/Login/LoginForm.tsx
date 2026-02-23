@@ -23,7 +23,10 @@ const LoginForm: React.FC = () => {
   // Ref để track manual login (tránh double call API)
   const isManualLoginRef = React.useRef(false);
 
-  // State hiển thị Overlay (Màn hình che toàn bộ)
+  // State loading cho manual login (inline trên button)
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // State hiển thị Overlay (chỉ dùng cho OAuth callback)
   const [showOverlay, setShowOverlay] = useState(false);
 
   // State nội dung chữ hiển thị trên Overlay
@@ -148,8 +151,7 @@ const LoginForm: React.FC = () => {
     }
 
     try {
-      setShowOverlay(true);
-      setOverlayText("Đang xác thực...");
+      setIsSubmitting(true);
 
       // Đánh dấu đang manual login để tránh trigger OAuth flow
       isManualLoginRef.current = true;
@@ -167,8 +169,6 @@ const LoginForm: React.FC = () => {
         console.log("🎫 Supabase login successful, token length:", accessToken?.length);
 
         // BƯỚC 2: Gọi Backend API với {accessToken, password}
-        setOverlayText("Đang đồng bộ với hệ thống...");
-
         const backendResponse = await loginToBackend(accessToken, formData.password);
         console.log("✅ Backend login successful:", backendResponse);
 
@@ -201,15 +201,14 @@ const LoginForm: React.FC = () => {
           || "Đăng nhập thất bại";
         toast.error(errorMessage);
       }
-
-      setShowOverlay(false);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleGoogleLogin = async () => {
     try {
-      setShowOverlay(true);
-      setOverlayText("Đang kết nối tới Google...");
+      setIsSubmitting(true);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -221,35 +220,50 @@ const LoginForm: React.FC = () => {
         },
       });
       if (error) throw error;
+      // Nếu thành công, trình duyệt sẽ redirect sang Google
+      // nên không cần tắt isSubmitting
     } catch (error) {
       console.log(error);
       toast.error("Không thể kết nối với Google.");
-      setShowOverlay(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="login-form relative">
-      {/* 🔥 DÙNG PORTAL ĐỂ ĐẨY OVERLAY RA BODY (FIX LỖI HEADER) 🔥 */}
+      {/* OAuth callback overlay — chỉ hiển thị khi redirect từ Google về */}
       {showOverlay &&
         createPortal(
           <div
             className="fixed inset-0 flex flex-col items-center justify-center transition-all duration-300"
-            // zIndex cực cao và màu trắng đục để che Header
-            style={{ zIndex: 99999, backgroundColor: "#ffffff" }}
+            style={{ zIndex: 99999, backgroundColor: "rgba(255, 255, 255, 0.85)", backdropFilter: "blur(8px)" }}
           >
-            {/* Spinner */}
-            <div className="relative w-16 h-16 mb-6">
-              <div className="absolute top-0 left-0 w-full h-full border-4 border-gray-100 rounded-full"></div>
-              <div className="absolute top-0 left-0 w-full h-full border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
-            </div>
+            <div
+              style={{
+                background: "#fff",
+                borderRadius: "16px",
+                padding: "40px 48px",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "20px",
+                maxWidth: "360px",
+              }}
+            >
+              {/* Spinner */}
+              <div className="relative w-12 h-12">
+                <div className="absolute top-0 left-0 w-full h-full border-4 border-gray-100 rounded-full"></div>
+                <div className="absolute top-0 left-0 w-full h-full border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+              </div>
 
-            {/* Text trạng thái */}
-            <p className="text-gray-700 text-lg font-medium animate-pulse">
-              {overlayText}
-            </p>
+              {/* Text trạng thái */}
+              <p className="text-gray-700 text-base font-medium text-center" style={{ margin: 0 }}>
+                {overlayText}
+              </p>
+            </div>
           </div>,
-          document.body // <-- Điểm mấu chốt: Render trực tiếp vào body
+          document.body
         )}
 
       {/* --- NỘI DUNG FORM CHÍNH --- */}
@@ -272,6 +286,7 @@ const LoginForm: React.FC = () => {
               icon="mail"
               value={formData.email}
               onChange={handleChange}
+              disabled={isSubmitting}
             />
           </div>
 
@@ -286,12 +301,14 @@ const LoginForm: React.FC = () => {
               value={formData.password}
               onChange={handleChange}
               showPasswordToggle={true}
+              disabled={isSubmitting}
             />
             <div className="text-right mt-2">
               <button
                 type="button"
                 onClick={() => setIsForgotPasswordOpen(true)}
                 className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                disabled={isSubmitting}
               >
                 Quên mật khẩu?
               </button>
@@ -302,9 +319,29 @@ const LoginForm: React.FC = () => {
             <button
               type="submit"
               className="login-form__button"
-              disabled={showOverlay}
+              disabled={isSubmitting}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                opacity: isSubmitting ? 0.7 : 1,
+                cursor: isSubmitting ? "not-allowed" : "pointer",
+              }}
             >
-              Đăng nhập
+              {isSubmitting && (
+                <svg
+                  className="animate-spin"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.3" />
+                  <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                </svg>
+              )}
+              {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>
           </div>
 
@@ -319,7 +356,11 @@ const LoginForm: React.FC = () => {
               type="button"
               className="login-form__social-btn"
               onClick={handleGoogleLogin}
-              disabled={showOverlay}
+              disabled={isSubmitting}
+              style={{
+                opacity: isSubmitting ? 0.7 : 1,
+                cursor: isSubmitting ? "not-allowed" : "pointer",
+              }}
             >
               <svg
                 width="20"
