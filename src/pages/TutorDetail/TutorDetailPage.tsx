@@ -522,6 +522,7 @@ const BookingSidebar = ({
     return (
         <aside className="booking-sidebar">
             <div className="booking-card">
+                {/* Fixed Header — always visible */}
                 <div className="booking-header">
                     <span className="booking-label">Bắt đầu lộ trình học thuật</span>
                     <div className="price-display">
@@ -530,95 +531,42 @@ const BookingSidebar = ({
                     </div>
                 </div>
 
-                {/* Availability Schedule - Redesigned to match Portal Profile */}
-                {hasAvailability ? (
-                    <div className="availability-schedule-container" style={{ marginTop: '14px' }}>
-                        <div style={{
-                            fontSize: '11px',
-                            letterSpacing: '1.1px',
-                            textTransform: 'uppercase',
-                            fontWeight: 700,
-                            color: 'rgba(26, 34, 56, 0.4)',
-                            marginBottom: '14px'
-                        }}>
-                            LỊCH DẠY
-                        </div>
-                        <div style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '8px'
-                        }}>
-                            {Object.entries(availabilityByDay).map(([dayName, slots]) => (
-                                <div key={dayName} style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '12px',
-                                    padding: '12px 14px',
-                                    backgroundColor: 'rgba(242, 240, 228, 0.5)',
-                                    borderRadius: '12px',
-                                    border: '1px solid rgba(62, 47, 40, 0.08)'
-                                }}>
-                                    <div style={{
-                                        minWidth: '70px',
-                                        fontSize: '13px',
-                                        fontWeight: 700,
-                                        color: '#1a2238'
-                                    }}>
-                                        {dayName}
+                {/* Scrollable Body */}
+                <div className="booking-card-body">
+                    {/* Availability Schedule */}
+                    {hasAvailability ? (
+                        <div className="availability-schedule-container">
+                            <div className="schedule-label">LỊCH DẠY</div>
+                            <div className="schedule-list">
+                                {Object.entries(availabilityByDay).map(([dayName, slots]) => (
+                                    <div key={dayName} className="schedule-day-row">
+                                        <div className="schedule-day-name">{dayName}</div>
+                                        <div className="schedule-slots">
+                                            {slots.map((s, idx) => (
+                                                <span key={idx} className="schedule-time-chip">
+                                                    {s.starttime} - {s.endtime}
+                                                </span>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <div style={{
-                                        flex: 1,
-                                        display: 'flex',
-                                        flexWrap: 'wrap',
-                                        gap: '6px'
-                                    }}>
-                                        {slots.map((s, idx) => (
-                                            <span key={idx} style={{
-                                                padding: '4px 10px',
-                                                backgroundColor: '#fff',
-                                                borderRadius: '6px',
-                                                fontSize: '11px',
-                                                fontWeight: 600,
-                                                color: 'rgba(62, 47, 40, 0.7)',
-                                                border: '1px solid rgba(62, 47, 40, 0.1)'
-                                            }}>
-                                                {s.starttime} - {s.endtime}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                ) : (
-                    <div className="empty-availability" style={{
-                        marginTop: '14px',
-                        padding: '20px 14px',
-                        backgroundColor: 'rgba(242, 240, 228, 0.5)',
-                        borderRadius: '12px',
-                        textAlign: 'center',
-                        color: 'rgba(62, 47, 40, 0.5)',
-                        fontSize: '12px',
-                        fontStyle: 'italic'
-                    }}>
-                        Chưa cập nhật lịch dạy
-                    </div>
-                )}
+                    ) : (
+                        <div className="empty-availability">
+                            Chưa cập nhật lịch dạy
+                        </div>
+                    )}
 
-                {/* Trial Lesson Price */}
-                {trialLessonPrice && trialLessonPrice > 0 && (
-                    <div style={{
-                        marginTop: '14px',
-                        fontSize: '10px',
-                        fontWeight: 700,
-                        letterSpacing: '1.05px',
-                        textTransform: 'uppercase',
-                        color: 'rgba(62, 47, 40, 0.4)'
-                    }}>
-                        Buổi học thử: {formatCurrency(trialLessonPrice)}
-                    </div>
-                )}
+                    {/* Trial Lesson Price */}
+                    {trialLessonPrice && trialLessonPrice > 0 && (
+                        <div className="trial-price-label">
+                            Buổi học thử: {formatCurrency(trialLessonPrice)}
+                        </div>
+                    )}
+                </div>
 
+                {/* Fixed Footer — always visible */}
                 <div className="booking-actions">
                     <button className="btn-start" onClick={onBooking}>
                         <b>ĐẶT LỊCH NGAY</b>
@@ -639,6 +587,116 @@ const BookingSidebar = ({
         </aside>
     );
 };
+
+// ============================================
+// Skeleton Loading Component
+// ============================================
+const TutorDetailSkeleton = () => (
+    <div className="tutor-detail-page">
+        <Header />
+        <main className="tutor-detail-main">
+            <div className="tutor-detail-container">
+                {/* Left Content */}
+                <div className="tutor-detail-content">
+
+                    {/* Hero Skeleton */}
+                    <section className="tutor-hero-section">
+                        <div className="component-2" style={{ position: 'relative', overflow: 'hidden' }}>
+                            {/* Thumbnail placeholder */}
+                            <div className="skeleton-box skeleton-hero-img" />
+
+                            {/* Tutor info card overlay */}
+                            <div className="skeleton-hero-overlay">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <div className="skeleton-box skeleton-avatar" />
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                        <div className="skeleton-box" style={{ width: 110, height: 14 }} />
+                                        <div className="skeleton-box" style={{ width: 180, height: 22 }} />
+                                        <div className="skeleton-box" style={{ width: 150, height: 13 }} />
+                                    </div>
+                                </div>
+                                {/* Rating card placeholder */}
+                                <div className="skeleton-box" style={{ width: 160, height: 52, borderRadius: 12 }} />
+                            </div>
+                        </div>
+
+                        {/* Subject tags */}
+                        <div className="skeleton-tags-row">
+                            {[88, 104, 76, 96, 68, 80].map((w, i) => (
+                                <div key={i} className="skeleton-box" style={{ width: w, height: 34, borderRadius: 20 }} />
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* About Skeleton */}
+                    <section className="about-section">
+                        <div className="skeleton-box" style={{ width: 230, height: 28, marginBottom: 24 }} />
+                        <div className="skeleton-about-grid">
+                            <div className="skeleton-about-text">
+                                {[100, 96, 90, 94, 78, 85, 60].map((w, i) => (
+                                    <div key={i} className="skeleton-box" style={{ width: `${w}%`, height: 14 }} />
+                                ))}
+                                <div style={{ height: 12 }} />
+                                {[100, 88, 92, 70].map((w, i) => (
+                                    <div key={i} className="skeleton-box" style={{ width: `${w}%`, height: 14 }} />
+                                ))}
+                            </div>
+                            <div className="skeleton-creds">
+                                <div className="skeleton-box" style={{ height: 96, borderRadius: 14 }} />
+                                <div className="skeleton-box" style={{ height: 96, borderRadius: 14 }} />
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Portfolio / Certificates Skeleton */}
+                    <section className="portfolio-section">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                            <div className="skeleton-box" style={{ width: 280, height: 28 }} />
+                            <div className="skeleton-box" style={{ width: 100, height: 28, borderRadius: 20 }} />
+                        </div>
+                        <div className="skeleton-cert-grid">
+                            {[1, 2, 3, 4].map(i => (
+                                <div key={i} className="skeleton-box" style={{ height: 76, borderRadius: 14 }} />
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* Testimonials Skeleton */}
+                    <section className="section5">
+                        <div className="skeleton-box" style={{ width: 200, height: 28, marginBottom: 20 }} />
+                        {/* Rating stats bar */}
+                        <div className="skeleton-box" style={{ height: 100, borderRadius: 14, marginBottom: 16 }} />
+                        {/* Testimonial card */}
+                        <div className="skeleton-box" style={{ height: 220, borderRadius: 16 }} />
+                    </section>
+
+                </div>
+
+                {/* Sidebar Skeleton */}
+                <aside className="booking-sidebar">
+                    <div className="booking-card">
+                        {/* Price header */}
+                        <div className="skeleton-box" style={{ height: 76, borderRadius: 12, marginBottom: 20 }} />
+                        {/* Schedule label */}
+                        <div className="skeleton-box" style={{ width: 80, height: 12, marginBottom: 14 }} />
+                        {/* Schedule rows */}
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="skeleton-box" style={{ height: 50, borderRadius: 12, marginBottom: 8 }} />
+                        ))}
+                        {/* Buttons */}
+                        <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                            <div className="skeleton-box" style={{ height: 50, borderRadius: 12 }} />
+                            <div className="skeleton-box" style={{ height: 50, borderRadius: 12 }} />
+                        </div>
+                    </div>
+                    {/* Verification note */}
+                    <div className="skeleton-box" style={{ height: 64, borderRadius: 12, marginTop: 16 }} />
+                </aside>
+            </div>
+        </main>
+        <Footer />
+    </div>
+);
 
 // Main TutorDetailPage Component
 const TutorDetailPage = () => {
@@ -686,16 +744,7 @@ const TutorDetailPage = () => {
     console.log("🎨 [TutorDetail] Render:", { id, loading, error, hasProfile: !!profile });
 
     if (loading) {
-        return (
-            <div className="tutor-detail-page">
-                <Header />
-                <div className="loading-container">
-                    <div className="spinner"></div>
-                    <p>Đang tải hồ sơ gia sư...</p>
-                </div>
-                <Footer />
-            </div>
-        );
+        return <TutorDetailSkeleton />;
     }
 
     if (error || !profile) {

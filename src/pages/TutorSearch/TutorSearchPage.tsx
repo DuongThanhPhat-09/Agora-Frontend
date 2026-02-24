@@ -7,6 +7,7 @@ import type {
 import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import "../../styles/pages/tutor-search.css";
 
 // SVG Icons
 const SearchIcon = () => (
