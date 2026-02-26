@@ -9,7 +9,7 @@ import type {
   UserGrowthData,
   RecentActivity,
   // Vetting
-  TutorForReview,
+  // TutorForReview,
   TutorDetailForReview,
   ApproveTutorResponse,
   RejectTutorRequest,

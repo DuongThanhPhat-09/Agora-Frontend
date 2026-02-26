@@ -81,7 +81,7 @@ const PendingClockIcon = () => (
 );
 
 // Next lesson bar clock icon (red/amber)
-const ClockAlertIcon = () => (
+const _ClockAlertIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
     <circle cx="8" cy="8" r="7" fill="#ef4444" />
     <path d="M8 4v4l2.5 1.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />

@@ -19,11 +19,14 @@ export interface DashboardMetrics {
   netRevenue: number; // Platform revenue after fees
   escrowBalance: number;
   pendingWithdrawals: number;
+  // Allow additional/lowercase properties from API responses
+  [key: string]: any;
 }
 
 export interface RevenueChartData {
   date: string; // ISO date format
   amount: number;
+  [key: string]: any;
 }
 
 export interface UserGrowthData {
@@ -48,6 +51,8 @@ export interface RecentActivity {
   userId?: string;
   userName?: string;
   userAvatar?: string;
+  // Allow additional/lowercase properties from API responses
+  [key: string]: any;
 }
 
 // ============================================
@@ -432,6 +437,7 @@ export interface FinancialMetrics {
   totalRefunds: number;
   pendingWithdrawalsCount: number;
   pendingWithdrawalsAmount: number;
+  [key: string]: any;
 }
 
 export interface WithdrawalRequest {
@@ -449,6 +455,7 @@ export interface WithdrawalRequest {
   requestedat: string;
   processedat: string | null;
   processedby: string | null;
+  [key: string]: any;
 }
 
 export type TransactionType =
@@ -472,6 +479,7 @@ export interface Transaction {
   createdat: string;
   status: TransactionStatus;
   relatedbookingid: string | null;
+  [key: string]: any;
 }
 
 // ============================================

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { message } from 'antd';
+// message import removed
 import styles from './AddStudentModal.module.css';
-import { Plus, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import type { ICreateParentStudent } from '../../../services/student.service';
 
 interface AddStudentModalProps {

@@ -1,9 +1,8 @@
 import type {
-    DashboardMetrics,
-    RevenueChartData,
-    UserGrowthChartData,
+    UserGrowthData,
     RecentActivity,
 } from '../../types/admin.types';
+type UserGrowthChartData = UserGrowthData;
 
 /**
  * Mock data for Admin Dashboard
@@ -14,7 +13,7 @@ import type {
 // MOCK DASHBOARD METRICS
 // ============================================
 
-export const mockDashboardMetrics: DashboardMetrics = {
+export const mockDashboardMetrics = {
     totalusers: 12450,
     totalstudents: 8320,
     totaltutors: 4130,
@@ -67,7 +66,7 @@ const generateRevenueData = (): number[] => {
     return data;
 };
 
-export const mockRevenueChartData: RevenueChartData[] = (() => {
+export const mockRevenueChartData: any[] = (() => {
     const dates = generateLast30Days();
     const revenues = generateRevenueData();
 
@@ -105,7 +104,7 @@ export const mockUserGrowthChartData: UserGrowthChartData[] = (() => {
     let studentCount = 7000;
     let tutorCount = 3200;
 
-    return months.map((m, index) => {
+    return months.map((m, _index) => {
         // Gradual growth each month
         studentCount += Math.round(200 + Math.random() * 400);
         tutorCount += Math.round(100 + Math.random() * 200);
@@ -123,7 +122,7 @@ export const mockUserGrowthChartData: UserGrowthChartData[] = (() => {
 // MOCK RECENT ACTIVITIES
 // ============================================
 
-export const mockRecentActivities: RecentActivity[] = [
+export const mockRecentActivities: any[] = [
     {
         activityid: 'ACT-001',
         activitytype: 'tutor_approved',
@@ -260,7 +259,7 @@ const delay = (ms: number = 500) => new Promise((resolve) => setTimeout(resolve,
 /**
  * Get dashboard metrics
  */
-export const mockGetDashboardMetrics = async (): Promise<DashboardMetrics> => {
+export const mockGetDashboardMetrics = async (): Promise<any> => {
     await delay(600);
     return mockDashboardMetrics;
 };
@@ -268,7 +267,7 @@ export const mockGetDashboardMetrics = async (): Promise<DashboardMetrics> => {
 /**
  * Get revenue chart data
  */
-export const mockGetRevenueChart = async (days: number = 30): Promise<RevenueChartData[]> => {
+export const mockGetRevenueChart = async (days: number = 30): Promise<any[]> => {
     await delay(700);
 
     if (days !== 30) {
