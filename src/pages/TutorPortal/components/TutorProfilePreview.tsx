@@ -70,11 +70,12 @@ const ShieldIcon = () => (
     </svg>
 );
 
-const QuoteIcon = () => (
-    <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <text x="5" y="32" fontSize="36" fontFamily="Georgia, serif" fill="#E4DED5">"</text>
-    </svg>
-);
+// QuoteIcon - commented out to avoid TS6133 (noUnusedLocals)
+// const QuoteIcon = () => (
+//     <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+//         <text x="5" y="32" fontSize="36" fontFamily="Georgia, serif" fill="#E4DED5">"</text>
+//     </svg>
+// );
 
 // ===== Label mappings =====
 const CITY_LABELS: Record<string, string> = {

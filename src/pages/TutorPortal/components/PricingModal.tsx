@@ -53,12 +53,6 @@ const PricingModal: React.FC<PricingModalProps> = ({
         setHourlyRateDisplay(value);
     };
 
-    // Format on blur
-    const handleHourlyRateBlur = () => {
-        if (formData.hourlyRate > 0) {
-            setHourlyRateDisplay(formatVND(formData.hourlyRate));
-        }
-    };
 
     // Handle trial price change
     const handleTrialPriceChange = (value: string) => {
@@ -72,12 +66,6 @@ const PricingModal: React.FC<PricingModalProps> = ({
         setTrialPriceDisplay(value);
     };
 
-    // Format on blur
-    const handleTrialPriceBlur = () => {
-        if (formData.trialLessonPrice && formData.trialLessonPrice > 0) {
-            setTrialPriceDisplay(formatVND(formData.trialLessonPrice));
-        }
-    };
 
     // Validate form
     const validateForm = (): boolean => {
@@ -130,7 +118,6 @@ const PricingModal: React.FC<PricingModalProps> = ({
                         label="Giá theo giờ"
                         value={hourlyRateDisplay}
                         onChange={handleHourlyRateChange}
-                        onBlur={handleHourlyRateBlur}
                         placeholder="VD: 200,000 VND"
                         required
                         error={errors.hourlyRate}
@@ -146,7 +133,6 @@ const PricingModal: React.FC<PricingModalProps> = ({
                         label="Giá buổi học thử"
                         value={trialPriceDisplay}
                         onChange={handleTrialPriceChange}
-                        onBlur={handleTrialPriceBlur}
                         placeholder="Để trống nếu không có"
                         error={errors.trialPrice}
                         hint="Phải thấp hơn giá theo giờ"

@@ -9,7 +9,8 @@ import AboutMeModal from './components/AboutMeModal';
 import CredentialModal from './components/CredentialModal';
 import type { CredentialData as ModalCredentialData } from './components/CredentialModal';
 import IdentityVerificationModal from './components/IdentityVerificationModal';
-import type { IdentityVerificationData } from './components/IdentityVerificationModal';
+// @ts-ignore - IdentityVerificationData may be used later
+import type { IdentityVerificationData as _IdentityVerificationData } from './components/IdentityVerificationModal';
 import IntroVideoSection from './components/IntroVideoSection';
 import ProfileCompleteness from './components/ProfileCompleteness';
 import BookingModal from './components/BookingModal';
@@ -19,11 +20,12 @@ import { getUserIdFromToken } from '../../services/auth.service';
 import styles from '../../styles/pages/tutor-portal-profile.module.css';
 
 // Icon Components
-const PlayIcon = () => (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <path d="M8.17 5.83L22.17 14L8.17 22.17V5.83Z" fill="white" />
-    </svg>
-);
+// PlayIcon - commented out to avoid TS6133 (noUnusedLocals)
+// const PlayIcon = () => (
+//     <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+//         <path d="M8.17 5.83L22.17 14L8.17 22.17V5.83Z" fill="white" />
+//     </svg>
+// );
 
 const StarIcon = () => (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="#fbbf24">
@@ -58,12 +60,13 @@ const EditPencilIcon = () => (
     </svg>
 );
 
-const GraduationIcon = () => (
-    <svg width="21" height="21" viewBox="0 0 21 21" fill="none">
-        <path d="M10.5 2.625L1.75 7.875L10.5 13.125L19.25 7.875L10.5 2.625Z" stroke="#1a2238" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M15.75 10.5V15.75L10.5 18.375L5.25 15.75V10.5" stroke="#1a2238" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
+// GraduationIcon - commented out to avoid TS6133 (noUnusedLocals)
+// const GraduationIcon = () => (
+//     <svg width="21" height="21" viewBox="0 0 21 21" fill="none">
+//         <path d="M10.5 2.625L1.75 7.875L10.5 13.125L19.25 7.875L10.5 2.625Z" stroke="#1a2238" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+//         <path d="M15.75 10.5V15.75L10.5 18.375L5.25 15.75V10.5" stroke="#1a2238" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+//     </svg>
+// );
 
 const CertificateIcon = () => (
     <svg width="21" height="21" viewBox="0 0 21 21" fill="none">
@@ -160,16 +163,16 @@ const TutorPortalProfile: React.FC = () => {
     // Form hook
     const {
         formData,
-        sectionStatuses,
+        sectionStatuses: _sectionStatuses,
         isDirty,
-        isLoading,
-        isInitialLoading,
+        isLoading: _isLoading,
+        isInitialLoading: _isInitialLoading,
         isVideoUploading,
         lastSaved,
-        error,
-        canPublish,
+        error: _error,
+        canPublish: _canPublish,
         fetchProgress,
-        updateHeroSection,
+        updateHeroSection: _updateHeroSection,
         updatePricing,
         updateAbout,
         updateVideoUrl,
@@ -179,8 +182,8 @@ const TutorPortalProfile: React.FC = () => {
         updateCredential,
         removeCredential,
         updateIdentityVerification,
-        saveDraft,
-        publishChanges
+        saveDraft: _saveDraft,
+        publishChanges: _publishChanges
     } = useTutorProfileForm();
 
     // Get display location
@@ -316,377 +319,377 @@ const TutorPortalProfile: React.FC = () => {
                 /* Preview Mode - Show TutorProfilePreview component */
                 <TutorProfilePreview formData={formData} />
             ) : (
-            /* Edit Mode - Show editable sections */
-            <div className={styles.mainContent}>
-                <div className={styles.contentWrapper}>
-                    {/* Left Column */}
-                    <div className={styles.leftColumn}>
-                        {/* Intro Video Section */}
-                        <IntroVideoSection
-                            videoUrl={formData.videoIntroUrl}
-                            onChange={updateVideoUrl}
-                            onUploadVideo={uploadVideo}
-                            isEditMode={isEditMode}
-                            isUploading={isVideoUploading}
-                        />
+                /* Edit Mode - Show editable sections */
+                <div className={styles.mainContent}>
+                    <div className={styles.contentWrapper}>
+                        {/* Left Column */}
+                        <div className={styles.leftColumn}>
+                            {/* Intro Video Section */}
+                            <IntroVideoSection
+                                videoUrl={formData.videoIntroUrl}
+                                onChange={updateVideoUrl}
+                                onUploadVideo={uploadVideo}
+                                isEditMode={isEditMode}
+                                isUploading={isVideoUploading}
+                            />
 
-                        {/* Hero Section Card */}
-                        <div className={styles.sectionCard}>
-                            <div className={styles.sectionHeader}>
-                                <h2 className={styles.sectionTitle}>Thông tin cơ bản</h2>
-                                {isEditMode && (
-                                    <button
-                                        className={styles.editIconBtn}
-                                        onClick={() => setIsHeroModalOpen(true)}
-                                    >
-                                        <EditPencilIcon />
-                                    </button>
-                                )}
+                            {/* Hero Section Card */}
+                            <div className={styles.sectionCard}>
+                                <div className={styles.sectionHeader}>
+                                    <h2 className={styles.sectionTitle}>Thông tin cơ bản</h2>
+                                    {isEditMode && (
+                                        <button
+                                            className={styles.editIconBtn}
+                                            onClick={() => setIsHeroModalOpen(true)}
+                                        >
+                                            <EditPencilIcon />
+                                        </button>
+                                    )}
+                                </div>
+                                <div className={styles.heroContent}>
+                                    {/* Avatar */}
+                                    <div className={styles.avatarContainer}>
+                                        <div className={styles.avatar}>
+                                            {formData.avatarUrl && (
+                                                <img src={formData.avatarUrl} alt={formData.fullName} />
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Info */}
+                                    <div className={styles.heroInfo}>
+                                        <div className={styles.nameRow}>
+                                            <h1 className={styles.tutorName}>{formData.fullName}</h1>
+                                            <VerifiedIcon />
+                                        </div>
+
+                                        <p className={styles.headline}>{formData.headline}</p>
+
+                                        <div className={styles.metaRow}>
+                                            <div className={styles.metaItem}>
+                                                <StarIcon />
+                                                <span className={styles.metaValue}>
+                                                    {formData.averageRating} ({formData.totalReviews} đánh giá)
+                                                </span>
+                                            </div>
+                                            <div className={styles.metaItem}>
+                                                <LocationIcon />
+                                                <span className={styles.metaValue}>{getLocationDisplay()}</span>
+                                            </div>
+                                            <div className={styles.metaItem}>
+                                                <DesktopIcon />
+                                                <span className={styles.metaValue}>
+                                                    {TEACHING_MODE_LABELS[formData.teachingMode] || formData.teachingMode}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Subject Tags */}
+                                        <div className={styles.subjectTags}>
+                                            <div className={styles.tagsRow}>
+                                                {formData.subjects
+                                                    .filter(subject => subject.subjectName && subject.subjectName.trim())
+                                                    .map((subject) => (
+                                                        <span key={subject.subjectId} className={styles.subjectTag}>
+                                                            {subject.subjectName}
+                                                        </span>
+                                                    ))}
+                                                {/* Display subject-specific tags */}
+                                                {formData.subjects.flatMap(subject =>
+                                                    subject.tags.map((tag: string) => (
+                                                        <span key={`${subject.subjectId}-${tag}`} className={styles.customTag}>
+                                                            {tag}
+                                                        </span>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div className={styles.heroContent}>
-                                {/* Avatar */}
-                                <div className={styles.avatarContainer}>
-                                    <div className={styles.avatar}>
-                                        {formData.avatarUrl && (
-                                            <img src={formData.avatarUrl} alt={formData.fullName} />
+
+                            {/* About Me Section */}
+                            <div className={styles.sectionCard}>
+                                <div className={styles.sectionHeader}>
+                                    <h2 className={styles.sectionTitle}>Giới thiệu</h2>
+                                    {isEditMode && (
+                                        <button
+                                            className={styles.editIconBtn}
+                                            onClick={() => setIsAboutModalOpen(true)}
+                                        >
+                                            <EditPencilIcon />
+                                        </button>
+                                    )}
+                                </div>
+                                <div className={styles.aboutContent}>
+                                    <p className={styles.bioText}>{formData.bio}</p>
+
+                                    <div className={styles.aboutDetails}>
+                                        <div className={styles.detailItem}>
+                                            <span className={styles.detailLabel}>Học vấn</span>
+                                            <span className={styles.detailValue}>{formData.education}</span>
+                                        </div>
+                                        {formData.gpa && formData.gpaScale && (
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>GPA</span>
+                                                <span className={styles.detailValue}>
+                                                    {formData.gpa}/{formData.gpaScale}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className={styles.experienceSection}>
+                                        <h3 className={styles.subTitle}>Kinh nghiệm</h3>
+                                        <p className={styles.experienceText}>{formData.experience}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Academic Credentials Section */}
+                            <div className={styles.sectionCard}>
+                                <div className={styles.sectionHeader}>
+                                    <h2 className={styles.sectionTitle}>Bằng cấp & Chứng chỉ</h2>
+                                    {isEditMode && (
+                                        <button
+                                            className={styles.addBtn}
+                                            onClick={() => {
+                                                setEditingCredential(null);
+                                                setIsCredentialModalOpen(true);
+                                            }}
+                                        >
+                                            <PlusIcon />
+                                            <span>Thêm mới</span>
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Credentials List */}
+                                <div className={styles.credentialsList}>
+                                    {formData.credentials.length === 0 ? (
+                                        <div className={styles.emptyCredentials}>
+                                            <p>Chưa có chứng chỉ nào. Thêm chứng chỉ để tăng độ tin cậy của bạn.</p>
+                                        </div>
+                                    ) : (
+                                        formData.credentials.map((credential) => (
+                                            <div key={credential.id} className={styles.credentialItem}>
+                                                <div className={styles.credentialIcon}>
+                                                    <CertificateIcon />
+                                                </div>
+                                                <div className={styles.credentialInfo}>
+                                                    <h4 className={styles.credentialTitle}>{credential.name}</h4>
+                                                    <p className={styles.credentialInstitution}>{credential.institution}</p>
+                                                    <div className={styles.credentialMeta}>
+                                                        {credential.certificateType && (
+                                                            <span className={styles.credentialType}>
+                                                                {credential.certificateType.toUpperCase()}
+                                                            </span>
+                                                        )}
+                                                        {credential.issueYear && (
+                                                            <span className={styles.credentialDate}>
+                                                                Năm {credential.issueYear}
+                                                            </span>
+                                                        )}
+                                                        <span className={`${styles.verificationBadge} ${styles[credential.verificationStatus]}`}>
+                                                            {credential.verificationStatus === 'verified' ? 'Đã xác minh' :
+                                                                credential.verificationStatus === 'pending' ? 'Đang chờ duyệt' : 'Bị từ chối'}
+                                                        </span>
+                                                    </div>
+                                                    {/* Show verification note if exists */}
+                                                    {credential.verificationNote && (
+                                                        <p className={styles.credentialNote}>
+                                                            <strong>Ghi chú:</strong> {credential.verificationNote}
+                                                        </p>
+                                                    )}
+                                                    {/* Show certificate file link */}
+                                                    {credential.certificateUrl && (
+                                                        <a
+                                                            href={credential.certificateUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className={styles.credentialLink}
+                                                        >
+                                                            Xem chứng chỉ
+                                                        </a>
+                                                    )}
+                                                </div>
+                                                {isEditMode && (
+                                                    <div className={styles.credentialActions}>
+                                                        <button
+                                                            className={styles.editCredentialBtn}
+                                                            onClick={() => handleEditCredential(credential)}
+                                                        >
+                                                            <EditPencilIcon />
+                                                        </button>
+                                                        <Popconfirm
+                                                            title="Xóa chứng chỉ"
+                                                            description={`Bạn có chắc muốn xóa chứng chỉ "${credential.name}"?`}
+                                                            onConfirm={() => handleDeleteCredential(credential.id)}
+                                                            okText="Xóa"
+                                                            cancelText="Hủy"
+                                                            okButtonProps={{
+                                                                danger: true,
+                                                                loading: deletingCredentialId === credential.id
+                                                            }}
+                                                            placement="left"
+                                                        >
+                                                            <button
+                                                                className={styles.deleteCredentialBtn}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                            >
+                                                                <TrashIcon />
+                                                            </button>
+                                                        </Popconfirm>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Identity Verification Section */}
+                            <div className={styles.sectionCard}>
+                                <div className={styles.sectionHeader}>
+                                    <h2 className={styles.sectionTitle}>Xác minh danh tính</h2>
+                                    {/* Only show header button when already submitted (not for 'not_submitted' status) */}
+                                    {isEditMode && formData.identityVerification.verificationStatus !== 'not_submitted' && (
+                                        <button
+                                            className={styles.editBtnSmall}
+                                            onClick={() => setIsIdentityModalOpen(true)}
+                                        >
+                                            <EditPencilIcon />
+                                            <span>Xem chi tiết</span>
+                                        </button>
+                                    )}
+                                </div>
+                                <div className={styles.identityContent}>
+                                    <div className={styles.identityStatus}>
+                                        {formData.identityVerification.verificationStatus === 'verified' && (
+                                            <div className={styles.identityVerified}>
+                                                <div className={`${styles.identityBadge} ${styles.verified}`}>
+                                                    <CheckCircleIcon />
+                                                    <span>Đã xác minh</span>
+                                                </div>
+                                                <p className={styles.identityVerifiedText}>
+                                                    Danh tính của bạn đã được xác minh thành công.
+                                                </p>
+                                            </div>
+                                        )}
+                                        {formData.identityVerification.verificationStatus === 'pending' && (
+                                            <div className={styles.identityPending}>
+                                                <div className={`${styles.identityBadge} ${styles.pending}`}>
+                                                    <span>Đang chờ duyệt</span>
+                                                </div>
+                                                <p className={styles.identityPendingText}>
+                                                    Hồ sơ xác minh của bạn đang được xem xét. Vui lòng chờ trong 24-48 giờ.
+                                                </p>
+                                            </div>
+                                        )}
+                                        {formData.identityVerification.verificationStatus === 'rejected' && (
+                                            <div className={styles.identityRejected}>
+                                                <div className={`${styles.identityBadge} ${styles.rejected}`}>
+                                                    <span>Bị từ chối</span>
+                                                </div>
+                                                <p className={styles.identityRejectedText}>
+                                                    Hồ sơ xác minh của bạn đã bị từ chối. Vui lòng kiểm tra lại và gửi lại.
+                                                </p>
+                                                <button
+                                                    className={styles.resubmitBtn}
+                                                    onClick={() => setIsIdentityModalOpen(true)}
+                                                >
+                                                    Gửi lại hồ sơ
+                                                </button>
+                                            </div>
+                                        )}
+                                        {formData.identityVerification.verificationStatus === 'not_submitted' && (
+                                            <div className={styles.identityNotSubmitted}>
+                                                <p>Xác minh danh tính để tăng độ tin cậy với học sinh và phụ huynh.</p>
+                                                <button
+                                                    className={styles.verifyNowBtn}
+                                                    onClick={() => setIsIdentityModalOpen(true)}
+                                                >
+                                                    Xác minh ngay
+                                                </button>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
-
-                                {/* Info */}
-                                <div className={styles.heroInfo}>
-                                    <div className={styles.nameRow}>
-                                        <h1 className={styles.tutorName}>{formData.fullName}</h1>
-                                        <VerifiedIcon />
-                                    </div>
-
-                                    <p className={styles.headline}>{formData.headline}</p>
-
-                                    <div className={styles.metaRow}>
-                                        <div className={styles.metaItem}>
-                                            <StarIcon />
-                                            <span className={styles.metaValue}>
-                                                {formData.averageRating} ({formData.totalReviews} đánh giá)
-                                            </span>
-                                        </div>
-                                        <div className={styles.metaItem}>
-                                            <LocationIcon />
-                                            <span className={styles.metaValue}>{getLocationDisplay()}</span>
-                                        </div>
-                                        <div className={styles.metaItem}>
-                                            <DesktopIcon />
-                                            <span className={styles.metaValue}>
-                                                {TEACHING_MODE_LABELS[formData.teachingMode] || formData.teachingMode}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Subject Tags */}
-                                    <div className={styles.subjectTags}>
-                                        <div className={styles.tagsRow}>
-                                            {formData.subjects
-                                                .filter(subject => subject.subjectName && subject.subjectName.trim())
-                                                .map((subject) => (
-                                                    <span key={subject.subjectId} className={styles.subjectTag}>
-                                                        {subject.subjectName}
-                                                    </span>
-                                                ))}
-                                            {/* Display subject-specific tags */}
-                                            {formData.subjects.flatMap(subject =>
-                                                subject.tags.map((tag: string) => (
-                                                    <span key={`${subject.subjectId}-${tag}`} className={styles.customTag}>
-                                                        {tag}
-                                                    </span>
-                                                ))
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
-                        {/* About Me Section */}
-                        <div className={styles.sectionCard}>
-                            <div className={styles.sectionHeader}>
-                                <h2 className={styles.sectionTitle}>Giới thiệu</h2>
+                        {/* Right Column - Sidebar */}
+                        <div className={styles.rightColumn}>
+                            {/* Pricing Card */}
+                            <div className={styles.pricingCard}>
                                 {isEditMode && (
                                     <button
-                                        className={styles.editIconBtn}
-                                        onClick={() => setIsAboutModalOpen(true)}
+                                        className={styles.editPriceBtn}
+                                        onClick={() => setIsPricingModalOpen(true)}
                                     >
                                         <EditPencilIcon />
                                     </button>
                                 )}
-                            </div>
-                            <div className={styles.aboutContent}>
-                                <p className={styles.bioText}>{formData.bio}</p>
-
-                                <div className={styles.aboutDetails}>
-                                    <div className={styles.detailItem}>
-                                        <span className={styles.detailLabel}>Học vấn</span>
-                                        <span className={styles.detailValue}>{formData.education}</span>
+                                <div className={styles.priceRow}>
+                                    <span className={styles.priceAmount}>{formatPrice(formData.hourlyRate)}</span>
+                                    <span className={styles.priceUnit}>VND / giờ</span>
+                                </div>
+                                {formData.trialLessonPrice && (
+                                    <div className={styles.trialPrice}>
+                                        Buổi học thử: {formatPrice(formData.trialLessonPrice)} VND
                                     </div>
-                                    {formData.gpa && formData.gpaScale && (
-                                        <div className={styles.detailItem}>
-                                            <span className={styles.detailLabel}>GPA</span>
-                                            <span className={styles.detailValue}>
-                                                {formData.gpa}/{formData.gpaScale}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className={styles.experienceSection}>
-                                    <h3 className={styles.subTitle}>Kinh nghiệm</h3>
-                                    <p className={styles.experienceText}>{formData.experience}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Academic Credentials Section */}
-                        <div className={styles.sectionCard}>
-                            <div className={styles.sectionHeader}>
-                                <h2 className={styles.sectionTitle}>Bằng cấp & Chứng chỉ</h2>
-                                {isEditMode && (
-                                    <button
-                                        className={styles.addBtn}
-                                        onClick={() => {
-                                            setEditingCredential(null);
-                                            setIsCredentialModalOpen(true);
-                                        }}
-                                    >
-                                        <PlusIcon />
-                                        <span>Thêm mới</span>
-                                    </button>
                                 )}
-                            </div>
-
-                            {/* Credentials List */}
-                            <div className={styles.credentialsList}>
-                                {formData.credentials.length === 0 ? (
-                                    <div className={styles.emptyCredentials}>
-                                        <p>Chưa có chứng chỉ nào. Thêm chứng chỉ để tăng độ tin cậy của bạn.</p>
+                                {formData.allowPriceNegotiation && (
+                                    <div className={styles.negotiationNote}>
+                                        Có thể thương lượng giá
                                     </div>
-                                ) : (
-                                    formData.credentials.map((credential) => (
-                                        <div key={credential.id} className={styles.credentialItem}>
-                                            <div className={styles.credentialIcon}>
-                                                <CertificateIcon />
-                                            </div>
-                                            <div className={styles.credentialInfo}>
-                                                <h4 className={styles.credentialTitle}>{credential.name}</h4>
-                                                <p className={styles.credentialInstitution}>{credential.institution}</p>
-                                                <div className={styles.credentialMeta}>
-                                                    {credential.certificateType && (
-                                                        <span className={styles.credentialType}>
-                                                            {credential.certificateType.toUpperCase()}
-                                                        </span>
-                                                    )}
-                                                    {credential.issueYear && (
-                                                        <span className={styles.credentialDate}>
-                                                            Năm {credential.issueYear}
-                                                        </span>
-                                                    )}
-                                                    <span className={`${styles.verificationBadge} ${styles[credential.verificationStatus]}`}>
-                                                        {credential.verificationStatus === 'verified' ? 'Đã xác minh' :
-                                                            credential.verificationStatus === 'pending' ? 'Đang chờ duyệt' : 'Bị từ chối'}
-                                                    </span>
-                                                </div>
-                                                {/* Show verification note if exists */}
-                                                {credential.verificationNote && (
-                                                    <p className={styles.credentialNote}>
-                                                        <strong>Ghi chú:</strong> {credential.verificationNote}
-                                                    </p>
-                                                )}
-                                                {/* Show certificate file link */}
-                                                {credential.certificateUrl && (
-                                                    <a
-                                                        href={credential.certificateUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className={styles.credentialLink}
-                                                    >
-                                                        Xem chứng chỉ
-                                                    </a>
-                                                )}
-                                            </div>
-                                            {isEditMode && (
-                                                <div className={styles.credentialActions}>
-                                                    <button
-                                                        className={styles.editCredentialBtn}
-                                                        onClick={() => handleEditCredential(credential)}
-                                                    >
-                                                        <EditPencilIcon />
-                                                    </button>
-                                                    <Popconfirm
-                                                        title="Xóa chứng chỉ"
-                                                        description={`Bạn có chắc muốn xóa chứng chỉ "${credential.name}"?`}
-                                                        onConfirm={() => handleDeleteCredential(credential.id)}
-                                                        okText="Xóa"
-                                                        cancelText="Hủy"
-                                                        okButtonProps={{
-                                                            danger: true,
-                                                            loading: deletingCredentialId === credential.id
-                                                        }}
-                                                        placement="left"
-                                                    >
-                                                        <button
-                                                            className={styles.deleteCredentialBtn}
-                                                            onClick={(e) => e.stopPropagation()}
-                                                        >
-                                                            <TrashIcon />
-                                                        </button>
-                                                    </Popconfirm>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))
                                 )}
-                            </div>
-                        </div>
 
-                        {/* Identity Verification Section */}
-                        <div className={styles.sectionCard}>
-                            <div className={styles.sectionHeader}>
-                                <h2 className={styles.sectionTitle}>Xác minh danh tính</h2>
-                                {/* Only show header button when already submitted (not for 'not_submitted' status) */}
-                                {isEditMode && formData.identityVerification.verificationStatus !== 'not_submitted' && (
-                                    <button
-                                        className={styles.editBtnSmall}
-                                        onClick={() => setIsIdentityModalOpen(true)}
-                                    >
-                                        <EditPencilIcon />
-                                        <span>Xem chi tiết</span>
-                                    </button>
+                                {/* Show no schedule message on card only in edit mode */}
+                                {isEditMode && formData.availability.length === 0 && (
+                                    <div className={styles.noScheduleSection}>
+                                        <p className={styles.noScheduleMessage}>Chưa cập nhật lịch</p>
+                                        <button
+                                            className={styles.updateScheduleLink}
+                                            onClick={() => navigate('/tutor-portal/schedule')}
+                                        >
+                                            Cập nhật lịch ngay
+                                        </button>
+                                    </div>
                                 )}
-                            </div>
-                            <div className={styles.identityContent}>
-                                <div className={styles.identityStatus}>
-                                    {formData.identityVerification.verificationStatus === 'verified' && (
-                                        <div className={styles.identityVerified}>
-                                            <div className={`${styles.identityBadge} ${styles.verified}`}>
-                                                <CheckCircleIcon />
-                                                <span>Đã xác minh</span>
-                                            </div>
-                                            <p className={styles.identityVerifiedText}>
-                                                Danh tính của bạn đã được xác minh thành công.
-                                            </p>
-                                        </div>
-                                    )}
-                                    {formData.identityVerification.verificationStatus === 'pending' && (
-                                        <div className={styles.identityPending}>
-                                            <div className={`${styles.identityBadge} ${styles.pending}`}>
-                                                <span>Đang chờ duyệt</span>
-                                            </div>
-                                            <p className={styles.identityPendingText}>
-                                                Hồ sơ xác minh của bạn đang được xem xét. Vui lòng chờ trong 24-48 giờ.
-                                            </p>
-                                        </div>
-                                    )}
-                                    {formData.identityVerification.verificationStatus === 'rejected' && (
-                                        <div className={styles.identityRejected}>
-                                            <div className={`${styles.identityBadge} ${styles.rejected}`}>
-                                                <span>Bị từ chối</span>
-                                            </div>
-                                            <p className={styles.identityRejectedText}>
-                                                Hồ sơ xác minh của bạn đã bị từ chối. Vui lòng kiểm tra lại và gửi lại.
-                                            </p>
-                                            <button
-                                                className={styles.resubmitBtn}
-                                                onClick={() => setIsIdentityModalOpen(true)}
-                                            >
-                                                Gửi lại hồ sơ
-                                            </button>
-                                        </div>
-                                    )}
-                                    {formData.identityVerification.verificationStatus === 'not_submitted' && (
-                                        <div className={styles.identityNotSubmitted}>
-                                            <p>Xác minh danh tính để tăng độ tin cậy với học sinh và phụ huynh.</p>
-                                            <button
-                                                className={styles.verifyNowBtn}
-                                                onClick={() => setIsIdentityModalOpen(true)}
-                                            >
-                                                Xác minh ngay
-                                            </button>
-                                        </div>
-                                    )}
+
+                                {/* Show booking and message buttons only in preview mode */}
+                                {!isEditMode && (
+                                    <>
+                                        <button
+                                            className={styles.bookTrialBtn}
+                                            onClick={() => setIsBookingModalOpen(true)}
+                                        >
+                                            Đặt buổi học thử
+                                        </button>
+                                        <button className={styles.sendMessageBtn}>
+                                            <MessageIcon />
+                                            <span>Gửi tin nhắn</span>
+                                        </button>
+                                    </>
+                                )}
+
+                                <div className={styles.cancellationNote}>
+                                    <CheckCircleIcon />
+                                    <span>Miễn phí hủy trước 24h</span>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    {/* Right Column - Sidebar */}
-                    <div className={styles.rightColumn}>
-                        {/* Pricing Card */}
-                        <div className={styles.pricingCard}>
+                            {/* Profile Completeness Card */}
                             {isEditMode && (
-                                <button
-                                    className={styles.editPriceBtn}
-                                    onClick={() => setIsPricingModalOpen(true)}
-                                >
-                                    <EditPencilIcon />
-                                </button>
+                                <ProfileCompleteness
+                                    profileData={formData}
+                                    onSectionClick={handleCompletenessClick}
+                                />
                             )}
-                            <div className={styles.priceRow}>
-                                <span className={styles.priceAmount}>{formatPrice(formData.hourlyRate)}</span>
-                                <span className={styles.priceUnit}>VND / giờ</span>
-                            </div>
-                            {formData.trialLessonPrice && (
-                                <div className={styles.trialPrice}>
-                                    Buổi học thử: {formatPrice(formData.trialLessonPrice)} VND
-                                </div>
-                            )}
-                            {formData.allowPriceNegotiation && (
-                                <div className={styles.negotiationNote}>
-                                    Có thể thương lượng giá
-                                </div>
-                            )}
-
-                            {/* Show no schedule message on card only in edit mode */}
-                            {isEditMode && formData.availability.length === 0 && (
-                                <div className={styles.noScheduleSection}>
-                                    <p className={styles.noScheduleMessage}>Chưa cập nhật lịch</p>
-                                    <button
-                                        className={styles.updateScheduleLink}
-                                        onClick={() => navigate('/tutor-portal/schedule')}
-                                    >
-                                        Cập nhật lịch ngay
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* Show booking and message buttons only in preview mode */}
-                            {!isEditMode && (
-                                <>
-                                    <button
-                                        className={styles.bookTrialBtn}
-                                        onClick={() => setIsBookingModalOpen(true)}
-                                    >
-                                        Đặt buổi học thử
-                                    </button>
-                                    <button className={styles.sendMessageBtn}>
-                                        <MessageIcon />
-                                        <span>Gửi tin nhắn</span>
-                                    </button>
-                                </>
-                            )}
-
-                            <div className={styles.cancellationNote}>
-                                <CheckCircleIcon />
-                                <span>Miễn phí hủy trước 24h</span>
-                            </div>
                         </div>
-
-                        {/* Profile Completeness Card */}
-                        {isEditMode && (
-                            <ProfileCompleteness
-                                profileData={formData}
-                                onSectionClick={handleCompletenessClick}
-                            />
-                        )}
                     </div>
                 </div>
-            </div>
             )}
 
             {/* Edit Bar - Sticky Bottom */}
