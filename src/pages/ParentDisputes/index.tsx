@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getParentDisputes, type DisputeListDto } from '../../services/parent-lesson.service';
 import { message as antMessage, Spin, Tag } from 'antd';
@@ -19,7 +19,6 @@ const DISPUTE_TYPE: Record<string, string> = {
 };
 
 const ParentDisputes: React.FC = () => {
-  const _navigate = useNavigate();
   const [disputes, setDisputes] = useState<DisputeListDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
