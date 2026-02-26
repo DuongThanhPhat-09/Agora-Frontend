@@ -80,13 +80,13 @@ const PendingClockIcon = () => (
   </svg>
 );
 
-// Next lesson bar clock icon (red/amber)
-const _ClockAlertIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <circle cx="8" cy="8" r="7" fill="#ef4444" />
-    <path d="M8 4v4l2.5 1.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
-  </svg>
-);
+// ClockAlertIcon - commented out to avoid TS6133 (noUnusedLocals)
+// const ClockAlertIcon = () => (
+//   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+//     <circle cx="8" cy="8" r="7" fill="#ef4444" />
+//     <path d="M8 4v4l2.5 1.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
+//   </svg>
+// );
 
 // Calendar icon for next lesson
 const CalSmallIcon = () => (

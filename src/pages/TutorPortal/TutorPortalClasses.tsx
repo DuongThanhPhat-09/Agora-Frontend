@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getTutorLessons, type LessonResponse, type PagedList } from '../../services/lesson.service';
+import { getTutorLessons, type LessonResponse } from '../../services/lesson.service';
 import { message as antMessage } from 'antd';
 import styles from '../../styles/pages/tutor-portal-classes.module.css';
 
@@ -38,11 +38,12 @@ const EditIcon = () => (
     </svg>
 );
 
-const ChevronRightIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M5 3L9 7L5 11" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
+// ChevronRightIcon - commented out (only used in commented-out sidebar)
+// const ChevronRightIcon = () => (
+//     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+//         <path d="M5 3L9 7L5 11" strokeLinecap="round" strokeLinejoin="round" />
+//     </svg>
+// );
 
 // Helper function to format date
 const formatDate = (dateString: string) => {
@@ -56,52 +57,19 @@ const formatDate = (dateString: string) => {
     return `${day}, Thg ${month}\n${dateNum} ${hours}:${minutes}`;
 };
 
-// Sample data for classes needing attention
-const attentionClasses = [
-    {
-        id: 1,
-        name: 'Đại số cơ bản',
-        homework: '8 BTVN',
-        scores: '4 Điểm',
-        nextLesson: 'Tiếp theo: T4 15:00'
-    },
-    {
-        id: 2,
-        name: 'Toán học nâng cao A',
-        homework: '8 BTVN',
-        scores: '4 Điểm',
-        nextLesson: 'Tiếp theo: T4 15:00'
-    },
-    {
-        id: 3,
-        name: 'Vật lý cơ bản',
-        homework: '8 BTVN',
-        scores: '4 Điểm',
-        nextLesson: 'Tiếp theo: T4 15:00'
-    }
-];
+// Sample data - commented out (only used in commented-out sidebar)
+// const attentionClasses = [
+//     { id: 1, name: 'Đại số cơ bản', homework: '8 BTVN', scores: '4 Điểm', nextLesson: 'Tiếp theo: T4 15:00' },
+//     { id: 2, name: 'Toán học nâng cao A', homework: '8 BTVN', scores: '4 Điểm', nextLesson: 'Tiếp theo: T4 15:00' },
+//     { id: 3, name: 'Vật lý cơ bản', homework: '8 BTVN', scores: '4 Điểm', nextLesson: 'Tiếp theo: T4 15:00' }
+// ];
 
-// Sample data for recent activity
-const recentActivities = [
-    {
-        id: 1,
-        text: 'Học sinh mới tham gia lớp Vật lý',
-        time: '2 giờ trước',
-        type: 'student'
-    },
-    {
-        id: 2,
-        text: 'Đã chấm bài tập Hóa học',
-        time: '5 giờ trước',
-        type: 'homework'
-    },
-    {
-        id: 3,
-        text: 'Đã nhập điểm cho lớp luyện thi',
-        time: '1 ngày trước',
-        type: 'scores'
-    }
-];
+// Sample data - commented out (only used in commented-out sidebar)
+// const recentActivities = [
+//     { id: 1, text: 'Học sinh mới tham gia lớp Vật lý', time: '2 giờ trước', type: 'student' },
+//     { id: 2, text: 'Đã chấm bài tập Hóa học', time: '5 giờ trước', type: 'homework' },
+//     { id: 3, text: 'Đã nhập điểm cho lớp luyện thi', time: '1 ngày trước', type: 'scores' }
+// ];
 
 // Interface for grouped class data
 interface ClassData {
@@ -311,85 +279,85 @@ const TutorPortalClasses: React.FC = () => {
                         <>
                             {console.log('✅ Rendering table with', filteredClasses.length, 'classes')}
                             <table className={styles.table}>
-                            <thead>
-                                <tr>
-                                    <th>LỚP HỌC</th>
-                                    <th>LỊCH HỌC</th>
-                                    <th>HỌC SINH</th>
-                                    <th>BUỔI<br />TIẾP THEO</th>
-                                    <th>TIẾN ĐỘ</th>
-                                    <th className={styles.alignRight}>HÀNH ĐỘNG</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredClasses.map((classData) => (
-                                    <tr key={classData.bookingId}>
-                                        <td>
-                                            <div className={styles.classInfo}>
-                                                <div className={styles.className}>{classData.subjectName}</div>
-                                                <div className={styles.classTags}>
-                                                    <span className={styles.tag}>{classData.totalLessons} buổi</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className={styles.scheduleText}>
-                                                {classData.schedule}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className={styles.studentsList}>
-                                                <div className={styles.studentAvatar}>
-                                                    {classData.studentName.substring(0, 2).toUpperCase()}
-                                                </div>
-                                                <span style={{ marginLeft: '8px', fontSize: '13px' }}>
-                                                    {classData.studentName}
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            {classData.nextLesson ? (
-                                                <div className={styles.nextLessonText}>
-                                                    {formatDate(classData.nextLesson.scheduledStart).split('\n').map((line, i) => (
-                                                        <div key={i}>{line}</div>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <div className={styles.nextLessonText}>
-                                                    Không có
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td>
-                                            <div className={styles.healthBadges}>
-                                                <span className={styles.hwBadge}>
-                                                    {classData.completedLessons}/{classData.totalLessons}<br />Hoàn thành
-                                                </span>
-                                                <span className={styles.scoresBadge}>
-                                                    {classData.hasHomework ? '✓' : '-'}<br />BTVN
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className={styles.actions}>
-                                                <button
-                                                    className={styles.openBtn}
-                                                    onClick={() => handleOpenClass(classData.bookingId)}
-                                                >
-                                                    Mở
-                                                </button>
-                                                <button className={styles.iconBtn}>
-                                                    <EditIcon />
-                                                </button>
-                                                <button className={styles.iconBtn}>
-                                                    <MoreIcon />
-                                                </button>
-                                            </div>
-                                        </td>
+                                <thead>
+                                    <tr>
+                                        <th>LỚP HỌC</th>
+                                        <th>LỊCH HỌC</th>
+                                        <th>HỌC SINH</th>
+                                        <th>BUỔI<br />TIẾP THEO</th>
+                                        <th>TIẾN ĐỘ</th>
+                                        <th className={styles.alignRight}>HÀNH ĐỘNG</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {filteredClasses.map((classData) => (
+                                        <tr key={classData.bookingId}>
+                                            <td>
+                                                <div className={styles.classInfo}>
+                                                    <div className={styles.className}>{classData.subjectName}</div>
+                                                    <div className={styles.classTags}>
+                                                        <span className={styles.tag}>{classData.totalLessons} buổi</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className={styles.scheduleText}>
+                                                    {classData.schedule}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className={styles.studentsList}>
+                                                    <div className={styles.studentAvatar}>
+                                                        {classData.studentName.substring(0, 2).toUpperCase()}
+                                                    </div>
+                                                    <span style={{ marginLeft: '8px', fontSize: '13px' }}>
+                                                        {classData.studentName}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {classData.nextLesson ? (
+                                                    <div className={styles.nextLessonText}>
+                                                        {formatDate(classData.nextLesson.scheduledStart).split('\n').map((line, i) => (
+                                                            <div key={i}>{line}</div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className={styles.nextLessonText}>
+                                                        Không có
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td>
+                                                <div className={styles.healthBadges}>
+                                                    <span className={styles.hwBadge}>
+                                                        {classData.completedLessons}/{classData.totalLessons}<br />Hoàn thành
+                                                    </span>
+                                                    <span className={styles.scoresBadge}>
+                                                        {classData.hasHomework ? '✓' : '-'}<br />BTVN
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className={styles.actions}>
+                                                    <button
+                                                        className={styles.openBtn}
+                                                        onClick={() => handleOpenClass(classData.bookingId)}
+                                                    >
+                                                        Mở
+                                                    </button>
+                                                    <button className={styles.iconBtn}>
+                                                        <EditIcon />
+                                                    </button>
+                                                    <button className={styles.iconBtn}>
+                                                        <MoreIcon />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </>
                     )}
                 </div>
