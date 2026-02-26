@@ -2,7 +2,7 @@
 /* eslint-disable no-useless-catch */
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5166/api";
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5166') + '/api';
 const USER_LOCAL_STORAGE_KEY = "agora_user_data"; // Key để lưu thông tin user
 
 const api = axios.create({
@@ -29,6 +29,33 @@ export const saveUserToStorage = (userData: any) => {
 export const getCurrentUser = () => {
   const data = localStorage.getItem(USER_LOCAL_STORAGE_KEY);
   return data ? JSON.parse(data) : null;
+};
+
+/**
+ * Lấy thông tin user từ JWT token
+ */
+export const getUserInfoFromToken = () => {
+  const user = getCurrentUser();
+  if (!user || !user.accessToken) return null;
+
+  const payload = decodeJWT(user.accessToken);
+  if (!payload) return null;
+
+  // Extract user info from JWT claims
+  const emailClaim = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress";
+  const nameClaim = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name";
+  const givenNameClaim = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname";
+  const surnameClaim = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname";
+
+  return {
+    email: payload[emailClaim] || payload.email,
+    fullname: payload[nameClaim] || payload.name,
+    firstName: payload[givenNameClaim] || payload.given_name,
+    lastName: payload[surnameClaim] || payload.family_name,
+    userId: getUserIdFromToken(),
+    role: getCurrentUserRole(),
+    ...user // Include original user data (accessToken, etc.)
+  };
 };
 
 /**
@@ -198,7 +225,8 @@ export const registerUserToBackend = async (supabaseToken: string, password: str
       role: role
     };
 
-    const response = await api.post("/registrations/register-supabase", payload);
+    // Endpoint: /api/auth/register-supabase
+    const response = await api.post("/auth/register-supabase", payload);
     console.log("✅ Backend registration successful:", response.data);
     return response.data;
   } catch (error: any) {
@@ -228,3 +256,45 @@ export const parseEKYCData = (ekycRawData: string | null) => {
     return null;
   }
 };
+
+// --- PASSWORD MANAGEMENT ---
+
+/**
+ * Sync password with backend after Supabase password reset
+ */
+export const syncPassword = async (supabaseToken: string, newPassword: string) => {
+  try {
+    console.log("🔄 Syncing password with backend...");
+    const response = await api.put("/passwords/sync", {
+      supabaseToken,
+      newPassword
+    });
+    console.log("✅ Password synced successfully");
+    return response.data;
+  } catch (error) {
+    console.error("❌ Password sync error:", error);
+    throw error;
+  }
+};
+
+/**
+ * Change password (requires old password)
+ */
+export const changePassword = async (oldPassword: string, newPassword: string) => {
+  try {
+    console.log("🔄 Changing password...");
+    const user = getCurrentUser();
+    const response = await api.put("/passwords/change", {
+      oldPassword,
+      newPassword
+    }, {
+      headers: { Authorization: `Bearer ${user?.accessToken}` }
+    });
+    console.log("✅ Password changed successfully");
+    return response.data;
+  } catch (error) {
+    console.error("❌ Password change error:", error);
+    throw error;
+  }
+};
+

@@ -6,7 +6,6 @@
 @import "./styles/base/global.css";
 
 /* ===== LAYOUT STYLES ===== */
-@import "./styles/layouts/tutor-layout.css";
 
 /* ===== COMPONENT STYLES ===== */
 /* Header and Footer are imported directly in their components */
@@ -21,7 +20,6 @@
 @import "./styles/pages/tutor-search.css";
 @import "./styles/pages/register.css";
 @import "./styles/pages/tutor-detail.css";
-@import "./styles/pages/tutor-workspace.css";
 @import "./styles/pages/admin-vetting.css";
 @import "./styles/pages/admin-dispute.css";
 @import "./styles/pages/admin-dispute-detail.css";

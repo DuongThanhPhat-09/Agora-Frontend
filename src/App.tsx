@@ -1,41 +1,57 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import HomePage from "./pages/Home/HomePage";
-import TutorSearchPage from "./pages/TutorSearch/TutorSearchPage";
-import LoginPage from "./pages/Login/LoginPage";
-import RegisterPage from "./pages/Register/RegisterPage";
-import { TutorDetailPage } from "./pages/TutorDetail";
-import TutorLayout from "./layouts/TutorLayout";
-import TutorDashboard from "./pages/TutorWorkspace/TutorDashboard";
-import TutorSchedulePage from "./pages/TutorSchedule";
-import MessagesPage from "./pages/TutorMessages";
-import { TutorWalletPage } from "./pages/TutorWallet";
-import { TutorClassesPage } from "./pages/TutorClasses";
-import { TutorProfilePage } from "./pages/TutorProfile";
-import { AdminDashboardPage } from "./pages/AdminDashboard";
-import { UserManagementPage } from "./pages/AdminUserManagement";
-import { AdminVettingPage } from "./pages/AdminVetting";
-import { AdminDisputesPage } from "./pages/AdminDisputes";
-import AdminDisputeDetailPage from "./pages/AdminDisputes/AdminDisputeDetailPage";
-import { AdminFinancialsPage } from "./pages/AdminFinancials";
-import { AdminSettingsPage } from "./pages/AdminSettings";
-import AdminLayout from "./layouts/AdminLayout";
-import NotFoundPage from "./pages/Error/NotFoundPage";
-import UnauthorizedPage from "./pages/Error/UnauthorizedPage";
-import ForbiddenPage from "./pages/Error/ForbiddenPage";
+import { Routes, Route, Navigate } from 'react-router-dom';
+import HomePage from './pages/Home/HomePage';
+import TutorSearchPage from './pages/TutorSearch/TutorSearchPage';
+import LoginPage from './pages/Login/LoginPage';
+import RegisterPage from './pages/Register/RegisterPage';
+import ResetPasswordPage from './pages/Login/ResetPasswordPage';
+import { TutorDetailPage } from './pages/TutorDetail';
+import { AdminDashboardPage } from './pages/AdminDashboard';
+import { UserManagementPage } from './pages/AdminUserManagement';
+import { AdminVettingPage } from './pages/AdminVetting';
+import { AdminDisputesPage } from './pages/AdminDisputes';
+import AdminDisputeDetailPageExpanded from './pages/AdminDisputes/AdminDisputeDetailPageExpanded';
+import { AdminFinancialsPage } from './pages/AdminFinancials';
+import { AdminSettingsPage } from './pages/AdminSettings';
+import AdminWarningsPage from './pages/AdminWarnings/AdminWarningsPage';
+import AdminLayout from './layouts/AdminLayout';
+import TutorPortalLayout from './layouts/TutorPortalLayout';
+import {
+  TutorPortalProfile,
+  TutorPortalDashboard,
+  TutorPortalSchedule,
+  TutorPortalMessages,
+  TutorPortalClasses,
+  TutorPortalClassDetail,
+  TutorPortalStudentProfile,
+  TutorPortalBookings,
+} from './pages/TutorPortal';
+import NotFoundPage from './pages/Error/NotFoundPage';
+import UnauthorizedPage from './pages/Error/UnauthorizedPage';
+import ForbiddenPage from './pages/Error/ForbiddenPage';
 
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import ParentLayout from './layouts/ParentLayout';
+import ParentDashboard from './pages/ParentDashboard';
+import ParentBooking from './pages/ParentBooking';
+import BookingDetail from './pages/ParentBooking/Details';
+import ParentWallet from './pages/ParentWallet';
+import ParentMessage from './pages/ParentMessage';
+import PaymentPage from './pages/ParentBooking/Payment';
+import StudentDashboard from './pages/StudentDashboard';
+import StudentCourses from './pages/StudentCourses';
+import ParentStudent from './pages/ParentStudent';
+import PaymentCallback from './pages/PaymentCallback/PaymentCallback';
+import ParentLessons from './pages/ParentLessons';
+import ParentLessonDetail from './pages/ParentLessons/ParentLessonDetail';
+import ParentDisputes from './pages/ParentDisputes';
 
 // ---------------------
 
 function App() {
   return (
     <div>
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        style={{ zIndex: 99999 }}
-      />
+      <ToastContainer position="top-right" autoClose={5000} style={{ zIndex: 99999 }} />
 
       <Routes>
         {/* Public Routes */}
@@ -45,33 +61,6 @@ function App() {
         <Route path="/tutor-detail" element={<TutorDetailPage />} />
         <Route path="/tutor-detail/:id" element={<TutorDetailPage />} />
 
-        {/* Redirect old tutor URLs to new structure */}
-        <Route path="/tutor-workspace" element={<Navigate to="/tutor/workspace" replace />} />
-        <Route path="/tutor-schedule" element={<Navigate to="/tutor/schedule" replace />} />
-        <Route path="/tutor-classes" element={<Navigate to="/tutor/classes" replace />} />
-        <Route path="/tutor-messages" element={<Navigate to="/tutor/messages" replace />} />
-        <Route path="/tutor-wallet" element={<Navigate to="/tutor/wallet" replace />} />
-        <Route path="/tutor-profile" element={<Navigate to="/tutor/profile" replace />} />
-
-        {/* Tutor Layout with nested routes - PROTECTED */}
-        <Route
-          path="/tutor"
-          element={
-            // <ProtectedRoute allowedRoles={["Tutor"]}>
-            //   <TutorLayout />
-            // </ProtectedRoute>
-            <TutorLayout />
-
-          }
-        >
-          <Route path="workspace" element={<TutorDashboard />} />
-          <Route path="schedule" element={<TutorSchedulePage />} />
-          <Route path="classes" element={<TutorClassesPage />} />
-          <Route path="messages" element={<MessagesPage />} />
-          <Route path="wallet" element={<TutorWalletPage />} />
-          <Route path="profile" element={<TutorProfilePage />} />
-        </Route>
-
         {/* Admin Layout - PROTECTED */}
         <Route
           path="/admin"
@@ -80,7 +69,6 @@ function App() {
             //   <AdminLayout />
             // </ProtectedRoute>
             <AdminLayout />
-
           }
         >
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
@@ -88,13 +76,71 @@ function App() {
           <Route path="users" element={<UserManagementPage />} />
           <Route path="vetting" element={<AdminVettingPage />} />
           <Route path="disputes" element={<AdminDisputesPage />} />
-          <Route path="disputes/:id" element={<AdminDisputeDetailPage />} />
+          <Route path="disputes/:disputeId" element={<AdminDisputeDetailPageExpanded />} />
           <Route path="financials" element={<AdminFinancialsPage />} />
+          <Route path="warnings" element={<AdminWarningsPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
 
+        {/* Tutor Portal - New Layout based on Figma */}
+        <Route path="/tutor-portal" element={<TutorPortalLayout />}>
+          <Route index element={<Navigate to="/tutor-portal/dashboard" replace />} />
+          <Route path="dashboard" element={<TutorPortalDashboard />} />
+          <Route path="profile" element={<TutorPortalProfile />} />
+          <Route path="schedule" element={<TutorPortalSchedule />} />
+          <Route path="messages" element={<TutorPortalMessages />} />
+          <Route path="classes" element={<TutorPortalClasses />} />
+          <Route path="classes/:classId" element={<TutorPortalClassDetail />} />
+          <Route path="students/:studentId" element={<TutorPortalStudentProfile />} />
+          <Route path="bookings" element={<TutorPortalBookings />} />
+          {/* Future routes: sessions, finance, settings */}
+        </Route>
+
+        {/* Parent Layout - PROTECTED */}
+        <Route
+          path="/parent"
+          element={
+            // <ProtectedRoute allowedRoles={["Admin"]}>
+            //   <AdminLayout />
+            // </ProtectedRoute>
+            <ParentLayout />
+          }
+        >
+          <Route index element={<Navigate to="/parent/dashboard" replace />} />
+          <Route path="dashboard" element={<ParentDashboard />} />
+          <Route path="booking" element={<ParentBooking />} />
+          <Route path="booking/:id" element={<BookingDetail />} />
+          <Route path="booking/:id/payment" element={<PaymentPage />} />
+          <Route path="student" element={<ParentStudent />} />
+          <Route path="wallet" element={<ParentWallet />} />
+          <Route path="messages" element={<ParentMessage />} />
+          <Route path="lessons" element={<ParentLessons />} />
+          <Route path="lessons/:lessonId" element={<ParentLessonDetail />} />
+          <Route path="disputes" element={<ParentDisputes />} />
+        </Route>
+
+        {/* Student Layout - PROTECTED */}
+        <Route
+          path="/student"
+          element={
+            // <ProtectedRoute allowedRoles={["Admin"]}>
+            //   <AdminLayout />
+            // </ProtectedRoute>
+            <ParentLayout />
+          }
+        >
+          <Route index element={<Navigate to="/student/dashboard" replace />} />
+          <Route path="dashboard" element={<StudentDashboard />} />
+          <Route path="courses" element={<StudentCourses />} />
+        </Route>
+
+        {/* PayOS callback - loaded inside iframe after payment */}
+        <Route path="/payment/success" element={<PaymentCallback />} />
+        <Route path="/payment/cancel" element={<PaymentCallback />} />
+
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         {/* Error Pages */}
         <Route path="/401" element={<UnauthorizedPage />} />

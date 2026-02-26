@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
+import { SubjectsManagement } from './components';
 
 import '../../styles/pages/admin-settings.css';
 
+type SettingsTab = 'general' | 'users' | 'financial' | 'subjects' | 'integrations' | 'notifications';
+
 export const AdminSettingsPage = () => {
+    // Active tab
+    const [activeTab, setActiveTab] = useState<SettingsTab>('financial');
+
     // State management
     const [commissionRate, setCommissionRate] = useState<number>(15);
     const [minWithdrawal, setMinWithdrawal] = useState<string>('50.00');
@@ -46,54 +52,109 @@ export const AdminSettingsPage = () => {
                         <div className="settings-menu">
                             <h3 className="settings-menu-title">Cấu hình hệ thống</h3>
                             <div className="settings-nav">
-                                <button className="settings-nav-btn">
+                                <button
+                                    className={`settings-nav-btn ${activeTab === 'general' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('general')}
+                                >
+                                    {activeTab === 'general' && <div className="settings-nav-active-indicator"></div>}
                                     <div className="settings-nav-content">
                                         <span className="material-symbols-outlined settings-nav-icon">tune</span>
                                         <span className="settings-nav-text">Chung</span>
                                     </div>
+                                    {activeTab === 'general' && (
+                                        <span className="material-symbols-outlined settings-nav-chevron">chevron_right</span>
+                                    )}
                                 </button>
-                                <button className="settings-nav-btn">
+                                <button
+                                    className={`settings-nav-btn ${activeTab === 'users' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('users')}
+                                >
+                                    {activeTab === 'users' && <div className="settings-nav-active-indicator"></div>}
                                     <div className="settings-nav-content">
                                         <span className="material-symbols-outlined settings-nav-icon">badge</span>
                                         <span className="settings-nav-text">Quản lý người dùng</span>
                                     </div>
+                                    {activeTab === 'users' && (
+                                        <span className="material-symbols-outlined settings-nav-chevron">chevron_right</span>
+                                    )}
                                 </button>
-                                {/* Active Item */}
-                                <button className="settings-nav-btn active">
-                                    <div className="settings-nav-active-indicator"></div>
+                                <button
+                                    className={`settings-nav-btn ${activeTab === 'financial' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('financial')}
+                                >
+                                    {activeTab === 'financial' && <div className="settings-nav-active-indicator"></div>}
                                     <div className="settings-nav-content">
                                         <span className="material-symbols-outlined settings-nav-icon">account_balance_wallet</span>
                                         <span className="settings-nav-text">Logic tài chính</span>
                                     </div>
-                                    <span className="material-symbols-outlined settings-nav-chevron">chevron_right</span>
+                                    {activeTab === 'financial' && (
+                                        <span className="material-symbols-outlined settings-nav-chevron">chevron_right</span>
+                                    )}
                                 </button>
-                                <button className="settings-nav-btn">
+                                <button
+                                    className={`settings-nav-btn ${activeTab === 'subjects' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('subjects')}
+                                >
+                                    {activeTab === 'subjects' && <div className="settings-nav-active-indicator"></div>}
+                                    <div className="settings-nav-content">
+                                        <span className="material-symbols-outlined settings-nav-icon">library_books</span>
+                                        <span className="settings-nav-text">Môn học</span>
+                                    </div>
+                                    {activeTab === 'subjects' && (
+                                        <span className="material-symbols-outlined settings-nav-chevron">chevron_right</span>
+                                    )}
+                                </button>
+                                <button
+                                    className={`settings-nav-btn ${activeTab === 'integrations' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('integrations')}
+                                >
+                                    {activeTab === 'integrations' && <div className="settings-nav-active-indicator"></div>}
                                     <div className="settings-nav-content">
                                         <span className="material-symbols-outlined settings-nav-icon">integration_instructions</span>
                                         <span className="settings-nav-text">Tích hợp</span>
                                     </div>
+                                    {activeTab === 'integrations' && (
+                                        <span className="material-symbols-outlined settings-nav-chevron">chevron_right</span>
+                                    )}
                                 </button>
-                                <button className="settings-nav-btn">
+                                <button
+                                    className={`settings-nav-btn ${activeTab === 'notifications' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('notifications')}
+                                >
+                                    {activeTab === 'notifications' && <div className="settings-nav-active-indicator"></div>}
                                     <div className="settings-nav-content">
                                         <span className="material-symbols-outlined settings-nav-icon">notifications</span>
                                         <span className="settings-nav-text">Thông báo</span>
                                     </div>
+                                    {activeTab === 'notifications' && (
+                                        <span className="material-symbols-outlined settings-nav-chevron">chevron_right</span>
+                                    )}
                                 </button>
                             </div>
                         </div>
 
                         {/* Right Configuration Panel (75%) */}
                         <div className="settings-panel">
-                            {/* Header */}
-                            <div className="settings-panel-header">
-                                <div>
-                                    <h2 className="settings-page-title">Cấu hình tài chính</h2>
-                                    <p className="settings-page-desc">Quản lý tỷ lệ hoa hồng, quy tắc thanh toán và thông số thuế cho nền tảng.</p>
+                            {/* Subjects Tab - Full Width Layout */}
+                            {activeTab === 'subjects' && (
+                                <div className="settings-panel-full">
+                                    <SubjectsManagement />
                                 </div>
-                                <div className="text-right hidden sm:block">
-                                    <span className="settings-last-updated">Cập nhật lần cuối: Hôm nay, 10:23 SA</span>
-                                </div>
-                            </div>
+                            )}
+
+                            {/* Financial Tab - Form Layout */}
+                            {activeTab === 'financial' && (
+                                <>
+                                    {/* Header */}
+                                    <div className="settings-panel-header">
+                                        <div>
+                                            <h2 className="settings-page-title">Cấu hình tài chính</h2>
+                                            <p className="settings-page-desc">Quản lý tỷ lệ hoa hồng, quy tắc thanh toán và thông số thuế cho nền tảng.</p>
+                                        </div>
+                                        <div className="text-right hidden sm:block">
+                                            <span className="settings-last-updated">Cập nhật lần cuối: Hôm nay, 10:23 SA</span>
+                                        </div>
+                                    </div>
 
                             {/* Scrollable Form Content */}
                             <div className="settings-form-content">
@@ -289,6 +350,23 @@ export const AdminSettingsPage = () => {
                                     Lưu thay đổi
                                 </button>
                             </div>
+                                </>
+                            )}
+
+                            {/* Other tabs - Coming Soon */}
+                            {activeTab !== 'financial' && activeTab !== 'subjects' && (
+                                <div className="settings-panel-header">
+                                    <div>
+                                        <h2 className="settings-page-title">
+                                            {activeTab === 'general' && 'Cấu hình chung'}
+                                            {activeTab === 'users' && 'Quản lý người dùng'}
+                                            {activeTab === 'integrations' && 'Tích hợp'}
+                                            {activeTab === 'notifications' && 'Thông báo'}
+                                        </h2>
+                                        <p className="settings-page-desc">Tính năng đang được phát triển...</p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

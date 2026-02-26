@@ -1,5 +1,11 @@
+import { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import BookingModal from './BookingModal';
+import { getTutorFullProfile } from '../../services/tutorDetail.service';
+import type { TutorFullProfile, FeedbackItem, AvailabilitySlot, CertificateInfo } from '../../services/tutorDetail.service';
+import { getTutorFeedbacks, getTutorFeedbackStats, type FeedbackDto, type FeedbackStatsDto } from '../../services/feedback.service';
 import "../../styles/pages/tutor-detail.css";
 
 // SVG Icons
@@ -28,14 +34,6 @@ const HeartIcon = () => (
     </svg>
 );
 
-const GraduationIcon = () => (
-    <svg width="17.5" height="17.5" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M9 1.5L1 5.5L9 9.5L17 5.5L9 1.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M1 5.5V10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M4 7V12C4 13.5 6 15 9 15C12 15 14 13.5 14 12V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
-
 const CheckIcon = () => (
     <svg width="8.8" height="8.8" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M7.5 2.25L3.5625 6.1875L1.5 4.125" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -51,19 +49,6 @@ const CertificateIcon = () => (
     </svg>
 );
 
-const FileIcon = () => (
-    <svg width="17.5" height="17.5" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M10 1H4C3.4 1 3 1.4 3 2V16C3 16.6 3.4 17 4 17H14C14.6 17 15 16.6 15 16V6L10 1Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M10 1V6H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
-
-const ShieldIcon = () => (
-    <svg width="10.5" height="10.5" viewBox="0 0 11 11" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M5.5 1L2 2.5V5C2 7.5 3.5 9.5 5.5 10C7.5 9.5 9 7.5 9 5V2.5L5.5 1Z" stroke="#3D4A3E" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
-
 const VerifyIcon = () => (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 4L5.5 10.5L2 7" stroke="#3D4A3E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -76,179 +61,121 @@ const QuoteIcon = () => (
     </svg>
 );
 
-// Tutor Data
-const tutorData = {
-    name: "Dr. Sarah Jenkins",
-    credential: "PhD Candidate in Molecular Biology",
-    university: "Oxford University",
-    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-    interviewThumbnail: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800",
-    rating: 4.9,
-    reviews: 127,
-    tags: ["Sinh học phân tử", "IB Diploma", "A-Level", "Luyện thi Y khoa", "Cố vấn du học"],
-    about: {
-        intro: "Tôi chuyên sâu vào việc thu hẹp khoảng cách giữa chương trình trung học và kỳ vọng khắt khe của các đại học top đầu thế giới. Phương pháp của tôi tập trung vào việc học dựa trên vấn đề (Inquiry-based learning) và phân tích phê phán.",
-        experience: "Trong 5 năm qua, tôi đã cố vấn cho hơn 120 học sinh, đa số đều chuyển tiếp thành công vào ngành Y khoa, Khoa học Sinh học và Khoa học Tự nhiên tại các định chế giáo dục danh tiếng. Tôi tin rằng thành công học thuật gồm 30% kiến thức và 70% tư duy chiến lược."
-    },
-    credentials: {
-        education: { title: "Học vấn", institution: "Đại học Oxford", detail: "Tiến sĩ, Sinh học phân tử" },
-        experience: { title: "Kinh nghiệm", institution: "Cố vấn Tuyển sinh Cao cấp", detail: "Chuyên sâu Oxbridge (3 năm)" },
-        certificate: { title: "Chứng chỉ", institution: "Qualified Teacher (QTS)", detail: "Vương Quốc Anh" }
-    },
-    academicDegrees: [
-        { title: "Tiến sĩ Sinh học Phân tử", institution: "University of Oxford", verified: true },
-        { title: "Thạc sĩ Khoa học (Honors)", institution: "Imperial College London", verified: true }
-    ],
-    certificates: [
-        { title: "Qualified Teacher Status", institution: "Department for Education UK", verified: true },
-        { title: "IELTS Academic", institution: "Overall Band Score", score: "8.5", verified: true },
-        { title: "GRE Biology Subject", institution: "98th Percentile", score: "980", verified: true },
-        { title: "Higher Education Fellowship", institution: "Advance HE", verified: true }
-    ],
-    stats: [
-        { value: "+1.8", label: "GPA trung bình tăng", sublabel: "Sau 12 tuần giảng dạy" },
-        { value: "98%", label: "Học sinh đỗ nguyện vọng 1", sublabel: "Oxbridge & Ivy League" },
-        { value: "+220", label: "Tăng điểm SAT/IELTS", sublabel: "Điểm SAT trung bình tăng" },
-        { value: "12w", label: "Thời gian đạt mục tiêu", sublabel: "Lộ trình cá nhân hóa" }
-    ],
-    testimonials: [
-        {
-            id: 1,
-            name: "Lê Minh Anh",
-            initial: "L",
-            role: "Học sinh Year 13 (A-Level)",
-            quote: `"Chuyên môn của Sarah là không thể bàn cãi. Cô không chỉ dạy kiến thức mà còn dạy cách các giáo sư Oxford tư duy khi ra đề thi."`,
-            duration: "6 tháng",
-            goal: "Thi đỗ Y khoa - University of Cambridge",
-            result: "Đạt A* Biology, đỗ nguyện vọng 1"
-        },
-        {
-            id: 2,
-            name: "Chị Tuyết Mai",
-            initial: "C",
-            role: "Phụ huynh tại Hà Nội",
-            quote: `"Sự minh bạch trong báo cáo định kỳ là điều tôi hài lòng nhất. Tôi biết con mình tiến bộ từng ngày thông qua Agora LMS."`,
-            duration: "4 tháng",
-            goal: "Cải thiện IB Biology từ 4 lên 7",
-            result: "Kết quả cuối kỳ đạt điểm 7 tuyệt đối"
-        }
-    ],
-    price: "500.000đ",
-    schedule: [
-        { day: "T2", date: "21" },
-        { day: "T3", date: "22" },
-        { day: "T4", date: "23" },
-        { day: "T5", date: "24", selected: true },
-        { day: "T6", date: "25" }
-    ],
-    timeSlots: [
-        { time: "09:00", disabled: true },
-        { time: "10:30", selected: true },
-        { time: "13:30", available: true },
-        { time: "15:00", disabled: true },
-        { time: "16:30", available: true },
-        { time: "19:00", available: true }
-    ]
+// Formatter for currency
+const formatCurrency = (amount: number | null) => {
+    if (amount === null || amount === undefined) return "0đ";
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 };
 
-// Hero Section with Video Thumbnail
-const HeroSection = () => (
-    <section className="tutor-hero-section">
-        <div className="component-2">
-            <img
-                className="interview-thumbnail"
-                src={tutorData.interviewThumbnail}
-                alt="Sarah Jenkins Academic Interview"
-            />
-            <div className="gradient-overlay"></div>
+// ============================================
+// Sub-components
+// ============================================
 
-            {/* Play Button */}
-            <div className="play-button-container">
-                <div className="play-button">
-                    <PlayIcon />
-                </div>
-                <b className="click-to-view">Click to View Academic Interview</b>
-            </div>
+// Hero Section
+const HeroSection = ({ profile }: { profile: TutorFullProfile }) => {
+    // Flatten subjects tags
+    const tags = profile.subjects?.flatMap(s => s.tags || []) || [];
 
-            {/* Agora Badge */}
-            <div className="agora-badge-container">
-                <div className="agora-badge">
-                    <div className="agora-badge-dot"></div>
-                    <b className="agora-badge-text">Agora Original Interview</b>
-                </div>
-            </div>
+    return (
+        <section className="tutor-hero-section">
+            <div className="component-2">
+                <img
+                    className="interview-thumbnail"
+                    src={(() => {
+                        if (!profile.videoIntroUrl) return "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800";
+                        const match = profile.videoIntroUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/);
+                        return match?.[1] ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800";
+                    })()}
+                    alt={profile.fullName || "Tutor Interview"}
+                />
+                <div className="gradient-overlay"></div>
 
-            {/* Tutor Info Card */}
-            <div className="tutor-info-card">
-                <div className="tutor-info-content">
-                    <div className="tutor-mini-avatar">
-                        <img src={tutorData.avatar} alt={tutorData.name} />
-                        <div className="mini-avatar-gradient"></div>
+                {/* Play Button */}
+                <div className="play-button-container">
+                    <div className="play-button">
+                        <PlayIcon />
                     </div>
-                    <div className="tutor-info-text">
-                        <div className="university-badge">
-                            <b>{tutorData.university}</b>
+                    <b className="click-to-view">Click để xem phỏng vấn học thuật</b>
+                </div>
+
+                {/* Agora Badge */}
+                <div className="agora-badge-container">
+                    <div className="agora-badge">
+                        <div className="agora-badge-dot"></div>
+                        <b className="agora-badge-text">Agora Original Interview</b>
+                    </div>
+                </div>
+
+                {/* Tutor Info Card */}
+                <div className="tutor-info-card">
+                    <div className="tutor-info-content">
+                        <div className="tutor-mini-avatar">
+                            <img src={profile.avatarUrl || "https://randomuser.me/api/portraits/lego/1.jpg"} alt={profile.fullName || ""} />
+                            <div className="mini-avatar-gradient"></div>
                         </div>
-                        <h1 className="tutor-name">{tutorData.name}</h1>
-                        <p className="tutor-credential">{tutorData.credential}</p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Rating Card */}
-            <div className="rating-card-container">
-                <div className="rating-card">
-                    <div className="rating-stars">
-                        <div className="stars-row">
-                            {[1, 2, 3, 4, 5].map((i) => (
-                                <StarIcon key={i} filled={true} />
-                            ))}
+                        <div className="tutor-info-text">
+                            <div className="university-badge">
+                                <b>{profile.education?.split(',')[0] || "University"}</b>
+                            </div>
+                            <h1 className="tutor-name">{profile.fullName}</h1>
+                            <p className="tutor-credential">{profile.headline}</p>
                         </div>
-                        <b className="rating-text">{tutorData.rating} ({tutorData.reviews} REVIEWS)</b>
                     </div>
-                    <div className="rating-divider"></div>
-                    <div className="favorite-button">
-                        <HeartIcon />
+                </div>
+
+                {/* Rating Card */}
+                <div className="rating-card-container">
+                    <div className="rating-card">
+                        <div className="rating-stars">
+                            <div className="stars-row">
+                                {[1, 2, 3, 4, 5].map((i) => (
+                                    <StarIcon key={i} filled={i <= Math.round(profile.averageRating || 0)} />
+                                ))}
+                            </div>
+                            <b className="rating-text">{(profile.averageRating || 0).toFixed(1)} ({profile.totalFeedbacks || 0} ĐÁNH GIÁ)</b>
+                        </div>
+                        <div className="rating-divider"></div>
+                        <div className="favorite-button">
+                            <HeartIcon />
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        {/* Subject Tags */}
-        <div className="subject-tags">
-            {tutorData.tags.map((tag, index) => (
-                <div key={index} className="subject-tag">
-                    <b>{tag}</b>
-                </div>
-            ))}
-        </div>
-    </section>
-);
+            {/* Subject Tags */}
+            <div className="subject-tags">
+                {tags.length > 0 ? tags.map((tag, index) => (
+                    <div key={index} className="subject-tag">
+                        <b>{tag}</b>
+                    </div>
+                )) : (
+                    <div className="subject-tag"><b>Chưa cập nhật môn học</b></div>
+                )}
+            </div>
+        </section>
+    );
+};
 
 // About Section
-const AboutSection = () => (
+const AboutSection = ({ profile }: { profile: TutorFullProfile }) => (
     <section className="about-section">
-        <h2 className="section-title">Về Mentor Sarah</h2>
+        <h2 className="section-title">Về Mentor {profile.fullName?.split(' ').pop()}</h2>
         <div className="about-content">
             <div className="about-text">
-                <p className="about-intro">{tutorData.about.intro}</p>
-                <p className="about-experience">{tutorData.about.experience}</p>
+                <p className="about-intro">{profile.bio || "Gia sư chưa cập nhật giới thiệu."}</p>
+                <p className="about-experience">{profile.experience || "Chưa cập nhật kinh nghiệm giảng dạy."}</p>
             </div>
             <div className="credentials-card">
                 <div className="credential-item">
-                    <span className="credential-label">{tutorData.credentials.education.title}</span>
-                    <b className="credential-institution">{tutorData.credentials.education.institution}</b>
-                    <i className="credential-detail">{tutorData.credentials.education.detail}</i>
+                    <span className="credential-label">Học vấn</span>
+                    <b className="credential-institution">{profile.education || "—"}</b>
+                    <i className="credential-detail">GPA: {profile.gpa || "—"}/{profile.gpaScale || "—"}</i>
                 </div>
+                {/* Additional fixed cards if you want to keep the UI symmetry, or hide if data missing */}
                 <div className="credential-item">
-                    <span className="credential-label">{tutorData.credentials.experience.title}</span>
-                    <b className="credential-institution">{tutorData.credentials.experience.institution}</b>
-                    <i className="credential-detail">{tutorData.credentials.experience.detail}</i>
-                </div>
-                <div className="credential-item">
-                    <span className="credential-label">{tutorData.credentials.certificate.title}</span>
-                    <b className="credential-institution">{tutorData.credentials.certificate.institution}</b>
-                    <i className="credential-detail">{tutorData.credentials.certificate.detail}</i>
+                    <span className="credential-label">Hình thức dạy</span>
+                    <b className="credential-institution">{profile.teachingMode || "—"}</b>
+                    <i className="credential-detail">{profile.teachingAreaCity || "Toàn quốc"}</i>
                 </div>
             </div>
         </div>
@@ -256,7 +183,7 @@ const AboutSection = () => (
 );
 
 // Academic Portfolio Section
-const AcademicPortfolioSection = () => (
+const AcademicPortfolioSection = ({ certificates }: { certificates: CertificateInfo[] | null }) => (
     <section className="portfolio-section">
         <div className="portfolio-header">
             <div className="portfolio-title-group">
@@ -269,63 +196,35 @@ const AcademicPortfolioSection = () => (
         </div>
 
         <div className="portfolio-content">
-            {/* Academic Degrees */}
-            <div className="portfolio-category">
-                <div className="category-header">
-                    <div className="category-indicator navy"></div>
-                    <span className="category-title">I. Văn bằng học thuật</span>
-                    <div className="category-divider"></div>
-                </div>
-                <div className="degrees-grid">
-                    {tutorData.academicDegrees.map((degree, index) => (
-                        <div key={index} className="degree-card">
-                            <div className="degree-icon navy">
-                                <GraduationIcon />
-                            </div>
-                            <div className="degree-info">
-                                <div className="degree-title-row">
-                                    <b className="degree-title">{degree.title}</b>
-                                    {degree.verified && (
-                                        <div className="verified-check">
-                                            <CheckIcon />
-                                        </div>
-                                    )}
-                                </div>
-                                <span className="degree-institution">{degree.institution}</span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Certificates */}
+            {/* Certificates Category */}
             <div className="portfolio-category">
                 <div className="category-header">
                     <div className="category-indicator gold"></div>
-                    <span className="category-title">II. Chứng chỉ & Khảo thí</span>
+                    <span className="category-title">Văn bằng & Chứng chỉ</span>
                     <div className="category-divider"></div>
-                    <button className="view-more-btn">XEM THÊM</button>
                 </div>
                 <div className="certificates-grid">
-                    {tutorData.certificates.map((cert, index) => (
+                    {certificates && certificates.length > 0 ? certificates.map((cert, index) => (
                         <div key={index} className="certificate-card">
                             <div className="certificate-icon">
-                                {cert.score ? <FileIcon /> : <CertificateIcon />}
+                                <CertificateIcon />
                             </div>
                             <div className="certificate-info">
                                 <div className="certificate-title-row">
-                                    <b className="certificate-title">{cert.title}</b>
-                                    {cert.verified && (
+                                    <b className="certificate-title">{cert.certificateName}</b>
+                                    {cert.verificationStatus === 'verified' && (
                                         <div className="verified-check">
                                             <CheckIcon />
                                         </div>
                                     )}
                                 </div>
-                                <span className="certificate-institution">{cert.institution}</span>
-                                {cert.score && <b className="certificate-score">{cert.score}</b>}
+                                <span className="certificate-institution">{cert.issuingOrganization}</span>
+                                {cert.yearIssued && <b className="certificate-score">Năm {cert.yearIssued}</b>}
                             </div>
                         </div>
-                    ))}
+                    )) : (
+                        <p className="empty-message">Chưa có chứng chỉ được cập nhật.</p>
+                    )}
                 </div>
             </div>
 
@@ -344,183 +243,565 @@ const AcademicPortfolioSection = () => (
     </section>
 );
 
-// Stats Section
-const StatsSection = () => (
-    <section className="stats-section">
-        <div className="stats-header">
-            <h2 className="section-title">Hiệu quả đào tạo thực tế</h2>
-            <div className="stats-badge">
-                <ShieldIcon />
-                <b>Dữ liệu xác thực từ Agora LMS</b>
-            </div>
-        </div>
-        <div className="stats-grid">
-            {tutorData.stats.map((stat, index) => (
-                <div key={index} className="stat-card">
-                    <b className="stat-value">{stat.value}</b>
-                    <b className="stat-label">{stat.label}</b>
-                    <i className="stat-sublabel">{stat.sublabel}</i>
-                </div>
-            ))}
-        </div>
-    </section>
-);
-
 // Testimonials Section
-const TestimonialsSection = () => (
-    <section className="section5">
-        <div className="heading-24">
-            <h2 className="nht-k-thnh">Nhật ký thành công</h2>
+const TestimonialsSection = ({ feedbacks, totalFeedbacks, tutorId }: {
+    feedbacks: FeedbackItem[] | null,
+    totalFeedbacks: number,
+    tutorId?: string
+}) => {
+    const [allFeedbacks, setAllFeedbacks] = useState<(FeedbackItem | FeedbackDto)[]>([]);
+    const [stats, setStats] = useState<FeedbackStatsDto | null>(null);
+    const [page, setPage] = useState(1);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    // Update feedbacks when prop changes
+    useEffect(() => {
+        if (feedbacks) setAllFeedbacks(feedbacks);
+    }, [feedbacks]);
+
+    // Derived state for easier tracking
+    const effectiveTotal = Math.max(totalFeedbacks, stats?.totalReviews || 0);
+    const hasMore = effectiveTotal > allFeedbacks.length;
+
+    // Load stats on mount
+    useEffect(() => {
+        if (!tutorId) return;
+        getTutorFeedbackStats(tutorId)
+            .then(res => {
+                const data = res.content || res;
+                setStats(data);
+            })
+            .catch(() => { });
+    }, [tutorId]);
+
+    const loadMore = useCallback(async () => {
+        if (!tutorId || loadingMore) return;
+        try {
+            setLoadingMore(true);
+            const pageToFetch = allFeedbacks.length <= (feedbacks?.length || 0) ? 1 : page + 1;
+            const res = await getTutorFeedbacks(tutorId, pageToFetch, 5);
+            const data = res.content || res;
+            const newItems = Array.isArray(data) ? data : data?.items || [];
+
+            if (newItems.length > 0) {
+                if (pageToFetch === 1) {
+                    setAllFeedbacks(newItems);
+                } else {
+                    setAllFeedbacks(prev => {
+                        const existingIds = new Set(prev.map(f => f.feedbackId));
+                        const filtered = newItems.filter(f => !existingIds.has(f.feedbackId));
+                        return [...prev, ...filtered];
+                    });
+                }
+                setPage(pageToFetch);
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoadingMore(false);
+        }
+    }, [tutorId, page, loadingMore, allFeedbacks.length, feedbacks?.length]);
+
+    const handleNext = async () => {
+        if (currentIndex < allFeedbacks.length - 1) {
+            setCurrentIndex(prev => prev + 1);
+        } else if (hasMore) {
+            await loadMore();
+            setCurrentIndex(prev => prev + 1);
+        }
+    };
+
+    const handlePrev = () => {
+        if (currentIndex > 0) {
+            setCurrentIndex(prev => prev - 1);
+        }
+    };
+
+    const testimonial = allFeedbacks[currentIndex];
+
+    // Rating bar helper
+    const RatingBar = ({ star, count, percent }: { star: number; count: number; percent: number }) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
+            <span style={{ minWidth: '12px', color: '#666' }}>{star}</span>
+            <StarIcon />
+            <div style={{ flex: 1, height: '6px', borderRadius: '3px', background: '#f0ece3' }}>
+                <div style={{ width: `${percent}%`, height: '100%', borderRadius: '3px', background: '#D4B483', transition: 'width 0.3s' }} />
+            </div>
+            <span style={{ minWidth: '28px', textAlign: 'right', color: '#999', fontSize: '11px' }}>{count}</span>
         </div>
-        <div className="container84">
-            {tutorData.testimonials.map((testimonial) => (
-                <div key={testimonial.id} className="component-8">
-                    {/* Quote Icon - positioned at top-right of card */}
-                    <div className="container85">
-                        <div className="component-122">
-                            <QuoteIcon />
+    );
+
+    return (
+        <section className="section5">
+            <div className="heading-24">
+                <h2 className="nht-k-thnh">Nhật ký thành công</h2>
+            </div>
+
+            {/* Rating Stats */}
+            {stats && (
+                <div style={{
+                    display: 'flex', gap: '24px', alignItems: 'center',
+                    padding: '16px 20px', marginBottom: '10px',
+                    background: 'rgba(242, 240, 228, 0.5)', borderRadius: '12px',
+                    border: '1px solid rgba(62, 47, 40, 0.08)',
+                }}>
+                    <div style={{ textAlign: 'center', minWidth: '80px' }}>
+                        <div style={{ fontSize: '32px', fontWeight: 700, color: '#1a2238' }}>
+                            {stats.averageRating.toFixed(1)}
                         </div>
+                        <div style={{ display: 'flex', gap: '2px', justifyContent: 'center', margin: '4px 0' }}>
+                            {[1, 2, 3, 4, 5].map(i => <StarIcon key={i} filled={i <= Math.round(stats.averageRating)} />)}
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#999' }}>{stats.totalReviews} đánh giá</div>
                     </div>
-                    <div className="container86">
-                        <div className="container87">
-                            {/* User Info */}
-                            <div className="container88">
-                                <div className="background7">
-                                    <b className="l">{testimonial.initial}</b>
-                                </div>
-                                <div className="container89">
-                                    <div className="heading-47">
-                                        <b className="l-minh-anh">{testimonial.name}</b>
-                                    </div>
-                                    <div className="container90">
-                                        <span className="hc-sinh-year">{testimonial.role}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            {/* Quote */}
-                            <div className="container91">
-                                <i className="chuyn-mn-ca">{testimonial.quote}</i>
-                            </div>
-                            {/* Badges */}
-                            <div className="container92">
-                                <div className="border2">
-                                    <b className="xc-thc-bi">Xác thực bởi Agora LMS</b>
-                                </div>
-                                <div className="border2">
-                                    <b className="xc-thc-bi">Học trong {testimonial.duration}</b>
-                                </div>
-                            </div>
-                        </div>
-                        {/* Result Card */}
-                        <div className="background8">
-                            <div className="container93">
-                                <span className="mc-tiu-ban">Mục tiêu ban đầu</span>
-                                <div className="container95">
-                                    <b className="thi-y">{testimonial.goal}</b>
-                                </div>
-                            </div>
-                            <div className="horizontal-divider3"></div>
-                            <div className="container96">
-                                <span className="mc-tiu-ban">Kết quả thực tế</span>
-                                <div className="container98">
-                                    <b className="t-a-biology">{testimonial.result}</b>
-                                </div>
-                            </div>
-                        </div>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <RatingBar star={5} count={stats.rating5Count} percent={stats.rating5Percent} />
+                        <RatingBar star={4} count={stats.rating4Count} percent={stats.rating4Percent} />
+                        <RatingBar star={3} count={stats.rating3Count} percent={stats.rating3Percent} />
+                        <RatingBar star={2} count={stats.rating2Count} percent={stats.rating2Percent} />
+                        <RatingBar star={1} count={stats.rating1Count} percent={stats.rating1Percent} />
                     </div>
                 </div>
-            ))}
-        </div>
-        <button className="component-9">
-            <b className="xem-tt-c">Xem tất cả lộ trình thành công (124)</b>
-        </button>
-    </section>
-);
+            )}
 
+            <div className="container84">
+                {testimonial ? (
+                    <div className="component-8" style={{ width: '100%' }}>
+                        <div className="container85">
+                            <div className="component-122">
+                                <QuoteIcon />
+                            </div>
+                        </div>
+                        <div className="container86">
+                            <div className="container87">
+                                <div className="container88">
+                                    <div className="background7">
+                                        <b className="l">{
+                                            (('fromUserName' in testimonial ? testimonial.fromUserName : (testimonial as any).parentName) || 'P').charAt(0)
+                                        }</b>
+                                    </div>
+                                    <div className="container89">
+                                        <div className="heading-47">
+                                            <b className="l-minh-anh">
+                                                {('fromUserName' in testimonial ? testimonial.fromUserName : (testimonial as any).parentName) || 'Học viên'}
+                                            </b>
+                                        </div>
+                                        <div className="container90">
+                                            <span className="hc-sinh-year">{testimonial.createdAt ? new Date(testimonial.createdAt).toLocaleDateString('vi-VN') : 'Học viên'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="container91">
+                                    <i className="chuyn-mn-ca">"{testimonial.comment || 'Không có bình luận.'}"</i>
+                                </div>
+                                <div className="container92">
+                                    <div className="border2">
+                                        <b className="xc-thc-bi">Xác thực bởi Agora LMS</b>
+                                    </div>
+                                    {('courseDuration' in testimonial && (testimonial as any).courseDuration) && (
+                                        <div className="border2">
+                                            <b className="xc-thc-bi">Học trong {(testimonial as any).courseDuration}</b>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="background8">
+                                <div className="container93">
+                                    <span className="mc-tiu-ban">Mục tiêu ban đầu</span>
+                                    <div className="container95">
+                                        <b className="thi-y">{('initialGoal' in testimonial ? (testimonial as any).initialGoal : null) || '—'}</b>
+                                    </div>
+                                </div>
+                                <div className="horizontal-divider3"></div>
+                                <div className="container96">
+                                    <span className="mc-tiu-ban">Kết quả thực tế</span>
+                                    <div className="container98">
+                                        <b className="t-a-biology">{('actualResult' in testimonial ? (testimonial as any).actualResult : null) || '—'}</b>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <p className="empty-message-center" style={{ width: '100%', textAlign: 'center', padding: '40px' }}>
+                        {loadingMore ? 'Đang tải đánh giá...' : 'Gia sư chưa có đánh giá nào.'}
+                    </p>
+                )}
+
+                {/* Slider Navigation */}
+                {effectiveTotal > 1 && (
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        width: '100%',
+                        marginTop: '20px'
+                    }}>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                                onClick={handlePrev}
+                                disabled={currentIndex === 0}
+                                style={{
+                                    width: '40px',
+                                    height: '40px',
+                                    borderRadius: '50%',
+                                    border: '1px solid #e4ded5',
+                                    background: currentIndex === 0 ? '#f5f5f5' : '#fff',
+                                    cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                <span style={{ fontSize: '18px', color: '#3e2f28' }}>←</span>
+                            </button>
+                            <button
+                                onClick={handleNext}
+                                disabled={currentIndex === effectiveTotal - 1 || loadingMore}
+                                style={{
+                                    width: '40px',
+                                    height: '40px',
+                                    borderRadius: '50%',
+                                    border: '1px solid #e4ded5',
+                                    background: (currentIndex === effectiveTotal - 1) ? '#f5f5f5' : '#fff',
+                                    cursor: (currentIndex === effectiveTotal - 1) ? 'not-allowed' : 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                <span style={{ fontSize: '18px', color: '#3e2f28' }}>{loadingMore ? '...' : '→'}</span>
+                            </button>
+                        </div>
+
+                        <div style={{ fontSize: '14px', color: '#999', fontWeight: 500 }}>
+                            Đánh giá {currentIndex + 1} / {effectiveTotal}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </section>
+    );
+};
 
 // Booking Sidebar
-const BookingSidebar = () => (
-    <aside className="booking-sidebar">
-        <div className="booking-card">
-            {/* Price Header */}
-            <div className="booking-header">
-                <span className="booking-label">Bắt đầu lộ trình học thuật</span>
-                <div className="price-display">
-                    <b className="price-amount">{tutorData.price}</b>
-                    <b className="price-unit">/ BUỔI HỌC</b>
-                </div>
-            </div>
+const BookingSidebar = ({
+    hourlyRate,
+    trialLessonPrice,
+    availabilities,
+    onBooking
+}: {
+    hourlyRate: number | null,
+    trialLessonPrice: number | null,
+    availabilities: AvailabilitySlot[] | null,
+    onBooking: () => void
+}) => {
+    // Group availability by day
+    const dayLabelsMap: Record<number, string> = {
+        0: "Chủ Nhật",
+        1: "Thứ 2",
+        2: "Thứ 3",
+        3: "Thứ 4",
+        4: "Thứ 5",
+        5: "Thứ 6",
+        6: "Thứ 7"
+    };
 
-            {/* Date Picker */}
-            <div className="date-picker">
-                <div className="date-grid">
-                    {tutorData.schedule.map((day, index) => (
-                        <div key={index} className={`date-item ${day.selected ? 'selected' : ''}`}>
-                            <span className="day-label">{day.day}</span>
-                            <b className="date-number">{day.date}</b>
+    const availabilityByDay = (availabilities || []).reduce((acc, slot) => {
+        const key = slot.dayName || dayLabelsMap[slot.dayofweek] || `Thứ ${slot.dayofweek + 1}`;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(slot);
+        return acc;
+    }, {} as Record<string, AvailabilitySlot[]>);
+
+    const hasAvailability = Object.keys(availabilityByDay).length > 0;
+
+    return (
+        <aside className="booking-sidebar">
+            <div className="booking-card">
+                {/* Fixed Header — always visible */}
+                <div className="booking-header">
+                    <span className="booking-label">Bắt đầu lộ trình học thuật</span>
+                    <div className="price-display">
+                        <b className="price-amount">{formatCurrency(hourlyRate)}</b>
+                        <b className="price-unit">/ BUỔI HỌC</b>
+                    </div>
+                </div>
+
+                {/* Scrollable Body */}
+                <div className="booking-card-body">
+                    {/* Availability Schedule */}
+                    {hasAvailability ? (
+                        <div className="availability-schedule-container">
+                            <div className="schedule-label">LỊCH DẠY</div>
+                            <div className="schedule-list">
+                                {Object.entries(availabilityByDay).map(([dayName, slots]) => (
+                                    <div key={dayName} className="schedule-day-row">
+                                        <div className="schedule-day-name">{dayName}</div>
+                                        <div className="schedule-slots">
+                                            {slots.map((s, idx) => (
+                                                <span key={idx} className="schedule-time-chip">
+                                                    {s.starttime} - {s.endtime}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                    ))}
+                    ) : (
+                        <div className="empty-availability">
+                            Chưa cập nhật lịch dạy
+                        </div>
+                    )}
+
+                    {/* Trial Lesson Price */}
+                    {trialLessonPrice && trialLessonPrice > 0 && (
+                        <div className="trial-price-label">
+                            Buổi học thử: {formatCurrency(trialLessonPrice)}
+                        </div>
+                    )}
+                </div>
+
+                {/* Fixed Footer — always visible */}
+                <div className="booking-actions">
+                    <button className="btn-start" onClick={onBooking}>
+                        <b>ĐẶT LỊCH NGAY</b>
+                    </button>
+                    <button className="btn-chat">
+                        <b>CHAT TƯ VẤN</b>
+                    </button>
                 </div>
             </div>
 
-            {/* Time Picker */}
-            <div className="time-picker-section">
-                <span className="picker-label">TIME PICKER</span>
-                <div className="time-grid">
-                    {tutorData.timeSlots.map((slot, index) => (
-                        <button
-                            key={index}
-                            className={`time-slot ${slot.selected ? 'selected' : ''} ${slot.disabled ? 'disabled' : ''}`}
-                            disabled={slot.disabled}
-                        >
-                            <b>{slot.time}</b>
-                        </button>
-                    ))}
+            <div className="verification-note">
+                <div className="note-header">
+                    <VerifyIcon />
+                    <b>Đã xác minh bởi Agora Council</b>
                 </div>
+                <i className="note-text">Hoàn học phí nếu không hài lòng sau buổi học đầu tiên.</i>
             </div>
+        </aside>
+    );
+};
 
-            {/* Action Buttons */}
-            <div className="booking-actions">
-                <button className="btn-start">
-                    <b>BẮT ĐẦU NGAY</b>
-                </button>
-                <button className="btn-chat">
-                    <b>CHAT TƯ VẤN</b>
-                </button>
-            </div>
-        </div>
+// ============================================
+// Skeleton Loading Component
+// ============================================
+const TutorDetailSkeleton = () => (
+    <div className="tutor-detail-page">
+        <Header />
+        <main className="tutor-detail-main">
+            <div className="tutor-detail-container">
+                {/* Left Content */}
+                <div className="tutor-detail-content">
 
-        {/* Verification Note */}
-        <div className="verification-note">
-            <div className="note-header">
-                <VerifyIcon />
-                <b>Đã xác minh bởi Agora Council</b>
+                    {/* Hero Skeleton */}
+                    <section className="tutor-hero-section">
+                        <div className="component-2" style={{ position: 'relative', overflow: 'hidden' }}>
+                            {/* Thumbnail placeholder */}
+                            <div className="skeleton-box skeleton-hero-img" />
+
+                            {/* Tutor info card overlay */}
+                            <div className="skeleton-hero-overlay">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <div className="skeleton-box skeleton-avatar" />
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                        <div className="skeleton-box" style={{ width: 110, height: 14 }} />
+                                        <div className="skeleton-box" style={{ width: 180, height: 22 }} />
+                                        <div className="skeleton-box" style={{ width: 150, height: 13 }} />
+                                    </div>
+                                </div>
+                                {/* Rating card placeholder */}
+                                <div className="skeleton-box" style={{ width: 160, height: 52, borderRadius: 12 }} />
+                            </div>
+                        </div>
+
+                        {/* Subject tags */}
+                        <div className="skeleton-tags-row">
+                            {[88, 104, 76, 96, 68, 80].map((w, i) => (
+                                <div key={i} className="skeleton-box" style={{ width: w, height: 34, borderRadius: 20 }} />
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* About Skeleton */}
+                    <section className="about-section">
+                        <div className="skeleton-box" style={{ width: 230, height: 28, marginBottom: 24 }} />
+                        <div className="skeleton-about-grid">
+                            <div className="skeleton-about-text">
+                                {[100, 96, 90, 94, 78, 85, 60].map((w, i) => (
+                                    <div key={i} className="skeleton-box" style={{ width: `${w}%`, height: 14 }} />
+                                ))}
+                                <div style={{ height: 12 }} />
+                                {[100, 88, 92, 70].map((w, i) => (
+                                    <div key={i} className="skeleton-box" style={{ width: `${w}%`, height: 14 }} />
+                                ))}
+                            </div>
+                            <div className="skeleton-creds">
+                                <div className="skeleton-box" style={{ height: 96, borderRadius: 14 }} />
+                                <div className="skeleton-box" style={{ height: 96, borderRadius: 14 }} />
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Portfolio / Certificates Skeleton */}
+                    <section className="portfolio-section">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                            <div className="skeleton-box" style={{ width: 280, height: 28 }} />
+                            <div className="skeleton-box" style={{ width: 100, height: 28, borderRadius: 20 }} />
+                        </div>
+                        <div className="skeleton-cert-grid">
+                            {[1, 2, 3, 4].map(i => (
+                                <div key={i} className="skeleton-box" style={{ height: 76, borderRadius: 14 }} />
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* Testimonials Skeleton */}
+                    <section className="section5">
+                        <div className="skeleton-box" style={{ width: 200, height: 28, marginBottom: 20 }} />
+                        {/* Rating stats bar */}
+                        <div className="skeleton-box" style={{ height: 100, borderRadius: 14, marginBottom: 16 }} />
+                        {/* Testimonial card */}
+                        <div className="skeleton-box" style={{ height: 220, borderRadius: 16 }} />
+                    </section>
+
+                </div>
+
+                {/* Sidebar Skeleton */}
+                <aside className="booking-sidebar">
+                    <div className="booking-card">
+                        {/* Price header */}
+                        <div className="skeleton-box" style={{ height: 76, borderRadius: 12, marginBottom: 20 }} />
+                        {/* Schedule label */}
+                        <div className="skeleton-box" style={{ width: 80, height: 12, marginBottom: 14 }} />
+                        {/* Schedule rows */}
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="skeleton-box" style={{ height: 50, borderRadius: 12, marginBottom: 8 }} />
+                        ))}
+                        {/* Buttons */}
+                        <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                            <div className="skeleton-box" style={{ height: 50, borderRadius: 12 }} />
+                            <div className="skeleton-box" style={{ height: 50, borderRadius: 12 }} />
+                        </div>
+                    </div>
+                    {/* Verification note */}
+                    <div className="skeleton-box" style={{ height: 64, borderRadius: 12, marginTop: 16 }} />
+                </aside>
             </div>
-            <i className="note-text">Hoàn học phí nếu không hài lòng sau buổi học đầu tiên.</i>
-        </div>
-    </aside>
+        </main>
+        <Footer />
+    </div>
 );
 
 // Main TutorDetailPage Component
 const TutorDetailPage = () => {
+    const { id } = useParams<{ id: string }>();
+    const [profile, setProfile] = useState<TutorFullProfile | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [showBooking, setShowBooking] = useState(false);
+
+    useEffect(() => {
+        let mounted = true;
+
+        const fetchProfile = async () => {
+            if (!id) return;
+            console.log("🚀 [TutorDetail] Starting fetch for:", id);
+            try {
+                // Only set loading if we don't have a profile or if ID changed completely
+                // But for simplicity, just set loading true.
+                setLoading(true);
+                const response = await getTutorFullProfile(id);
+
+                if (mounted) {
+                    console.log("✅ [TutorDetail] Mounted & Set Profile for:", id);
+                    setProfile(response.content);
+                    setError(null);
+                }
+            } catch (err) {
+                if (mounted) {
+                    console.error("❌ [TutorDetail] Failed to fetch:", err);
+                    setError("Có lỗi xảy ra khi tải thông tin gia sư.");
+                }
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        };
+
+        fetchProfile();
+
+        return () => {
+            console.log("🧹 [TutorDetail] Cleanup/Unmount for:", id);
+            mounted = false;
+        };
+    }, [id]);
+
+    console.log("🎨 [TutorDetail] Render:", { id, loading, error, hasProfile: !!profile });
+
+    if (loading) {
+        return <TutorDetailSkeleton />;
+    }
+
+    if (error || !profile) {
+        return (
+            <div className="tutor-detail-page">
+                <Header />
+                <div className="error-container">
+                    <h2>Oops!</h2>
+                    <p>{error || "Không tìm thấy thông tin gia sư."}</p>
+                    <button onClick={() => window.history.back()} className="btn-back">Quay lại</button>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
+
     return (
         <div className="tutor-detail-page">
             <Header />
             <main className="tutor-detail-main">
                 <div className="tutor-detail-container">
                     <div className="tutor-detail-content">
-                        <HeroSection />
-                        <AboutSection />
+                        <HeroSection profile={profile} />
+                        <AboutSection profile={profile} />
+
                         <div className="portfolio-stats-wrapper">
-                            <AcademicPortfolioSection />
-                            <StatsSection />
+                            <AcademicPortfolioSection certificates={profile.certificates} />
+
+                            {/* Hide StatsSection as requested since it doesn't have an API yet */}
+                            {/* <StatsSection /> */}
                         </div>
-                        <TestimonialsSection />
+
+                        <TestimonialsSection
+                            feedbacks={profile.feedbacks}
+                            totalFeedbacks={profile.totalFeedbacks}
+                            tutorId={id}
+                        />
                     </div>
-                    <BookingSidebar />
+                    <BookingSidebar
+                        hourlyRate={profile.hourlyRate}
+                        trialLessonPrice={profile.trialLessonPrice}
+                        availabilities={profile.availabilities}
+                        onBooking={() => setShowBooking(true)}
+                    />
                 </div>
             </main>
             <Footer />
+
+            <BookingModal
+                isOpen={showBooking}
+                onClose={() => setShowBooking(false)}
+                tutorName={profile.fullName || ""}
+                tutorId={id || ""}
+                hourlyRate={profile.hourlyRate || 0}
+                subjects={profile.subjects || []}
+                availabilities={profile.availabilities}
+            />
         </div>
     );
 };

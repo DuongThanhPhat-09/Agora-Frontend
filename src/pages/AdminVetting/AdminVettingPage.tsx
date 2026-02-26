@@ -1,64 +1,130 @@
-
+import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import { Spin } from 'antd';
+import { getPendingTutors, updateTutorApproval } from '../../services/admin.service';
+import TutorDetailModal from './components/TutorDetailModal';
+import type { PendingTutorFromAPI } from '../../types/admin.types';
 import '../../styles/pages/admin-dashboard.css';
 import '../../styles/pages/admin-vetting.css';
 
 const AdminVettingPage = () => {
-    // Sample data for tutors
-    const tutors = [
-        {
-            id: 1,
-            name: "Dr. Eleanor Vance",
-            email: "e.vance@uni.edu",
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuAC-Y15tQcs2PNEQJWEqi5E0Mlac48WDdreuUzI74wnhqOeyoJTUtqw8VStAoqirwgCxjnIqkO3PMMrDsnw1iatus8xTTLSq_JvQdNtOjQ9BH06aQscXxOv7l-WGzNpwoN-Dpzk6_AR_2KW9h3CHYlExV_Cvkhe92c-v5svh8jIhIx6dRmMOPyXf5fAn_GCarcQWj_fz47JrT1ux0-v-9ehLcY-0uXOL_tv_9ZbIa5tMFbQ7TyE4mkW1a7AwkGvsyTGHm2wKTVB-sM",
-            subjects: ["Vật lý", "Toán học"],
-            submitted: "24 Th10, 2023"
-        },
-        {
-            id: 2,
-            name: "Marcus Thorne",
-            email: "m.thorne@academy.org",
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuAOvb7ii3bKUZQcZ9s44xVbMc74oWv7Q_1db0guuXCWDdFYkoXdFfJqwhA_gsWfrrbAOQLR90ytQ8D1LHDT86puG8fXFIFpT9-D-gCIAYZQBL0JluZEYfBiYyhXovvlYog874IJSM_s8Lbhfmmx6F5SqbJN6zW0GL6RFrE9AGDwNnB_K7GOiNhZSa6d4QtrOzSAQMOy1uLOZcWz6ZgUvd_5hHrq-tKvX80Ejth6uwPf8NotFvD2SRG_Np2Q-xnq56_YbyC_NERsPx8",
-            subjects: ["Văn học", "Lịch sử", "+1"],
-            submitted: "23 Th10, 2023"
-        },
-        {
-            id: 3,
-            name: "Sarah Chen",
-            email: "s.chen@tech.edu",
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBwk0R0Zjz_o4Gufvi1O6X7Zf3E1BbCj_nFR1k7pCO2KPla1aIClEaOrrV0_pT1no68Y31xqZPBKTHcdCFVa2JVvdsdP-nr5BPXptwbwy5_QzLuOeOA7iq2pKH4ckUcy7wbHT7QbOEGjNUZeaLbXhif_HSudO46Ivszij53TVkMEMFAEfakXdiejsFOqps3Mp0elqEj4bzUvpeinCTsE0kTwULektMojagsY--slMOslqAznb_tUye88Xvn7D2n6SZyYRGSxjeyzb0",
-            subjects: ["Khoa học máy tính"],
-            submitted: "23 Th10, 2023"
-        },
-        {
-            id: 4,
-            name: "James Wilson",
-            email: "j.wilson@edu.net",
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuCwJ7TscjFc03c43hzCgeGuuPH_Rt4sdu4mZZ6vqZ0DGEnOs8Xp6Qtp9GY4WwH_RqKRhK3XgpdmM33cQ3Aycpr821qHsulDD2RFBFf_l35GaryYZ-7y04Q24cF9mxGDrYRpePLNV2SDfuxW6b7HqbXQxDnzAmHmpDN1Bwij7zPWGzuJLqbMbj807b2MRRBuhAIqEahehGXwbRUJvJks5mOocNP0AMslXws-dTXsj1jfPJCNBvMrCfCmOT3ev4jswNxpeQHQPaZm_PA",
-            subjects: ["Hóa học", "Sinh học"],
-            submitted: "22 Th10, 2023"
-        },
-        {
-            id: 5,
-            name: "Priya Patel",
-            email: "p.patel@uni.ac.uk",
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuAtm14j9Yd928xqqttR5DRr1cOIew7GT18T_3CjI8oThj6ZRVlXAto-ib7Lg00X65HANzxxqEH46_Rpe-jRik7MNWgcM4yeA3WX4TrLl3LFgFkBxrhzygDsE3tahio24z0TCjRrz3UAF8AbR8b6-xQQ0hYvESKqW2QaaIWacAq7U-4otXbNVCqYWbVadUI9imCksfR4OLwnxl_knlb8Z7znXBZJ1B8QVvhjpUpovTXZtVvAZcLEuPkMzn19zw9ORI75MnVL9XijRv8",
-            subjects: ["Kinh tế học"],
-            submitted: "22 Th10, 2023"
-        },
-        {
-            id: 6,
-            name: "David Kim",
-            email: "d.kim@institute.org",
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBl1jcVWV0OZ5T2lz116J2bxcixi8a4PLisAKCy6Cahb6y8_MdMldkxzkdcs83YxWonp2YJGRS7YM6ZPf1cs2lgzpLlLUEIKE3ZN9QV1Kn1tqlmvlG42JyViR_H7p80zqOVOo8sBdgDxyNxQA45yugj-FP-oqRJi2UnULvE93VUpCDygewGp6e3iouseg0M54ndUGJnltsUq4LjLuB0G6DE-_qZHrxbdSddZjELrBl5Taq-uhBMfywUP-vvKC80qQMNs1WRNnmNUlo",
-            subjects: ["Toán học", "Thống kê"],
-            submitted: "21 Th10, 2023"
+    // State management
+    const [tutors, setTutors] = useState<PendingTutorFromAPI[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [selectedTutor, setSelectedTutor] = useState<PendingTutorFromAPI | null>(null);
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [rejectionNote, setRejectionNote] = useState('');
+    const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
+
+    // Fetch pending tutors on mount
+    useEffect(() => {
+        fetchPendingTutors();
+    }, []);
+
+    const fetchPendingTutors = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await getPendingTutors(1, 50);
+            setTutors(response.content || []);
+        } catch (err: any) {
+            console.error('Error fetching pending tutors:', err);
+
+            // Phân biệt loại lỗi để hiển thị message rõ ràng
+            if (err?.response?.status === 401) {
+                setError('⚠️ Bạn cần đăng nhập với quyền Admin để xem danh sách này.');
+            } else if (err?.response?.status === 403) {
+                setError('🚫 Bạn không có quyền truy cập trang này.');
+            } else if (err?.response?.status === 404) {
+                // 404 = endpoint không tồn tại hoặc không có data
+                setError(null); // Không hiển thị lỗi, để empty state xử lý
+                setTutors([]);
+            } else if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
+                setError('⏱️ Yêu cầu quá lâu. Vui lòng kiểm tra kết nối mạng.');
+            } else if (err?.code === 'ERR_NETWORK') {
+                setError('📡 Không thể kết nối đến server. Vui lòng kiểm tra backend đang chạy.');
+            } else {
+                setError('❌ Không thể tải danh sách gia sư. Vui lòng thử lại sau.');
+            }
+
+            setTutors([]);
+        } finally {
+            setLoading(false);
         }
-    ];
+    };
+
+    const handleApprove = async (tutorId: string) => {
+        try {
+            setActionLoading(tutorId);
+            await updateTutorApproval(tutorId, true);
+            toast.success('Phê duyệt gia sư thành công!');
+            setSelectedTutor(null);
+            await fetchPendingTutors();
+        } catch (err) {
+            console.error('Error approving tutor:', err);
+            toast.error('Không thể phê duyệt gia sư. Vui lòng thử lại.');
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleOpenRejectModal = (tutorId: string) => {
+        setShowRejectModal(tutorId);
+        setRejectionNote('');
+    };
+
+    const handleReject = async () => {
+        if (!showRejectModal) return;
+        if (rejectionNote.trim().length < 20) {
+            toast.error('Lý do từ chối phải có ít nhất 20 ký tự.');
+            return;
+        }
+
+        try {
+            setActionLoading(showRejectModal);
+            await updateTutorApproval(showRejectModal, false, rejectionNote);
+            toast.success('Đã từ chối hồ sơ gia sư.');
+            setShowRejectModal(null);
+            setRejectionNote('');
+            setSelectedTutor(null);
+            await fetchPendingTutors();
+        } catch (err) {
+            console.error('Error rejecting tutor:', err);
+            toast.error('Không thể từ chối hồ sơ. Vui lòng thử lại.');
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const formatDate = (dateString: string): string => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+        if (diffHours < 1) {
+            return 'Vừa xong';
+        } else if (diffHours < 24) {
+            return `${diffHours} giờ trước`;
+        } else if (diffDays < 7) {
+            return `${diffDays} ngày trước`;
+        } else {
+            return date.toLocaleDateString('vi-VN');
+        }
+    };
+
+    const formatCurrency = (amount: number | null): string => {
+        if (!amount) return '—';
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+        }).format(amount);
+    };
 
     return (
         <div className="admin-vetting-page">
-            {/* Main Content */}
-
             {/* Main Content */}
             <main className="admin-main">
                 {/* Header */}
@@ -116,9 +182,9 @@ const AdminVettingPage = () => {
                             </div>
 
                             <div className="vetting-actions">
-                                <button className="vetting-btn vetting-btn-outline">
-                                    <span className="material-symbols-outlined vetting-btn-icon">filter_list</span>
-                                    Bộ lọc
+                                <button className="vetting-btn vetting-btn-outline" onClick={fetchPendingTutors}>
+                                    <span className="material-symbols-outlined vetting-btn-icon">refresh</span>
+                                    Làm mới
                                 </button>
                                 <button className="vetting-btn vetting-btn-primary">
                                     <span className="material-symbols-outlined vetting-btn-icon">download</span>
@@ -132,7 +198,7 @@ const AdminVettingPage = () => {
                             <div className="vetting-tabs-nav">
                                 <button className="vetting-tab vetting-tab-active">
                                     Đang chờ
-                                    <span className="vetting-tab-count">12</span>
+                                    <span className="vetting-tab-count">{tutors.length}</span>
                                 </button>
                                 <button className="vetting-tab">
                                     Đã duyệt
@@ -145,80 +211,197 @@ const AdminVettingPage = () => {
 
                         {/* Table Card */}
                         <div className="vetting-table-card">
-                            <div className="vetting-table-wrapper">
-                                <table className="vetting-table">
-                                    <thead className="vetting-table-head">
-                                        <tr>
-                                            <th className="vetting-table-th">Thông tin gia sư</th>
-                                            <th className="vetting-table-th">Môn học</th>
-                                            <th className="vetting-table-th">Đã nộp</th>
-                                            <th className="vetting-table-th">Trạng thái</th>
-                                            <th className="vetting-table-th">Hành động</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="vetting-table-body">
-                                        {tutors.map((tutor) => (
-                                            <tr key={tutor.id} className="vetting-table-row">
-                                                <td className="vetting-table-td">
-                                                    <div className="vetting-tutor-info">
-                                                        <div
-                                                            className="vetting-tutor-avatar"
-                                                            style={{ backgroundImage: `url(${tutor.avatar})` }}
-                                                        ></div>
-                                                        <div className="vetting-tutor-details">
-                                                            <div className="vetting-tutor-name">{tutor.name}</div>
-                                                            <div className="vetting-tutor-email">{tutor.email}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="vetting-table-td">
-                                                    <div className="vetting-subjects">
-                                                        {tutor.subjects.map((subject, idx) => (
-                                                            <span key={idx} className="vetting-subject-tag">
-                                                                {subject}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </td>
-                                                <td className="vetting-table-td vetting-date">
-                                                    {tutor.submitted}
-                                                </td>
-                                                <td className="vetting-table-td">
-                                                    <span className="vetting-status-badge">
-                                                        <span className="vetting-status-dot"></span>
-                                                        Chờ xem xét
-                                                    </span>
-                                                </td>
-                                                <td className="vetting-table-td">
-                                                    <button className="vetting-action-btn">
-                                                        Xem chi tiết
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                            {/* Loading State */}
+                            {loading && (
+                                <div className="vetting-loading-state">
+                                    <Spin size="large" tip="Đang tải danh sách gia sư...">
+                                        <div style={{ padding: '50px' }} />
+                                    </Spin>
+                                </div>
+                            )}
 
-                            {/* Pagination */}
-                            <div className="vetting-pagination">
-                                <p className="vetting-pagination-info">Hiển thị 1-6 trong 12 yêu cầu</p>
-                                <div className="vetting-pagination-controls">
-                                    <button className="vetting-pagination-btn" disabled>
-                                        <span className="material-symbols-outlined vetting-pagination-icon">arrow_back</span>
-                                    </button>
-                                    <button className="vetting-pagination-btn">
-                                        <span className="material-symbols-outlined vetting-pagination-icon">arrow_forward</span>
+                            {/* Error State */}
+                            {error && !loading && (
+                                <div className="vetting-error-state">
+                                    <span className="material-symbols-outlined vetting-state-icon">error</span>
+                                    <p>{error}</p>
+                                    <button className="vetting-btn vetting-btn-primary" onClick={fetchPendingTutors}>
+                                        Thử lại
                                     </button>
                                 </div>
-                            </div>
+                            )}
+
+                            {/* Empty State */}
+                            {!loading && !error && tutors.length === 0 && (
+                                <div className="vetting-empty-state">
+                                    <span className="material-symbols-outlined vetting-state-icon">check_circle</span>
+                                    <p>Không có gia sư nào đang chờ duyệt</p>
+                                </div>
+                            )}
+
+                            {/* Table with Data */}
+                            {!loading && !error && tutors.length > 0 && (
+                                <div className="vetting-table-wrapper">
+                                    <table className="vetting-table">
+                                        <thead className="vetting-table-head">
+                                            <tr>
+                                                <th className="vetting-table-th">Thông tin gia sư</th>
+                                                <th className="vetting-table-th">Tiêu đề</th>
+                                                <th className="vetting-table-th">Giá/giờ</th>
+                                                <th className="vetting-table-th">Đã nộp</th>
+                                                <th className="vetting-table-th">Trạng thái</th>
+                                                <th className="vetting-table-th">Hành động</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="vetting-table-body">
+                                            {tutors.map((tutor) => (
+                                                <tr key={tutor.userid} className="vetting-table-row">
+                                                    <td className="vetting-table-td">
+                                                        <div className="vetting-tutor-info">
+                                                            <div
+                                                                className="vetting-tutor-avatar"
+                                                                style={{ backgroundImage: `url(${tutor.avatarurl || 'https://via.placeholder.com/40'})` }}
+                                                            ></div>
+                                                            <div className="vetting-tutor-details">
+                                                                <div className="vetting-tutor-name">{tutor.fullname}</div>
+                                                                <div className="vetting-tutor-email">{tutor.email}</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="vetting-table-td">
+                                                        <div className="vetting-headline">
+                                                            {tutor.sections?.basicInfo?.headline || 'Chưa cập nhật'}
+                                                        </div>
+                                                    </td>
+                                                    <td className="vetting-table-td">
+                                                        <span className="vetting-price-cell">
+                                                            {formatCurrency(tutor.sections?.pricing?.hourlyRate ?? null)}
+                                                        </span>
+                                                    </td>
+                                                    <td className="vetting-table-td vetting-date">
+                                                        {formatDate(tutor.profileCreatedAt)}
+                                                    </td>
+                                                    <td className="vetting-table-td">
+                                                        <span className="vetting-status-badge">
+                                                            <span className="vetting-status-dot"></span>
+                                                            Chờ xem xét
+                                                        </span>
+                                                    </td>
+                                                    <td className="vetting-table-td">
+                                                        <div className="vetting-row-actions">
+                                                            <button
+                                                                className="vetting-quick-btn vetting-quick-approve"
+                                                                title="Phê duyệt"
+                                                                onClick={() => handleApprove(tutor.userid)}
+                                                                disabled={actionLoading === tutor.userid}
+                                                            >
+                                                                <span className="material-symbols-outlined">check</span>
+                                                            </button>
+                                                            <button
+                                                                className="vetting-quick-btn vetting-quick-reject"
+                                                                title="Từ chối"
+                                                                onClick={() => handleOpenRejectModal(tutor.userid)}
+                                                                disabled={actionLoading === tutor.userid}
+                                                            >
+                                                                <span className="material-symbols-outlined">close</span>
+                                                            </button>
+                                                            <button
+                                                                className="vetting-action-btn"
+                                                                onClick={() => setSelectedTutor(tutor)}
+                                                            >
+                                                                Xem chi tiết
+                                                                <span className="material-symbols-outlined" style={{ fontSize: 18, marginLeft: 4 }}>
+                                                                    open_in_new
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+
+                            {/* Pagination */}
+                            {!loading && !error && tutors.length > 0 && (
+                                <div className="vetting-pagination">
+                                    <p className="vetting-pagination-info">
+                                        Hiển thị {tutors.length} yêu cầu đang chờ duyệt
+                                    </p>
+                                    <div className="vetting-pagination-controls">
+                                        <button className="vetting-pagination-btn" disabled>
+                                            <span className="material-symbols-outlined vetting-pagination-icon">arrow_back</span>
+                                        </button>
+                                        <button className="vetting-pagination-btn" disabled>
+                                            <span className="material-symbols-outlined vetting-pagination-icon">arrow_forward</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
             </main>
+
+            {/* Tutor Detail Modal */}
+            <TutorDetailModal
+                tutor={selectedTutor}
+                isOpen={selectedTutor !== null}
+                onClose={() => setSelectedTutor(null)}
+                onApprove={handleApprove}
+                onOpenReject={handleOpenRejectModal}
+                actionLoading={actionLoading}
+            />
+
+            {/* Rejection Modal */}
+            {showRejectModal && (
+                <div className="vetting-modal-overlay" onClick={() => setShowRejectModal(null)}>
+                    <div className="vetting-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="vetting-modal-header">
+                            <h3>Từ chối hồ sơ gia sư</h3>
+                            <button
+                                className="vetting-modal-close"
+                                onClick={() => setShowRejectModal(null)}
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <div className="vetting-modal-body">
+                            <p className="vetting-modal-description">
+                                Vui lòng nhập lý do từ chối hồ sơ. Lý do này sẽ được gửi đến gia sư để họ có thể cải thiện hồ sơ.
+                            </p>
+                            <textarea
+                                className="vetting-rejection-textarea"
+                                placeholder="Nhập lý do từ chối (ít nhất 20 ký tự)..."
+                                value={rejectionNote}
+                                onChange={(e) => setRejectionNote(e.target.value)}
+                                rows={4}
+                            />
+                            <p className="vetting-char-count">
+                                {rejectionNote.length}/20 ký tự tối thiểu
+                            </p>
+                        </div>
+                        <div className="vetting-modal-footer">
+                            <button
+                                className="vetting-btn vetting-btn-outline"
+                                onClick={() => setShowRejectModal(null)}
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                className="vetting-btn vetting-btn-reject"
+                                onClick={handleReject}
+                                disabled={rejectionNote.trim().length < 20 || actionLoading !== null}
+                            >
+                                {actionLoading ? 'Đang xử lý...' : 'Xác nhận từ chối'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
 
 export default AdminVettingPage;
-
