@@ -1,5 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import type { UserGrowthChartData } from '../../../types/admin.types';
+import type { UserGrowthData } from '../../../types/admin.types';
+type UserGrowthChartData = UserGrowthData;
 import { formatNumber } from '../../../utils/formatters';
 
 interface UserGrowthChartProps {

@@ -1,5 +1,6 @@
-import { FunctionComponent, useState } from 'react';
-import { X, Calendar, Clock } from 'lucide-react';
+import type { FunctionComponent } from 'react';
+import { useState } from 'react';
+import { Calendar, Clock } from 'lucide-react';
 import styles from './RescheduleModal.module.css';
 
 interface RescheduleModalProps {
@@ -14,8 +15,8 @@ const RescheduleModal: FunctionComponent<RescheduleModalProps> = ({
   isOpen,
   onClose,
   studentName,
-  currentDate,
-  currentTime,
+  currentDate: _currentDate,
+  currentTime: _currentTime,
 }) => {
   const [alternativeDate, setAlternativeDate] = useState('');
   const [alternativeTime, setAlternativeTime] = useState('');

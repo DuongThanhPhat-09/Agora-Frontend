@@ -1,4 +1,4 @@
-import styles from './styles.module.css';
+import './styles.module.css';
 
 const StudentCourses = () => {
   return <div></div>;

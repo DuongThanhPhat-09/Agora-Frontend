@@ -19,7 +19,7 @@ const DISPUTE_TYPE: Record<string, string> = {
 };
 
 const ParentDisputes: React.FC = () => {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [disputes, setDisputes] = useState<DisputeListDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);

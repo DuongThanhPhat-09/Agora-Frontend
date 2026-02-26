@@ -7,7 +7,6 @@ import NotificationDropdown from '../../components/NotificationDropdown/Notifica
 import { getUserInfoFromToken } from '../../services/auth.service';
 import { getStudents } from '../../services/student.service';
 import { getNextLesson } from '../../services/lesson.service';
-import type { StudentType } from '../../types/student.type';
 import type { LessonResponse } from '../../services/lesson.service';
 
 // Logo Icon (Agora symbol) - same as TutorPortalLayout
@@ -336,7 +335,7 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
                     })}
                   </span>
                   <span className={styles.nextLessonDot}>•</span>
-                  <span>{nextLesson.subjectName || 'Lesson'} with {nextLesson.tutorName || 'Tutor'}</span>
+                  <span>{(nextLesson as LessonResponse & { subjectName?: string; tutorName?: string }).subjectName || 'Lesson'} with {(nextLesson as LessonResponse & { subjectName?: string; tutorName?: string }).tutorName || 'Tutor'}</span>
                 </div>
               )}
             </div>

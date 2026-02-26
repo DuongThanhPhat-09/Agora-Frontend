@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Modal, Radio, Button, message as antMessage } from 'antd';
-import { processNoShowAction } from '../../../services/parent-lesson.service';
+import { processNoShowAction, type NoShowActionRequest } from '../../../services/parent-lesson.service';
 
 interface NoShowActionModalProps {
   open: boolean;
@@ -44,7 +44,7 @@ const NoShowActionModal: React.FC<NoShowActionModalProps> = ({
 
     try {
       setSubmitting(true);
-      await processNoShowAction(lessonId, { action: selectedAction });
+      await processNoShowAction(lessonId, { actionType: selectedAction as NoShowActionRequest["actionType"] });
       antMessage.success('Đã xử lý thành công!');
       onSuccess();
     } catch (error: any) {

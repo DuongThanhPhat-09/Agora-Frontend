@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { message } from 'antd';
+// message import removed
 import styles from './AddStudentModal.module.css';
-import { Trash2, Edit3 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import type { StudentType } from '../../../types/student.type';
 import type { ICreateParentStudent } from '../../../services/student.service';
 

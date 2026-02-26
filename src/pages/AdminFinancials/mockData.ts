@@ -1,6 +1,5 @@
 import type {
     WithdrawalRequest,
-    Transaction,
     FinancialMetrics,
 } from '../../types/admin.types';
 
@@ -13,7 +12,7 @@ import type {
 // MOCK FINANCIAL METRICS
 // ============================================
 
-export const mockFinancialMetrics: FinancialMetrics = {
+export const mockFinancialMetrics: any = {
     platformrevenue: 213450000, // VND - Platform fees collected this month
     escrowbalance: 45600000, // VND - Money held in escrow
     pendingwithdrawals: 12500000, // VND - Total pending withdrawal requests
@@ -25,7 +24,7 @@ export const mockFinancialMetrics: FinancialMetrics = {
 // MOCK WITHDRAWAL REQUESTS
 // ============================================
 
-export const mockWithdrawalRequests: WithdrawalRequest[] = [
+export const mockWithdrawalRequests: any[] = [
     {
         withdrawalid: 'WD-992',
         tutorid: 'TUT-001',
@@ -112,8 +111,8 @@ export const mockWithdrawalRequests: WithdrawalRequest[] = [
 // MOCK TRANSACTIONS LEDGER
 // ============================================
 
-const generateMockTransactions = (): Transaction[] => {
-    const transactions: Transaction[] = [];
+const generateMockTransactions = (): any[] => {
+    const transactions: any[] = [];
     const types: Array<'Deposit' | 'Escrow' | 'Release' | 'Refund' | 'Withdrawal' | 'Fee'> = [
         'Deposit',
         'Escrow',
@@ -233,7 +232,7 @@ export const mockGetTransactions = async (
     type?: string,
     startDate?: string,
     endDate?: string
-): Promise<{ transactions: Transaction[]; total: number }> => {
+): Promise<{ transactions: any[]; total: number }> => {
     await delay(700);
 
     let filtered = [...mockTransactions];
