@@ -23,18 +23,32 @@
 }
 
 .tutor-search-page .search-icon {
-    width: 21px;
-    height: 21px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     color: rgba(26, 34, 56, 0.4);
+    line-height: 0;
+    order: 2; /* move icon to the right of the input */
+    margin-left: 8px; /* spacing from input */
+    margin-top: -15px; /* adjust vertical alignment */
 }
 
+/* ensure SVG keeps correct aspect ratio and no negative offset */
 .tutor-search-page .search-icon svg {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: auto;
+    display: block;
+    margin-top: 0; /* remove previous negative offset */
+}
+
+/* enforce ordering for the other elements in the bar */
+.tutor-search-page .search-input {
+    order: 1;
+}
+
+.tutor-search-page .btn-search {
+    order: 3;
 }
 
 .tutor-search-page .search-input {

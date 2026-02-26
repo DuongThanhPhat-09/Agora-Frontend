@@ -730,23 +730,6 @@ const TutorPortalProfile: React.FC = () => {
                         <ShareIcon />
                     </button>
 
-                    {/* Save Draft Button */}
-                    <button
-                        className={styles.saveDraftBtn}
-                        onClick={saveDraft}
-                        disabled={!isDirty || isLoading}
-                    >
-                        {isLoading ? 'Đang lưu...' : 'Lưu nháp'}
-                    </button>
-
-                    {/* Publish Button */}
-                    <button
-                        className={styles.publishBtn}
-                        onClick={publishChanges}
-                        disabled={!canPublish || isLoading}
-                    >
-                        Xuất bản
-                    </button>
                 </div>
             </div>
 

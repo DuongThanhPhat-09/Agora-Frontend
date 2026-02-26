@@ -108,15 +108,6 @@ const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
             percentage: 15
         });
 
-        // Student Outcomes: 10% (optional Phase 2)
-        // For now, we'll show it but mark as optional
-        items.push({
-            key: 'outcomes',
-            label: 'Thành tích học sinh',
-            completed: false,
-            percentage: 10
-        });
-
         return items;
     }, [profileData]);
 
@@ -140,7 +131,7 @@ const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
         <div className={styles.card}>
             {/* Header */}
             <div className={styles.header}>
-                <span className={styles.label}>Muc do hoan thien</span>
+                <span className={styles.label}>Mức độ hoàn thiện</span>
                 <span className={styles.percent}>{totalPercentage}%</span>
             </div>
 
@@ -155,11 +146,11 @@ const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
             {/* Status Message */}
             <div className={styles.statusMessage}>
                 {totalPercentage === 100 ? (
-                    <span className={styles.complete}>Ho so cua ban da hoan thien!</span>
+                    <span className={styles.complete}>Hồ sơ của bạn đã hoàn thiện!</span>
                 ) : totalPercentage >= 70 ? (
-                    <span className={styles.good}>Sap hoan thien! Con {100 - totalPercentage}% nua.</span>
+                    <span className={styles.good}>Sắp hoàn thiện! Còn {100 - totalPercentage}% nữa.</span>
                 ) : (
-                    <span className={styles.needsWork}>Hoan thien them de thu hut hoc sinh</span>
+                    <span className={styles.needsWork}>Hoàn thiện thêm để thu hút học sinh</span>
                 )}
             </div>
 
@@ -184,7 +175,7 @@ const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
                     className={styles.actionBtn}
                     onClick={() => handleItemClick(incompleteItems[0].key)}
                 >
-                    Hoan thien: {incompleteItems[0].label}
+                    Hoàn thiện: {incompleteItems[0].label}
                 </button>
             )}
         </div>
