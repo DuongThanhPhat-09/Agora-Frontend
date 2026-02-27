@@ -91,10 +91,17 @@ const TutorPortalClasses: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<string>('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 10;
 
     useEffect(() => {
         fetchLessons();
     }, [statusFilter]);
+
+    // Reset page khi filter hoặc search thay đổi
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, statusFilter]);
 
     const fetchLessons = async () => {
         try {
@@ -207,6 +214,13 @@ const TutorPortalClasses: React.FC = () => {
         return studentMatch || subjectMatch;
     });
 
+    // Pagination
+    const totalPages = Math.max(1, Math.ceil(filteredClasses.length / ITEMS_PER_PAGE));
+    const paginatedClasses = filteredClasses.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
+
     console.log('🔍 Render state:', {
         loading,
         lessonsCount: lessons.length,
@@ -290,7 +304,7 @@ const TutorPortalClasses: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredClasses.map((classData) => (
+                                    {paginatedClasses.map((classData) => (
                                         <tr key={classData.bookingId}>
                                             <td>
                                                 <div className={styles.classInfo}>
@@ -358,6 +372,74 @@ const TutorPortalClasses: React.FC = () => {
                                     ))}
                                 </tbody>
                             </table>
+
+                            {/* Pagination */}
+                            {filteredClasses.length > ITEMS_PER_PAGE && (
+                                <div className={styles.pagination}>
+                                    <span className={styles.paginationInfo}>
+                                        Hiển thị {(currentPage - 1) * ITEMS_PER_PAGE + 1}-
+                                        {Math.min(currentPage * ITEMS_PER_PAGE, filteredClasses.length)} trong số{' '}
+                                        {filteredClasses.length} lớp học
+                                    </span>
+                                    <div className={styles.paginationControls}>
+                                        <button
+                                            className={styles.pageBtn}
+                                            onClick={() => setCurrentPage(currentPage - 1)}
+                                            disabled={currentPage === 1}
+                                        >
+                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+                                                 stroke="currentColor" strokeWidth="1.5">
+                                                <path d="M9 3L5 7L9 11" strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                        </button>
+
+                                        {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                                            let pageNum: number;
+                                            if (totalPages <= 5) {
+                                                pageNum = i + 1;
+                                            } else if (currentPage <= 3) {
+                                                pageNum = i + 1;
+                                            } else if (currentPage >= totalPages - 2) {
+                                                pageNum = totalPages - 4 + i;
+                                            } else {
+                                                pageNum = currentPage - 2 + i;
+                                            }
+                                            return (
+                                                <button
+                                                    key={pageNum}
+                                                    className={`${styles.pageNumber} ${currentPage === pageNum ? styles.pageActive : ''}`}
+                                                    onClick={() => setCurrentPage(pageNum)}
+                                                >
+                                                    {pageNum}
+                                                </button>
+                                            );
+                                        })}
+
+                                        {totalPages > 5 && currentPage < totalPages - 2 && (
+                                            <>
+                                                <span className={styles.paginationEllipsis}>...</span>
+                                                <button
+                                                    className={styles.pageNumber}
+                                                    onClick={() => setCurrentPage(totalPages)}
+                                                >
+                                                    {totalPages}
+                                                </button>
+                                            </>
+                                        )}
+
+                                        <button
+                                            className={styles.pageBtn}
+                                            onClick={() => setCurrentPage(currentPage + 1)}
+                                            disabled={currentPage === totalPages}
+                                        >
+                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+                                                 stroke="currentColor" strokeWidth="1.5">
+                                                <path d="M5 3L9 7L5 11" strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </>
                     )}
                 </div>
