@@ -12,7 +12,7 @@ import {
 import type {
     DashboardMetrics,
     RevenueChartData,
-    UserGrowthChartData,
+    UserGrowthData,
     RecentActivity,
 } from '../../types/admin.types';
 import { formatCurrency, formatCompactNumber, formatNumber } from '../../utils/formatters';
@@ -25,7 +25,7 @@ const AdminDashboardPageEnhanced = () => {
     // State management
     const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
     const [revenueData, setRevenueData] = useState<RevenueChartData[]>([]);
-    const [userGrowthData, setUserGrowthData] = useState<UserGrowthChartData[]>([]);
+    const [userGrowthData, setUserGrowthData] = useState<UserGrowthData[]>([]);
     const [activities, setActivities] = useState<RecentActivity[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -119,7 +119,7 @@ const AdminDashboardPageEnhanced = () => {
                                 </div>
                                 <div className="admin-stat-content">
                                     <p className="admin-stat-value">
-                                        {loading ? '...' : metrics?.activebookings || 0}
+                                        {loading ? '...' : metrics?.activeBookings || 0}
                                     </p>
                                     <div className="admin-stat-footer">
                                         <span className="admin-stat-badge admin-stat-badge-green">Hoạt động</span>

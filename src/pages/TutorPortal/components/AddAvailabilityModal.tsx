@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 import { type FunctionComponent, useState, useEffect } from 'react';
+=======
+import type { FunctionComponent } from 'react';
+import { useState, useEffect } from 'react';
+>>>>>>> 1a5d51718d9c7b15dbb72bdeb6696cddef9ca4a8
 import { X, Clock } from 'lucide-react';
 import { toast } from 'react-toastify';
 import styles from './AddAvailabilityModal.module.css';

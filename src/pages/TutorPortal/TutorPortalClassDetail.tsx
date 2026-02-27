@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getTutorLessons, checkInLesson, checkOutLesson, type LessonResponse } from '../../services/lesson.service';
-import { message as antMessage, Modal, Tag } from 'antd';
+import { message as antMessage, Tag } from 'antd';
 import styles from '../../styles/pages/tutor-portal-class-detail.module.css';
 import LessonReportForm from './components/LessonReportForm';
 import AttachmentUploader from './components/AttachmentUploader';
@@ -57,14 +57,14 @@ const MoreIcon = () => (
     </svg>
 );
 
-// Sample data for reference (not used)
-const classData = {
-    id: '1',
-    name: 'Toán học',
-    subject: 'Toán',
-    grade: 'Lớp 11',
-    nextLesson: 'Thứ Hai, 20/01 lúc 14:00'
-};
+// Sample data for reference (commented out - not used)
+// const classData = {
+//     id: '1',
+//     name: 'Toán học',
+//     subject: 'Toán',
+//     grade: 'Lớp 11',
+//     nextLesson: 'Thứ Hai, 20/01 lúc 14:00'
+// };
 
 // Type for student data
 interface StudentData {
@@ -153,7 +153,7 @@ const TutorPortalClassDetail: React.FC = () => {
                             month: '2-digit',
                             hour: '2-digit',
                             minute: '2-digit'
-                          })
+                        })
                         : 'Không có',
                     studentName: firstLesson.student?.fullName || 'Unknown',
                     studentEmail: '' // TODO: Add email if available in API
@@ -247,12 +247,12 @@ const TutorPortalClassDetail: React.FC = () => {
     const getLessonStatusLabel = (status?: string): { text: string; color: string } => {
         switch (status) {
             case 'scheduled': return { text: 'Đã lên lịch', color: '#1890ff' };
-            case 'checked_in': return { text: 'Đã check-in', color: '#52c41a' };
-            case 'checked_out': return { text: 'Đã check-out', color: '#faad14' };
+            case 'in_progress': return { text: 'Đang học', color: '#52c41a' };
             case 'pending_confirmation': return { text: 'Chờ xác nhận', color: '#722ed1' };
             case 'completed': return { text: 'Hoàn thành', color: '#52c41a' };
             case 'disputed': return { text: 'Đang khiếu nại', color: '#ff4d4f' };
             case 'cancelled': return { text: 'Đã hủy', color: '#999' };
+            case 'no_show': return { text: 'Vắng mặt', color: '#ff4d4f' };
             default: return { text: status || 'N/A', color: '#999' };
         }
     };
@@ -293,7 +293,7 @@ const TutorPortalClassDetail: React.FC = () => {
                     weekday: 'short',
                     day: '2-digit',
                     month: '2-digit'
-                  })
+                })
                 : 'Chưa có',
             homeworkStatus: {
                 label: 'Đúng tiến độ',
@@ -472,7 +472,7 @@ const TutorPortalClassDetail: React.FC = () => {
                                                             </button>
                                                         )}
 
-                                                        {lesson.status === 'checked_in' && (
+                                                        {lesson.status === 'in_progress' && !lesson.checkOutTime && (
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); handleCheckOut(lesson.lessonId); }}
                                                                 disabled={checkingOut}
@@ -488,7 +488,7 @@ const TutorPortalClassDetail: React.FC = () => {
                                                             </button>
                                                         )}
 
-                                                        {lesson.status === 'checked_out' && (
+                                                        {lesson.status === 'in_progress' && lesson.checkOutTime && (
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
@@ -581,7 +581,7 @@ const TutorPortalClassDetail: React.FC = () => {
                                                         </div>
 
                                                         {/* Report Form (shown after check-out) */}
-                                                        {showReportForm && activeLessonId === lesson.lessonId && lesson.status === 'checked_out' && (
+                                                        {showReportForm && activeLessonId === lesson.lessonId && lesson.status === 'in_progress' && lesson.checkOutTime && (
                                                             <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                                                 <LessonReportForm
                                                                     lessonId={lesson.lessonId}
@@ -745,106 +745,106 @@ const TutorPortalClassDetail: React.FC = () => {
             {/* Right Sidebar - Student Details */}
             {selectedStudent && (
                 <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.open : ''}`}>
-                <div className={styles.sidebarHeader}>
-                    <img src={selectedStudent.avatar} alt={selectedStudent.name} className={styles.sidebarAvatar} />
-                    <div className={styles.sidebarStudentInfo}>
-                        <h3 className={styles.sidebarStudentName}>{selectedStudent.name}</h3>
-                        <div className={styles.sidebarStudentTags}>
-                            <span className={styles.sidebarTag}>{selectedStudent.grade}</span>
-                            <span className={`${styles.sidebarTag} ${styles.statusTag}`}>{selectedStudent.status}</span>
+                    <div className={styles.sidebarHeader}>
+                        <img src={selectedStudent.avatar} alt={selectedStudent.name} className={styles.sidebarAvatar} />
+                        <div className={styles.sidebarStudentInfo}>
+                            <h3 className={styles.sidebarStudentName}>{selectedStudent.name}</h3>
+                            <div className={styles.sidebarStudentTags}>
+                                <span className={styles.sidebarTag}>{selectedStudent.grade}</span>
+                                <span className={`${styles.sidebarTag} ${styles.statusTag}`}>{selectedStudent.status}</span>
+                            </div>
                         </div>
-                    </div>
-                    <button className={styles.sidebarCloseBtn} onClick={handleCloseSidebar}>
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M5 5L15 15M15 5L5 15" strokeLinecap="round" />
-                        </svg>
-                    </button>
-                </div>
-
-                <div className={styles.sidebarContent}>
-                    {/* Quick Actions */}
-                    <div className={styles.quickActions}>
-                        <button className={styles.quickActionBtn}>
-                            <MessageIcon />
-                            <span>Nhắn tin</span>
-                        </button>
-                        <button className={styles.quickActionBtn}>
-                            <NoteIcon />
-                            <span>Thêm ghi chú</span>
-                        </button>
-                        <button className={styles.quickActionBtn}>
-                            <BookIcon />
-                            <span>Giao BTVN</span>
+                        <button className={styles.sidebarCloseBtn} onClick={handleCloseSidebar}>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M5 5L15 15M15 5L5 15" strokeLinecap="round" />
+                            </svg>
                         </button>
                     </div>
 
-                    {/* Overview */}
-                    <div className={styles.section}>
-                        <h4 className={styles.sectionTitle}>Tổng quan</h4>
-                        <div className={styles.overviewCard}>
-                            <div className={styles.overviewRow}>
-                                <span className={styles.overviewLabel}>Email</span>
-                                <span className={styles.overviewValue}>{selectedStudent.email}</span>
-                            </div>
-                            <div className={styles.overviewRow}>
-                                <span className={styles.overviewLabel}>Buổi học cuối</span>
-                                <span className={styles.overviewValue}>T4, 15/01</span>
-                            </div>
-                            <div className={styles.overviewRow}>
-                                <span className={styles.overviewLabel}>Buổi học tiếp theo</span>
-                                <span className={styles.overviewValue}>T2, 20/01 lúc 14:00</span>
-                            </div>
+                    <div className={styles.sidebarContent}>
+                        {/* Quick Actions */}
+                        <div className={styles.quickActions}>
+                            <button className={styles.quickActionBtn}>
+                                <MessageIcon />
+                                <span>Nhắn tin</span>
+                            </button>
+                            <button className={styles.quickActionBtn}>
+                                <NoteIcon />
+                                <span>Thêm ghi chú</span>
+                            </button>
+                            <button className={styles.quickActionBtn}>
+                                <BookIcon />
+                                <span>Giao BTVN</span>
+                            </button>
                         </div>
-                    </div>
 
-                    {/* Attendance */}
-                    <div className={styles.section}>
-                        <h4 className={styles.sectionTitle}>Điểm danh (4 buổi gần nhất)</h4>
-                        <div className={styles.attendanceGrid}>
-                            <div className={styles.attendanceItem}>
-                                <div className={styles.attendanceDate}>T4 15</div>
-                                <div className={`${styles.attendanceStatus} ${styles.present}`}>Có mặt</div>
-                            </div>
-                            <div className={styles.attendanceItem}>
-                                <div className={styles.attendanceDate}>T2 13</div>
-                                <div className={`${styles.attendanceStatus} ${styles.present}`}>Có mặt</div>
-                            </div>
-                            <div className={styles.attendanceItem}>
-                                <div className={styles.attendanceDate}>T4 8</div>
-                                <div className={`${styles.attendanceStatus} ${styles.absent}`}>Vắng mặt</div>
-                            </div>
-                            <div className={styles.attendanceItem}>
-                                <div className={styles.attendanceDate}>T2 6</div>
-                                <div className={`${styles.attendanceStatus} ${styles.present}`}>Có mặt</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Homework Status */}
-                    <div className={styles.section}>
-                        <h4 className={styles.sectionTitle}>Trạng thái bài tập</h4>
-                        <div className={styles.homeworkList}>
-                            <div className={styles.homeworkItem}>
-                                <div className={styles.homeworkInfo}>
-                                    <div className={styles.homeworkTitle}>Bài tập Chương 5</div>
-                                    <div className={styles.homeworkDue}>Hạn nộp: 16/01</div>
+                        {/* Overview */}
+                        <div className={styles.section}>
+                            <h4 className={styles.sectionTitle}>Tổng quan</h4>
+                            <div className={styles.overviewCard}>
+                                <div className={styles.overviewRow}>
+                                    <span className={styles.overviewLabel}>Email</span>
+                                    <span className={styles.overviewValue}>{selectedStudent.email}</span>
                                 </div>
-                                <span className={`${styles.homeworkBadge} ${styles.overdueBadge}`}>Quá hạn</span>
-                            </div>
-                            <div className={styles.homeworkItem}>
-                                <div className={styles.homeworkInfo}>
-                                    <div className={styles.homeworkTitle}>Kiểm tra thực hành 3</div>
-                                    <div className={styles.homeworkDue}>Hạn nộp: 18/01</div>
+                                <div className={styles.overviewRow}>
+                                    <span className={styles.overviewLabel}>Buổi học cuối</span>
+                                    <span className={styles.overviewValue}>T4, 15/01</span>
                                 </div>
-                                <span className={`${styles.homeworkBadge} ${styles.inProgressBadge}`}>Đang làm</span>
+                                <div className={styles.overviewRow}>
+                                    <span className={styles.overviewLabel}>Buổi học tiếp theo</span>
+                                    <span className={styles.overviewValue}>T2, 20/01 lúc 14:00</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* View Profile Button */}
-                    <button className={styles.viewProfileBtn} onClick={handleViewProfile}>XEM HỒ SƠ</button>
-                </div>
-            </aside>
+                        {/* Attendance */}
+                        <div className={styles.section}>
+                            <h4 className={styles.sectionTitle}>Điểm danh (4 buổi gần nhất)</h4>
+                            <div className={styles.attendanceGrid}>
+                                <div className={styles.attendanceItem}>
+                                    <div className={styles.attendanceDate}>T4 15</div>
+                                    <div className={`${styles.attendanceStatus} ${styles.present}`}>Có mặt</div>
+                                </div>
+                                <div className={styles.attendanceItem}>
+                                    <div className={styles.attendanceDate}>T2 13</div>
+                                    <div className={`${styles.attendanceStatus} ${styles.present}`}>Có mặt</div>
+                                </div>
+                                <div className={styles.attendanceItem}>
+                                    <div className={styles.attendanceDate}>T4 8</div>
+                                    <div className={`${styles.attendanceStatus} ${styles.absent}`}>Vắng mặt</div>
+                                </div>
+                                <div className={styles.attendanceItem}>
+                                    <div className={styles.attendanceDate}>T2 6</div>
+                                    <div className={`${styles.attendanceStatus} ${styles.present}`}>Có mặt</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Homework Status */}
+                        <div className={styles.section}>
+                            <h4 className={styles.sectionTitle}>Trạng thái bài tập</h4>
+                            <div className={styles.homeworkList}>
+                                <div className={styles.homeworkItem}>
+                                    <div className={styles.homeworkInfo}>
+                                        <div className={styles.homeworkTitle}>Bài tập Chương 5</div>
+                                        <div className={styles.homeworkDue}>Hạn nộp: 16/01</div>
+                                    </div>
+                                    <span className={`${styles.homeworkBadge} ${styles.overdueBadge}`}>Quá hạn</span>
+                                </div>
+                                <div className={styles.homeworkItem}>
+                                    <div className={styles.homeworkInfo}>
+                                        <div className={styles.homeworkTitle}>Kiểm tra thực hành 3</div>
+                                        <div className={styles.homeworkDue}>Hạn nộp: 18/01</div>
+                                    </div>
+                                    <span className={`${styles.homeworkBadge} ${styles.inProgressBadge}`}>Đang làm</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* View Profile Button */}
+                        <button className={styles.viewProfileBtn} onClick={handleViewProfile}>XEM HỒ SƠ</button>
+                    </div>
+                </aside>
             )}
 
             {/* Overlay - only show when sidebar is open on smaller screens */}

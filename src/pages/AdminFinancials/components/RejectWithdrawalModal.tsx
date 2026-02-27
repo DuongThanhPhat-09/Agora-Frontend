@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import type { WithdrawalRequest } from '../../../types/admin.types';
-import { formatCurrency, formatDateTime } from '../../../utils/formatters';
+import { formatCurrency } from '../../../utils/formatters';
 
 interface RejectWithdrawalModalProps {
     isOpen: boolean;

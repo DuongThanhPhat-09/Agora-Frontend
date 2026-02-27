@@ -2,6 +2,7 @@
 /* eslint-disable no-useless-catch */
 import axios from 'axios';
 import { getCurrentUser } from './auth.service';
+import { setupAuthInterceptor } from './apiClient';
 import type {
   // Dashboard
   DashboardMetrics,
@@ -9,7 +10,7 @@ import type {
   UserGrowthData,
   RecentActivity,
   // Vetting
-  TutorForReview,
+  // TutorForReview,
   TutorDetailForReview,
   ApproveTutorResponse,
   RejectTutorRequest,
@@ -69,20 +70,8 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor - Handle common errors
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid
-      console.error('Unauthorized - redirecting to login');
-      // Optionally clear storage and redirect
-      // clearUserFromStorage();
-      // window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
+// Response interceptor - Handle 401 (token expired)
+setupAuthInterceptor(api);
 
 // ============================================
 // DASHBOARD APIs (ADM-01)

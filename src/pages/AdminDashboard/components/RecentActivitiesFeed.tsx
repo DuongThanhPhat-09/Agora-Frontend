@@ -15,7 +15,7 @@ const RecentActivitiesFeed = ({
     autoRefresh = false,
     refreshInterval = 30000,
 }: RecentActivitiesFeedProps) => {
-    const [refreshKey, setRefreshKey] = useState(0);
+    const [, setRefreshKey] = useState(0);
 
     // Auto-refresh timer
     useEffect(() => {

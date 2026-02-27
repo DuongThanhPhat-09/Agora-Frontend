@@ -22,8 +22,8 @@ const LessonReportForm: React.FC<LessonReportFormProps> = ({
     try {
       setSubmitting(true);
       const request: SubmitReportRequest = {
-        lessonContent: values.lessonContent,
-        homework: values.homework || '',
+        contentCovered: values.lessonContent,
+        homeworkAssigned: values.homework || '',
         tutorNotes: values.tutorNotes || '',
         isStudentPresent: values.isStudentPresent ?? true,
         attendanceNote: values.attendanceNote || '',

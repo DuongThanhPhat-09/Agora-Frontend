@@ -45,6 +45,17 @@ import PaymentCallback from './pages/PaymentCallback/PaymentCallback';
 import ParentLessons from './pages/ParentLessons';
 import ParentLessonDetail from './pages/ParentLessons/ParentLessonDetail';
 import ParentDisputes from './pages/ParentDisputes';
+import TutorFinanceDashboardPage from './pages/TutorFinance/TutorFinanceDashboard/TutorFinanceDashboardPage';
+import TransactionHistoryPage from './pages/TutorFinance/TransactionHistory/TransactionHistoryPage';
+import BankInfoManagementPage from './pages/TutorFinance/BankInfoManagement/BankInfoManagementPage';
+import CreateWithdrawalPage from './pages/TutorFinance/CreateWithdrawal/CreateWithdrawalPage';
+import WithdrawalListPage from './pages/TutorFinance/WithdrawalList/WithdrawalListPage';
+import WithdrawalDetailPage from './pages/TutorFinance/WithdrawalList/WithdrawalDetailPage';
+import PayoutOverviewPage from './pages/AdminPayout/PayoutOverview/PayoutOverviewPage';
+import PayoutDetailPage from './pages/AdminPayout/PayoutDetail/PayoutDetailPage';
+import PendingReviewPage from './pages/AdminPayout/PendingReview/PendingReviewPage';
+import AllPayoutRequestsPage from './pages/AdminPayout/AllRequests/AllPayoutRequestsPage';
+import FraudLogsPage from './pages/AdminPayout/FraudLogs/FraudLogsPage';
 
 // ---------------------
 
@@ -80,6 +91,12 @@ function App() {
           <Route path="financials" element={<AdminFinancialsPage />} />
           <Route path="warnings" element={<AdminWarningsPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
+          <Route path="payouts" element={<PayoutOverviewPage />} />
+          <Route path="payouts/history" element={<AllPayoutRequestsPage />} />
+          <Route path="payouts/:id" element={<PayoutDetailPage />} />
+          <Route path="payout/review" element={<PendingReviewPage />} />
+          <Route path="payout/review/:id" element={<div className="p-6">Payout Request Detail Page (Coming Soon)</div>} />
+          <Route path="payout/fraud-logs" element={<FraudLogsPage />} />
         </Route>
 
         {/* Tutor Portal - New Layout based on Figma */}
@@ -93,7 +110,12 @@ function App() {
           <Route path="classes/:classId" element={<TutorPortalClassDetail />} />
           <Route path="students/:studentId" element={<TutorPortalStudentProfile />} />
           <Route path="bookings" element={<TutorPortalBookings />} />
-          {/* Future routes: sessions, finance, settings */}
+          <Route path="finance" element={<TutorFinanceDashboardPage />} />
+          <Route path="finance/transactions" element={<TransactionHistoryPage />} />
+          <Route path="finance/bank-info" element={<BankInfoManagementPage />} />
+          <Route path="finance/withdraw" element={<CreateWithdrawalPage />} />
+          <Route path="finance/withdrawals" element={<WithdrawalListPage />} />
+          <Route path="finance/withdrawals/:id" element={<WithdrawalDetailPage />} />
         </Route>
 
         {/* Parent Layout - PROTECTED */}

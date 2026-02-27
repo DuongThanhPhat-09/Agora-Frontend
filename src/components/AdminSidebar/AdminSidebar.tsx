@@ -69,6 +69,14 @@ const AdminSidebar = () => {
                     </a>
 
                     <a
+                        className={`admin-nav-item ${location.pathname.startsWith('/admin/payout') ? 'admin-nav-item-active' : ''}`}
+                        onClick={() => navigate('/admin/payouts')}
+                    >
+                        <span className="material-symbols-outlined admin-nav-icon">monitoring</span>
+                        <span className="admin-nav-text">Payout</span>
+                    </a>
+
+                    <a
                         className={`admin-nav-item ${isActive('/admin/settings') ? 'admin-nav-item-active' : ''}`}
                         onClick={() => navigate('/admin/settings')}
                     >

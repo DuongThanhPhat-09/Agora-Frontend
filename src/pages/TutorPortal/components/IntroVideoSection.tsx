@@ -44,7 +44,7 @@ interface IntroVideoSectionProps {
 
 const IntroVideoSection: React.FC<IntroVideoSectionProps> = ({
     videoUrl,
-    onChange,
+    onChange: _onChange,
     onUploadVideo,
     isEditMode,
     isUploading = false

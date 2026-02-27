@@ -136,7 +136,12 @@ const TutorPortalLayout: React.FC = () => {
         avatar: 'https://ui-avatars.com/api/?name=User&background=3d4a3e&color=f2f0e4&size=128'
     });
 
-    const isActive = (path: string) => location.pathname === path;
+    const isActive = (path: string) => {
+        if (path === '/tutor-portal/finance') {
+            return location.pathname.startsWith('/tutor-portal/finance');
+        }
+        return location.pathname === path;
+    };
 
     // Helper function to generate avatar from name
     const generateAvatarFromName = (name: string) => {

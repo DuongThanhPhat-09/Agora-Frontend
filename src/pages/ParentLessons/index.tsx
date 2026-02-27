@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, BookOpen, AlertTriangle, CheckCircle, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getPendingLessons, getParentDisputes, type PendingLessonDto } from '../../services/parent-lesson.service';
+import { getPendingLessons, type PendingLessonDto } from '../../services/parent-lesson.service';
 import { message as antMessage, Spin, Tag } from 'antd';
 import CountdownTimer from './components/CountdownTimer';
 
@@ -38,7 +38,7 @@ const ParentLessons = () => {
     try {
       setLoading(true);
       const response = await getPendingLessons();
-      const data = Array.isArray(response.content) ? response.content : response.content?.items || [];
+      const data = Array.isArray(response.content) ? response.content : ((response.content) as any)?.items || [];
       setAllLessons(data);
     } catch (error) {
       antMessage.error('Không thể tải danh sách buổi học.');
