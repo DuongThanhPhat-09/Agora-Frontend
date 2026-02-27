@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 import { getAuthHeaders, type ApiResponse } from './tutorProfile.service';
+import { setupAuthInterceptor } from './apiClient';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -10,6 +11,7 @@ const api = axios.create({
         'Content-Type': 'application/json',
     },
 });
+setupAuthInterceptor(api);
 
 // ===== TYPES =====
 
