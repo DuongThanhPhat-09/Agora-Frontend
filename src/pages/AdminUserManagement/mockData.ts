@@ -327,7 +327,7 @@ export const mockUnblockUser = async (userId: string): Promise<void> => {
     // In real implementation, would update user status to 'active'
 };
 
-export const mockIssueWarning = async (userId: string, reason: string, severity: string, relatedBookingId?: string): Promise<void> => {
+export const mockIssueWarning = async (userId: string, reason: string, severity: string, _relatedBookingId?: string): Promise<void> => {
     await new Promise((resolve) => setTimeout(resolve, 700));
     console.log(`Issuing ${severity} warning to user ${userId}: ${reason}`);
     // In real implementation, would create new warning record

@@ -83,13 +83,13 @@ interface NoteRecord {
 
 const TutorPortalStudentProfile: React.FC = () => {
     const navigate = useNavigate();
-    const { studentId } = useParams();
+    const { studentId: _studentId } = useParams();
     const searchParams = new URLSearchParams(window.location.search);
     const classId = searchParams.get('classId');
     const bookingId = classId ? parseInt(classId) : undefined;
 
     const [newNote, setNewNote] = useState('');
-    const [lessons, setLessons] = useState<LessonResponse[]>([]);
+    const [_lessons, setLessons] = useState<LessonResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [studentData, setStudentData] = useState<StudentData | null>(null);
     const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
@@ -169,7 +169,7 @@ const TutorPortalStudentProfile: React.FC = () => {
                     month: '2-digit',
                     hour: '2-digit',
                     minute: '2-digit'
-                  })
+                })
                 : 'Không có',
             parent: 'Phụ huynh', // TODO: Add from API
             parentEmail: 'parent@example.com', // TODO: Add from API
@@ -195,7 +195,7 @@ const TutorPortalStudentProfile: React.FC = () => {
 
         // Compute homework data (from lessons with homework)
         const lessonsWithHomework = sortedLessons.filter(l => l.homework);
-        setHomeworkData(lessonsWithHomework.map((lesson, index) => ({
+        setHomeworkData(lessonsWithHomework.map((lesson) => ({
             id: lesson.lessonId,
             title: lesson.homework || 'Bài tập',
             assigned: new Date(lesson.scheduledStart).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
@@ -205,7 +205,7 @@ const TutorPortalStudentProfile: React.FC = () => {
 
         // Compute notes from tutor notes
         const lessonsWithNotes = sortedLessons.filter(l => l.tutorNotes).slice(-5).reverse();
-        setNotes(lessonsWithNotes.map((lesson, index) => ({
+        setNotes(lessonsWithNotes.map((lesson) => ({
             id: lesson.lessonId,
             date: new Date(lesson.scheduledStart).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }),
             text: lesson.tutorNotes || ''
@@ -213,7 +213,7 @@ const TutorPortalStudentProfile: React.FC = () => {
 
         // Compute score data (placeholder - using lesson completion as "score")
         const completedWithContent = completedLessons.filter(l => l.lessonContent).slice(-3).reverse();
-        setScoreData(completedWithContent.map((lesson, index) => ({
+        setScoreData(completedWithContent.map((lesson) => ({
             id: lesson.lessonId,
             title: lesson.lessonContent || 'Bài học',
             date: new Date(lesson.scheduledStart).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }),
@@ -273,24 +273,24 @@ const TutorPortalStudentProfile: React.FC = () => {
                     </div>
                     <div className={styles.container14}>
                         <div className={styles.container15}>
-                        <div className={styles.heading1}>
-                            <b className={styles.emmaJohnson}>{studentData.name}</b>
-                        </div>
-                        <div className={styles.overlayborder}>
-                            <b className={styles.grade11}>{studentData.grade}</b>
-                        </div>
-                        <div className={styles.overlayborder2}>
-                            <b className={styles.active}>{studentData.status}</b>
-                        </div>
+                            <div className={styles.heading1}>
+                                <b className={styles.emmaJohnson}>{studentData.name}</b>
+                            </div>
+                            <div className={styles.overlayborder}>
+                                <b className={styles.grade11}>{studentData.grade}</b>
+                            </div>
+                            <div className={styles.overlayborder2}>
+                                <b className={styles.active}>{studentData.status}</b>
+                            </div>
                         </div>
                         <div className={styles.container16}>
-                        <div className={styles.text9}>
-                            <span className={styles.textTxt}>
-                                <span className={styles.apMathematicsA}>{studentData.class} • </span>
-                                <span className={styles.nextLesson}>Buổi học tiếp theo:</span>
-                                <span className={styles.apMathematicsA}> {studentData.nextLesson}</span>
-                            </span>
-                        </div>
+                            <div className={styles.text9}>
+                                <span className={styles.textTxt}>
+                                    <span className={styles.apMathematicsA}>{studentData.class} • </span>
+                                    <span className={styles.nextLesson}>Buổi học tiếp theo:</span>
+                                    <span className={styles.apMathematicsA}> {studentData.nextLesson}</span>
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -318,37 +318,37 @@ const TutorPortalStudentProfile: React.FC = () => {
                     {/* Overview Stats */}
                     <div className={styles.sectionOverviewStats}>
                         <div className={styles.backgroundbordershadow}>
-                        <div className={styles.heading3}>
-                            <div className={styles.averageScore}>Điểm trung bình</div>
-                        </div>
-                        <div className={styles.container19}>
-                            <b className={styles.b}>{studentData.avgScore}%</b>
-                            <div className={styles.container20}>
-                                <ArrowUpIcon />
-                                <div className={styles.div}>+{studentData.avgScoreChange}%</div>
+                            <div className={styles.heading3}>
+                                <div className={styles.averageScore}>Điểm trung bình</div>
+                            </div>
+                            <div className={styles.container19}>
+                                <b className={styles.b}>{studentData.avgScore}%</b>
+                                <div className={styles.container20}>
+                                    <ArrowUpIcon />
+                                    <div className={styles.div}>+{studentData.avgScoreChange}%</div>
+                                </div>
                             </div>
                         </div>
-                        </div>
                         <div className={styles.backgroundbordershadow}>
-                        <div className={styles.heading3}>
-                            <div className={styles.attendanceRate}>Tỷ lệ điểm danh</div>
-                        </div>
-                        <div className={styles.container19}>
-                            <b className={styles.b2}>{studentData.attendanceRate}%</b>
-                            <div className={styles.container22}>
-                                <ArrowDownIcon />
-                                <div className={styles.div2}>{studentData.attendanceChange}%</div>
+                            <div className={styles.heading3}>
+                                <div className={styles.attendanceRate}>Tỷ lệ điểm danh</div>
+                            </div>
+                            <div className={styles.container19}>
+                                <b className={styles.b2}>{studentData.attendanceRate}%</b>
+                                <div className={styles.container22}>
+                                    <ArrowDownIcon />
+                                    <div className={styles.div2}>{studentData.attendanceChange}%</div>
+                                </div>
                             </div>
                         </div>
-                        </div>
                         <div className={styles.backgroundbordershadow}>
-                        <div className={styles.heading3}>
-                            <div className={styles.overdueHw}>BTVN quá hạn</div>
-                        </div>
-                        <div className={styles.paragraph}>
-                            <b className={styles.b3}>{studentData.overdueHw}</b>
-                            <div className={styles.items}>mục</div>
-                        </div>
+                            <div className={styles.heading3}>
+                                <div className={styles.overdueHw}>BTVN quá hạn</div>
+                            </div>
+                            <div className={styles.paragraph}>
+                                <b className={styles.b3}>{studentData.overdueHw}</b>
+                                <div className={styles.items}>mục</div>
+                            </div>
                         </div>
                     </div>
 
@@ -390,10 +390,10 @@ const TutorPortalStudentProfile: React.FC = () => {
                                 ))
                             )}
                         </div>
-                        </div>
+                    </div>
 
-                        {/* Homework Section */}
-                        <div className={styles.sectionHomework}>
+                    {/* Homework Section */}
+                    <div className={styles.sectionHomework}>
                         <div className={styles.overlayhorizontalborder}>
                             <div className={styles.container10}>
                                 <div className={styles.homeworkAssignments}>Bài tập về nhà</div>
@@ -434,10 +434,10 @@ const TutorPortalStudentProfile: React.FC = () => {
                                 ))
                             )}
                         </div>
-                        </div>
+                    </div>
 
-                        {/* Score History */}
-                        <div className={styles.sectionHomework}>
+                    {/* Score History */}
+                    <div className={styles.sectionHomework}>
                         <div className={styles.overlayhorizontalborder3}>
                             <div className={styles.container10}>
                                 <b className={styles.scoreHistory}>Lịch sử điểm số</b>
@@ -466,13 +466,13 @@ const TutorPortalStudentProfile: React.FC = () => {
                                 ))
                             )}
                         </div>
-                        </div>
                     </div>
+                </div>
 
-                    {/* Right Column */}
-                    <div className={styles.rightColumnSidebarWidgets}>
-                        {/* Contact Information */}
-                        <div className={styles.sectionContactInfo}>
+                {/* Right Column */}
+                <div className={styles.rightColumnSidebarWidgets}>
+                    {/* Contact Information */}
+                    <div className={styles.sectionContactInfo}>
                         <div className={styles.heading24}>
                             <b className={styles.attendanceHistory}>Thông tin liên hệ</b>
                         </div>
@@ -503,10 +503,10 @@ const TutorPortalStudentProfile: React.FC = () => {
                                 </div>
                             </div>
                         </div>
-                        </div>
+                    </div>
 
-                        {/* Learning Goals - Commented out (no API data yet) */}
-                        {/* <div className={styles.sectionContactInfo}>
+                    {/* Learning Goals - Commented out (no API data yet) */}
+                    {/* <div className={styles.sectionContactInfo}>
                         <div className={styles.heading24}>
                             <b className={styles.attendanceHistory}>Mục tiêu học tập</b>
                         </div>
@@ -521,8 +521,8 @@ const TutorPortalStudentProfile: React.FC = () => {
                         </div>
                         </div> */}
 
-                        {/* Notes */}
-                        <div className={styles.sectionNotes}>
+                    {/* Notes */}
+                    <div className={styles.sectionNotes}>
                         <div className={styles.heading26}>
                             <b className={styles.notes}>Ghi chú</b>
                         </div>

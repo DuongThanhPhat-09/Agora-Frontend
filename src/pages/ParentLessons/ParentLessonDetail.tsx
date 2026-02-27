@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { getParentLessonDetail, type PendingLessonDto } from '../../services/parent-lesson.service';
+import { getParentLessonDetail } from '../../services/parent-lesson.service';
 import { message as antMessage, Spin, Tag, Button } from 'antd';
 import CountdownTimer from './components/CountdownTimer';
 import ConfirmLessonModal from './components/ConfirmLessonModal';

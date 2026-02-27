@@ -22,7 +22,7 @@ interface ProfileData {
     teachingAreaDistrict: string;
     videoIntroUrl: string | null;
     bio: string;
-    credentials: Array<{ id: number }>;
+    credentials: Array<{ id: string | number }>;
     availability: Array<{ dayOfWeek: number }>;
     identityVerification: {
         verificationStatus: 'not_submitted' | 'pending' | 'verified' | 'rejected';
@@ -82,7 +82,7 @@ const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
         });
 
         // About Me (bio >= 100 chars): 15%
-        const hasBio = profileData.bio && profileData.bio.length >= 100;
+        const hasBio = !!(profileData.bio && profileData.bio.length >= 100);
         items.push({
             key: 'about',
             label: 'Giới thiệu bản thân',

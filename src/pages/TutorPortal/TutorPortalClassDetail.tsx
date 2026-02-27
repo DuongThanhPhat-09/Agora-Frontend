@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getTutorLessons, checkInLesson, checkOutLesson, type LessonResponse } from '../../services/lesson.service';
-import { message as antMessage, Modal, Tag } from 'antd';
+import { message as antMessage, Tag } from 'antd';
 import styles from '../../styles/pages/tutor-portal-class-detail.module.css';
 import LessonReportForm from './components/LessonReportForm';
 import AttachmentUploader from './components/AttachmentUploader';
@@ -57,14 +57,14 @@ const MoreIcon = () => (
     </svg>
 );
 
-// Sample data for reference (not used)
-const classData = {
-    id: '1',
-    name: 'Toán học',
-    subject: 'Toán',
-    grade: 'Lớp 11',
-    nextLesson: 'Thứ Hai, 20/01 lúc 14:00'
-};
+// Sample data for reference (commented out - not used)
+// const classData = {
+//     id: '1',
+//     name: 'Toán học',
+//     subject: 'Toán',
+//     grade: 'Lớp 11',
+//     nextLesson: 'Thứ Hai, 20/01 lúc 14:00'
+// };
 
 // Type for student data
 interface StudentData {
