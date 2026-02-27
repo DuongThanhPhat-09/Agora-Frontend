@@ -72,9 +72,10 @@ export interface CheckOutRequest {
 }
 
 export interface SubmitReportRequest {
-  lessonContent: string;
-  homework?: string;
+  contentCovered: string;
+  homeworkAssigned?: string;
   tutorNotes?: string;
+  isTutorPresent?: boolean;
   isStudentPresent: boolean;
   attendanceNote?: string;
 }
