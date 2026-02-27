@@ -1,7 +1,7 @@
 .classManagement {
     display: flex;
     width: 100%;
-    height: 100%;
+    min-height: 100%;
     background-color: #f2f0e4;
 }
 
@@ -334,6 +334,93 @@
     height: 14px;
 }
 
+/* Pagination */
+.pagination {
+    padding: 16px 21px;
+    border-top: 1.1px solid rgba(62, 47, 40, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.paginationInfo {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12.3px;
+    font-weight: 500;
+    color: rgba(62, 47, 40, 0.4);
+}
+
+.paginationControls {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.pageBtn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    border: 1px solid rgba(62, 47, 40, 0.1);
+    background-color: transparent;
+    color: #1a2238;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pageBtn:hover:not(:disabled) {
+    background-color: #f2f0e4;
+}
+
+.pageBtn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.pageBtn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.pageNumber {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    border: 1px solid transparent;
+    background-color: transparent;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12.3px;
+    font-weight: 700;
+    color: rgba(62, 47, 40, 0.4);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pageNumber:hover {
+    background-color: #f2f0e4;
+}
+
+.pageActive {
+    background-color: #1a2238;
+    color: #f2f0e4;
+    border-color: #1a2238;
+}
+
+.pageActive:hover {
+    background-color: #2a3448;
+}
+
+.paginationEllipsis {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12.3px;
+    color: rgba(62, 47, 40, 0.3);
+}
+
 /* Sidebar */
 .sidebar {
     flex: 0 0 293px;
@@ -575,6 +662,12 @@
 
     .table {
         min-width: 800px;
+    }
+
+    .pagination {
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
     }
 
     .sidebar {
