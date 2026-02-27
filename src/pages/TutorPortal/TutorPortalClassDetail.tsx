@@ -247,12 +247,12 @@ const TutorPortalClassDetail: React.FC = () => {
     const getLessonStatusLabel = (status?: string): { text: string; color: string } => {
         switch (status) {
             case 'scheduled': return { text: 'Đã lên lịch', color: '#1890ff' };
-            case 'checked_in': return { text: 'Đã check-in', color: '#52c41a' };
-            case 'checked_out': return { text: 'Đã check-out', color: '#faad14' };
+            case 'in_progress': return { text: 'Đang học', color: '#52c41a' };
             case 'pending_confirmation': return { text: 'Chờ xác nhận', color: '#722ed1' };
             case 'completed': return { text: 'Hoàn thành', color: '#52c41a' };
             case 'disputed': return { text: 'Đang khiếu nại', color: '#ff4d4f' };
             case 'cancelled': return { text: 'Đã hủy', color: '#999' };
+            case 'no_show': return { text: 'Vắng mặt', color: '#ff4d4f' };
             default: return { text: status || 'N/A', color: '#999' };
         }
     };
@@ -472,7 +472,7 @@ const TutorPortalClassDetail: React.FC = () => {
                                                             </button>
                                                         )}
 
-                                                        {lesson.status === 'checked_in' && (
+                                                        {lesson.status === 'in_progress' && !lesson.checkOutTime && (
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); handleCheckOut(lesson.lessonId); }}
                                                                 disabled={checkingOut}
@@ -488,7 +488,7 @@ const TutorPortalClassDetail: React.FC = () => {
                                                             </button>
                                                         )}
 
-                                                        {lesson.status === 'checked_out' && (
+                                                        {lesson.status === 'in_progress' && lesson.checkOutTime && (
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
@@ -581,7 +581,7 @@ const TutorPortalClassDetail: React.FC = () => {
                                                         </div>
 
                                                         {/* Report Form (shown after check-out) */}
-                                                        {showReportForm && activeLessonId === lesson.lessonId && lesson.status === 'checked_out' && (
+                                                        {showReportForm && activeLessonId === lesson.lessonId && lesson.status === 'in_progress' && lesson.checkOutTime && (
                                                             <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                                                 <LessonReportForm
                                                                     lessonId={lesson.lessonId}
