@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getAuthHeaders } from './tutorProfile.service';
+import { setupAuthInterceptor } from './apiClient';
 
 const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5166') + '/api';
 
@@ -9,6 +10,7 @@ const api = axios.create({
         'Content-Type': 'application/json',
     },
 });
+setupAuthInterceptor(api);
 
 // DTO matching backend NotificationResponse
 export interface NotificationDTO {
