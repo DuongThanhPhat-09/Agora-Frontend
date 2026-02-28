@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 import { getAuthHeaders, type ApiResponse } from './tutorProfile.service';
+import { setupAuthInterceptor } from './apiClient';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -10,6 +11,7 @@ const api = axios.create({
         'Content-Type': 'application/json',
     },
 });
+setupAuthInterceptor(api);
 
 // ===== TYPES =====
 
@@ -28,6 +30,7 @@ export interface CreateBookingPayload {
     tutorId: string;
     subjectId: number;
     teachingMode: 'online' | 'offline' | 'hybrid';
+    startDate: string; // YYYY-MM-DD
     schedule: ScheduleItemPayload[];
     locationCity?: string;
     locationDistrict?: string;
@@ -53,6 +56,7 @@ export interface BookingResponseDTO {
     paymentStatus: string;
     paymentCode: string;
     schedule: ScheduleItemPayload[];
+    startDate?: string;
     createdAt: string;
     paymentDueAt: string | null;
     // 2-stage payment fields

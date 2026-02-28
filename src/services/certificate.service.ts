@@ -1,12 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 import { getCurrentUser } from './auth.service';
+import { setupAuthInterceptor } from './apiClient';
 
 const API_BASE_URL = 'http://localhost:5166/api';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
 });
+setupAuthInterceptor(api);
 
 // Add token to requests
 api.interceptors.request.use((config) => {

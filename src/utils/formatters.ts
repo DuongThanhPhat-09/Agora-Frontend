@@ -268,6 +268,78 @@ export const formatWithdrawalStatus = (status: string): string => {
   return statusMap[status] || status;
 };
 
+/**
+ * Enhanced withdrawal status formatter
+ */
+export const formatWithdrawalStatusV2 = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    pending: 'Chờ xử lý',
+    approved: 'Đã phê duyệt',
+    processing: 'Đang xử lý',
+    completed: 'Hoàn thành',
+    rejected: 'Đã từ chối',
+    cancelled: 'Đã hủy',
+    delayed: 'Đang tạm giữ',
+    pending_review: 'Chờ xét duyệt',
+  };
+
+  return statusMap[status] || status;
+};
+
+/**
+ * Format approval decision internal code to Vietnamese
+ */
+export const formatApprovalDecision = (decision: string | null): string => {
+  if (!decision) return 'Chờ xử lý';
+  const decisionMap: Record<string, string> = {
+    AUTO_APPROVE: 'Tự động duyệt',
+    DELAYED: 'Cần kiểm tra',
+    MANUAL_REVIEW: 'Chờ Admin duyệt',
+    AUTO_REJECT: 'Tự động từ chối',
+  };
+
+  return decisionMap[decision] || decision;
+};
+
+/**
+ * Format trust score with color label
+ */
+export const formatTrustScore = (score: number | null): { label: string; color: string } => {
+  if (score === null || score === undefined) return { label: 'N/A', color: 'gray' };
+
+  if (score >= 80) return { label: 'An toàn', color: 'green' };
+  if (score >= 50) return { label: 'Trung bình', color: 'yellow' };
+  if (score >= 30) return { label: 'Rủi ro thấp', color: 'orange' };
+  return { label: 'Rủi ro cao', color: 'red' };
+};
+
+/**
+ * Get estimated processing time based on decision
+ */
+export const formatEstimatedTime = (decision: string | null): string => {
+  if (!decision) return 'Đang cập nhật';
+  const timeMap: Record<string, string> = {
+    AUTO_APPROVE: '5-30 phút',
+    DELAYED: '2-4 giờ',
+    MANUAL_REVIEW: '1-24 giờ',
+    AUTO_REJECT: 'N/A',
+  };
+
+  return timeMap[decision] || 'Chờ xét duyệt';
+};
+
+/**
+ * Mask bank account number for privacy
+ */
+export const maskBankAccount = (accountNumber: string | null): string => {
+  if (!accountNumber) return 'N/A';
+  if (accountNumber.length < 8) return accountNumber;
+
+  const firstPart = accountNumber.substring(0, 4);
+  const lastPart = accountNumber.substring(accountNumber.length - 3);
+  return `${firstPart}***${lastPart}`;
+};
+
 // ============================================
 // TEXT FORMATTERS
 // ============================================
