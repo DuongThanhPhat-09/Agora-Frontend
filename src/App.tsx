@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import HomePage from './pages/Home/HomePage';
 import TutorSearchPage from './pages/TutorSearch/TutorSearchPage';
 import LoginPage from './pages/Login/LoginPage';
@@ -53,6 +54,8 @@ import WithdrawalListPage from './pages/TutorFinance/WithdrawalList/WithdrawalLi
 import WithdrawalDetailPage from './pages/TutorFinance/WithdrawalList/WithdrawalDetailPage';
 import PayoutOverviewPage from './pages/AdminPayout/PayoutOverview/PayoutOverviewPage';
 import PayoutDetailPage from './pages/AdminPayout/PayoutDetail/PayoutDetailPage';
+import SessionExpiredModal from './components/SessionExpiredModal';
+import { getCurrentUser, isTokenExpired } from './services/auth.service';
 import PendingReviewPage from './pages/AdminPayout/PendingReview/PendingReviewPage';
 import AllPayoutRequestsPage from './pages/AdminPayout/AllRequests/AllPayoutRequestsPage';
 import FraudLogsPage from './pages/AdminPayout/FraudLogs/FraudLogsPage';
@@ -60,8 +63,34 @@ import FraudLogsPage from './pages/AdminPayout/FraudLogs/FraudLogsPage';
 // ---------------------
 
 function App() {
+  const location = useLocation();
+  const [showSessionExpired, setShowSessionExpired] = useState(false);
+
+  const checkTokenExpiry = useCallback(() => {
+    const user = getCurrentUser();
+    // Chỉ check khi user đã đăng nhập (có data trong localStorage)
+    if (user?.accessToken && isTokenExpired()) {
+      setShowSessionExpired(true);
+    }
+  }, []);
+
+  // Check token expiry khi route thay đổi
+  useEffect(() => {
+    checkTokenExpiry();
+  }, [location.pathname, checkTokenExpiry]);
+
+  // Check token expiry định kỳ mỗi 30 giây
+  useEffect(() => {
+    const interval = setInterval(checkTokenExpiry, 30000);
+    return () => clearInterval(interval);
+  }, [checkTokenExpiry]);
+
   return (
     <div>
+      <SessionExpiredModal
+        isOpen={showSessionExpired}
+        onClose={() => setShowSessionExpired(false)}
+      />
       <ToastContainer position="top-right" autoClose={5000} style={{ zIndex: 99999 }} />
 
       <Routes>
