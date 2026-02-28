@@ -1,13 +1,17 @@
+<<<<<<< HEAD
+import { type FunctionComponent, useState, useEffect } from 'react';
+=======
 import type { FunctionComponent } from 'react';
 import { useState, useEffect } from 'react';
+>>>>>>> 1a5d51718d9c7b15dbb72bdeb6696cddef9ca4a8
 import { X, Clock } from 'lucide-react';
 import { toast } from 'react-toastify';
 import styles from './AddAvailabilityModal.module.css';
 import { createAvailability, DAY_OF_WEEK_MAP } from '../../../services/availability.service';
 
-// Hour options: 7 to 21
-const HOUR_OPTIONS = Array.from({ length: 15 }, (_, i) => {
-    const hour = 7 + i;
+// Hour options: 0 to 23 (temporarily expanded)
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => {
+    const hour = i;
     return {
         value: hour.toString(),
         label: hour.toString().padStart(2, '0')
@@ -358,9 +362,9 @@ const AddAvailabilityModal: FunctionComponent<AddAvailabilityModalProps> = ({
                             </div>
 
                             {/* Time hint */}
-                            <p className={styles.timeHint}>
+                            {/* <p className={styles.timeHint}>
                                 Lưu ý: Thời gian phải nằm trong khoảng 07:00 - 21:00
-                            </p>
+                            </p> */}
                         </div>
 
                         {/* Action Buttons */}

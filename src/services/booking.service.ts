@@ -30,6 +30,7 @@ export interface CreateBookingPayload {
     tutorId: string;
     subjectId: number;
     teachingMode: 'online' | 'offline' | 'hybrid';
+    startDate: string; // YYYY-MM-DD
     schedule: ScheduleItemPayload[];
     locationCity?: string;
     locationDistrict?: string;
@@ -55,6 +56,7 @@ export interface BookingResponseDTO {
     paymentStatus: string;
     paymentCode: string;
     schedule: ScheduleItemPayload[];
+    startDate?: string;
     createdAt: string;
     paymentDueAt: string | null;
     // 2-stage payment fields

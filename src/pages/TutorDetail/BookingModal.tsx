@@ -22,6 +22,7 @@ interface BookingFormData {
     studentId: string;
     subjectId: number;
     teachingMode: 'online' | 'offline' | 'hybrid';
+    startDate: string;
     schedule: ScheduleSlot[];
     locationCity: string;
     locationDistrict: string;
@@ -57,12 +58,11 @@ const DURATION_OPTIONS = [
 
 const DAY_NAMES = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
-const TIME_SLOTS = [
-    '07:00', '07:30', '08:00', '08:30', '09:00', '09:30',
-    '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00',
-    '14:30', '15:00', '15:30', '16:00', '16:30', '17:00',
-    '17:30', '18:00', '18:30', '19:00', '19:30', '20:00',
-];
+const TIME_SLOTS = Array.from({ length: 48 }, (_, i) => {
+    const hours = Math.floor(i / 2).toString().padStart(2, '0');
+    const minutes = i % 2 === 0 ? '00' : '30';
+    return `${hours}:${minutes}`;
+});
 
 // ===== HELPERS =====
 const formatPrice = (amount: number) =>
@@ -410,8 +410,21 @@ const StepSchedule = ({ formData, setFormData, slotDuration, setSlotDuration, av
 
             <div className="bm-step-title">Chọn lịch học hàng tuần</div>
             <p className="bm-step-desc">
-                Chọn các slot phù hợp. Hệ thống tính: <strong>{slotsPerWeek} slot/tuần × 4 tuần = {sessionCount} buổi/tháng</strong>.
+                Chọn các khoảng thời gian học và ngày bắt đầu mong muốn. Học phí được tính tạm tính theo <strong>{slotsPerWeek} slot/tuần × 4 tuần = {sessionCount} buổi/tháng</strong>.
             </p>
+
+            {/* Start Date selector */}
+            <div className="bm-duration-section" style={{ marginBottom: 16 }}>
+                <span className="bm-duration-label">Ngày bắt đầu dự kiến:</span>
+                <input
+                    type="date"
+                    className="bm-form-input"
+                    style={{ width: 'fit-content' }}
+                    min={new Date().toISOString().split('T')[0]}
+                    value={formData.startDate}
+                    onChange={(e) => setFormData(d => ({ ...d, startDate: e.target.value }))}
+                />
+            </div>
 
             {/* Duration selector */}
             <div className="bm-duration-section">
@@ -615,6 +628,10 @@ const StepReview = ({ formData, setFormData, hourlyRate, students, availableSubj
                     </div>
                 )}
                 <div className="bm-review-row">
+                    <span className="bm-review-label">Ngày bắt đầu</span>
+                    <span className="bm-review-value">{new Date(formData.startDate || new Date().toISOString()).toLocaleDateString('vi-VN')}</span>
+                </div>
+                <div className="bm-review-row">
                     <span className="bm-review-label">Số buổi/tháng</span>
                     <span className="bm-review-value">{sessionCount} buổi ({slotsPerWeek} slot/tuần)</span>
                 </div>
@@ -724,6 +741,7 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
         studentId: '',
         subjectId: 0,
         teachingMode: 'online',
+        startDate: new Date().toISOString().split('T')[0],
         schedule: [],
         locationCity: '',
         locationDistrict: '',
@@ -768,6 +786,7 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
                 studentId: '',
                 subjectId: 0,
                 teachingMode: 'online',
+                startDate: new Date().toISOString().split('T')[0],
                 schedule: [],
                 locationCity: '',
                 locationDistrict: '',
@@ -804,6 +823,7 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
                 tutorId: tutorId,
                 subjectId: formData.subjectId,
                 teachingMode: formData.teachingMode,
+                startDate: formData.startDate,
                 schedule: formData.schedule.map((s) => ({
                     dayOfWeek: s.dayOfWeek,
                     startTime: s.startTime,
