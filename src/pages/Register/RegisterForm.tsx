@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -11,6 +11,18 @@ import {
     checkEmailExists
 } from "../../services/auth.service";
 
+// --- HELPER: Format phone to E.164 ---
+const formatPhoneE164 = (phone: string): string => {
+    const digits = phone.replace(/\D/g, "");
+    if (digits.startsWith("0")) {
+        return "+84" + digits.substring(1);
+    }
+    if (digits.startsWith("84")) {
+        return "+" + digits;
+    }
+    return "+84" + digits;
+};
+
 const RegisterForm: React.FC = () => {
     const navigate = useNavigate();
 
@@ -21,7 +33,7 @@ const RegisterForm: React.FC = () => {
         phone: "",
         password: "",
         confirmPassword: "",
-        role: "Student", // Default role
+        role: "Student",
         terms: false,
     });
 
@@ -29,67 +41,25 @@ const RegisterForm: React.FC = () => {
     const [showOverlay, setShowOverlay] = useState(false);
     const [overlayText, setOverlayText] = useState("Đang xử lý...");
 
-    // --- VERIFICATION STATES ---
-    const [waitingForEmailVerification, setWaitingForEmailVerification] = useState(false);
-    const [userEmail, setUserEmail] = useState("");
-    const [pendingUserData, setPendingUserData] = useState<any>(null);
+    // --- OTP VERIFICATION STATES ---
+    const [waitingForOtp, setWaitingForOtp] = useState(false);
+    const [otpInput, setOtpInput] = useState(["", "", "", "", "", ""]);
+    const [otpLoading, setOtpLoading] = useState(false);
+    const [formattedPhone, setFormattedPhone] = useState("");
+    const [resendCooldown, setResendCooldown] = useState(0);
 
-    // 🔥 Ref để ngăn chặn race condition
-    const isProcessingEmailConfirmation = useRef(false);
-
-    // ========================================================================
-    // LOGIC: LẮNG NGHE SỰ KIỆN EMAIL VERIFICATION (GIỮ NGUYÊN)
-    // ========================================================================
-    useEffect(() => {
-        if (!waitingForEmailVerification) return;
-
-        const { data: authListener } = supabase.auth.onAuthStateChange(
-            async (event, session) => {
-                if (event === "SIGNED_IN" && session && !isProcessingEmailConfirmation.current) {
-                    isProcessingEmailConfirmation.current = true;
-                    try {
-                        setWaitingForEmailVerification(false);
-                        setShowOverlay(true);
-                        setOverlayText("Xác thực thành công! Đang khởi tạo...");
-
-                        const accessToken = session.access_token;
-                        const backendResponse = await registerUserToBackend(
-                            accessToken,
-                            pendingUserData?.password || "",
-                            pendingUserData?.role || "Student"
-                        );
-
-                        let fullUserData = backendResponse;
-                        if (!fullUserData.id || !fullUserData.fullname) {
-                            const userProfile = await checkEmailExists(userEmail);
-                            fullUserData = {
-                                ...userProfile.content,
-                                accessToken: backendResponse.accessToken || accessToken,
-                            };
-                        }
-
-                        saveUserToStorage(fullUserData);
-                        toast.success(`Chào mừng ${fullUserData.fullname || 'bạn'} đến với Agora!`);
-
-                        setTimeout(() => navigate("/"), 1500);
-
-                    } catch (error: any) {
-                        toast.error("Lỗi đồng bộ dữ liệu. Vui lòng thử đăng nhập lại.");
-                        setShowOverlay(false);
-                        isProcessingEmailConfirmation.current = false;
-                        navigate("/login");
-                    }
-                }
-            }
-        );
-
-        return () => {
-            authListener.subscription.unsubscribe();
-        };
-    }, [waitingForEmailVerification, navigate, userEmail, pendingUserData]);
+    // Refs for OTP input boxes
+    const otpRefs = [
+        React.useRef<HTMLInputElement>(null),
+        React.useRef<HTMLInputElement>(null),
+        React.useRef<HTMLInputElement>(null),
+        React.useRef<HTMLInputElement>(null),
+        React.useRef<HTMLInputElement>(null),
+        React.useRef<HTMLInputElement>(null),
+    ];
 
     // ========================================================================
-    // FORM HANDLERS (GIỮ NGUYÊN)
+    // FORM HANDLERS
     // ========================================================================
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type, checked } = e.target;
@@ -99,6 +69,80 @@ const RegisterForm: React.FC = () => {
         }));
     };
 
+    // ========================================================================
+    // OTP INPUT HANDLERS
+    // ========================================================================
+    const handleOtpChange = (index: number, value: string) => {
+        if (!/^\d*$/.test(value)) return;
+        const newOtp = [...otpInput];
+        newOtp[index] = value.slice(-1);
+        setOtpInput(newOtp);
+
+        if (value && index < 5) {
+            otpRefs[index + 1].current?.focus();
+        }
+    };
+
+    const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
+        if (e.key === "Backspace" && !otpInput[index] && index > 0) {
+            otpRefs[index - 1].current?.focus();
+        }
+    };
+
+    const handleOtpPaste = (e: React.ClipboardEvent) => {
+        e.preventDefault();
+        const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+        const newOtp = [...otpInput];
+        for (let i = 0; i < pasted.length; i++) {
+            newOtp[i] = pasted[i];
+        }
+        setOtpInput(newOtp);
+        const lastIndex = Math.min(pasted.length, 5);
+        otpRefs[lastIndex].current?.focus();
+    };
+
+    // ========================================================================
+    // RESEND OTP WITH COOLDOWN
+    // ========================================================================
+    const startResendCooldown = () => {
+        setResendCooldown(60);
+        const interval = setInterval(() => {
+            setResendCooldown((prev) => {
+                if (prev <= 1) {
+                    clearInterval(interval);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+    };
+
+    const handleResendOtp = async () => {
+        if (resendCooldown > 0) return;
+        try {
+            const { error } = await supabase.auth.signUp({
+                phone: formattedPhone,
+                password: formData.password,
+                options: {
+                    data: {
+                        full_name: formData.fullname,
+                        email: formData.email,
+                        phone: formData.phone,
+                        app_role: formData.role,
+                    },
+                },
+            });
+            if (error) throw error;
+            toast.success("Đã gửi lại mã OTP!");
+            startResendCooldown();
+        } catch (error: any) {
+            toast.error(error.message || "Không thể gửi lại OTP.");
+        }
+    };
+
+    // ========================================================================
+    // SUBMIT: SIGN UP WITH PHONE → SEND OTP
+    // ========================================================================
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -119,10 +163,18 @@ const RegisterForm: React.FC = () => {
             return;
         }
 
+        // Validate phone number
+        const phoneDigits = formData.phone.replace(/\D/g, "");
+        if (phoneDigits.length < 9 || phoneDigits.length > 11) {
+            toast.warning("Số điện thoại không hợp lệ!");
+            return;
+        }
+
         try {
             setShowOverlay(true);
             setOverlayText("Đang kiểm tra...");
 
+            // Check if email already exists
             const existingUser = await checkEmailExists(formData.email);
             if (existingUser && existingUser.content) {
                 toast.error("Email đã tồn tại. Vui lòng đăng nhập.");
@@ -131,70 +183,120 @@ const RegisterForm: React.FC = () => {
                 return;
             }
 
-            setOverlayText("Đang kết nối hệ thống...");
+            setOverlayText("Đang gửi mã OTP...");
 
+            // Format phone to E.164
+            const phoneE164 = formatPhoneE164(formData.phone);
+            setFormattedPhone(phoneE164);
+
+            // Sign up with phone (sends OTP via SMS)
             const { data, error } = await supabase.auth.signUp({
-                email: formData.email,
+                phone: phoneE164,
                 password: formData.password,
                 options: {
                     data: {
                         full_name: formData.fullname,
+                        email: formData.email,
                         phone: formData.phone,
-                        app_role: formData.role, // Application role: Admin/Tutor/Student/Parent
+                        app_role: formData.role,
                     },
                 },
             });
 
             if (error) throw error;
 
-            if (data.user && data.user.identities && data.user.identities.length === 0) {
-                const { data: { session: currentSession } } = await supabase.auth.getSession();
-                if (currentSession && currentSession.user.email === formData.email) {
-                    await handleInstantRegistration(currentSession.access_token);
-                    return;
-                }
-            }
+            console.log("📱 OTP sent to:", phoneE164);
+            console.log("📦 SignUp response:", data);
 
-            if (data.session) {
-                await handleInstantRegistration(data.session.access_token);
-            } else if (data.user && !data.session) {
-                setUserEmail(formData.email);
-                setPendingUserData({
-                    fullname: formData.fullname,
-                    email: formData.email,
-                    phone: formData.phone,
-                    password: formData.password,
-                    role: formData.role
-                });
-                setWaitingForEmailVerification(true);
-                setShowOverlay(false);
-                toast.success("Vui lòng kiểm tra email!");
-            }
+            // Show OTP input modal
+            setWaitingForOtp(true);
+            setShowOverlay(false);
+            startResendCooldown();
+            toast.success("Mã OTP đã được gửi đến số điện thoại của bạn!");
 
         } catch (error: any) {
-            const msg = error.message?.includes("User already registered") ? "Email đã được đăng ký." : `Lỗi: ${error.message}`;
+            console.error("SignUp error:", error);
+            const msg = error.message?.includes("User already registered")
+                ? "Số điện thoại đã được đăng ký."
+                : error.message?.includes("rate limit")
+                    ? "Gửi OTP quá nhiều lần. Vui lòng chờ và thử lại."
+                    : `Lỗi: ${error.message}`;
             toast.error(msg);
             setShowOverlay(false);
         }
     };
 
+    // ========================================================================
+    // VERIFY OTP → REGISTER WITH BACKEND
+    // ========================================================================
+    const handleVerifyOtp = async () => {
+        const otpCode = otpInput.join("");
+        if (otpCode.length !== 6) {
+            toast.warning("Vui lòng nhập đủ 6 chữ số!");
+            return;
+        }
+
+        try {
+            setOtpLoading(true);
+
+            const { data, error } = await supabase.auth.verifyOtp({
+                phone: formattedPhone,
+                token: otpCode,
+                type: "sms",
+            });
+
+            if (error) throw error;
+
+            console.log("✅ OTP verified successfully:", data);
+
+            if (data.session) {
+                await handleInstantRegistration(data.session.access_token);
+            } else {
+                throw new Error("Không nhận được session sau xác thực OTP.");
+            }
+
+        } catch (error: any) {
+            console.error("OTP verification error:", error);
+            if (error.message?.includes("Token has expired or is invalid")) {
+                toast.error("Mã OTP không đúng hoặc đã hết hạn. Vui lòng thử lại.");
+            } else {
+                toast.error(error.message || "Xác thực OTP thất bại.");
+            }
+            setOtpInput(["", "", "", "", "", ""]);
+            otpRefs[0].current?.focus();
+        } finally {
+            setOtpLoading(false);
+        }
+    };
+
+    // ========================================================================
+    // REGISTER WITH BACKEND (after OTP verified)
+    // ========================================================================
     const handleInstantRegistration = async (token: string) => {
         try {
-            setOverlayText("Đang đồng bộ...");
+            setWaitingForOtp(false);
+            setShowOverlay(true);
+            setOverlayText("Đang đồng bộ tài khoản...");
+
             const backendResponse = await registerUserToBackend(token, formData.password, formData.role);
             let fullUserData = backendResponse;
+
             if (!fullUserData.id || !fullUserData.fullname) {
                 const userProfile = await checkEmailExists(formData.email);
                 fullUserData = { ...userProfile.content, accessToken: backendResponse.accessToken || token };
             }
+
             saveUserToStorage(fullUserData);
-            toast.success("Đăng ký hoàn tất!");
-            navigate("/");
+            toast.success(`Chào mừng ${fullUserData.fullname || 'bạn'} đến với Agora!`);
+            setTimeout(() => navigate("/"), 1500);
+
         } catch (err: any) {
-            toast.error("Không thể đồng bộ tài khoản.");
+            console.error("Backend registration error:", err);
+            toast.error("Không thể đồng bộ tài khoản. Vui lòng thử đăng nhập lại.");
             setShowOverlay(false);
+            navigate("/login");
         }
-    }
+    };
 
     // ========================================================================
     // RENDER
@@ -204,6 +306,7 @@ const RegisterForm: React.FC = () => {
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
                 @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+                @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
                 .agora-modal-overlay {
                     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
                     background-color: rgba(26, 34, 56, 0.9);
@@ -228,6 +331,23 @@ const RegisterForm: React.FC = () => {
                     margin-bottom: 15px;
                 }
                 .agora-btn-primary:hover { background-color: #2c3652; transform: translateY(-1px); }
+                .agora-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+                .otp-input {
+                    width: 48px; height: 56px;
+                    text-align: center; font-size: 24px; font-weight: 700;
+                    border: 2px solid #e0e0e0; border-radius: 10px;
+                    outline: none; transition: all 0.2s;
+                    color: #1a2238; background-color: #faf9f6;
+                }
+                .otp-input:focus {
+                    border-color: #1a2238;
+                    background-color: #fff;
+                    box-shadow: 0 0 0 3px rgba(26, 34, 56, 0.1);
+                }
+                .otp-input:not(:placeholder-shown) {
+                    border-color: #3d4a3e;
+                    background-color: rgba(61, 74, 62, 0.05);
+                }
             `}</style>
 
             {/* --- OVERLAY LOADING --- */}
@@ -239,15 +359,14 @@ const RegisterForm: React.FC = () => {
                             border: '4px solid #f3f3f3', borderTop: '4px solid #1a2238', borderRadius: '50%',
                             animation: 'spin 1s linear infinite'
                         }}></div>
-                        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
                         <p style={{ color: '#1a2238', fontWeight: '500' }}>{overlayText}</p>
                     </div>
                 </div>,
                 document.body
             )}
 
-            {/* --- EMAIL VERIFICATION MODAL (FAILSAFE VERSION) --- */}
-            {waitingForEmailVerification && createPortal(
+            {/* --- OTP VERIFICATION MODAL --- */}
+            {waitingForOtp && createPortal(
                 <div className="agora-modal-overlay">
                     <div className="agora-modal-box">
                         {/* Header */}
@@ -263,41 +382,111 @@ const RegisterForm: React.FC = () => {
 
                         {/* Content */}
                         <div style={{ padding: '25px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <h3 style={{ margin: '0 0 10px 0', color: '#1a2238', fontSize: '18px', fontWeight: 'bold' }}>Xác thực Email</h3>
+                            <div style={{
+                                width: '48px', height: '48px', borderRadius: '50%',
+                                backgroundColor: 'rgba(61, 74, 62, 0.1)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                marginBottom: '16px'
+                            }}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3d4a3e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
+                                </svg>
+                            </div>
 
-                            <p style={{ margin: '0 0 15px 0', color: '#666', fontSize: '13px', textAlign: 'center' }}>
-                                Chúng tôi đã gửi email xác thực đến:
+                            <h3 style={{ margin: '0 0 8px 0', color: '#1a2238', fontSize: '18px', fontWeight: 'bold' }}>
+                                Xác thực số điện thoại
+                            </h3>
+
+                            <p style={{ margin: '0 0 8px 0', color: '#666', fontSize: '13px', textAlign: 'center' }}>
+                                Nhập mã 6 chữ số đã gửi đến:
                             </p>
 
                             <div style={{
-                                backgroundColor: '#f5f5f5', padding: '10px 15px', borderRadius: '6px',
-                                marginBottom: '20px', width: '100%', textAlign: 'center',
-                                border: '1px solid #eee'
+                                backgroundColor: '#f5f5f5', padding: '8px 16px', borderRadius: '6px',
+                                marginBottom: '20px', textAlign: 'center', border: '1px solid #eee'
                             }}>
-                                <span style={{ color: '#1a2238', fontWeight: 'bold', fontSize: '14px', wordBreak: 'break-all' }}>{userEmail}</span>
+                                <span style={{ color: '#1a2238', fontWeight: 'bold', fontSize: '15px', letterSpacing: '1px' }}>
+                                    {formattedPhone}
+                                </span>
                             </div>
 
-                            {/* 🔥 NÚT BẤM DÙNG STYLE TRỰC TIẾP ĐỂ CHỐNG LỖI CSS 🔥 */}
+                            {/* OTP Input Boxes */}
+                            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }} onPaste={handleOtpPaste}>
+                                {otpInput.map((digit, index) => (
+                                    <input
+                                        key={index}
+                                        ref={otpRefs[index]}
+                                        type="text"
+                                        inputMode="numeric"
+                                        maxLength={1}
+                                        className="otp-input"
+                                        value={digit}
+                                        placeholder="·"
+                                        onChange={(e) => handleOtpChange(index, e.target.value)}
+                                        onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                                        autoFocus={index === 0}
+                                        disabled={otpLoading}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* Verify Button */}
                             <button
                                 type="button"
-                                onClick={() => window.open('https://mail.google.com', '_blank')}
                                 className="agora-btn-primary"
-                                style={{ display: 'flex', visibility: 'visible', height: '48px', opacity: 1 }}
+                                onClick={handleVerifyOtp}
+                                disabled={otpLoading || otpInput.join("").length !== 6}
                             >
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                                Mở Gmail ngay
+                                {otpLoading ? (
+                                    <>
+                                        <div style={{
+                                            width: '18px', height: '18px',
+                                            border: '2px solid rgba(255,255,255,0.3)',
+                                            borderTopColor: '#fff', borderRadius: '50%',
+                                            animation: 'spin 1s linear infinite'
+                                        }}></div>
+                                        Đang xác thực...
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                                            <polyline points="22 4 12 14.01 9 11.01" />
+                                        </svg>
+                                        Xác nhận OTP
+                                    </>
+                                )}
                             </button>
 
+                            {/* Resend OTP */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px' }}>
-                                <div style={{ width: '12px', height: '12px', border: '2px solid #d4b483', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                                <span style={{ fontSize: '12px', color: '#999', fontStyle: 'italic' }}>Đang chờ bạn xác nhận...</span>
+                                {resendCooldown > 0 ? (
+                                    <span style={{ fontSize: '13px', color: '#999' }}>
+                                        Gửi lại sau <strong style={{ color: '#1a2238' }}>{resendCooldown}s</strong>
+                                    </span>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={handleResendOtp}
+                                        style={{
+                                            background: 'none', border: 'none',
+                                            color: '#1a2238', fontSize: '13px', fontWeight: '600',
+                                            textDecoration: 'underline', cursor: 'pointer'
+                                        }}
+                                    >
+                                        Gửi lại mã OTP
+                                    </button>
+                                )}
                             </div>
 
                             <button
-                                onClick={() => setWaitingForEmailVerification(false)}
+                                onClick={() => {
+                                    setWaitingForOtp(false);
+                                    setOtpInput(["", "", "", "", "", ""]);
+                                }}
                                 style={{ background: 'none', border: 'none', color: '#888', fontSize: '12px', textDecoration: 'underline', cursor: 'pointer' }}
                             >
-                                Quay về trang đăng nhập
+                                Quay lại đăng ký
                             </button>
                         </div>
                     </div>
@@ -306,7 +495,7 @@ const RegisterForm: React.FC = () => {
             )}
 
             {/* --- MAIN FORM --- */}
-            {!waitingForEmailVerification && (
+            {!waitingForOtp && (
                 <>
                     <div className="register-form__header animate-fade-in-up">
                         <h2 className="register-form__title">Bắt đầu hành trình</h2>
@@ -340,44 +529,21 @@ const RegisterForm: React.FC = () => {
                                 </label>
                                 <div className="flex gap-3">
                                     <label className="flex-1 cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="role"
-                                            value="Student"
-                                            checked={formData.role === "Student"}
-                                            onChange={handleChange}
-                                            className="peer hidden"
-                                        />
+                                        <input type="radio" name="role" value="Student" checked={formData.role === "Student"} onChange={handleChange} className="peer hidden" />
                                         <div className="border-2 border-gray-300 rounded-lg p-3 text-center transition-all peer-checked:border-blue-600 peer-checked:bg-blue-50 hover:border-blue-400">
                                             <div className="text-2xl mb-1">🎓</div>
                                             <div className="text-sm font-medium text-gray-700 peer-checked:text-blue-600">Học sinh</div>
                                         </div>
                                     </label>
-
                                     <label className="flex-1 cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="role"
-                                            value="Parent"
-                                            checked={formData.role === "Parent"}
-                                            onChange={handleChange}
-                                            className="peer hidden"
-                                        />
+                                        <input type="radio" name="role" value="Parent" checked={formData.role === "Parent"} onChange={handleChange} className="peer hidden" />
                                         <div className="border-2 border-gray-300 rounded-lg p-3 text-center transition-all peer-checked:border-green-600 peer-checked:bg-green-50 hover:border-green-400">
                                             <div className="text-2xl mb-1">👨‍👩‍👧</div>
                                             <div className="text-sm font-medium text-gray-700 peer-checked:text-green-600">Phụ huynh</div>
                                         </div>
                                     </label>
-
                                     <label className="flex-1 cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="role"
-                                            value="Tutor"
-                                            checked={formData.role === "Tutor"}
-                                            onChange={handleChange}
-                                            className="peer hidden"
-                                        />
+                                        <input type="radio" name="role" value="Tutor" checked={formData.role === "Tutor"} onChange={handleChange} className="peer hidden" />
                                         <div className="border-2 border-gray-300 rounded-lg p-3 text-center transition-all peer-checked:border-purple-600 peer-checked:bg-purple-50 hover:border-purple-400">
                                             <div className="text-2xl mb-1">👨‍🏫</div>
                                             <div className="text-sm font-medium text-gray-700 peer-checked:text-purple-600">Gia sư</div>

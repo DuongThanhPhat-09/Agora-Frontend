@@ -14,6 +14,23 @@ import {
   saveUserToStorage,
 } from "../../services/auth.service";
 
+// --- HELPER: Detect phone number and format to E.164 ---
+const isPhoneNumber = (input: string): boolean => {
+  const digits = input.replace(/\D/g, "");
+  return /^\d{9,15}$/.test(digits) || input.startsWith("+");
+};
+
+const formatPhoneE164 = (phone: string): string => {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.startsWith("0")) {
+    return "+84" + digits.substring(1);
+  }
+  if (digits.startsWith("84")) {
+    return "+" + digits;
+  }
+  return "+84" + digits;
+};
+
 const LoginForm: React.FC = () => {
   const navigate = useNavigate();
 
@@ -156,11 +173,15 @@ const LoginForm: React.FC = () => {
       // Đánh dấu đang manual login để tránh trigger OAuth flow
       isManualLoginRef.current = true;
 
-      // BƯỚC 1: Đăng nhập với Supabase để lấy accessToken
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
+      // BƯỚC 1: Đăng nhập với Supabase (detect phone vs email)
+      const input = formData.email.trim();
+      const loginPayload = isPhoneNumber(input)
+        ? { phone: formatPhoneE164(input), password: formData.password }
+        : { email: input, password: formData.password };
+
+      console.log("🔐 Login payload type:", isPhoneNumber(input) ? "phone" : "email");
+
+      const { data, error } = await supabase.auth.signInWithPassword(loginPayload);
 
       if (error) throw error;
 
