@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import HomePage from './pages/Home/HomePage';
 import TutorSearchPage from './pages/TutorSearch/TutorSearchPage';
 import LoginPage from './pages/Login/LoginPage';
@@ -45,12 +46,51 @@ import PaymentCallback from './pages/PaymentCallback/PaymentCallback';
 import ParentLessons from './pages/ParentLessons';
 import ParentLessonDetail from './pages/ParentLessons/ParentLessonDetail';
 import ParentDisputes from './pages/ParentDisputes';
+import TutorFinanceDashboardPage from './pages/TutorFinance/TutorFinanceDashboard/TutorFinanceDashboardPage';
+import TransactionHistoryPage from './pages/TutorFinance/TransactionHistory/TransactionHistoryPage';
+import BankInfoManagementPage from './pages/TutorFinance/BankInfoManagement/BankInfoManagementPage';
+import CreateWithdrawalPage from './pages/TutorFinance/CreateWithdrawal/CreateWithdrawalPage';
+import WithdrawalListPage from './pages/TutorFinance/WithdrawalList/WithdrawalListPage';
+import WithdrawalDetailPage from './pages/TutorFinance/WithdrawalList/WithdrawalDetailPage';
+import PayoutOverviewPage from './pages/AdminPayout/PayoutOverview/PayoutOverviewPage';
+import PayoutDetailPage from './pages/AdminPayout/PayoutDetail/PayoutDetailPage';
+import SessionExpiredModal from './components/SessionExpiredModal';
+import { getCurrentUser, isTokenExpired } from './services/auth.service';
+import PendingReviewPage from './pages/AdminPayout/PendingReview/PendingReviewPage';
+import AllPayoutRequestsPage from './pages/AdminPayout/AllRequests/AllPayoutRequestsPage';
+import FraudLogsPage from './pages/AdminPayout/FraudLogs/FraudLogsPage';
 
 // ---------------------
 
 function App() {
+  const location = useLocation();
+  const [showSessionExpired, setShowSessionExpired] = useState(false);
+
+  const checkTokenExpiry = useCallback(() => {
+    const user = getCurrentUser();
+    // Chỉ check khi user đã đăng nhập (có data trong localStorage)
+    if (user?.accessToken && isTokenExpired()) {
+      setShowSessionExpired(true);
+    }
+  }, []);
+
+  // Check token expiry khi route thay đổi
+  useEffect(() => {
+    checkTokenExpiry();
+  }, [location.pathname, checkTokenExpiry]);
+
+  // Check token expiry định kỳ mỗi 30 giây
+  useEffect(() => {
+    const interval = setInterval(checkTokenExpiry, 30000);
+    return () => clearInterval(interval);
+  }, [checkTokenExpiry]);
+
   return (
     <div>
+      <SessionExpiredModal
+        isOpen={showSessionExpired}
+        onClose={() => setShowSessionExpired(false)}
+      />
       <ToastContainer position="top-right" autoClose={5000} style={{ zIndex: 99999 }} />
 
       <Routes>
@@ -80,6 +120,12 @@ function App() {
           <Route path="financials" element={<AdminFinancialsPage />} />
           <Route path="warnings" element={<AdminWarningsPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
+          <Route path="payouts" element={<PayoutOverviewPage />} />
+          <Route path="payouts/history" element={<AllPayoutRequestsPage />} />
+          <Route path="payouts/:id" element={<PayoutDetailPage />} />
+          <Route path="payout/review" element={<PendingReviewPage />} />
+          <Route path="payout/review/:id" element={<div className="p-6">Payout Request Detail Page (Coming Soon)</div>} />
+          <Route path="payout/fraud-logs" element={<FraudLogsPage />} />
         </Route>
 
         {/* Tutor Portal - New Layout based on Figma */}
@@ -93,7 +139,12 @@ function App() {
           <Route path="classes/:classId" element={<TutorPortalClassDetail />} />
           <Route path="students/:studentId" element={<TutorPortalStudentProfile />} />
           <Route path="bookings" element={<TutorPortalBookings />} />
-          {/* Future routes: sessions, finance, settings */}
+          <Route path="finance" element={<TutorFinanceDashboardPage />} />
+          <Route path="finance/transactions" element={<TransactionHistoryPage />} />
+          <Route path="finance/bank-info" element={<BankInfoManagementPage />} />
+          <Route path="finance/withdraw" element={<CreateWithdrawalPage />} />
+          <Route path="finance/withdrawals" element={<WithdrawalListPage />} />
+          <Route path="finance/withdrawals/:id" element={<WithdrawalDetailPage />} />
         </Route>
 
         {/* Parent Layout - PROTECTED */}

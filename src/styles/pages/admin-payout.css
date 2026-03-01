@@ -1,0 +1,65 @@
+.admin-payout-container {
+    padding: 24px;
+}
+
+.payout-header {
+    margin-bottom: 24px;
+}
+
+.payout-detail-grid {
+    margin-bottom: 24px;
+}
+
+.fraud-flag-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: #fff1f0;
+    border-left: 4px solid #ff4d4f;
+    margin-bottom: 8px;
+    border-radius: 4px;
+}
+
+.fraud-flag-icon {
+    color: #ff4d4f;
+    margin-right: 12px;
+    font-size: 18px;
+}
+
+.trust-score-gauge {
+    text-align: center;
+    padding: 16px 0;
+}
+
+.payout-timeline {
+    padding: 16px;
+}
+
+.bank-info-display {
+    background-color: #fafafa;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid #f0f0f0;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    color: rgba(0, 0, 0, 0.45);
+}
+
+.stat-value {
+    font-weight: 500;
+}
+
+.timeline-dot-approving {
+    color: #52c41a;
+}
+
+.timeline-dot-pending {
+    color: #faad14;
+}

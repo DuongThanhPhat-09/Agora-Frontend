@@ -70,7 +70,7 @@ interface EditAvailabilityData {
 
 // Hằng số
 const DAYS_OF_WEEK = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-const TIME_SLOTS = Array.from({ length: 15 }, (_, i) => 7 + i); // 7:00 đến 21:00
+const TIME_SLOTS = Array.from({ length: 24 }, (_, i) => i); // 0:00 đến 23:00
 const ROW_HEIGHT = 70; // px cho mỗi hàng giờ
 const PX_PER_MINUTE = ROW_HEIGHT / 60; // px cho mỗi phút
 

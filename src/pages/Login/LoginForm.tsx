@@ -142,7 +142,6 @@ const LoginForm: React.FC = () => {
       }
 
       // Lưu user data (lấy profile đầy đủ từ backend)
-      // Thử lấy profile qua checkEmailExists
       let fullUserData: any = { accessToken: token };
 
       const input = formData.email.trim();
