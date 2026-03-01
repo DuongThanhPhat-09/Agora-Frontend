@@ -144,11 +144,13 @@
 .statsGrid {
     display: flex;
     align-items: flex-start;
-    gap: 21px;
+    flex-wrap: wrap;
+    gap: 14px;
 }
 
 .statCard {
-    flex: 1;
+    flex: 1 1 calc(33.333% - 10px);
+    min-width: 200px;
     position: relative;
     box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
     border-radius: 14px;
@@ -189,13 +191,16 @@
 }
 
 .statValue {
-    font-size: 31.5px;
-    line-height: 35px;
+    font-size: 24px;
+    line-height: 30px;
     font-weight: 700;
     color: #1a2238;
     font-family: 'Bricolage Grotesque', sans-serif;
-    letter-spacing: -0.79px;
+    letter-spacing: -0.5px;
     margin-bottom: 3.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .statLabel {
@@ -374,6 +379,14 @@
     min-width: 63px;
     padding-top: 3.5px;
     font-family: 'Bricolage Grotesque', sans-serif;
+}
+
+.lessonDate {
+    font-size: 10px;
+    line-height: 14px;
+    color: rgba(62, 47, 40, 0.5);
+    font-weight: 500;
+    margin-top: 2px;
 }
 
 .lessonDetails {
@@ -779,6 +792,21 @@
     opacity: 0.6;
 }
 
+.calendarDay.selected {
+    background-color: transparent;
+    box-shadow: inset 0 0 0 2px #d97706;
+    color: #d97706;
+    font-weight: 700;
+}
+
+.calendarDay.selected.hasSession {
+    background-color: rgba(217, 119, 6, 0.08);
+}
+
+.calendarDay.selected .sessionDot {
+    background-color: #d97706;
+}
+
 /* Calendar Legend */
 .calendarLegend {
     display: flex;
@@ -807,6 +835,11 @@
 
 .legendDot.todayDot {
     background-color: #1a2238;
+}
+
+.legendDot.selectedDot {
+    background-color: transparent;
+    border: 2px solid #d97706;
 }
 
 .legendText {
