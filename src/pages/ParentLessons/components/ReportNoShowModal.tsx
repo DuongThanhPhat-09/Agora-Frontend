@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, Button, message as antMessage } from 'antd';
+import { Modal, Button } from 'antd';
+import { toast } from 'react-toastify';
 import { reportNoShow } from '../../../services/parent-lesson.service';
 
 interface ReportNoShowModalProps {
@@ -23,10 +24,10 @@ const ReportNoShowModal: React.FC<ReportNoShowModalProps> = ({
     try {
       setSubmitting(true);
       await reportNoShow(lessonId);
-      antMessage.success('Đã báo cáo gia sư vắng mặt.');
+      toast.success('Đã báo cáo gia sư vắng mặt.');
       onSuccess();
     } catch (error: any) {
-      antMessage.error(error.response?.data?.message || 'Không thể báo cáo. Vui lòng thử lại.');
+      toast.error(error.response?.data?.message || 'Không thể báo cáo. Vui lòng thử lại.');
     } finally {
       setSubmitting(false);
     }

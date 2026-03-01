@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Typography, Breadcrumb, Card, message, Input, DatePicker, Select } from 'antd';
+import { Typography, Breadcrumb, Card, Input, DatePicker, Select } from 'antd';
+import { toast } from 'react-toastify';
 import { SearchOutlined } from '@ant-design/icons';
 import { getAllPayoutRequests } from '../../../services/adminPayout.service';
 import WithdrawalRequestTable from '../PayoutOverview/components/WithdrawalRequestTable';
@@ -38,7 +39,7 @@ const AllPayoutRequestsPage: React.FC = () => {
             setTotal(response.total);
         } catch (error) {
             console.error('Failed to fetch payout requests:', error);
-            message.error('Không thể tải danh sách yêu cầu');
+            toast.error('Không thể tải danh sách yêu cầu');
         } finally {
             setLoading(false);
         }

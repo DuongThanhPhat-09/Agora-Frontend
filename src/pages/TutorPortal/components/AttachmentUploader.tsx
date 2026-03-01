@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Upload, Button, message as antMessage } from 'antd';
+import { Upload, Button } from 'antd';
+import { toast } from 'react-toastify';
 import { UploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import { uploadLessonAttachment } from '../../../services/lesson.service';
 
@@ -21,10 +22,10 @@ const AttachmentUploader: React.FC<AttachmentUploaderProps> = ({
       const response = await uploadLessonAttachment(lessonId, file);
       const url = response.content || '';
       setUploadedFiles((prev) => [...prev, { name: file.name, url }]);
-      antMessage.success(`Tải lên ${file.name} thành công!`);
+      toast.success(`Tải lên ${file.name} thành công!`);
       onUploadComplete?.(url);
     } catch (error: any) {
-      antMessage.error(`Tải lên ${file.name} thất bại.`);
+      toast.error(`Tải lên ${file.name} thất bại.`);
     } finally {
       setUploading(false);
     }

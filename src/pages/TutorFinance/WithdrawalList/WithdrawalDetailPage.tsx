@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Breadcrumb, Typography, Button, Descriptions, Steps, message, Alert, Spin } from 'antd';
+import { Card, Breadcrumb, Typography, Button, Descriptions, Steps, Alert, Spin } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     ArrowLeftOutlined,
@@ -14,6 +14,7 @@ import { formatCurrency, formatDateTime, formatApprovalDecision, formatEstimated
 import WithdrawalStatusBadge from './components/WithdrawalStatusBadge';
 import CancelWithdrawalModal from './components/CancelWithdrawalModal';
 import '../../../styles/pages/tutor-finance.css';
+import { toast } from 'react-toastify';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -34,7 +35,7 @@ const WithdrawalDetailPage: React.FC = () => {
             setWithdrawal(data);
         } catch (error) {
             console.error('Failed to fetch withdrawal detail:', error);
-            message.error('Không thể tải thông tin chi tiết yêu cầu rút tiền');
+            toast.error('Không thể tải thông tin chi tiết yêu cầu rút tiền');
             navigate('/tutor-portal/finance/withdrawals');
         } finally {
             setLoading(false);
@@ -50,11 +51,11 @@ const WithdrawalDetailPage: React.FC = () => {
         setCancelling(true);
         try {
             await cancelWithdrawal(id);
-            message.success('Đã hủy yêu cầu rút tiền thành công');
+            toast.success('Đã hủy yêu cầu rút tiền thành công');
             setIsCancelModalOpen(false);
             fetchDetail();
         } catch (error: any) {
-            message.error(error.response?.data?.message || 'Không thể hủy yêu cầu này');
+            toast.error(error.response?.data?.message || 'Không thể hủy yêu cầu này');
         } finally {
             setCancelling(false);
         }

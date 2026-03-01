@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Typography, Breadcrumb, Card, Alert, message } from 'antd';
+import { Typography, Breadcrumb, Card, Alert } from 'antd';
+import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { getPendingReview } from '../../../services/adminPayout.service';
 import type { PendingReviewItem } from '../../../types/adminPayout.types';
@@ -23,7 +24,7 @@ const PendingReviewPage: React.FC = () => {
             setTotal(data.total);
         } catch (error) {
             console.error('Failed to fetch pending reviews:', error);
-            message.error('Không thể tải danh sách chờ duyệt');
+            toast.error('Không thể tải danh sách chờ duyệt');
         } finally {
             setLoading(false);
         }

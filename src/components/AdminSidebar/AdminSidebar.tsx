@@ -1,5 +1,8 @@
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { Popconfirm } from 'antd';
+import { clearUserFromStorage } from '../../services/auth.service';
 import '../../styles/layouts/admin-layout.css';
+import { toast } from 'react-toastify';
 
 // Logo Icon (Agora symbol) - same as TutorPortal/ParentLayout
 const LogoIcon = () => (
@@ -106,10 +109,24 @@ const AdminSidebar = () => {
 
             {/* Sidebar Footer */}
             <div className="admin-sidebar-footer">
-                <button className="admin-signout-btn" title="Đăng xuất">
-                    <span className="material-symbols-outlined">logout</span>
-                    <span className="admin-signout-text">Đăng xuất</span>
-                </button>
+                <Popconfirm
+                    title="Đăng xuất"
+                    description="Bạn có chắc muốn đăng xuất không?"
+                    onConfirm={() => {
+                        clearUserFromStorage();
+                        toast.success('Đăng xuất thành công!');
+                        navigate('/login');
+                    }}
+                    okText="Đăng xuất"
+                    cancelText="Hủy"
+                    okButtonProps={{ danger: true }}
+                    placement="topRight"
+                >
+                    <button className="admin-signout-btn" title="Đăng xuất">
+                        <span className="material-symbols-outlined">logout</span>
+                        <span className="admin-signout-text">Đăng xuất</span>
+                    </button>
+                </Popconfirm>
             </div>
         </aside>
     );

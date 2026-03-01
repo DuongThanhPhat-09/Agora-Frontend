@@ -20,7 +20,8 @@ import {
     GraduationCap,
     CheckCircle2
 } from 'lucide-react';
-import { message as antMessage, Spin, QRCode, Button, Radio } from 'antd';
+import { Spin, QRCode, Button, Radio } from 'antd';
+import { toast } from 'react-toastify';
 
 const PaymentPage = () => {
     const { id } = useParams<{ id: string }>();
@@ -53,7 +54,7 @@ const PaymentPage = () => {
                     setPaymentSuccess(true);
                 }
             } catch (error) {
-                antMessage.error('Không thể tải thông tin thanh toán.');
+                toast.error('Không thể tải thông tin thanh toán.');
                 navigate('/parent/booking');
             } finally {
                 setLoading(false);
@@ -72,7 +73,7 @@ const PaymentPage = () => {
                     const res = await getPaymentStatus(bookingId);
                     if ((res?.content as any)?.paymentStatus === 'paid') {
                         setPaymentSuccess(true);
-                        antMessage.success('Thanh toán thành công!');
+                        toast.success('Thanh toán thành công!');
                         clearInterval(interval);
                     }
                 } catch (e) {
@@ -85,7 +86,7 @@ const PaymentPage = () => {
 
     const handleWalletPay = async () => {
         if (!paymentInfo || paymentInfo.walletBalance < paymentInfo.amount) {
-            antMessage.error('Số dư ví không đủ. Vui lòng nạp thêm tiền.');
+            toast.error('Số dư ví không đủ. Vui lòng nạp thêm tiền.');
             return;
         }
 
@@ -93,9 +94,9 @@ const PaymentPage = () => {
             setIsPaying(true);
             await payWithWallet(bookingId);
             setPaymentSuccess(true);
-            antMessage.success('Thanh toán bằng ví thành công!');
+            toast.success('Thanh toán bằng ví thành công!');
         } catch (error: any) {
-            antMessage.error(error.response?.data?.message || 'Có lỗi xảy ra khi thanh toán.');
+            toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi thanh toán.');
         } finally {
             setIsPaying(false);
         }

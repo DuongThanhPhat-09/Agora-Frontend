@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { getParentLessonDetail } from '../../services/parent-lesson.service';
-import { message as antMessage, Spin, Tag, Button } from 'antd';
+import { Spin, Tag, Button } from 'antd';
+import { toast } from 'react-toastify';
 import CountdownTimer from './components/CountdownTimer';
 import ConfirmLessonModal from './components/ConfirmLessonModal';
 import CreateDisputeForm from './components/CreateDisputeForm';
@@ -44,7 +45,7 @@ const ParentLessonDetail: React.FC = () => {
       const response = await getParentLessonDetail(id);
       setLesson(response.content);
     } catch (error: any) {
-      antMessage.error('Không thể tải chi tiết buổi học.');
+      toast.error('Không thể tải chi tiết buổi học.');
     } finally {
       setLoading(false);
     }

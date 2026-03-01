@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Popconfirm, message } from 'antd';
+import { Popconfirm } from 'antd';
+import { toast } from 'react-toastify';
 import styles from './styles.module.css';
 import type { StudentType } from '../../types/student.type';
 import {
@@ -165,13 +166,13 @@ const ParentStudent = () => {
   const handleAddStudent = async (payload: ICreateParentStudent) => {
     try {
       await createParentStudent(payload);
-      message.success('Student added successfully');
+      toast.success('Student added successfully');
       const response = await getStudents();
       if (response.statusCode === 200) setStudents(response.content);
       setIsAddModalOpen(false);
     } catch (err) {
       console.error('Error adding student:', err);
-      message.error('Failed to add student');
+      toast.error('Failed to add student');
     }
   };
 
@@ -189,25 +190,25 @@ const ParentStudent = () => {
   const handleEditSubmit = async (id: string, payload: ICreateParentStudent) => {
     try {
       await updateParentStudent(id, payload);
-      message.success('Student updated successfully');
+      toast.success('Student updated successfully');
       const response = await getStudents();
       if (response.statusCode === 200) setStudents(response.content);
       handleEditModalClose();
     } catch (err) {
       console.error('Error updating student:', err);
-      message.error('Failed to update student');
+      toast.error('Failed to update student');
     }
   };
 
   const handleDeleteConfirm = async (student: StudentType) => {
     try {
       await deleteStudent(student.studentId);
-      message.success('Student deleted successfully');
+      toast.success('Student deleted successfully');
       setStudents((prev) => prev.filter((s) => s.studentId !== student.studentId));
       setOpenMenuId(null);
     } catch (err) {
       console.error('Error deleting student:', err);
-      message.error('Failed to delete student');
+      toast.error('Failed to delete student');
     }
   };
 

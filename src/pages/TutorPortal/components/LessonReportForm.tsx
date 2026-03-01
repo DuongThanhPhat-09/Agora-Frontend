@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Form, Input, Checkbox, Button, message as antMessage } from 'antd';
+import { Form, Input, Checkbox, Button } from 'antd';
+import { toast } from 'react-toastify';
 import { submitLessonReport, type SubmitReportRequest } from '../../../services/lesson.service';
 
 const { TextArea } = Input;
@@ -29,10 +30,10 @@ const LessonReportForm: React.FC<LessonReportFormProps> = ({
         attendanceNote: values.attendanceNote || '',
       };
       await submitLessonReport(lessonId, request);
-      antMessage.success('Nộp báo cáo buổi học thành công!');
+      toast.success('Nộp báo cáo buổi học thành công!');
       onSubmitSuccess();
     } catch (error: any) {
-      antMessage.error(error.response?.data?.message || 'Không thể nộp báo cáo. Vui lòng thử lại.');
+      toast.error(error.response?.data?.message || 'Không thể nộp báo cáo. Vui lòng thử lại.');
     } finally {
       setSubmitting(false);
     }
