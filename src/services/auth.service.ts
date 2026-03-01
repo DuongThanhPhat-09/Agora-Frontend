@@ -324,3 +324,37 @@ export const changePassword = async (oldPassword: string, newPassword: string) =
   }
 };
 
+// --- SIMPLE AUTH (Không qua Supabase) ---
+
+export const simpleRegister = async (data: {
+  email: string;
+  phone: string;
+  password: string;
+  fullName: string;
+  role: string;
+}) => {
+  try {
+    console.log("🔐 Simple Register...");
+    const response = await api.post("/SimpleAuth/register", data);
+    console.log("✅ Register successful:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("❌ Register error:", error.response?.data);
+    throw error;
+  }
+};
+
+export const simpleLogin = async (emailOrPhone: string, password: string) => {
+  try {
+    console.log("🔐 Simple Login...");
+    const response = await api.post("/SimpleAuth/login", {
+      emailOrPhone,
+      password,
+    });
+    console.log("✅ Login successful:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("❌ Login error:", error.response?.data);
+    throw error;
+  }
+};
