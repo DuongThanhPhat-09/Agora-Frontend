@@ -124,14 +124,14 @@ const DisputeIcon = () => (
 );
 
 const navItems = [
-  { path: '/parent/dashboard', label: 'Dashboard', icon: DashboardIcon },
-  { path: '/parent/student', label: 'Children', icon: ChildrenIcon },
+  { path: '/parent/dashboard', label: 'Tổng quan', icon: DashboardIcon },
+  { path: '/parent/student', label: 'Con em', icon: ChildrenIcon },
   { path: '/parent/lessons', label: 'Buổi học', icon: LessonsIcon },
-  { path: '/parent/messages', label: 'Messages', icon: MessagesIcon },
-  { path: '/parent/wallet', label: 'Finance', icon: FinanceIcon },
-  { path: '/parent/booking', label: 'Booking', icon: BookingIcon },
+  { path: '/parent/messages', label: 'Tin nhắn', icon: MessagesIcon },
+  { path: '/parent/wallet', label: 'Tài chính', icon: FinanceIcon },
+  { path: '/parent/booking', label: 'Đặt lịch', icon: BookingIcon },
   { path: '/parent/disputes', label: 'Khiếu nại', icon: DisputeIcon },
-  { path: '/parent/settings', label: 'Settings', icon: SettingsIcon },
+  { path: '/parent/settings', label: 'Cài đặt', icon: SettingsIcon },
 ];
 
 interface ParentLayoutProps {
@@ -291,7 +291,56 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
         />
       )}
 
-      {/* Main Content (Left) */}
+      {/* Sidebar (Left) — must be before main for CSS sibling selector */}
+      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
+        {/* Logo Section */}
+        <div className={styles.sidebarLogo}>
+          <Link to="/" className={styles.logoLink}>
+            <LogoIcon />
+            <span className={styles.logoText}>AGORA</span>
+          </Link>
+          {/* Mobile Close Button */}
+          <button
+            className={styles.sidebarClose}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <CloseIcon />
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className={styles.sidebarNav}>
+          {navItems.map((item) => (
+            <div
+              key={item.path}
+              className={`${styles.navItem} ${isActive(item.path) ? styles.navItemActive : ''}`}
+              title={item.label}
+              onClick={() => {
+                navigate(item.path);
+                setSidebarOpen(false);
+              }}
+            >
+              <item.icon />
+              <span className={styles.navText}>{item.label}</span>
+            </div>
+          ))}
+        </nav>
+
+        {/* User Profile Card at Bottom */}
+        <div className={styles.sidebarUser}>
+          <div className={styles.userCard}>
+            <div className={styles.userAvatar}>
+              <span>{parentData.initials}</span>
+            </div>
+            <div className={styles.userInfo}>
+              <span className={styles.userName}>{parentData.name}</span>
+              <span className={styles.userRole}>{parentData.role}</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content (Right) */}
       <main className={styles.main}>
         {/* Header */}
         <header className={styles.header}>
@@ -346,7 +395,7 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
               <input
                 type="text"
                 className={styles.searchInput}
-                placeholder="Search classes, students, notes..."
+                placeholder="Tìm lớp học, ghi chú..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -392,54 +441,6 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
           {children || <Outlet />}
         </div>
       </main>
-
-      {/* Sidebar (Right) */}
-      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
-        {/* Logo Section */}
-        <div className={styles.sidebarLogo}>
-          <Link to="/" className={styles.logoLink}>
-            <LogoIcon />
-            <span className={styles.logoText}>AGORA</span>
-          </Link>
-          {/* Mobile Close Button */}
-          <button
-            className={styles.sidebarClose}
-            onClick={() => setSidebarOpen(false)}
-          >
-            <CloseIcon />
-          </button>
-        </div>
-
-        {/* Navigation */}
-        <nav className={styles.sidebarNav}>
-          {navItems.map((item) => (
-            <div
-              key={item.path}
-              className={`${styles.navItem} ${isActive(item.path) ? styles.navItemActive : ''}`}
-              onClick={() => {
-                navigate(item.path);
-                setSidebarOpen(false);
-              }}
-            >
-              <item.icon />
-              <span className={styles.navText}>{item.label}</span>
-            </div>
-          ))}
-        </nav>
-
-        {/* User Profile Card at Bottom */}
-        <div className={styles.sidebarUser}>
-          <div className={styles.userCard}>
-            <div className={styles.userAvatar}>
-              <span>{parentData.initials}</span>
-            </div>
-            <div className={styles.userInfo}>
-              <span className={styles.userName}>{parentData.name}</span>
-              <span className={styles.userRole}>{parentData.role}</span>
-            </div>
-          </div>
-        </div>
-      </aside>
     </div>
   );
 };

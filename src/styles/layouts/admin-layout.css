@@ -1,4 +1,5 @@
 /* ===== ADMIN LAYOUT ===== */
+/* Collapsible sidebar: 68px collapsed, 260px on hover */
 
 /* Main Layout Container */
 .admin-layout {
@@ -11,56 +12,93 @@
     overflow: hidden;
 }
 
-/* ===== SIDEBAR ===== */
+/* ===== SIDEBAR (Collapsible) ===== */
 .admin-sidebar {
-    width: 260px;
+    width: 68px;
     height: 100vh;
     background-color: var(--color-navy);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 32px 16px;
+    padding: 24px 10px;
     position: fixed;
     top: 0;
     left: 0;
     z-index: 20;
+    box-sizing: border-box;
+    overflow: hidden;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-sidebar:hover {
+    width: 260px;
 }
 
 .admin-sidebar-header {
-    padding: 0 16px;
-    margin-bottom: 48px;
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    gap: 10.5px;
+    min-height: 68px;
+    box-sizing: border-box;
+    margin-bottom: 0;
+}
+
+.admin-sidebar-header a {
+    display: flex;
+    align-items: center;
+    gap: 10.5px;
+    text-decoration: none;
+    color: inherit;
+}
+
+.admin-logo-icon {
+    width: 28px;
+    height: 28px;
+    color: #f2f0e4;
+    flex-shrink: 0;
 }
 
 .admin-logo {
-    font-family: var(--font-serif);
-    font-size: 30px;
+    font-family: 'Bricolage Grotesque', var(--font-serif), sans-serif;
+    font-size: 21px;
     font-weight: 700;
-    color: var(--color-gold);
-    letter-spacing: 0.05em;
+    line-height: 28px;
+    letter-spacing: -0.52px;
+    color: #f2f0e4;
     margin: 0;
+    opacity: 0;
+    white-space: nowrap;
+    transition: opacity 0.2s ease 0.05s;
+}
+
+.admin-sidebar:hover .admin-logo {
+    opacity: 1;
 }
 
 .admin-subtitle {
-    color: var(--color-white-40);
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin: 4px 0 0;
+    display: none;
+    opacity: 0;
+    white-space: nowrap;
+    transition: opacity 0.2s ease 0.05s;
+}
+
+.admin-sidebar:hover .admin-subtitle {
+    opacity: 1;
 }
 
 /* Sidebar Navigation */
 .admin-nav {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
 }
 
 .admin-nav-item {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 16px;
+    padding: 10px 12px;
     border-radius: var(--radius-full);
     cursor: pointer;
     transition: all 0.2s ease;
@@ -69,7 +107,8 @@
     font-weight: 500;
     position: relative;
     text-decoration: none;
-    /* In case it's an anchor tag */
+    min-height: 40px;
+    box-sizing: border-box;
 }
 
 .admin-nav-item:hover {
@@ -95,6 +134,14 @@
 
 .admin-nav-text {
     flex: 1;
+    opacity: 0;
+    white-space: nowrap;
+    transition: opacity 0.2s ease 0.05s;
+    overflow: hidden;
+}
+
+.admin-sidebar:hover .admin-nav-text {
+    opacity: 1;
 }
 
 .admin-nav-badge {
@@ -105,6 +152,13 @@
     padding: 2px 8px;
     border-radius: var(--radius-full);
     margin-left: auto;
+    opacity: 0;
+    white-space: nowrap;
+    transition: opacity 0.2s ease 0.05s;
+}
+
+.admin-sidebar:hover .admin-nav-badge {
+    opacity: 1;
 }
 
 .admin-nav-badge-alert {
@@ -115,11 +169,18 @@
     padding: 2px 8px;
     border-radius: var(--radius-full);
     margin-left: auto;
+    opacity: 0;
+    white-space: nowrap;
+    transition: opacity 0.2s ease 0.05s;
+}
+
+.admin-sidebar:hover .admin-nav-badge-alert {
+    opacity: 1;
 }
 
 /* Sidebar Footer */
 .admin-sidebar-footer {
-    padding: 0 16px;
+    padding: 0 6px;
 }
 
 .admin-signout-btn {
@@ -135,6 +196,8 @@
     transition: color 0.2s ease;
     width: 100%;
     padding: 0;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .admin-signout-btn:hover {
@@ -143,23 +206,35 @@
 
 .admin-signout-btn .material-symbols-outlined {
     font-size: 20px;
+    flex-shrink: 0;
+}
+
+.admin-signout-text {
+    opacity: 0;
+    white-space: nowrap;
+    transition: opacity 0.2s ease 0.05s;
+}
+
+.admin-sidebar:hover .admin-signout-text {
+    opacity: 1;
 }
 
 /* ===== MAIN CONTENT AREA ===== */
 .admin-main-wrapper {
-    margin-left: 260px;
+    margin-left: 68px;
     flex: 1;
     display: flex;
     flex-direction: column;
     position: relative;
     min-height: 100vh;
     overflow: hidden;
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Generic floating header styles if needed globally, 
-   but for now keeping specific page headers in page css 
-   unless they are strictly shared. 
-*/
+/* Push content when sidebar is hovered */
+.admin-sidebar:hover~.admin-main-wrapper {
+    margin-left: 260px;
+}
 
 /* Responsive adjustment for sidebar */
 @media (max-width: 768px) {
@@ -169,7 +244,21 @@
         position: relative;
     }
 
+    .admin-sidebar:hover {
+        width: 100%;
+    }
+
+    /* Show all text on mobile */
+    .admin-sidebar .admin-subtitle,
+    .admin-sidebar .admin-nav-text,
+    .admin-sidebar .admin-nav-badge,
+    .admin-sidebar .admin-nav-badge-alert,
+    .admin-sidebar .admin-signout-text {
+        opacity: 1;
+    }
+
     .admin-main-wrapper {
         margin-left: 0;
+        transition: none;
     }
 }
