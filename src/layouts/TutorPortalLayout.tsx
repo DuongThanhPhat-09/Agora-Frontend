@@ -111,15 +111,15 @@ const BookingIcon = () => (
 
 // Navigation items matching Figma design
 const navItems = [
-    { path: '/tutor-portal/dashboard', label: 'Dashboard', icon: DashboardIcon },
-    { path: '/tutor-portal/profile', label: 'Public Profile', icon: ProfileIcon },
-    { path: '/tutor-portal/messages', label: 'Messages', icon: MessagesIcon },
-    { path: '/tutor-portal/bookings', label: 'Booking Requests', icon: BookingIcon },
-    { path: '/tutor-portal/schedule', label: 'Teaching Schedule', icon: ScheduleIcon },
-    { path: '/tutor-portal/classes', label: 'Class Management', icon: ClassIcon },
-    { path: '/tutor-portal/sessions', label: 'Sessions', icon: SessionsIcon },
-    { path: '/tutor-portal/finance', label: 'Finance', icon: FinanceIcon },
-    { path: '/tutor-portal/settings', label: 'Settings', icon: SettingsIcon },
+    { path: '/tutor-portal/dashboard', label: 'Tổng quan', icon: DashboardIcon },
+    { path: '/tutor-portal/profile', label: 'Hồ sơ công khai', icon: ProfileIcon },
+    { path: '/tutor-portal/messages', label: 'Tin nhắn', icon: MessagesIcon },
+    { path: '/tutor-portal/bookings', label: 'Yêu cầu đặt lịch', icon: BookingIcon },
+    { path: '/tutor-portal/schedule', label: 'Lịch dạy', icon: ScheduleIcon },
+    { path: '/tutor-portal/classes', label: 'Quản lý lớp', icon: ClassIcon },
+    { path: '/tutor-portal/sessions', label: 'Buổi học', icon: SessionsIcon },
+    { path: '/tutor-portal/finance', label: 'Tài chính', icon: FinanceIcon },
+    { path: '/tutor-portal/settings', label: 'Cài đặt', icon: SettingsIcon },
 ];
 
 const TutorPortalLayout: React.FC = () => {
@@ -254,6 +254,7 @@ const TutorPortalLayout: React.FC = () => {
                         <div
                             key={item.path}
                             className={`tutor-portal-nav-item ${isActive(item.path) ? 'active' : ''}`}
+                            title={item.label}
                             onClick={() => {
                                 navigate(item.path);
                                 setSidebarOpen(false);
@@ -298,7 +299,7 @@ const TutorPortalLayout: React.FC = () => {
                             <input
                                 type="text"
                                 className="tutor-portal-search-input"
-                                placeholder="Search classes, students..."
+                                placeholder="Tìm lớp học, học sinh..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />

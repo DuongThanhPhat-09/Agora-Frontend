@@ -1,5 +1,6 @@
 /* ===== TUTOR PORTAL LAYOUT ===== */
 /* Figma Design System - Dark Navy Sidebar with Cream Accents */
+/* Collapsible sidebar: 68px collapsed, 224px on hover */
 
 /* Main Layout */
 .tutor-portal-layout {
@@ -13,12 +14,12 @@
     background-color: #f2f0e4;
 }
 
-/* ===== SIDEBAR ===== */
+/* ===== SIDEBAR (Collapsible) ===== */
 .tutor-portal-sidebar {
     position: fixed;
     top: 0;
     left: 0;
-    width: 224px;
+    width: 68px;
     height: 100vh;
     background-color: #1a2238;
     display: flex;
@@ -26,20 +27,28 @@
     z-index: 100;
     box-sizing: border-box;
     overflow: hidden;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tutor-portal-sidebar:hover {
+    width: 224px;
 }
 
 /* Sidebar Logo */
 .tutor-portal-sidebar-logo {
     display: flex;
     align-items: center;
-    padding: 28px;
+    padding: 20px;
     gap: 10.5px;
+    min-height: 68px;
+    box-sizing: border-box;
 }
 
 .tutor-portal-logo-icon {
     width: 28px;
     height: 28px;
     color: #f2f0e4;
+    flex-shrink: 0;
 }
 
 .tutor-portal-logo-text {
@@ -49,13 +58,20 @@
     line-height: 28px;
     letter-spacing: -0.52px;
     color: #f2f0e4;
+    opacity: 0;
+    white-space: nowrap;
+    transition: opacity 0.2s ease 0.05s;
+}
+
+.tutor-portal-sidebar:hover .tutor-portal-logo-text {
+    opacity: 1;
 }
 
 /* Sidebar Navigation */
 .tutor-portal-sidebar-nav {
     display: flex;
     flex-direction: column;
-    padding: 14px;
+    padding: 8px;
     gap: 3.5px;
     flex: 1;
 }
@@ -73,6 +89,8 @@
     line-height: 21px;
     font-weight: 500;
     font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 40px;
+    box-sizing: border-box;
 }
 
 .tutor-portal-nav-item:hover {
@@ -93,12 +111,20 @@
 
 .tutor-portal-nav-text {
     flex: 1;
+    opacity: 0;
+    white-space: nowrap;
+    transition: opacity 0.2s ease 0.05s;
+    overflow: hidden;
+}
+
+.tutor-portal-sidebar:hover .tutor-portal-nav-text {
+    opacity: 1;
 }
 
 /* Sidebar User Profile */
 .tutor-portal-sidebar-user {
     border-top: 1.2px solid rgba(255, 255, 255, 0.1);
-    padding: 21px;
+    padding: 12px 8px;
 }
 
 .tutor-portal-user-card {
@@ -133,6 +159,14 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
+    opacity: 0;
+    white-space: nowrap;
+    transition: opacity 0.2s ease 0.05s;
+    overflow: hidden;
+}
+
+.tutor-portal-sidebar:hover .tutor-portal-user-info {
+    opacity: 1;
 }
 
 .tutor-portal-user-name {
@@ -310,13 +344,19 @@
 
 /* ===== MAIN CONTENT AREA ===== */
 .tutor-portal-main {
-    margin-left: 224px;
+    margin-left: 68px;
     flex: 1;
     display: flex;
     flex-direction: column;
     height: 100vh;
     background-color: #f2f0e4;
     overflow: hidden;
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Push content when sidebar is hovered */
+.tutor-portal-sidebar:hover~.tutor-portal-main {
+    margin-left: 224px;
 }
 
 /* ===== MOBILE MENU ===== */
@@ -380,16 +420,29 @@
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
     .tutor-portal-sidebar {
+        width: 224px;
         transform: translateX(-100%);
         transition: transform 0.3s ease;
+    }
+
+    .tutor-portal-sidebar:hover {
+        width: 224px;
     }
 
     .tutor-portal-sidebar.open {
         transform: translateX(0);
     }
 
+    /* Show all text on mobile (sidebar is full-width overlay) */
+    .tutor-portal-sidebar .tutor-portal-logo-text,
+    .tutor-portal-sidebar .tutor-portal-nav-text,
+    .tutor-portal-sidebar .tutor-portal-user-info {
+        opacity: 1;
+    }
+
     .tutor-portal-main {
         margin-left: 0;
+        transition: none;
     }
 
     .tutor-portal-header-search {
@@ -425,11 +478,11 @@
 
 /* ===== LARGE SCREEN ENHANCEMENTS ===== */
 @media (min-width: 1920px) {
-    .tutor-portal-sidebar {
+    .tutor-portal-sidebar:hover {
         width: 280px;
     }
 
-    .tutor-portal-main {
+    .tutor-portal-sidebar:hover~.tutor-portal-main {
         margin-left: 280px;
     }
 
@@ -439,11 +492,11 @@
 }
 
 @media (min-width: 2560px) {
-    .tutor-portal-sidebar {
+    .tutor-portal-sidebar:hover {
         width: 320px;
     }
 
-    .tutor-portal-main {
+    .tutor-portal-sidebar:hover~.tutor-portal-main {
         margin-left: 320px;
     }
 
