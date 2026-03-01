@@ -453,6 +453,26 @@
     color: #f2f0e4;
 }
 
+/* Logout Button */
+.logoutBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 8px;
+    background: none;
+    border: 1px solid rgba(26, 34, 56, 0.15);
+    cursor: pointer;
+    color: #1a2238;
+    transition: all 0.2s ease;
+}
+
+.logoutBtn:hover {
+    background-color: rgba(99, 27, 27, 0.08);
+    border-color: rgba(99, 27, 27, 0.3);
+    color: #631b1b;
+}
+
 /* ===== CONTENT AREA ===== */
 .contentArea {
     flex: 1;

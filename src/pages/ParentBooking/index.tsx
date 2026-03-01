@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, User, BookOpen, Filter, ChevronLeft, ChevronRight, Plus, Eye } from 'lucide-react';
 import { getParentBookings, type BookingResponseDTO } from '../../services/booking.service';
 import styles from './styles.module.css';
-import { message as antMessage, Spin } from 'antd';
+import { Spin } from 'antd';
+import { toast } from 'react-toastify';
 
 // ===== TYPES =====
 
@@ -72,7 +73,7 @@ const ParentBooking = () => {
       setBookings(res.content.content);
       setTotalItems(res.content.totalElements);
     } catch (error) {
-      antMessage.error('Không thể tải danh sách đặt lịch.');
+      toast.error('Không thể tải danh sách đặt lịch.');
     } finally {
       setLoading(false);
     }

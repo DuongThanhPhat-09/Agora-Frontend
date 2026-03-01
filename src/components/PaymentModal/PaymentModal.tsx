@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { X, Wallet, CreditCard, ExternalLink, Loader2, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
 import styles from './PaymentModal.module.css';
 import { getPaymentInfo, getPaymentStatus, payWithWallet, type PaymentInfoDTO } from '../../services/payment.service';
-import { message as antMessage } from 'antd';
+import { toast } from 'react-toastify';
 
 interface PaymentModalProps {
     bookingId: number;
@@ -63,7 +63,7 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
                     if (result.isPaid) {
                         setWaitingForPayOS(false);
                         localStorage.removeItem('payos_payment_result');
-                        antMessage.success('Thanh toán thành công! Đang cập nhật...');
+                        toast.success('Thanh toán thành công! Đang cập nhật...');
                         setTimeout(() => {
                             onPaymentSuccess();
                             onClose();
@@ -71,7 +71,7 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
                     } else if (result.cancel) {
                         setWaitingForPayOS(false);
                         localStorage.removeItem('payos_payment_result');
-                        antMessage.info('Thanh toán đã bị hủy.');
+                        toast.info('Thanh toán đã bị hủy.');
                     }
                 } catch (e) {
                     console.error('[PaymentModal] Failed to parse payment result:', e);
@@ -98,7 +98,7 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
                     clearInterval(interval);
                     setWaitingForPayOS(false);
                     localStorage.removeItem('payos_payment_result');
-                    antMessage.success('Thanh toán thành công! Đang cập nhật...');
+                    toast.success('Thanh toán thành công! Đang cập nhật...');
                     setTimeout(() => {
                         onPaymentSuccess();
                         onClose();
@@ -124,7 +124,7 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
                     if (result.isPaid) {
                         setWaitingForPayOS(false);
                         localStorage.removeItem('payos_payment_result');
-                        antMessage.success('Thanh toán thành công!');
+                        toast.success('Thanh toán thành công!');
                         setTimeout(() => { onPaymentSuccess(); onClose(); }, 1500);
                         return;
                     }
@@ -143,7 +143,7 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
         try {
             setPaying(true);
             await payWithWallet(bookingId);
-            antMessage.success(
+            toast.success(
                 paymentInfo.paymentPhase === 'deposit'
                     ? 'Đặt cọc thành công!'
                     : 'Thanh toán phần còn lại thành công!'
@@ -152,7 +152,7 @@ const PaymentModal = ({ bookingId, isOpen, onClose, onPaymentSuccess }: PaymentM
             onClose();
         } catch (err: any) {
             console.error('Wallet payment failed:', err);
-            antMessage.error(err.response?.data?.message || 'Thanh toán thất bại.');
+            toast.error(err.response?.data?.message || 'Thanh toán thất bại.');
         } finally {
             setPaying(false);
         }

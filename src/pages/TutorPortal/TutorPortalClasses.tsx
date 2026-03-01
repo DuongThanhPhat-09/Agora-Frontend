@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getTutorLessons, type LessonResponse } from '../../services/lesson.service';
-import { message as antMessage } from 'antd';
+import { toast } from 'react-toastify';
 import styles from '../../styles/pages/tutor-portal-classes.module.css';
 
 // Icons
@@ -130,7 +130,7 @@ const TutorPortalClasses: React.FC = () => {
         } catch (error: any) {
             console.error('❌ Error fetching lessons:', error);
             console.error('❌ Error response:', error.response?.data);
-            antMessage.error('Không thể tải danh sách lớp học: ' + (error.message || 'Lỗi không xác định'));
+            toast.error('Không thể tải danh sách lớp học: ' + (error.message || 'Lỗi không xác định'));
         } finally {
             setLoading(false);
         }
@@ -388,7 +388,7 @@ const TutorPortalClasses: React.FC = () => {
                                             disabled={currentPage === 1}
                                         >
                                             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
-                                                 stroke="currentColor" strokeWidth="1.5">
+                                                stroke="currentColor" strokeWidth="1.5">
                                                 <path d="M9 3L5 7L9 11" strokeLinecap="round" strokeLinejoin="round" />
                                             </svg>
                                         </button>
@@ -433,7 +433,7 @@ const TutorPortalClasses: React.FC = () => {
                                             disabled={currentPage === totalPages}
                                         >
                                             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
-                                                 stroke="currentColor" strokeWidth="1.5">
+                                                stroke="currentColor" strokeWidth="1.5">
                                                 <path d="M5 3L9 7L5 11" strokeLinecap="round" strokeLinejoin="round" />
                                             </svg>
                                         </button>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, Form, Input, Select, Upload, Button, message as antMessage } from 'antd';
+import { Modal, Form, Input, Select, Upload, Button } from 'antd';
+import { toast } from 'react-toastify';
 import { UploadOutlined } from '@ant-design/icons';
 import { createDispute, uploadDisputeEvidence } from '../../../services/parent-lesson.service';
 
@@ -50,12 +51,12 @@ const CreateDisputeForm: React.FC<CreateDisputeFormProps> = ({
         evidence: evidenceUrls,
       });
 
-      antMessage.success('Khiếu nại đã được gửi thành công!');
+      toast.success('Khiếu nại đã được gửi thành công!');
       form.resetFields();
       setEvidenceFiles([]);
       onSuccess();
     } catch (error: any) {
-      antMessage.error(error.response?.data?.message || 'Không thể gửi khiếu nại.');
+      toast.error(error.response?.data?.message || 'Không thể gửi khiếu nại.');
     } finally {
       setSubmitting(false);
     }

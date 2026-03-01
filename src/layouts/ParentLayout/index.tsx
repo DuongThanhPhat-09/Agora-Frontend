@@ -1,10 +1,12 @@
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
+import { Popconfirm } from 'antd';
 import styles from './styles.module.css';
 import { useState, useEffect } from 'react';
 import { getUnreadCount } from '../../services/notification.service';
 import { signalRService } from '../../services/signalr.service';
 import NotificationDropdown from '../../components/NotificationDropdown/NotificationDropdown';
-import { getUserInfoFromToken } from '../../services/auth.service';
+import { getUserInfoFromToken, clearUserFromStorage } from '../../services/auth.service';
+import { toast } from 'react-toastify';
 import { getStudents } from '../../services/student.service';
 import { getNextLesson } from '../../services/lesson.service';
 import type { LessonResponse } from '../../services/lesson.service';
@@ -104,6 +106,15 @@ const MenuIcon = () => (
 const CloseIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M5 5L15 15M15 5L5 15" strokeLinecap="round" />
+  </svg>
+);
+
+// Logout Icon
+const LogoutIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M6 16H3C2.44772 16 2 15.5523 2 15V3C2 2.44772 2.44772 2 3 2H6" strokeLinecap="round" />
+    <path d="M12 12L16 9L12 6" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M16 9H7" strokeLinecap="round" />
   </svg>
 );
 
@@ -432,6 +443,27 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
                   <span>{parentData.initials}</span>
                 </div>
               </div>
+
+              {/* Logout Button */}
+              <Popconfirm
+                title="Đăng xuất"
+                description="Bạn có chắc muốn đăng xuất không?"
+                onConfirm={() => {
+                  clearUserFromStorage();
+                  toast.success('Đăng xuất thành công!');
+                  navigate('/login');
+                }}
+                okText="Đăng xuất"
+                cancelText="Hủy"
+                okButtonProps={{ danger: true }}
+              >
+                <button
+                  className={styles.logoutBtn}
+                  title="Đăng xuất"
+                >
+                  <LogoutIcon />
+                </button>
+              </Popconfirm>
             </div>
           </div>
         </header>

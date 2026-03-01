@@ -342,6 +342,26 @@
     color: #fff;
 }
 
+/* Logout Button */
+.tutor-portal-logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 8px;
+    background: none;
+    border: 1px solid rgba(26, 34, 56, 0.15);
+    cursor: pointer;
+    color: #1a2238;
+    transition: all 0.2s ease;
+}
+
+.tutor-portal-logout-btn:hover {
+    background-color: rgba(99, 27, 27, 0.08);
+    border-color: rgba(99, 27, 27, 0.3);
+    color: #631b1b;
+}
+
 /* ===== MAIN CONTENT AREA ===== */
 .tutor-portal-main {
     margin-left: 68px;
