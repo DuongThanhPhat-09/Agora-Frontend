@@ -739,6 +739,177 @@
     transform: translateY(-1px);
 }
 
+/* ===== MONTH VIEW ===== */
+.monthGrid {
+    flex: 1;
+    margin: 20px 28px 28px;
+    border-radius: 16px;
+    background-color: #fff;
+    border: 1px solid rgba(26, 34, 56, 0.08);
+    box-shadow: 0 4px 20px rgba(26, 34, 56, 0.06);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.monthHeader {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-bottom: 1px solid rgba(26, 34, 56, 0.06);
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.monthHeaderCell {
+    padding: 12px 8px;
+    text-align: center;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: rgba(26, 34, 56, 0.45);
+    border-right: 1px solid rgba(26, 34, 56, 0.06);
+}
+
+.monthHeaderCell:last-child {
+    border-right: none;
+}
+
+.monthBody {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    flex: 1;
+}
+
+.monthCell {
+    min-height: 90px;
+    padding: 8px;
+    border-right: 1px solid rgba(26, 34, 56, 0.06);
+    border-bottom: 1px solid rgba(26, 34, 56, 0.06);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.monthCell:nth-child(7n) {
+    border-right: none;
+}
+
+.monthCell:hover {
+    background-color: rgba(79, 140, 255, 0.04);
+}
+
+.monthCell.otherMonth {
+    opacity: 0.35;
+}
+
+.monthCell.todayCell {
+    background: rgba(79, 140, 255, 0.06);
+}
+
+.monthCell.todayCell .monthCellDay {
+    background: #4f8cff;
+    color: #fff;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.monthCellDay {
+    font-family: 'Bricolage Grotesque', serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a2238;
+    line-height: 1;
+}
+
+.monthCellDots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+}
+
+.monthDotAvail {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #4f8cff;
+}
+
+.monthDotLesson {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #3d4a3e;
+}
+
+.monthMore {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(26, 34, 56, 0.5);
+}
+
+/* ===== LESSON BLOCK (Day/Week Grid) ===== */
+.lessonBlock {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    right: 3px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #3d4a3e 0%, #2a3a2e 100%);
+    border-left: 3px solid #6abf69;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.15s ease;
+}
+
+.lessonBlock:hover {
+    transform: scale(1.02);
+    z-index: 150;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.lessonContent {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.lessonLabel {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lessonTime {
+    font-size: 10px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.lessonStudent {
+    font-size: 10px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.5);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* ===== SIDEBAR ===== */
 .sidebar {
     position: fixed;
