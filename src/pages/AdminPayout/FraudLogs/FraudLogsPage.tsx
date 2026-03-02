@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Typography, Breadcrumb, Card, Table, Tag, message, Space, Input, Select, DatePicker, Row, Col } from 'antd';
+import { Typography, Breadcrumb, Card, Table, Tag, Space, Input, Select, DatePicker, Row, Col } from 'antd';
+import { toast } from 'react-toastify';
 import { SecurityScanOutlined, SearchOutlined } from '@ant-design/icons';
 import { getFraudLogs } from '../../../services/adminPayout.service';
 import type { FraudLogItem } from '../../../types/adminPayout.types';
@@ -37,7 +38,7 @@ const FraudLogsPage: React.FC = () => {
             setTotal(response.total);
         } catch (error) {
             console.error('Failed to fetch fraud logs:', error);
-            message.error('Không thể tải nhật ký an toàn');
+            toast.error('Không thể tải nhật ký an toàn');
         } finally {
             setLoading(false);
         }

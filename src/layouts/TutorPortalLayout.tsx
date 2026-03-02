@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
+import { Popconfirm } from 'antd';
 import '../styles/layouts/tutor-portal-layout.css';
 import { getUnreadCount } from '../services/notification.service';
 import { signalRService } from '../services/signalr.service';
 import NotificationDropdown from '../components/NotificationDropdown/NotificationDropdown';
-import { getUserInfoFromToken } from '../services/auth.service';
+import { getUserInfoFromToken, clearUserFromStorage } from '../services/auth.service';
+import { toast } from 'react-toastify';
 
 // Logo Icon (Agora symbol)
 const LogoIcon = () => (
@@ -14,13 +16,6 @@ const LogoIcon = () => (
     </svg>
 );
 
-// Search Icon
-const SearchIcon = () => (
-    <svg className="tutor-portal-search-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <circle cx="6" cy="6" r="4.5" />
-        <path d="M9.5 9.5L13 13" strokeLinecap="round" />
-    </svg>
-);
 
 // Notification Bell Icon
 const NotificationIcon = () => (
@@ -101,6 +96,15 @@ const CloseIcon = () => (
     </svg>
 );
 
+// Logout Icon
+const LogoutIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="M6 16H3C2.44772 16 2 15.5523 2 15V3C2 2.44772 2.44772 2 3 2H6" strokeLinecap="round" />
+        <path d="M12 12L16 9L12 6" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M16 9H7" strokeLinecap="round" />
+    </svg>
+);
+
 const BookingIcon = () => (
     <svg className="tutor-portal-nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
         <path d="M11 3V1M7 3V1M3 13V5C3 3.89543 3.89543 3 5 3H13C14.1046 3 15 3.89543 15 5V13C15 14.1046 14.1046 15 13 15H5C3.89543 15 3 14.1046 3 13Z" strokeLinecap="round" />
@@ -111,15 +115,15 @@ const BookingIcon = () => (
 
 // Navigation items matching Figma design
 const navItems = [
-    { path: '/tutor-portal/dashboard', label: 'Dashboard', icon: DashboardIcon },
-    { path: '/tutor-portal/profile', label: 'Public Profile', icon: ProfileIcon },
-    { path: '/tutor-portal/messages', label: 'Messages', icon: MessagesIcon },
-    { path: '/tutor-portal/bookings', label: 'Booking Requests', icon: BookingIcon },
-    { path: '/tutor-portal/schedule', label: 'Teaching Schedule', icon: ScheduleIcon },
-    { path: '/tutor-portal/classes', label: 'Class Management', icon: ClassIcon },
-    { path: '/tutor-portal/sessions', label: 'Sessions', icon: SessionsIcon },
-    { path: '/tutor-portal/finance', label: 'Finance', icon: FinanceIcon },
-    { path: '/tutor-portal/settings', label: 'Settings', icon: SettingsIcon },
+    { path: '/tutor-portal/dashboard', label: 'Tổng quan', icon: DashboardIcon },
+    { path: '/tutor-portal/profile', label: 'Hồ sơ công khai', icon: ProfileIcon },
+    { path: '/tutor-portal/messages', label: 'Tin nhắn', icon: MessagesIcon },
+    { path: '/tutor-portal/bookings', label: 'Yêu cầu đặt lịch', icon: BookingIcon },
+    { path: '/tutor-portal/schedule', label: 'Lịch dạy', icon: ScheduleIcon },
+    { path: '/tutor-portal/classes', label: 'Quản lý lớp', icon: ClassIcon },
+    { path: '/tutor-portal/sessions', label: 'Buổi học', icon: SessionsIcon },
+    { path: '/tutor-portal/finance', label: 'Tài chính', icon: FinanceIcon },
+    { path: '/tutor-portal/settings', label: 'Cài đặt', icon: SettingsIcon },
 ];
 
 const TutorPortalLayout: React.FC = () => {
@@ -128,7 +132,6 @@ const TutorPortalLayout: React.FC = () => {
     const [notificationCount, setNotificationCount] = useState(0);
     const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
     const [userData, setUserData] = useState({
         name: 'User',
         initials: 'U',
@@ -254,6 +257,7 @@ const TutorPortalLayout: React.FC = () => {
                         <div
                             key={item.path}
                             className={`tutor-portal-nav-item ${isActive(item.path) ? 'active' : ''}`}
+                            title={item.label}
                             onClick={() => {
                                 navigate(item.path);
                                 setSidebarOpen(false);
@@ -264,19 +268,6 @@ const TutorPortalLayout: React.FC = () => {
                         </div>
                     ))}
                 </nav>
-
-                {/* User Profile Card at Bottom */}
-                <div className="tutor-portal-sidebar-user">
-                    <div className="tutor-portal-user-card">
-                        <div className="tutor-portal-user-avatar">
-                            <span className="tutor-portal-user-initials">{userData.initials}</span>
-                        </div>
-                        <div className="tutor-portal-user-info">
-                            <span className="tutor-portal-user-name">{userData.name}</span>
-                            <span className="tutor-portal-user-role">{userData.role}</span>
-                        </div>
-                    </div>
-                </div>
             </aside>
 
             {/* Main Content */}
@@ -292,17 +283,8 @@ const TutorPortalLayout: React.FC = () => {
                             <MenuIcon />
                         </button>
 
-                        {/* Search Bar */}
-                        <div className="tutor-portal-header-search">
-                            <SearchIcon />
-                            <input
-                                type="text"
-                                className="tutor-portal-search-input"
-                                placeholder="Search classes, students..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
+                        {/* Spacer */}
+                        <div style={{ flex: 1 }} />
 
                         {/* Right: User Info + Notifications + Avatar */}
                         <div className="tutor-portal-header-right">
@@ -338,6 +320,27 @@ const TutorPortalLayout: React.FC = () => {
                                     alt="User avatar"
                                 />
                             </div>
+
+                            {/* Logout Button */}
+                            <Popconfirm
+                                title="Đăng xuất"
+                                description="Bạn có chắc muốn đăng xuất không?"
+                                onConfirm={() => {
+                                    clearUserFromStorage();
+                                    toast.success('Đăng xuất thành công!');
+                                    navigate('/login');
+                                }}
+                                okText="Đăng xuất"
+                                cancelText="Hủy"
+                                okButtonProps={{ danger: true }}
+                            >
+                                <button
+                                    className="tutor-portal-logout-btn"
+                                    title="Đăng xuất"
+                                >
+                                    <LogoutIcon />
+                                </button>
+                            </Popconfirm>
                         </div>
                     </div>
                 </header>

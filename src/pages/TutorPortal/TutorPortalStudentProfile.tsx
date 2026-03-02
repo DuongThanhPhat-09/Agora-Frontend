@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getTutorLessons, type LessonResponse } from '../../services/lesson.service';
-import { message as antMessage } from 'antd';
+import { toast } from 'react-toastify';
 import styles from '../../styles/pages/tutor-portal-student-profile.module.css';
 
 // Icons
@@ -124,7 +124,7 @@ const TutorPortalStudentProfile: React.FC = () => {
             }
         } catch (error: any) {
             console.error('❌ Error fetching student data:', error);
-            antMessage.error('Không thể tải dữ liệu học sinh');
+            toast.error('Không thể tải dữ liệu học sinh');
         } finally {
             setLoading(false);
         }

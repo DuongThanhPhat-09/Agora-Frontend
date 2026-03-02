@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from '../../styles/pages/tutor-portal-dashboard.module.css';
 import { getTutorDashboardStats, getTutorCalendar, type TutorDashboardStats, type CalendarDay, type CalendarLesson } from '../../services/lesson.service';
 import { getTutorFeedbacks, type FeedbackDto } from '../../services/feedback.service';
@@ -57,21 +58,23 @@ const BookIcon = () => (
     </svg>
 );
 
-const MessageIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M1 3.5L7 7.5L13 3.5M1 10.5V3.5C1 2.94772 1.44772 2.5 2 2.5H12C12.5523 2.5 13 2.94772 13 3.5V10.5C13 11.0523 12.5523 11.5 12 11.5H2C1.44772 11.5 1 11.0523 1 10.5Z" strokeLinecap="round" />
-    </svg>
-);
-
-const NoteIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M8 1.5H3.5C2.94772 1.5 2.5 1.94772 2.5 2.5V11.5C2.5 12.0523 2.94772 12.5 3.5 12.5H10.5C11.0523 12.5 11.5 12.0523 11.5 11.5V5M8 1.5L11.5 5M8 1.5V5H11.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
 
 const WithdrawIcon = () => (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
         <path d="M7 10V2M7 2L4 5M7 2L10 5M2 12H12" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
+const WalletIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="M2 5C2 3.89543 2.89543 3 4 3H14C15.1046 3 16 3.89543 16 5V13C16 14.1046 15.1046 15 14 15H4C2.89543 15 2 14.1046 2 13V5Z" />
+        <path d="M12 9.5C12 10.0523 11.5523 10.5 11 10.5C10.4477 10.5 10 10.0523 10 9.5C10 8.94772 10.4477 8.5 11 8.5C11.5523 8.5 12 8.94772 12 9.5Z" fill="currentColor" />
+    </svg>
+);
+
+const FrozenIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="M9 1V17M1 9H17M4.5 4.5L13.5 13.5M13.5 4.5L4.5 13.5" strokeLinecap="round" />
     </svg>
 );
 
@@ -93,44 +96,13 @@ const ChevronRightIcon = () => (
     </svg>
 );
 
-const CheckboxIcon = () => (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <rect x="0.5" y="0.5" width="15" height="15" rx="3.5" stroke="currentColor" strokeWidth="1.2" fill="transparent" />
-    </svg>
-);
 
-const CheckedBoxIcon = () => (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <rect x="0.5" y="0.5" width="15" height="15" rx="3.5" stroke="currentColor" strokeWidth="1.2" fill="transparent" />
-        <path d="M4 8L7 11L12 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
-
-
-const tasksData = [
-    {
-        id: 1,
-        title: 'Xem báo cáo tiến độ của Nguyễn Văn A',
-        date: '22 THÁNG 1, 2025',
-        completed: false
-    },
-    {
-        id: 2,
-        title: 'Chuẩn bị tài liệu kiểm tra Hóa học',
-        date: '23 THÁNG 1, 2025',
-        completed: false
-    }
-];
-
-const personalNote = {
-    text: 'Nhớ cập nhật tài liệu giảng dạy cho các buổi học Vật lý tuần tới.',
-    date: '20 Tháng 1, 2025'
-};
 
 const TutorPortalDashboard: React.FC = () => {
-    const [selectedTab, setSelectedTab] = useState<'today' | 'tomorrow' | 'week'>('today');
-    const [currentMonth] = useState(new Date(2025, 0, 1)); // January 2025
-    const [tasks, setTasks] = useState(tasksData);
+    const navigate = useNavigate();
+    const [selectedTab, setSelectedTab] = useState<'today' | 'tomorrow' | 'week' | 'date'>('today');
+    const [currentMonth, setCurrentMonth] = useState(new Date());
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
     // API data states
     const [stats, setStats] = useState<TutorDashboardStats | null>(null);
@@ -250,11 +222,6 @@ const TutorPortalDashboard: React.FC = () => {
         }
     };
 
-    const toggleTask = (taskId: number) => {
-        setTasks(tasks.map(task =>
-            task.id === taskId ? { ...task, completed: !task.completed } : task
-        ));
-    };
 
     // Get lessons based on selected tab
     const getFilteredLessons = (): CalendarLesson[] => {
@@ -276,6 +243,10 @@ const TutorPortalDashboard: React.FC = () => {
                     return dayDate.getTime() === today.getTime();
                 } else if (selectedTab === 'tomorrow') {
                     return dayDate.getTime() === tomorrow.getTime();
+                } else if (selectedTab === 'date' && selectedDate) {
+                    const sel = new Date(selectedDate);
+                    sel.setHours(0, 0, 0, 0);
+                    return dayDate.getTime() === sel.getTime();
                 } else {
                     return dayDate >= today && dayDate <= weekEnd;
                 }
@@ -291,35 +262,87 @@ const TutorPortalDashboard: React.FC = () => {
         });
     };
 
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('vi-VN', {
+            weekday: 'short',
+            day: '2-digit',
+            month: '2-digit'
+        });
+    };
+
+    const getSectionTitle = () => {
+        if (selectedTab === 'today') return 'Các buổi học hôm nay';
+        if (selectedTab === 'tomorrow') return 'Các buổi học ngày mai';
+        if (selectedTab === 'date' && selectedDate) {
+            return `Lịch dạy ngày ${selectedDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+        }
+        return 'Các buổi học trong tuần';
+    };
+
+    const handleCalendarDayClick = (day: number, isCurrentMonth: boolean) => {
+        if (!isCurrentMonth) return;
+        const clickedDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+        setSelectedDate(clickedDate);
+        setSelectedTab('date');
+    };
+
+    const handlePrevMonth = () => {
+        setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+    };
+
+    const handleNextMonth = () => {
+        setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+    };
+
     return (
         <div className={styles.dashboard}>
             {/* Header */}
             <div className={styles.header}>
                 <h1 className={styles.title}>Bảng điều khiển</h1>
-                <span className={styles.date}>Thứ Ba, 21 Tháng 1, 2025</span>
+                <span className={styles.date}>
+                    {new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                </span>
             </div>
 
-            {/* Profile Under Review Banner */}
-            <div className={styles.reviewBanner}>
-                <div className={styles.bannerContent}>
-                    <div className={styles.bannerIcon}>
-                        <ClockIcon />
-                    </div>
-                    <div className={styles.bannerText}>
-                        <div className={styles.bannerTitleRow}>
-                            <span className={styles.bannerTitle}>Hồ sơ của bạn đang được xem xét</span>
-                            <span className={styles.pendingBadge}>Đang chờ</span>
+            {/* Profile Status Banner - only show if NOT active */}
+            {stats && stats.profileStatus && stats.profileStatus !== 'active' && (
+                <div className={styles.reviewBanner} style={{
+                    borderColor: stats.profileStatus === 'rejected' ? 'rgba(220, 38, 38, 0.2)' : undefined,
+                    backgroundColor: stats.profileStatus === 'rejected' ? 'rgba(220, 38, 38, 0.05)' : undefined,
+                }}>
+                    <div className={styles.bannerContent}>
+                        <div className={styles.bannerIcon}>
+                            <ClockIcon />
                         </div>
-                        <p className={styles.bannerDescription}>
-                            Admin đang xác minh thông tin của bạn. Bạn sẽ xuất hiện trên marketplace sau khi được phê duyệt.
-                        </p>
+                        <div className={styles.bannerText}>
+                            <div className={styles.bannerTitleRow}>
+                                <span className={styles.bannerTitle}>
+                                    {stats.profileStatus === 'draft' && 'H\u1ed3 s\u01a1 c\u1ee7a b\u1ea1n ch\u01b0a ho\u00e0n t\u1ea5t'}
+                                    {stats.profileStatus === 'pending_approval' && 'H\u1ed3 s\u01a1 c\u1ee7a b\u1ea1n \u0111ang \u0111\u01b0\u1ee3c xem x\u00e9t'}
+                                    {stats.profileStatus === 'rejected' && 'H\u1ed3 s\u01a1 c\u1ee7a b\u1ea1n \u0111\u00e3 b\u1ecb t\u1eeb ch\u1ed1i'}
+                                </span>
+                                <span className={styles.pendingBadge} style={{
+                                    backgroundColor: stats.profileStatus === 'rejected' ? 'rgba(220, 38, 38, 0.1)' : undefined,
+                                    color: stats.profileStatus === 'rejected' ? '#dc2626' : undefined,
+                                }}>
+                                    {stats.profileStatus === 'draft' && 'Nh\u00e1p'}
+                                    {stats.profileStatus === 'pending_approval' && '\u0110ang ch\u1edd'}
+                                    {stats.profileStatus === 'rejected' && 'Từ chối'}
+                                </span>
+                            </div>
+                            <p className={styles.bannerDescription}>
+                                {stats.profileStatus === 'draft' && 'Vui l\u00f2ng ho\u00e0n t\u1ea5t h\u1ed3 s\u01a1 gia s\u01b0 \u0111\u1ec3 \u0111\u01b0\u1ee3c xu\u1ea5t hi\u1ec7n tr\u00ean marketplace v\u00e0 nh\u1eadn h\u1ecdc sinh.'}
+                                {stats.profileStatus === 'pending_approval' && 'Admin \u0111ang x\u00e1c minh th\u00f4ng tin c\u1ee7a b\u1ea1n. B\u1ea1n s\u1ebd xu\u1ea5t hi\u1ec7n tr\u00ean marketplace sau khi \u0111\u01b0\u1ee3c ph\u00ea duy\u1ec7t.'}
+                                {stats.profileStatus === 'rejected' && 'H\u1ed3 s\u01a1 c\u1ee7a b\u1ea1n ch\u01b0a \u0111\u1ea1t y\u00eau c\u1ea7u. Vui l\u00f2ng c\u1eadp nh\u1eadt l\u1ea1i th\u00f4ng tin v\u00e0 g\u1eedi l\u1ea1i \u0111\u1ec3 \u0111\u01b0\u1ee3c xem x\u00e9t.'}
+                            </p>
+                        </div>
                     </div>
+                    <button className={styles.viewDetailsBtn} onClick={() => navigate('/tutor-portal/onboarding')}>
+                        {stats.profileStatus === 'draft' ? 'Ho\u00e0n t\u1ea5t h\u1ed3 s\u01a1' : stats.profileStatus === 'rejected' ? 'C\u1eadp nh\u1eadt h\u1ed3 s\u01a1' : 'Xem chi ti\u1ebft'}
+                        <ArrowRightIcon />
+                    </button>
                 </div>
-                <button className={styles.viewDetailsBtn}>
-                    Xem chi tiết
-                    <ArrowRightIcon />
-                </button>
-            </div>
+            )}
 
             {/* Stats Cards */}
             {loading ? (
@@ -343,7 +366,7 @@ const TutorPortalDashboard: React.FC = () => {
                                 <SessionsIcon />
                             </div>
                         </div>
-                        <div className={styles.statValue}>{stats.completedThisMonth}</div>
+                        <div className={styles.statValue}>{stats.completedThisMonth} <span style={{ fontSize: '12px', fontWeight: 400, color: 'rgba(62,47,40,0.5)' }}>/ {stats.totalCompleted} tổng</span></div>
                         <div className={styles.statLabel}>Hoàn thành tháng này</div>
                     </div>
                     <div className={styles.statCard}>
@@ -358,44 +381,106 @@ const TutorPortalDashboard: React.FC = () => {
                     <div className={styles.statCard}>
                         <div className={styles.statHeader}>
                             <div className={styles.statIcon}>
+                                <WalletIcon />
+                            </div>
+                        </div>
+                        <div className={styles.statValue}>
+                            {new Intl.NumberFormat('vi-VN').format(stats.walletBalance)}đ
+                        </div>
+                        <div className={styles.statLabel}>Số dư ví {stats.pendingConfirmation > 0 && <span style={{ color: '#d97706' }}>({stats.pendingConfirmation} chờ xác nhận)</span>}</div>
+                    </div>
+                    <div className={styles.statCard}>
+                        <div className={styles.statHeader}>
+                            <div className={styles.statIcon}>
+                                <FrozenIcon />
+                            </div>
+                        </div>
+                        <div className={styles.statValue}>
+                            {new Intl.NumberFormat('vi-VN').format(stats.frozenBalance)}đ
+                        </div>
+                        <div className={styles.statLabel}>Số dư đóng băng {stats.activeDisputes > 0 && <span style={{ color: '#dc2626' }}>({stats.activeDisputes} khiếu nại)</span>}</div>
+                    </div>
+                    <div className={styles.statCard}>
+                        <div className={styles.statHeader}>
+                            <div className={styles.statIcon}>
                                 <DollarIcon />
                             </div>
                         </div>
                         <div className={styles.statValue}>
-                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(stats.earningsThisMonth)}
+                            {new Intl.NumberFormat('vi-VN').format(stats.earningsThisMonth)}đ
                         </div>
-                        <div className={styles.statLabel}>Doanh thu tháng</div>
+                        <div className={styles.statLabel}>Doanh thu tháng <span style={{ fontSize: '10px', color: 'rgba(62,47,40,0.5)' }}>/ {new Intl.NumberFormat('vi-VN').format(stats.totalEarnings)}đ tổng</span></div>
                     </div>
                 </div>
             ) : null}
 
             {/* Quick Actions */}
             <div className={styles.quickActions}>
-                <button className={styles.actionBtn}>
+                <button className={styles.actionBtn} onClick={() => navigate('/tutor-portal/classes')}>
                     <CheckInIcon />
                     <span>Bắt đầu điểm danh</span>
                 </button>
-                <button className={styles.actionBtn}>
+                <button className={styles.actionBtn} onClick={() => navigate('/tutor-portal/schedule')}>
                     <PlusIcon />
                     <span>Thêm lịch rảnh</span>
                 </button>
-                <button className={styles.actionBtn}>
+                <button className={styles.actionBtn} onClick={() => navigate('/tutor-portal/classes')}>
                     <BookIcon />
                     <span>Tạo lớp học</span>
                 </button>
-                <button className={styles.actionBtn}>
-                    <MessageIcon />
-                    <span>Tin nhắn</span>
-                </button>
-                <button className={styles.actionBtn}>
-                    <NoteIcon />
-                    <span>Ghi chú nhanh</span>
-                </button>
-                <button className={styles.actionBtn}>
+                <button className={styles.actionBtn} onClick={() => navigate('/tutor-portal/finance/withdraw')}>
                     <WithdrawIcon />
                     <span>Rút tiền</span>
                 </button>
             </div>
+
+            {/* Next Upcoming Lessons from dashboard stats */}
+            {stats && stats.nextLessons && stats.nextLessons.length > 0 && (
+                <div className={styles.sectionCard} style={{ padding: '20px' }}>
+                    <div className={styles.sectionHeader} style={{ marginBottom: '14px' }}>
+                        <h2 className={styles.sectionTitle}>Buổi học sắp tới</h2>
+                        <button className={styles.outlineBtn} onClick={() => navigate('/tutor-portal/classes')}>
+                            Xem tất cả
+                            <ArrowRightIcon />
+                        </button>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {stats.nextLessons.slice(0, 5).map((lesson) => (
+                            <div key={lesson.lessonId} style={{
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                padding: '14px 16px', borderRadius: '12px',
+                                background: '#f9f8f3', border: '1px solid rgba(26,34,56,0.06)',
+                            }}>
+                                <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                                    <div style={{
+                                        display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                        minWidth: '50px', padding: '6px 10px', borderRadius: '8px',
+                                        background: '#1a2238', color: '#fff',
+                                    }}>
+                                        <span style={{ fontSize: '16px', fontWeight: 700, lineHeight: 1.2 }}>
+                                            {new Date(lesson.scheduledStart).getDate()}
+                                        </span>
+                                        <span style={{ fontSize: '10px', textTransform: 'uppercase', opacity: 0.8 }}>
+                                            Th{new Date(lesson.scheduledStart).getMonth() + 1}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontWeight: 700, fontSize: '14px', color: '#1a2238', fontFamily: "'Bricolage Grotesque', sans-serif" }}>
+                                            {lesson.subjectName || 'Chưa xác định'}
+                                        </div>
+                                        <div style={{ fontSize: '12px', color: 'rgba(62,47,40,0.6)', marginTop: '2px' }}>
+                                            {lesson.studentName || 'Chưa có học sinh'} • {formatTime(lesson.scheduledStart)} - {formatTime(lesson.scheduledEnd)}
+                                        </div>
+                                    </div>
+                                </div>
+                                <button className={styles.outlineBtn} onClick={() => navigate(`/tutor-portal/classes/${lesson.lessonId}`)}>
+                                    Chi tiết
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Main Content Grid - 3 Column Layout */}
             <div className={styles.contentGrid}>
@@ -403,7 +488,9 @@ const TutorPortalDashboard: React.FC = () => {
                 <div className={styles.leftColumn}>
                     <div className={styles.sectionCard}>
                         <div className={styles.sectionHeader}>
-                            <h2 className={styles.sectionTitle}>Các buổi học hôm nay</h2>
+                            <h2 className={styles.sectionTitle}>
+                                {getSectionTitle()}
+                            </h2>
                             <div className={styles.tabGroup}>
                                 <button
                                     className={`${styles.tabBtn} ${selectedTab === 'today' ? styles.active : ''}`}
@@ -431,7 +518,10 @@ const TutorPortalDashboard: React.FC = () => {
                                 getFilteredLessons().map((lesson) => (
                                     <div key={lesson.lessonId} className={styles.lessonItem}>
                                         <div className={styles.lessonInfo}>
-                                            <div className={styles.lessonTime}>{formatTime(lesson.scheduledStart)}</div>
+                                            <div className={styles.lessonTime}>
+                                                <div>{formatTime(lesson.scheduledStart)}</div>
+                                                <div className={styles.lessonDate}>{formatDate(lesson.scheduledStart)}</div>
+                                            </div>
                                             <div className={styles.lessonDetails}>
                                                 <h4 className={styles.lessonSubject}>{lesson.subjectName || 'Chưa xác định'}</h4>
                                                 <p className={styles.lessonStudent}>{lesson.studentName || 'Chưa có học sinh'}</p>
@@ -507,12 +597,14 @@ const TutorPortalDashboard: React.FC = () => {
                     {/* Calendar */}
                     <div className={`${styles.sectionCard} ${styles.calendarSection}`}>
                         <div className={styles.calendarHeader}>
-                            <h3 className={styles.calendarMonth}>Tháng 1, 2025</h3>
+                            <h3 className={styles.calendarMonth}>
+                                {currentMonth.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' })}
+                            </h3>
                             <div className={styles.calendarNav}>
-                                <button className={styles.calendarNavBtn}>
+                                <button className={styles.calendarNavBtn} onClick={handlePrevMonth}>
                                     <ChevronLeftIcon />
                                 </button>
-                                <button className={styles.calendarNavBtn}>
+                                <button className={styles.calendarNavBtn} onClick={handleNextMonth}>
                                     <ChevronRightIcon />
                                 </button>
                             </div>
@@ -529,7 +621,9 @@ const TutorPortalDashboard: React.FC = () => {
                                     className={`${styles.calendarDay}
                                         ${!day.isCurrentMonth ? styles.otherMonth : ''}
                                         ${day.isToday ? styles.today : ''}
-                                        ${day.hasSession ? styles.hasSession : ''}`}
+                                        ${day.hasSession ? styles.hasSession : ''}
+                                        ${selectedDate && day.isCurrentMonth && day.day === selectedDate.getDate() && currentMonth.getMonth() === selectedDate.getMonth() && currentMonth.getFullYear() === selectedDate.getFullYear() ? styles.selected : ''}`}
+                                    onClick={() => handleCalendarDayClick(day.day, day.isCurrentMonth ?? true)}
                                 >
                                     {day.day}
                                     {day.hasSession && <div className={styles.sessionDot} />}
@@ -544,6 +638,10 @@ const TutorPortalDashboard: React.FC = () => {
                             <div className={styles.legendItem}>
                                 <div className={`${styles.legendDot} ${styles.todayDot}`} />
                                 <span className={styles.legendText}>Hôm nay</span>
+                            </div>
+                            <div className={styles.legendItem}>
+                                <div className={`${styles.legendDot} ${styles.selectedDot}`} />
+                                <span className={styles.legendText}>Đang chọn</span>
                             </div>
                         </div>
                     </div>
@@ -636,52 +734,7 @@ const TutorPortalDashboard: React.FC = () => {
                         createdAt={replyModal.feedback?.createdAt}
                     />
 
-                    {/* Notes & Tasks */}
-                    <div className={styles.sectionCard}>
-                        <div className={styles.notesSection}>
-                            <div className={styles.notesSectionHeader}>
-                                <h2 className={styles.sectionTitle}>Ghi chú & Nhiệm vụ</h2>
-                                <button className={styles.addTaskBtn}>
-                                    <PlusIcon />
-                                    Thêm nhiệm vụ
-                                </button>
-                            </div>
 
-                            {/* Tasks List */}
-                            <div className={styles.tasksList}>
-                                {tasks.map((task) => (
-                                    <div key={task.id} className={styles.taskItem}>
-                                        <button
-                                            className={styles.taskCheckbox}
-                                            onClick={() => toggleTask(task.id)}
-                                        >
-                                            {task.completed ? <CheckedBoxIcon /> : <CheckboxIcon />}
-                                        </button>
-                                        <div className={styles.taskContent}>
-                                            <span className={`${styles.taskTitle} ${task.completed ? styles.completed : ''}`}>
-                                                {task.title}
-                                            </span>
-                                            <span className={styles.taskDate}>{task.date}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Personal Note */}
-                            <div className={styles.personalNoteSection}>
-                                <span className={styles.personalNoteLabel}>Ghi chú cá nhân</span>
-                                <p className={styles.personalNoteText}>
-                                    "{personalNote.text}"
-                                </p>
-                                <span className={styles.personalNoteDate}>{personalNote.date}</span>
-                            </div>
-
-                            {/* View All Records Button */}
-                            <button className={styles.viewAllRecordsBtn}>
-                                Xem tất cả hồ sơ
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

@@ -146,10 +146,36 @@ export const hasAnyRole = (allowedRoles: string[]): boolean => {
 };
 
 /**
- * Kiểm tra user đã đăng nhập chưa
+ * Kiểm tra token đã hết hạn chưa
+ */
+export const isTokenExpired = (): boolean => {
+  const user = getCurrentUser();
+  if (!user?.accessToken) return true;
+
+  try {
+    const payload = decodeJWT(user.accessToken);
+    if (!payload || !payload.exp) return true;
+
+    // exp là Unix timestamp (giây), Date.now() trả về millisecond
+    return payload.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+};
+
+/**
+ * Kiểm tra user đã đăng nhập chưa (bao gồm kiểm tra token hết hạn)
  */
 export const isAuthenticated = (): boolean => {
-  return getCurrentUser() !== null;
+  const user = getCurrentUser();
+  if (!user) return false;
+
+  // Kiểm tra token có hết hạn không
+  if (isTokenExpired()) {
+    return false;
+  }
+
+  return true;
 };
 
 // --- CÁC HÀM API ---
@@ -298,3 +324,37 @@ export const changePassword = async (oldPassword: string, newPassword: string) =
   }
 };
 
+// --- SIMPLE AUTH (Không qua Supabase) ---
+
+export const simpleRegister = async (data: {
+  email: string;
+  phone: string;
+  password: string;
+  fullName: string;
+  role: string;
+}) => {
+  try {
+    console.log("🔐 Simple Register...");
+    const response = await api.post("/SimpleAuth/register", data);
+    console.log("✅ Register successful:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("❌ Register error:", error.response?.data);
+    throw error;
+  }
+};
+
+export const simpleLogin = async (emailOrPhone: string, password: string) => {
+  try {
+    console.log("🔐 Simple Login...");
+    const response = await api.post("/SimpleAuth/login", {
+      emailOrPhone,
+      password,
+    });
+    console.log("✅ Login successful:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("❌ Login error:", error.response?.data);
+    throw error;
+  }
+};

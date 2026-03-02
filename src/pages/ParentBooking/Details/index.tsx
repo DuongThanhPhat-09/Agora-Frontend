@@ -19,7 +19,8 @@ import {
     type BookingResponseDTO
 } from '../../../services/booking.service';
 import styles from './styles.module.css';
-import { message as antMessage, Spin } from 'antd';
+import { Spin } from 'antd';
+import { toast } from 'react-toastify';
 
 // ===== HELPERS =====
 const DAY_NAMES = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
@@ -95,7 +96,7 @@ const BookingDetailPage = () => {
                 const res = await getBookingById(bookingId);
                 setBooking(res.content);
             } catch (error) {
-                antMessage.error('Không thể tải chi tiết đặt lịch.');
+                toast.error('Không thể tải chi tiết đặt lịch.');
             } finally {
                 setLoading(false);
             }

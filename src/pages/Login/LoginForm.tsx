@@ -9,7 +9,7 @@ import ForgotPasswordModal from "../../components/ForgotPasswordModal";
 import { supabase } from "../../lib/supabase";
 import {
   checkEmailExists,
-  loginToBackend,
+  simpleLogin,
   loginWithOAuth,
   saveUserToStorage,
 } from "../../services/auth.service";
@@ -32,7 +32,7 @@ const LoginForm: React.FC = () => {
   // State nội dung chữ hiển thị trên Overlay
   const [overlayText, setOverlayText] = useState("Đang xử lý...");
 
-  // --- LOGIC AUTHENTICATION ---
+  // --- LOGIC AUTHENTICATION (CHỈ CHO OAUTH) ---
   useEffect(() => {
     // 1. Kiểm tra URL ngay lập tức để bật màn che TRƯỚC KHI giao diện kịp render
     if (window.location.hash && window.location.hash.includes("access_token")) {
@@ -53,7 +53,6 @@ const LoginForm: React.FC = () => {
             }
           }
         }
-        // Không xử lý SIGNED_OUT ở đây để tránh tắt overlay quá sớm
       }
     );
 
@@ -67,75 +66,53 @@ const LoginForm: React.FC = () => {
       setShowOverlay(true);
       setOverlayText("Đang kiểm tra thông tin tài khoản...");
       console.log("🔍 Checking email:", email);
-      console.log("🎫 Access token (first 50 chars):", token?.substring(0, 50));
 
-      // BƯỚC 1: Gọi API Check Email
       const userCheck = await checkEmailExists(email);
 
       if (userCheck && userCheck.content) {
         setOverlayText("Đang đăng nhập vào hệ thống...");
 
-        // BƯỚC 2: Gọi API đăng nhập với OAuth (không có password)
-        console.log("🌐 Calling loginWithOAuth with:", { email, tokenLength: token?.length });
         const loginResponse = await loginWithOAuth(token, email);
-        console.log("✅ Login response:", loginResponse);
 
-        // 🔥 BƯỚC 3: GHÉP DỮ LIỆU & LƯU LOCAL STORAGE 🔥
-        // Chúng ta lấy Profile từ Bước 1 + Token từ Bước 2
         const fullUserData = {
-          ...userCheck.content, // Toàn bộ info: userid, fullname, role...
-          accessToken: loginResponse.accessToken, // Nhét thêm token vào để dùng gọi API sau này
+          ...userCheck.content,
+          accessToken: loginResponse.accessToken,
         };
 
-        console.log("💾 Saving Full User Data:", fullUserData);
         saveUserToStorage(fullUserData);
-
-        // Xong xuôi -> Chuyển trang
+        window.dispatchEvent(new Event("auth-change"));
         toast.success(`Chào mừng ${userCheck.content.fullname} quay lại!`);
         navigate("/");
       } else {
         throw new Error("USER_NOT_FOUND");
       }
     } catch (error: any) {
-      // === XỬ LÝ LỖI ===
-
-      console.error("❌ OAuth Login Error Details:");
-      console.error("Error message:", error.message);
-      console.error("Error response status:", error.response?.status);
-      console.error("Error response data:", error.response?.data);
-      console.error("Full error:", error);
+      console.error("❌ OAuth Login Error:", error);
 
       const isUserNotFound =
         error.message === "USER_NOT_FOUND" ||
         (error.response && error.response.status === 404);
 
       if (isUserNotFound) {
-        // 🔥 KHÔNG signOut vì RegisterForm cần dùng OAuth session!
-        console.log("⚠️ USER_NOT_FOUND - Keeping OAuth session for registration");
-
-        // Xử lý chuyển hướng mượt mà
+        console.log("⚠️ USER_NOT_FOUND - Redirecting to register");
         setOverlayText(
           "Tài khoản chưa tồn tại. Đang chuyển sang trang Đăng ký..."
         );
         toast.info("Vui lòng hoàn tất đăng ký để tiếp tục.");
 
-        // Delay 1.5s để người dùng kịp đọc thông báo
         setTimeout(() => {
           navigate("/register", { state: { email: email } });
         }, 1500);
       } else {
-        // Các lỗi kỹ thuật khác -> Sign out và tắt overlay
         console.log("❌ Other error - Signing out");
         await supabase.auth.signOut();
-
-        console.error("Login Error:", error);
         toast.error("Đăng nhập thất bại. Vui lòng thử lại.");
         setShowOverlay(false);
       }
     }
   };
 
-  // --- CÁC HÀM XỬ LÝ FORM THƯỜNG ---
+  // --- CÁC HÀM XỬ LÝ FORM ---
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -144,7 +121,6 @@ const LoginForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate
     if (!formData.email || !formData.password) {
       toast.warning("Vui lòng nhập đầy đủ email/SĐT và mật khẩu!");
       return;
@@ -152,55 +128,69 @@ const LoginForm: React.FC = () => {
 
     try {
       setIsSubmitting(true);
-
-      // Đánh dấu đang manual login để tránh trigger OAuth flow
       isManualLoginRef.current = true;
 
-      // BƯỚC 1: Đăng nhập với Supabase để lấy accessToken
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
+      // Gọi SimpleAuth login trực tiếp tới backend
+      const response = await simpleLogin(formData.email.trim(), formData.password);
 
-      if (error) throw error;
+      console.log("✅ SimpleLogin response:", response);
 
-      if (data.session) {
-        const accessToken = data.session.access_token;
-        console.log("🎫 Supabase login successful, token length:", accessToken?.length);
-
-        // BƯỚC 2: Gọi Backend API với {accessToken, password}
-        const backendResponse = await loginToBackend(accessToken, formData.password);
-        console.log("✅ Backend login successful:", backendResponse);
-
-        // BƯỚC 3: Lưu thông tin user
-        saveUserToStorage(backendResponse);
-
-        toast.success(`Chào mừng bạn quay lại!`);
-        setTimeout(() => {
-          navigate("/");
-        }, 1000);
+      // Extract token
+      const token = response.content?.token || response.token;
+      if (!token) {
+        throw new Error("Không nhận được token từ server.");
       }
+
+      // Lưu user data (lấy profile đầy đủ từ backend)
+      let fullUserData: any = { accessToken: token };
+
+      const input = formData.email.trim();
+      if (input.includes("@")) {
+        const userProfile = await checkEmailExists(input);
+        if (userProfile?.content) {
+          fullUserData = { ...userProfile.content, accessToken: token };
+        }
+      } else {
+        // Nếu login bằng phone, decode token để lấy info
+        try {
+          const base64Url = token.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(
+            atob(base64)
+              .split('')
+              .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+              .join('')
+          );
+          const payload = JSON.parse(jsonPayload);
+
+          const emailClaim = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress";
+          const userEmail = payload[emailClaim] || payload.email;
+
+          if (userEmail) {
+            const userProfile = await checkEmailExists(userEmail);
+            if (userProfile?.content) {
+              fullUserData = { ...userProfile.content, accessToken: token };
+            }
+          }
+        } catch (decodeError) {
+          console.warn("Could not decode token to get email:", decodeError);
+        }
+      }
+
+      saveUserToStorage(fullUserData);
+      window.dispatchEvent(new Event("auth-change"));
+      toast.success("Chào mừng bạn quay lại!");
+      setTimeout(() => navigate("/"), 1000);
+
     } catch (error: any) {
       console.error("Login Error:", error);
-
-      // Reset flag để cho phép OAuth flow hoạt động lại
       isManualLoginRef.current = false;
 
-      // Xử lý lỗi cụ thể
-      if (error.message?.includes("Invalid login credentials")) {
-        toast.error("Sai email/SĐT hoặc mật khẩu. Vui lòng thử lại.");
-      } else if (error.response?.status === 404) {
-        toast.info("Tài khoản chưa tồn tại. Vui lòng đăng ký.");
-        setTimeout(() => {
-          navigate("/register");
-        }, 1500);
-      } else {
-        const errorMessage = error.response?.data?.message?.errorMessage
-          || error.response?.data?.message
-          || error.message
-          || "Đăng nhập thất bại";
-        toast.error(errorMessage);
-      }
+      const errorMsg = error.response?.data?.message
+        || error.response?.data?.content
+        || error.message
+        || "Đăng nhập thất bại. Vui lòng thử lại.";
+      toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -220,8 +210,6 @@ const LoginForm: React.FC = () => {
         },
       });
       if (error) throw error;
-      // Nếu thành công, trình duyệt sẽ redirect sang Google
-      // nên không cần tắt isSubmitting
     } catch (error) {
       console.log(error);
       toast.error("Không thể kết nối với Google.");

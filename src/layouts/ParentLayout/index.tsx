@@ -1,10 +1,12 @@
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
+import { Popconfirm } from 'antd';
 import styles from './styles.module.css';
 import { useState, useEffect } from 'react';
 import { getUnreadCount } from '../../services/notification.service';
 import { signalRService } from '../../services/signalr.service';
 import NotificationDropdown from '../../components/NotificationDropdown/NotificationDropdown';
-import { getUserInfoFromToken } from '../../services/auth.service';
+import { getUserInfoFromToken, clearUserFromStorage } from '../../services/auth.service';
+import { toast } from 'react-toastify';
 import { getStudents } from '../../services/student.service';
 import { getNextLesson } from '../../services/lesson.service';
 import type { LessonResponse } from '../../services/lesson.service';
@@ -107,6 +109,15 @@ const CloseIcon = () => (
   </svg>
 );
 
+// Logout Icon
+const LogoutIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M6 16H3C2.44772 16 2 15.5523 2 15V3C2 2.44772 2.44772 2 3 2H6" strokeLinecap="round" />
+    <path d="M12 12L16 9L12 6" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M16 9H7" strokeLinecap="round" />
+  </svg>
+);
+
 // Navigation items matching Figma design
 // Lessons Icon
 const LessonsIcon = () => (
@@ -124,14 +135,14 @@ const DisputeIcon = () => (
 );
 
 const navItems = [
-  { path: '/parent/dashboard', label: 'Dashboard', icon: DashboardIcon },
-  { path: '/parent/student', label: 'Children', icon: ChildrenIcon },
+  { path: '/parent/dashboard', label: 'Tổng quan', icon: DashboardIcon },
+  { path: '/parent/student', label: 'Con em', icon: ChildrenIcon },
   { path: '/parent/lessons', label: 'Buổi học', icon: LessonsIcon },
-  { path: '/parent/messages', label: 'Messages', icon: MessagesIcon },
-  { path: '/parent/wallet', label: 'Finance', icon: FinanceIcon },
-  { path: '/parent/booking', label: 'Booking', icon: BookingIcon },
+  { path: '/parent/messages', label: 'Tin nhắn', icon: MessagesIcon },
+  { path: '/parent/wallet', label: 'Tài chính', icon: FinanceIcon },
+  { path: '/parent/booking', label: 'Đặt lịch', icon: BookingIcon },
   { path: '/parent/disputes', label: 'Khiếu nại', icon: DisputeIcon },
-  { path: '/parent/settings', label: 'Settings', icon: SettingsIcon },
+  { path: '/parent/settings', label: 'Cài đặt', icon: SettingsIcon },
 ];
 
 interface ParentLayoutProps {
@@ -291,7 +302,56 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
         />
       )}
 
-      {/* Main Content (Left) */}
+      {/* Sidebar (Left) — must be before main for CSS sibling selector */}
+      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
+        {/* Logo Section */}
+        <div className={styles.sidebarLogo}>
+          <Link to="/" className={styles.logoLink}>
+            <LogoIcon />
+            <span className={styles.logoText}>AGORA</span>
+          </Link>
+          {/* Mobile Close Button */}
+          <button
+            className={styles.sidebarClose}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <CloseIcon />
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className={styles.sidebarNav}>
+          {navItems.map((item) => (
+            <div
+              key={item.path}
+              className={`${styles.navItem} ${isActive(item.path) ? styles.navItemActive : ''}`}
+              title={item.label}
+              onClick={() => {
+                navigate(item.path);
+                setSidebarOpen(false);
+              }}
+            >
+              <item.icon />
+              <span className={styles.navText}>{item.label}</span>
+            </div>
+          ))}
+        </nav>
+
+        {/* User Profile Card at Bottom */}
+        <div className={styles.sidebarUser}>
+          <div className={styles.userCard}>
+            <div className={styles.userAvatar}>
+              <span>{parentData.initials}</span>
+            </div>
+            <div className={styles.userInfo}>
+              <span className={styles.userName}>{parentData.name}</span>
+              <span className={styles.userRole}>{parentData.role}</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content (Right) */}
       <main className={styles.main}>
         {/* Header */}
         <header className={styles.header}>
@@ -346,7 +406,7 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
               <input
                 type="text"
                 className={styles.searchInput}
-                placeholder="Search classes, students, notes..."
+                placeholder="Tìm lớp học, ghi chú..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -383,6 +443,27 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
                   <span>{parentData.initials}</span>
                 </div>
               </div>
+
+              {/* Logout Button */}
+              <Popconfirm
+                title="Đăng xuất"
+                description="Bạn có chắc muốn đăng xuất không?"
+                onConfirm={() => {
+                  clearUserFromStorage();
+                  toast.success('Đăng xuất thành công!');
+                  navigate('/login');
+                }}
+                okText="Đăng xuất"
+                cancelText="Hủy"
+                okButtonProps={{ danger: true }}
+              >
+                <button
+                  className={styles.logoutBtn}
+                  title="Đăng xuất"
+                >
+                  <LogoutIcon />
+                </button>
+              </Popconfirm>
             </div>
           </div>
         </header>
@@ -392,54 +473,6 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
           {children || <Outlet />}
         </div>
       </main>
-
-      {/* Sidebar (Right) */}
-      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
-        {/* Logo Section */}
-        <div className={styles.sidebarLogo}>
-          <Link to="/" className={styles.logoLink}>
-            <LogoIcon />
-            <span className={styles.logoText}>AGORA</span>
-          </Link>
-          {/* Mobile Close Button */}
-          <button
-            className={styles.sidebarClose}
-            onClick={() => setSidebarOpen(false)}
-          >
-            <CloseIcon />
-          </button>
-        </div>
-
-        {/* Navigation */}
-        <nav className={styles.sidebarNav}>
-          {navItems.map((item) => (
-            <div
-              key={item.path}
-              className={`${styles.navItem} ${isActive(item.path) ? styles.navItemActive : ''}`}
-              onClick={() => {
-                navigate(item.path);
-                setSidebarOpen(false);
-              }}
-            >
-              <item.icon />
-              <span className={styles.navText}>{item.label}</span>
-            </div>
-          ))}
-        </nav>
-
-        {/* User Profile Card at Bottom */}
-        <div className={styles.sidebarUser}>
-          <div className={styles.userCard}>
-            <div className={styles.userAvatar}>
-              <span>{parentData.initials}</span>
-            </div>
-            <div className={styles.userInfo}>
-              <span className={styles.userName}>{parentData.name}</span>
-              <span className={styles.userRole}>{parentData.role}</span>
-            </div>
-          </div>
-        </div>
-      </aside>
     </div>
   );
 };

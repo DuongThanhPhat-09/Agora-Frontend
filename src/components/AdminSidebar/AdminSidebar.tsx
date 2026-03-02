@@ -1,5 +1,16 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { Popconfirm } from 'antd';
+import { clearUserFromStorage } from '../../services/auth.service';
 import '../../styles/layouts/admin-layout.css';
+import { toast } from 'react-toastify';
+
+// Logo Icon (Agora symbol) - same as TutorPortal/ParentLayout
+const LogoIcon = () => (
+    <svg className="admin-logo-icon" width="28" height="28" viewBox="0 0 28 28" fill="currentColor">
+        <path d="M14 2L2 8V20L14 26L26 20V8L14 2ZM14 4.5L22.5 9V19L14 23.5L5.5 19V9L14 4.5Z" />
+        <path d="M14 8L8 11V17L14 20L20 17V11L14 8Z" />
+    </svg>
+);
 
 const AdminSidebar = () => {
     const navigate = useNavigate();
@@ -12,8 +23,10 @@ const AdminSidebar = () => {
             <div>
                 {/* Logo */}
                 <div className="admin-sidebar-header">
-                    <h1 className="admin-logo">AGORA</h1>
-                    <p className="admin-subtitle">Cổng quản trị</p>
+                    <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '10.5px', textDecoration: 'none', color: 'inherit' }}>
+                        <LogoIcon />
+                        <h1 className="admin-logo">AGORA</h1>
+                    </Link>
                 </div>
 
                 {/* Navigation */}
@@ -21,6 +34,7 @@ const AdminSidebar = () => {
                     <a
                         className={`admin-nav-item ${isActive('/admin/dashboard') ? 'admin-nav-item-active' : ''}`}
                         onClick={() => navigate('/admin/dashboard')}
+                        title="Bảng điều khiển"
                     >
                         <span className="material-symbols-outlined admin-nav-icon icon-filled">dashboard</span>
                         <span className="admin-nav-text">Bảng điều khiển</span>
@@ -29,6 +43,7 @@ const AdminSidebar = () => {
                     <a
                         className={`admin-nav-item ${isActive('/admin/users') ? 'admin-nav-item-active' : ''}`}
                         onClick={() => navigate('/admin/users')}
+                        title="Quản lý người dùng"
                     >
                         <span className="material-symbols-outlined admin-nav-icon">group</span>
                         <span className="admin-nav-text">Quản lý người dùng</span>
@@ -37,6 +52,7 @@ const AdminSidebar = () => {
                     <a
                         className={`admin-nav-item ${isActive('/admin/vetting') ? 'admin-nav-item-active' : ''}`}
                         onClick={() => navigate('/admin/vetting')}
+                        title="Yêu cầu kiểm duyệt"
                     >
                         <span className="material-symbols-outlined admin-nav-icon">description</span>
                         <span className="admin-nav-text">Yêu cầu kiểm duyệt</span>
@@ -46,6 +62,7 @@ const AdminSidebar = () => {
                     <a
                         className={`admin-nav-item ${location.pathname.startsWith('/admin/disputes') ? 'admin-nav-item-active' : ''}`}
                         onClick={() => navigate('/admin/disputes')}
+                        title="Khiếu nại"
                     >
                         <span className="material-symbols-outlined admin-nav-icon">gavel</span>
                         <span className="admin-nav-text">Khiếu nại</span>
@@ -55,6 +72,7 @@ const AdminSidebar = () => {
                     <a
                         className={`admin-nav-item ${location.pathname.startsWith('/admin/warnings') ? 'admin-nav-item-active' : ''}`}
                         onClick={() => navigate('/admin/warnings')}
+                        title="Cảnh báo"
                     >
                         <span className="material-symbols-outlined admin-nav-icon">warning</span>
                         <span className="admin-nav-text">Cảnh báo</span>
@@ -63,6 +81,7 @@ const AdminSidebar = () => {
                     <a
                         className={`admin-nav-item ${isActive('/admin/financials') ? 'admin-nav-item-active' : ''}`}
                         onClick={() => navigate('/admin/financials')}
+                        title="Tài chính"
                     >
                         <span className="material-symbols-outlined admin-nav-icon">account_balance</span>
                         <span className="admin-nav-text">Tài chính</span>
@@ -71,6 +90,7 @@ const AdminSidebar = () => {
                     <a
                         className={`admin-nav-item ${location.pathname.startsWith('/admin/payout') ? 'admin-nav-item-active' : ''}`}
                         onClick={() => navigate('/admin/payouts')}
+                        title="Payout"
                     >
                         <span className="material-symbols-outlined admin-nav-icon">monitoring</span>
                         <span className="admin-nav-text">Payout</span>
@@ -79,6 +99,7 @@ const AdminSidebar = () => {
                     <a
                         className={`admin-nav-item ${isActive('/admin/settings') ? 'admin-nav-item-active' : ''}`}
                         onClick={() => navigate('/admin/settings')}
+                        title="Cài đặt"
                     >
                         <span className="material-symbols-outlined admin-nav-icon">settings</span>
                         <span className="admin-nav-text">Cài đặt</span>
@@ -88,10 +109,24 @@ const AdminSidebar = () => {
 
             {/* Sidebar Footer */}
             <div className="admin-sidebar-footer">
-                <button className="admin-signout-btn">
-                    <span className="material-symbols-outlined">logout</span>
-                    Đăng xuất
-                </button>
+                <Popconfirm
+                    title="Đăng xuất"
+                    description="Bạn có chắc muốn đăng xuất không?"
+                    onConfirm={() => {
+                        clearUserFromStorage();
+                        toast.success('Đăng xuất thành công!');
+                        navigate('/login');
+                    }}
+                    okText="Đăng xuất"
+                    cancelText="Hủy"
+                    okButtonProps={{ danger: true }}
+                    placement="topRight"
+                >
+                    <button className="admin-signout-btn" title="Đăng xuất">
+                        <span className="material-symbols-outlined">logout</span>
+                        <span className="admin-signout-text">Đăng xuất</span>
+                    </button>
+                </Popconfirm>
             </div>
         </aside>
     );

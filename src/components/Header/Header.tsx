@@ -3,15 +3,14 @@ import { Link, useLocation } from "react-router-dom";
 import "./Header.css";
 // Import Supabase và kiểu dữ liệu User
 import { supabase } from "../../lib/supabase";
-import { type User } from "@supabase/supabase-js";
-import { clearUserFromStorage, getUserInfoFromToken } from "../../services/auth.service";
+import { clearUserFromStorage, getCurrentUser, getUserInfoFromToken } from "../../services/auth.service";
 import { Popconfirm } from "antd";
 import { LogOut, LayoutDashboard } from "lucide-react";
 
 const Header = () => {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userDisplayName, setUserDisplayName] = useState<string>("User");
   const [userAvatar, setUserAvatar] = useState<string>("");
 
@@ -39,59 +38,84 @@ const Header = () => {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=631b1b&color=fff&size=128`;
   };
 
+  // Function to check login status from localStorage
+  const checkLoginStatus = () => {
+    const localUser = getCurrentUser();
+    if (localUser && localUser.accessToken) {
+      setIsLoggedIn(true);
+      const userData = getUserInfoFromToken();
+      const displayName = userData?.fullname ||
+        (userData?.firstName && userData?.lastName ? `${userData.firstName} ${userData.lastName}` : null) ||
+        localUser.fullname ||
+        "User";
+      setUserDisplayName(displayName);
+      setUserAvatar(generateAvatarFromName(displayName));
+      return true;
+    }
+    return false;
+  };
+
   useEffect(() => {
-    // 1. Kiểm tra session hiện tại (Cho trường hợp F5 lại trang)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
+    // 1. Kiểm tra localStorage trước (cho SimpleAuth login)
+    const hasLocalUser = checkLoginStatus();
 
-      if (currentUser) {
-        // Lấy thông tin từ JWT token
+    // 2. Nếu không có local user, kiểm tra Supabase session (cho OAuth login)
+    if (!hasLocalUser) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          setIsLoggedIn(true);
+          const userData = getUserInfoFromToken();
+          const displayName = userData?.fullname ||
+            session.user.user_metadata?.full_name ||
+            session.user.email?.split('@')[0] ||
+            "User";
+          setUserDisplayName(displayName);
+          const avatarUrl = session.user.user_metadata?.avatar_url || generateAvatarFromName(displayName);
+          setUserAvatar(avatarUrl);
+        }
+      });
+    }
+
+    // 3. Lắng nghe Supabase auth state changes (OAuth login/logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        setIsLoggedIn(true);
         const userData = getUserInfoFromToken();
-
-        // Ưu tiên: JWT token > user_metadata > email
         const displayName = userData?.fullname ||
-          (userData?.firstName && userData?.lastName ? `${userData.firstName} ${userData.lastName}` : null) ||
-          currentUser.user_metadata?.full_name ||
-          currentUser.email?.split('@')[0] ||
+          session.user.user_metadata?.full_name ||
+          session.user.email?.split('@')[0] ||
           "User";
         setUserDisplayName(displayName);
-
-        // Avatar: Generate từ tên
-        const avatarUrl = currentUser.user_metadata?.avatar_url || generateAvatarFromName(displayName);
+        const avatarUrl = session.user.user_metadata?.avatar_url || generateAvatarFromName(displayName);
         setUserAvatar(avatarUrl);
+      } else if (!getCurrentUser()) {
+        setIsLoggedIn(false);
       }
     });
 
-    // 2. Lắng nghe sự kiện thay đổi auth (Login/Logout)
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-
-      if (currentUser) {
-        const userData = getUserInfoFromToken();
-        const displayName = userData?.fullname ||
-          (userData?.firstName && userData?.lastName ? `${userData.firstName} ${userData.lastName}` : null) ||
-          currentUser.user_metadata?.full_name ||
-          currentUser.email?.split('@')[0] ||
-          "User";
-        setUserDisplayName(displayName);
-
-        // Avatar: Generate từ tên
-        const avatarUrl = currentUser.user_metadata?.avatar_url || generateAvatarFromName(displayName);
-        setUserAvatar(avatarUrl);
+    // 4. Lắng nghe storage changes + custom auth event
+    const handleAuthChange = () => {
+      const localUser = getCurrentUser();
+      if (localUser && localUser.accessToken) {
+        checkLoginStatus();
+      } else {
+        setIsLoggedIn(false);
       }
-    });
+    };
+    window.addEventListener("storage", handleAuthChange);
+    window.addEventListener("auth-change", handleAuthChange);
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener("storage", handleAuthChange);
+      window.removeEventListener("auth-change", handleAuthChange);
+    };
   }, []);
 
   const confirmLogout = async () => {
     await supabase.auth.signOut();
     clearUserFromStorage();
-    setUser(null);
+    setIsLoggedIn(false);
     setIsMenuOpen(false);
   };
   return (
@@ -123,7 +147,7 @@ const Header = () => {
 
         {/* Auth Buttons - Xử lý điều kiện hiển thị */}
         <div className="auth-buttons">
-          {user && !isAuthPage ? (
+          {isLoggedIn && !isAuthPage ? (
             // --- GIAO DIỆN TỐI GIẢN KHI ĐÃ ĐĂNG NHẬP ---
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
               {/* Nút Portal tương ứng theo Role - Icon version */}
@@ -234,7 +258,7 @@ const Header = () => {
 
           {/* Mobile Auth Section */}
           <div className="mobile-auth">
-            {user && !isAuthPage ? (
+            {isLoggedIn && !isAuthPage ? (
               <div
                 style={{
                   display: "flex",
