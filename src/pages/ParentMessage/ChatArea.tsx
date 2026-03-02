@@ -7,7 +7,7 @@ import SessionContextCard from './SessionContextCard';
 import { getChatMessages, type ChatMessage, type ChatChannel } from '../../services/chat.service';
 import { getBookingById, type BookingResponseDTO } from '../../services/booking.service';
 import { signalRService } from '../../services/signalr.service';
-import { message } from 'antd';
+import { toast } from 'react-toastify';
 import PaymentModal from '../../components/PaymentModal/PaymentModal';
 
 interface ChatAreaProps {
@@ -107,7 +107,7 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
         console.error('SignalR connection error:', err);
         if (mounted) {
           setConnectionState('error');
-          message.error('Failed to connect to chat server');
+          toast.error('Failed to connect to chat server');
         }
       }
     };
@@ -131,7 +131,7 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
           console.log(`✅ Joined channel ${selectedChannelId}`);
         } catch (err) {
           console.error('Error joining channel:', err);
-          message.error('Failed to join chat channel');
+          toast.error('Failed to join chat channel');
         }
       }
     };
@@ -170,7 +170,7 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
         await loadMessages({ page: 1, pageSize: 50 });
       } catch (err) {
         console.error('Error fetching messages:', err);
-        message.error('Failed to load messages');
+        toast.error('Failed to load messages');
       } finally {
         setLoading(false);
       }
@@ -206,7 +206,7 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
         console.error('Error sending message:', err);
         // Xóa message thất bại khỏi UI
         setMessages((prev) => prev.filter((msg) => msg.messageId !== tempMessage.messageId));
-        message.error('Failed to send message');
+        toast.error('Failed to send message');
       }
     },
     [selectedChannelId, currentUserId],
@@ -222,7 +222,7 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
       setMessages([]);
     } catch (err) {
       console.error('Error leaving channel:', err);
-      message.error('Failed to leave chat channel');
+      toast.error('Failed to leave chat channel');
     }
   }, [selectedChannelId]);
 
@@ -232,7 +232,7 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
   }, []);
 
   const handlePaymentSuccess = () => {
-    message.success('Thanh toán thành công! Lớp học đang được thiết lập.');
+    toast.success('Thanh toán thành công! Lớp học đang được thiết lập.');
     // Refresh booking details
     if (selectedChannel?.bookingId) {
       getBookingById(selectedChannel.bookingId).then(response => {

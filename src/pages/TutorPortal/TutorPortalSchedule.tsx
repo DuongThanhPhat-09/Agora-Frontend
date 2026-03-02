@@ -20,14 +20,6 @@ dayjs.extend(isoWeek);
 dayjs.locale('vi');
 
 // Biểu tượng
-const CalendarSyncIcon = () => (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-        <path d="M6 1.5V3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-        <path d="M1.5 7.5H3.75C4.5 7.5 4.5 7.5 4.5 6.75V6.75C4.5 6 4.5 6 5.25 6H6.75C7.5 6 7.5 6 7.5 6.75V6.75C7.5 7.5 7.5 7.5 8.25 7.5H10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-        <rect x="1.5" y="2" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-    </svg>
-);
-
 const PlusIcon = () => (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
         <path d="M7 3V11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -116,22 +108,48 @@ const TutorPortalSchedule: React.FC = () => {
     const [calendarData, setCalendarData] = useState<CalendarDayDto[]>([]);
     const [isLoadingLessons, setIsLoadingLessons] = useState(false);
 
-    // Lấy các ngày trong tuần sử dụng dayjs
-    const weekDates = useMemo(() => {
-        const startOfWeek = currentDate.startOf('isoWeek'); // Thứ Hai
+    // Lấy các ngày hiển thị dựa trên viewMode
+    const displayDates = useMemo(() => {
+        if (viewMode === 'day') {
+            return [currentDate];
+        }
+        // week mode (default)
+        const startOfWeek = currentDate.startOf('isoWeek');
         return Array.from({ length: 7 }, (_, i) => startOfWeek.add(i, 'day'));
-    }, [currentDate]);
+    }, [currentDate, viewMode]);
 
-    // Định dạng khoảng tuần để hiển thị
-    const weekRange = useMemo(() => {
-        const start = weekDates[0];
-        const end = weekDates[6];
+    // Lấy dữ liệu cho month view
+    const monthCalendarData = useMemo(() => {
+        if (viewMode !== 'month') return [];
+        const startOfMonth = currentDate.startOf('month');
+        const endOfMonth = currentDate.endOf('month');
+        const startDay = startOfMonth.startOf('isoWeek');
+        const endDay = endOfMonth.endOf('isoWeek');
+        const days: Dayjs[] = [];
+        let day = startDay;
+        while (day.isBefore(endDay) || day.isSame(endDay, 'day')) {
+            days.push(day);
+            day = day.add(1, 'day');
+        }
+        return days;
+    }, [currentDate, viewMode]);
 
+    // Định dạng tiêu đề ngày/tuần/tháng
+    const dateRangeText = useMemo(() => {
+        if (viewMode === 'day') {
+            return currentDate.format('DD MMMM, YYYY');
+        }
+        if (viewMode === 'month') {
+            return currentDate.format('MMMM YYYY');
+        }
+        // week
+        const start = displayDates[0];
+        const end = displayDates[6];
         if (start.month() === end.month()) {
             return `${start.format('DD')} - ${end.format('DD MMM, YYYY')}`;
         }
         return `${start.format('DD MMM')} - ${end.format('DD MMM, YYYY')}`;
-    }, [weekDates]);
+    }, [currentDate, displayDates, viewMode]);
 
     // Lấy lịch rảnh từ API
     // MERGED: Dùng minutes precision từ develop
@@ -230,17 +248,30 @@ const TutorPortalSchedule: React.FC = () => {
         setEditingAvailability(null);
     };
 
-    // Xử lý điều hướng
-    const handlePrevWeek = () => {
-        setCurrentDate(currentDate.subtract(1, 'week'));
+    // Xử lý điều hướng theo viewMode
+    const navUnit = viewMode === 'day' ? 'day' : viewMode === 'month' ? 'month' : 'week';
+
+    const handlePrev = () => {
+        setCurrentDate(currentDate.subtract(1, navUnit));
     };
 
-    const handleNextWeek = () => {
-        setCurrentDate(currentDate.add(1, 'week'));
+    const handleNext = () => {
+        setCurrentDate(currentDate.add(1, navUnit));
     };
 
     const handleToday = () => {
         setCurrentDate(dayjs());
+    };
+
+    // Helper: check if a day has availability slots
+    const getDayAvailability = (date: Dayjs): LocalAvailabilitySlot[] => {
+        const isoDay = date.isoWeekday(); // 1=Mon, 7=Sun
+        return availability.filter(a => a.dayOfWeek === isoDay);
+    };
+
+    // Helper: check if a day has lessons
+    const getDayLessons = (date: Dayjs): LessonResponse[] => {
+        return lessons.filter(l => dayjs(l.scheduledStart).isSame(date, 'day'));
     };
 
     const handleAddAvailabilityClick = () => {
@@ -252,9 +283,8 @@ const TutorPortalSchedule: React.FC = () => {
     };
 
     // FROM DEVELOP: Tìm slot rảnh bắt đầu trong giờ cụ thể
-    // dayIndex: 0-6 (Thứ Hai-Chủ Nhật theo thứ tự hiển thị)
-    const getAvailabilityStartingAtHour = (dayIndex: number, hour: number): LocalAvailabilitySlot | null => {
-        const isoDay = dayIndex + 1;
+    const getAvailabilityStartingAtHour = (date: Dayjs, hour: number): LocalAvailabilitySlot | null => {
+        const isoDay = date.isoWeekday();
         return availability.find(a =>
             a.dayOfWeek === isoDay &&
             a.startHour === hour
@@ -267,12 +297,14 @@ const TutorPortalSchedule: React.FC = () => {
     };
 
     // Kiểm tra tuần hiện tại có phải tuần này không
-    const isCurrentWeek = useMemo(() => {
+    const isCurrentPeriod = useMemo(() => {
         const today = dayjs();
+        if (viewMode === 'day') return currentDate.isSame(today, 'day');
+        if (viewMode === 'month') return currentDate.isSame(today, 'month');
         const startOfCurrentWeek = today.startOf('isoWeek');
         const startOfDisplayWeek = currentDate.startOf('isoWeek');
         return startOfCurrentWeek.isSame(startOfDisplayWeek, 'day');
-    }, [currentDate]);
+    }, [currentDate, viewMode]);
 
     return (
         <div className={styles.schedulePage}>
@@ -283,10 +315,6 @@ const TutorPortalSchedule: React.FC = () => {
                     <div className={styles.headerTop}>
                         <h1 className={styles.pageTitle}>Lịch dạy</h1>
                         <div className={styles.headerActions}>
-                            <button className={styles.syncBtn}>
-                                <CalendarSyncIcon />
-                                <span>Đồng bộ lịch</span>
-                            </button>
                             <button className={styles.addBtn} onClick={handleAddAvailabilityClick}>
                                 <PlusIcon />
                                 <span>Thêm lịch rảnh</span>
@@ -341,17 +369,17 @@ const TutorPortalSchedule: React.FC = () => {
 
                             {/* Điều hướng ngày */}
                             <div className={styles.dateNav}>
-                                <button className={styles.navBtn} onClick={handlePrevWeek}>
+                                <button className={styles.navBtn} onClick={handlePrev}>
                                     <ChevronLeftIcon />
                                 </button>
-                                <span className={styles.dateRange}>{weekRange}</span>
-                                <button className={styles.navBtn} onClick={handleNextWeek}>
+                                <span className={styles.dateRange}>{dateRangeText}</span>
+                                <button className={styles.navBtn} onClick={handleNext}>
                                     <ChevronRightIcon />
                                 </button>
                                 <button
-                                    className={`${styles.nowBtn} ${isCurrentWeek ? styles.active : ''}`}
+                                    className={`${styles.nowBtn} ${isCurrentPeriod ? styles.active : ''}`}
                                     onClick={handleToday}
-                                    disabled={isCurrentWeek}
+                                    disabled={isCurrentPeriod}
                                 >
                                     Hôm nay
                                 </button>
@@ -362,15 +390,7 @@ const TutorPortalSchedule: React.FC = () => {
                         <div className={styles.legend}>
                             <div className={styles.legendItem}>
                                 <div className={styles.legendDot} />
-                                <span>Buổi học</span>
-                            </div>
-                            <div className={styles.legendItem}>
-                                <div className={styles.legendBorder} />
                                 <span>Rảnh</span>
-                            </div>
-                            <div className={styles.legendItem}>
-                                <div className={styles.legendBlocked} />
-                                <span>Bận</span>
                             </div>
                             <div className={styles.timezone}>
                                 UTC+7 • Giờ Việt Nam
@@ -400,25 +420,55 @@ const TutorPortalSchedule: React.FC = () => {
                                     <span>Thêm lịch rảnh đầu tiên</span>
                                 </button>
                             </div>
+                        ) : viewMode === 'month' ? (
+                            /* Month view - Availability */
+                            <div className={styles.monthGrid}>
+                                <div className={styles.monthHeader}>
+                                    {DAYS_OF_WEEK.map(d => <div key={d} className={styles.monthHeaderCell}>{d}</div>)}
+                                </div>
+                                <div className={styles.monthBody}>
+                                    {monthCalendarData.map((date, i) => {
+                                        const daySlots = getDayAvailability(date);
+                                        const isCurrentMonth = date.month() === currentDate.month();
+                                        return (
+                                            <div
+                                                key={i}
+                                                className={`${styles.monthCell} ${!isCurrentMonth ? styles.otherMonth : ''} ${isToday(date) ? styles.todayCell : ''}`}
+                                                onClick={() => { setCurrentDate(date); setViewMode('day'); }}
+                                            >
+                                                <span className={styles.monthCellDay}>{date.format('D')}</span>
+                                                {daySlots.length > 0 && (
+                                                    <div className={styles.monthCellDots}>
+                                                        {daySlots.slice(0, 3).map((s, j) => (
+                                                            <div key={j} className={styles.monthDotAvail} title={`${s.startTime} - ${s.endTime}`} />
+                                                        ))}
+                                                        {daySlots.length > 3 && <span className={styles.monthMore}>+{daySlots.length - 3}</span>}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         ) : (
-                            /* Lưới lịch - MERGED: dùng pixel-perfect positioning từ develop */
-                            <div className={styles.calendarGrid}>
+                            /* Day / Week view - Availability grid */
+                            <div className={styles.calendarGrid} style={viewMode === 'day' ? { '--col-count': '1' } as React.CSSProperties : undefined}>
                                 {/* Hàng tiêu đề */}
-                                <div className={styles.calendarHeader}>
+                                <div className={styles.calendarHeader} style={viewMode === 'day' ? { gridTemplateColumns: '70px 1fr' } : undefined}>
                                     <div className={styles.timeColumn} />
-                                    {weekDates.map((date, index) => (
+                                    {displayDates.map((date, index) => (
                                         <div
                                             key={index}
                                             className={`${styles.dayColumn} ${isToday(date) ? styles.today : ''}`}
                                         >
-                                            <span className={styles.dayName}>{DAYS_OF_WEEK[index]}</span>
+                                            <span className={styles.dayName}>{viewMode === 'day' ? date.format('dddd') : DAYS_OF_WEEK[index]}</span>
                                             <span className={styles.dayNumber}>{date.format('DD')}</span>
                                             <span className={styles.monthName}>{date.format('MMM')}</span>
                                         </div>
                                     ))}
                                 </div>
 
-                                {/* Các hàng thời gian - FROM DEVELOP: tính toán theo phút */}
+                                {/* Các hàng thời gian */}
                                 <div className={styles.calendarBody}>
                                     {TIME_SLOTS.map((hour, index) => (
                                         <div
@@ -426,15 +476,15 @@ const TutorPortalSchedule: React.FC = () => {
                                             className={styles.timeRow}
                                             style={{
                                                 zIndex: TIME_SLOTS.length - index,
-                                                position: 'relative'
+                                                position: 'relative',
+                                                ...(viewMode === 'day' ? { gridTemplateColumns: '70px 1fr' } : {})
                                             }}
                                         >
                                             <div className={styles.timeLabel}>
                                                 {hour.toString().padStart(2, '0')}:00
                                             </div>
-                                            {weekDates.map((date, dayIndex) => {
-                                                const slot = getAvailabilityStartingAtHour(dayIndex, hour);
-                                                // FROM DEVELOP: Tính offset phút trong giờ (VD: 30 phút cho 07:30)
+                                            {displayDates.map((date, dayIndex) => {
+                                                const slot = getAvailabilityStartingAtHour(date, hour);
                                                 const minuteOffset = slot ? (slot.startMinutes - hour * 60) : 0;
                                                 const topOffsetPx = minuteOffset * PX_PER_MINUTE;
                                                 const heightPx = slot ? slot.durationMinutes * PX_PER_MINUTE : 0;
@@ -530,17 +580,17 @@ const TutorPortalSchedule: React.FC = () => {
                             </div>
 
                             <div className={styles.dateNav}>
-                                <button className={styles.navBtn} onClick={handlePrevWeek}>
+                                <button className={styles.navBtn} onClick={handlePrev}>
                                     <ChevronLeftIcon />
                                 </button>
-                                <span className={styles.dateRange}>{weekRange}</span>
-                                <button className={styles.navBtn} onClick={handleNextWeek}>
+                                <span className={styles.dateRange}>{dateRangeText}</span>
+                                <button className={styles.navBtn} onClick={handleNext}>
                                     <ChevronRightIcon />
                                 </button>
                                 <button
-                                    className={`${styles.nowBtn} ${isCurrentWeek ? styles.active : ''}`}
+                                    className={`${styles.nowBtn} ${isCurrentPeriod ? styles.active : ''}`}
                                     onClick={handleToday}
-                                    disabled={isCurrentWeek}
+                                    disabled={isCurrentPeriod}
                                 >
                                     Hôm nay
                                 </button>

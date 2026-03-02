@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, Button, message as antMessage } from 'antd';
+import { Modal, Button } from 'antd';
+import { toast } from 'react-toastify';
 import { confirmLesson } from '../../../services/parent-lesson.service';
 
 interface ConfirmLessonModalProps {
@@ -27,10 +28,10 @@ const ConfirmLessonModal: React.FC<ConfirmLessonModalProps> = ({
     try {
       setConfirming(true);
       await confirmLesson(lessonId);
-      antMessage.success('Xác nhận buổi học thành công!');
+      toast.success('Xác nhận buổi học thành công!');
       onSuccess();
     } catch (error: any) {
-      antMessage.error(error.response?.data?.message || 'Không thể xác nhận buổi học.');
+      toast.error(error.response?.data?.message || 'Không thể xác nhận buổi học.');
     } finally {
       setConfirming(false);
     }

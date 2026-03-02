@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, Input, Rate, message as antMessage, Spin } from 'antd';
+import { Modal, Input, Rate, Spin } from 'antd';
+import { toast } from 'react-toastify';
 import { replyFeedback, type ReplyFeedbackRequest } from '../../../services/feedback.service';
 
 const { TextArea } = Input;
@@ -24,7 +25,7 @@ const ReplyFeedbackModal: React.FC<ReplyFeedbackModalProps> = ({
 
     const handleSubmit = async () => {
         if (!replyText.trim()) {
-            antMessage.warning('Vui lòng nhập nội dung phản hồi.');
+            toast.warn('Vui lòng nhập nội dung phản hồi.');
             return;
         }
 
@@ -34,11 +35,11 @@ const ReplyFeedbackModal: React.FC<ReplyFeedbackModalProps> = ({
                 replyComment: replyText.trim(),
             };
             await replyFeedback(feedbackId, request);
-            antMessage.success('Đã gửi phản hồi thành công!');
+            toast.success('Đã gửi phản hồi thành công!');
             setReplyText('');
             onSuccess();
         } catch (error) {
-            antMessage.error('Không thể gửi phản hồi. Vui lòng thử lại.');
+            toast.error('Không thể gửi phản hồi. Vui lòng thử lại.');
         } finally {
             setSubmitting(false);
         }

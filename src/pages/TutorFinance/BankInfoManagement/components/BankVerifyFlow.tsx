@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Steps, Form, Input, Button, Alert, Space, message } from 'antd';
+import { Steps, Form, Input, Button, Alert, Space } from 'antd';
 import { BankOutlined, SafetyCertificateOutlined, CheckCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { requestVerification, confirmVerification } from '../../../../services/bankVerification.service';
 import BankSelectDropdown from './BankSelectDropdown';
 import type { BankVerificationStatus } from '../../../../types/finance.types';
+import { toast } from 'react-toastify';
 
 // Removed Title as it's not used in this component
 
@@ -32,9 +33,9 @@ const BankVerifyFlow: React.FC<Props> = ({ onSuccess, onCancel, status }) => {
                 accountNumber: values.accountNumber
             });
             setCurrentStep(1);
-            message.success('Đã gửi yêu cầu xác thực. Vui lòng kiểm tra tài khoản ngân hàng.');
+            toast.success('Đã gửi yêu cầu xác thực. Vui lòng kiểm tra tài khoản ngân hàng.');
         } catch (error: any) {
-            message.error(error.response?.data?.message || 'Yêu cầu xác thực thất bại');
+            toast.error(error.response?.data?.message || 'Yêu cầu xác thực thất bại');
         } finally {
             setLoading(false);
         }
@@ -46,10 +47,10 @@ const BankVerifyFlow: React.FC<Props> = ({ onSuccess, onCancel, status }) => {
             await confirmVerification({
                 verificationCode: values.code
             });
-            message.success('Xác thực tài khoản ngân hàng thành công!');
+            toast.success('Xác thực tài khoản ngân hàng thành công!');
             onSuccess();
         } catch (error: any) {
-            message.error(error.response?.data?.message || 'Mã xác thực không chính xác hoặc đã hết hạn');
+            toast.error(error.response?.data?.message || 'Mã xác thực không chính xác hoặc đã hết hạn');
         } finally {
             setLoading(false);
         }

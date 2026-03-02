@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, Radio, Button, message as antMessage } from 'antd';
+import { Modal, Radio, Button } from 'antd';
+import { toast } from 'react-toastify';
 import { processNoShowAction, type NoShowActionRequest } from '../../../services/parent-lesson.service';
 
 interface NoShowActionModalProps {
@@ -38,17 +39,17 @@ const NoShowActionModal: React.FC<NoShowActionModalProps> = ({
 
   const handleSubmit = async () => {
     if (!selectedAction) {
-      antMessage.warning('Vui lòng chọn hành động.');
+      toast.warn('Vui lòng chọn hành động.');
       return;
     }
 
     try {
       setSubmitting(true);
       await processNoShowAction(lessonId, { actionType: selectedAction as NoShowActionRequest["actionType"] });
-      antMessage.success('Đã xử lý thành công!');
+      toast.success('Đã xử lý thành công!');
       onSuccess();
     } catch (error: any) {
-      antMessage.error(error.response?.data?.message || 'Không thể xử lý. Vui lòng thử lại.');
+      toast.error(error.response?.data?.message || 'Không thể xử lý. Vui lòng thử lại.');
     } finally {
       setSubmitting(false);
     }

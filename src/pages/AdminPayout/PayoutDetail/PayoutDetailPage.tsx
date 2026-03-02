@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Typography, Breadcrumb, Card, Row, Col, Space,
-    Button, Descriptions, Tag, Divider, message, Skeleton
+    Button, Descriptions, Tag, Divider, Skeleton
 } from 'antd';
 import {
     ArrowLeftOutlined,
@@ -27,6 +27,7 @@ import PayoutTimeline from './components/PayoutTimeline';
 import ApproveWithdrawalModal from './components/ApproveWithdrawalModal';
 import RejectWithdrawalModal from './components/RejectWithdrawalModal';
 import '../../../styles/pages/admin-payout.css';
+import { toast } from 'react-toastify';
 
 const { Title, Text } = Typography;
 
@@ -49,7 +50,7 @@ const PayoutDetailPage: React.FC = () => {
             setDetail(data);
         } catch (error) {
             console.error('Failed to fetch payout detail:', error);
-            message.error('Không thể tải chi tiết yêu cầu');
+            toast.error('Không thể tải chi tiết yêu cầu');
         } finally {
             setLoading(false);
         }
@@ -65,14 +66,14 @@ const PayoutDetailPage: React.FC = () => {
         try {
             const result = await approvePayoutRequest(parseInt(id), note);
             if (result.success) {
-                message.success(result.message || 'Đã phê duyệt và chuyển tiền thành công');
+                toast.success(result.message || 'Đã phê duyệt và chuyển tiền thành công');
                 fetchDetail(); // Refresh data
                 setApproveModalOpen(false);
             } else {
-                message.error(result.message || 'Phê duyệt thất bại');
+                toast.error(result.message || 'Phê duyệt thất bại');
             }
         } catch (error: any) {
-            message.error(error.response?.data?.message || 'Có lỗi xảy ra khi phê duyệt');
+            toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi phê duyệt');
         } finally {
             setActionLoading(false);
         }
@@ -84,14 +85,14 @@ const PayoutDetailPage: React.FC = () => {
         try {
             const result = await rejectPayoutRequest(parseInt(id), reason);
             if (result.success) {
-                message.success('Đã từ chối yêu cầu rút tiền');
+                toast.success('Đã từ chối yêu cầu rút tiền');
                 fetchDetail();
                 setRejectModalOpen(false);
             } else {
-                message.error(result.message || 'Từ chối thất bại');
+                toast.error(result.message || 'Từ chối thất bại');
             }
         } catch (error: any) {
-            message.error(error.response?.data?.message || 'Có lỗi xảy ra khi từ chối');
+            toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi từ chối');
         } finally {
             setActionLoading(false);
         }

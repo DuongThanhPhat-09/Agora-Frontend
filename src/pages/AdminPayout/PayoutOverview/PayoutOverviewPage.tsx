@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Typography, Breadcrumb, Card, Tabs, message, Button } from 'antd';
+import { Typography, Breadcrumb, Card, Tabs, Button } from 'antd';
+import { toast } from 'react-toastify';
 import { getPayoutOverview, getWithdrawalRequests } from '../../../services/adminPayout.service';
 import type { PayoutOverview, WithdrawalRequestItem } from '../../../types/adminPayout.types';
 import { useNavigate } from 'react-router-dom';
@@ -31,7 +32,7 @@ const PayoutOverviewPage: React.FC = () => {
             setTotal(reqResponse.total);
         } catch (error) {
             console.error('Failed to fetch payout data:', error);
-            message.error('Không thể tải dữ liệu thanh toán');
+            toast.error('Không thể tải dữ liệu thanh toán');
         } finally {
             setLoading(false);
         }

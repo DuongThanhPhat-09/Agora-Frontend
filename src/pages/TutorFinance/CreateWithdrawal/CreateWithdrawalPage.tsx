@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Breadcrumb, Steps, Button, message } from 'antd';
+import { Typography, Breadcrumb, Steps, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { WalletOutlined, SafetyCertificateOutlined, CheckCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { getFinanceSummary, getBankInfo, createWithdrawal } from '../../../services/tutorFinance.service';
@@ -8,6 +8,7 @@ import WithdrawForm from './components/WithdrawForm';
 import WithdrawConfirmModal from './components/WithdrawConfirmModal';
 import WithdrawResultCard from './components/WithdrawResultCard';
 import '../../../styles/pages/tutor-finance.css';
+import { toast } from 'react-toastify';
 
 const { Title, Text } = Typography;
 
@@ -35,12 +36,12 @@ const CreateWithdrawalPage: React.FC = () => {
                 setBankInfo(info);
 
                 if (!info || !info.isVerified) {
-                    message.warning('Bạn cần xác thực tài khoản ngân hàng trước khi rút tiền');
+                    toast.warn('Bạn cần xác thực tài khoản ngân hàng trước khi rút tiền');
                     navigate('/tutor-portal/finance/bank-info');
                 }
             } catch (error) {
                 console.error('Failed to prepare withdrawal:', error);
-                message.error('Không thể tải thông tin số dư hoặc ngân hàng');
+                toast.error('Không thể tải thông tin số dư hoặc ngân hàng');
             } finally {
                 setLoading(false);
             }
@@ -63,7 +64,7 @@ const CreateWithdrawalPage: React.FC = () => {
             setCurrentStep(2);
         } catch (error: any) {
             console.error('Withdrawal failed:', error);
-            message.error(error.response?.data?.message || 'Có lỗi xảy ra khi thực hiện rút tiền');
+            toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi thực hiện rút tiền');
             setResultStatus('error');
         } finally {
             setSubmitting(false);

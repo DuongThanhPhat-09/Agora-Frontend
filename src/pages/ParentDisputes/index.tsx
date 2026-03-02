@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 // import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getParentDisputes, type DisputeListDto } from '../../services/parent-lesson.service';
-import { message as antMessage, Spin, Tag } from 'antd';
+import { Spin, Tag } from 'antd';
+import { toast } from 'react-toastify';
 
 const DISPUTE_STATUS: Record<string, { label: string; color: string }> = {
   open: { label: 'Đang mở', color: '#faad14' },
@@ -38,7 +39,7 @@ const ParentDisputes: React.FC = () => {
         setTotalItems(data.totalCount || data.items.length);
       }
     } catch (error) {
-      antMessage.error('Không thể tải danh sách khiếu nại.');
+      toast.error('Không thể tải danh sách khiếu nại.');
     } finally {
       setLoading(false);
     }

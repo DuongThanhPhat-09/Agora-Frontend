@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Spin, Tag, message as antMessage, Input, Empty, Tooltip } from 'antd';
+import { Spin, Tag, Input, Empty, Tooltip } from 'antd';
 import { getActiveSuspensions, getUserWarnings, unsuspendUser } from '../../services/admin.service';
 import { toast } from 'react-toastify';
 
@@ -87,7 +87,7 @@ const AdminWarningsPage: React.FC = () => {
                 setSuspensions([]);
             }
         } catch (error) {
-            antMessage.error('Không thể tải danh sách đình chỉ.');
+            toast.error('Không thể tải danh sách đình chỉ.');
         } finally {
             setSuspensionsLoading(false);
         }
@@ -116,7 +116,7 @@ const AdminWarningsPage: React.FC = () => {
     // Lookup warnings
     const handleLookup = async () => {
         if (!searchUserId.trim()) {
-            antMessage.warning('Vui lòng nhập User ID.');
+            toast.warn('Vui lòng nhập User ID.');
             return;
         }
         try {
@@ -126,9 +126,9 @@ const AdminWarningsPage: React.FC = () => {
             setWarningSummary(data);
         } catch (error: any) {
             if (error?.response?.status === 404) {
-                antMessage.error('Không tìm thấy user.');
+                toast.error('Không tìm thấy user.');
             } else {
-                antMessage.error('Lỗi khi tra cứu cảnh báo.');
+                toast.error('Lỗi khi tra cứu cảnh báo.');
             }
             setWarningSummary(null);
         } finally {

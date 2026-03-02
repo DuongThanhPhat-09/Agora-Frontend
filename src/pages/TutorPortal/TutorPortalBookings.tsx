@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import styles from '../../styles/pages/tutor-portal-bookings.module.css';
 import { getTutorBookings, acceptBooking, declineBooking, type BookingResponseDTO } from '../../services/booking.service';
 import { Calendar, Clock, User, BookOpen, ChevronRight, Check, X, Search } from 'lucide-react';
-import { message as antMessage, Tabs, Modal, Input } from 'antd';
+import { Tabs, Modal, Input } from 'antd';
+import { toast } from 'react-toastify';
 
 const TutorPortalBookings = () => {
     const [bookings, setBookings] = useState<BookingResponseDTO[]>([]);
@@ -35,9 +36,9 @@ const TutorPortalBookings = () => {
         } catch (error: any) {
             console.error('Fetch bookings error:', error);
             if (error.response?.status === 403) {
-                antMessage.error('Bạn không có quyền truy cập (Lỗi 403). Vui lòng kiểm tra lại tài khoản hoặc quyền Tutor.');
+                toast.error('Bạn không có quyền truy cập (Lỗi 403). Vui lòng kiểm tra lại tài khoản hoặc quyền Tutor.');
             } else {
-                antMessage.error('Không thể tải danh sách yêu cầu đặt lịch: ' + (error.message || 'Lỗi không xác định'));
+                toast.error('Không thể tải danh sách yêu cầu đặt lịch: ' + (error.message || 'Lỗi không xác định'));
             }
         } finally {
             setLoading(false);
@@ -51,10 +52,10 @@ const TutorPortalBookings = () => {
     const handleAccept = async (id: number) => {
         try {
             await acceptBooking(id);
-            antMessage.success('Đã chấp nhận yêu cầu!');
+            toast.success('Đã chấp nhận yêu cầu!');
             fetchBookings();
         } catch (error) {
-            antMessage.error('Có lỗi xảy ra khi chấp nhận yêu cầu.');
+            toast.error('Có lỗi xảy ra khi chấp nhận yêu cầu.');
         }
     };
 
@@ -67,12 +68,12 @@ const TutorPortalBookings = () => {
         if (!selectedBookingId) return;
         try {
             await declineBooking(selectedBookingId, declineReason);
-            antMessage.success('Đã từ chối yêu cầu.');
+            toast.success('Đã từ chối yêu cầu.');
             setDeclineModalVisible(false);
             setDeclineReason('');
             fetchBookings();
         } catch (error) {
-            antMessage.error('Có lỗi xảy ra khi từ chối yêu cầu.');
+            toast.error('Có lỗi xảy ra khi từ chối yêu cầu.');
         }
     };
 

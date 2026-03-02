@@ -161,7 +161,7 @@ const TutorPortalClassDetail: React.FC = () => {
             }
         } catch (error: any) {
             console.error('❌ Error fetching class data:', error);
-            antMessage.error('Không thể tải dữ liệu lớp học');
+            toast.error('Không thể tải dữ liệu lớp học');
         } finally {
             setLoading(false);
         }
@@ -217,10 +217,10 @@ const TutorPortalClassDetail: React.FC = () => {
         try {
             setCheckingIn(true);
             await checkInLesson(lessonId);
-            antMessage.success('Check-in thành công!');
+            toast.success('Check-in thành công!');
             await fetchClassData();
         } catch (error: any) {
-            antMessage.error(error.response?.data?.message || 'Không thể check-in. Vui lòng thử lại.');
+            toast.error(error.response?.data?.message || 'Không thể check-in. Vui lòng thử lại.');
         } finally {
             setCheckingIn(false);
         }
@@ -230,10 +230,10 @@ const TutorPortalClassDetail: React.FC = () => {
         try {
             setCheckingOut(true);
             await checkOutLesson(lessonId);
-            antMessage.success('Check-out thành công!');
+            toast.success('Check-out thành công!');
             await fetchClassData();
         } catch (error: any) {
-            antMessage.error(error.response?.data?.message || 'Không thể check-out. Vui lòng thử lại.');
+            toast.error(error.response?.data?.message || 'Không thể check-out. Vui lòng thử lại.');
         } finally {
             setCheckingOut(false);
         }
@@ -243,7 +243,7 @@ const TutorPortalClassDetail: React.FC = () => {
     const handleReportSuccess = async () => {
         setShowReportForm(false);
         setActiveLessonId(null);
-        antMessage.success('Báo cáo đã được nộp thành công!');
+        toast.success('Báo cáo đã được nộp thành công!');
         await fetchClassData();
     };
 

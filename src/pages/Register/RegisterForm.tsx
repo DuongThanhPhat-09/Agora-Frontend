@@ -82,6 +82,13 @@ const RegisterForm: React.FC = () => {
             return;
         }
 
+        // Validate phone number
+        const phoneDigits = formData.phone.replace(/\D/g, "");
+        if (phoneDigits.length < 9 || phoneDigits.length > 11) {
+            toast.warning("Số điện thoại không hợp lệ!");
+            return;
+        }
+
         try {
             setIsSubmitting(true);
 

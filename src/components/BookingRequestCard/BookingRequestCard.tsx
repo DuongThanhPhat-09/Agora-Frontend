@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Calendar, Clock, User, BookOpen, Check, X, AlertCircle } from 'lucide-react';
 import styles from './BookingRequestCard.module.css';
 import { acceptBooking, declineBooking, getBookingById } from '../../services/booking.service';
-import { message as antMessage } from 'antd';
+import { toast } from 'react-toastify';
 
 interface BookingRequestData {
     bookingId: number;
@@ -100,9 +100,9 @@ const BookingRequestCard = ({ message, isTutor = false, onProceedToPayment }: Bo
             setLoading(true);
             await acceptBooking(data.bookingId);
             setStatus('accepted');
-            antMessage.success('Đã chấp nhận yêu cầu đặt lịch!');
+            toast.success('Đã chấp nhận yêu cầu đặt lịch!');
         } catch (error) {
-            antMessage.error('Không thể chấp nhận yêu cầu. Vui lòng thử lại.');
+            toast.error('Không thể chấp nhận yêu cầu. Vui lòng thử lại.');
         } finally {
             setLoading(false);
         }
@@ -113,9 +113,9 @@ const BookingRequestCard = ({ message, isTutor = false, onProceedToPayment }: Bo
             setLoading(true);
             await declineBooking(data.bookingId, 'Tutor declined via chat');
             setStatus('cancelled');
-            antMessage.info('Đã từ chối yêu cầu đặt lịch.');
+            toast.info('Đã từ chối yêu cầu đặt lịch.');
         } catch (error) {
-            antMessage.error('Có lỗi xảy ra khi từ chối yêu cầu.');
+            toast.error('Có lỗi xảy ra khi từ chối yêu cầu.');
         } finally {
             setLoading(false);
         }

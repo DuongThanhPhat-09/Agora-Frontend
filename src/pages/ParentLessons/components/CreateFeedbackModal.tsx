@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, Rate, Input, message as antMessage, Spin } from 'antd';
+import { Modal, Rate, Input, Spin } from 'antd';
+import { toast } from 'react-toastify';
 import { createFeedback, type CreateFeedbackRequest } from '../../../services/feedback.service';
 
 const { TextArea } = Input;
@@ -28,7 +29,7 @@ const CreateFeedbackModal: React.FC<CreateFeedbackModalProps> = ({
 
     const handleSubmit = async () => {
         if (rating === 0) {
-            antMessage.warning('Vui lòng chọn số sao đánh giá.');
+            toast.warn('Vui lòng chọn số sao đánh giá.');
             return;
         }
 
@@ -46,11 +47,11 @@ const CreateFeedbackModal: React.FC<CreateFeedbackModalProps> = ({
                 courseDuration: feedbackType === 'early_termination' && courseDuration.trim() ? courseDuration.trim() : undefined,
             };
             await createFeedback(request);
-            antMessage.success('Đã gửi đánh giá thành công!');
+            toast.success('Đã gửi đánh giá thành công!');
             handleReset();
             onSuccess();
         } catch (error) {
-            antMessage.error('Không thể gửi đánh giá. Vui lòng thử lại.');
+            toast.error('Không thể gửi đánh giá. Vui lòng thử lại.');
         } finally {
             setSubmitting(false);
         }

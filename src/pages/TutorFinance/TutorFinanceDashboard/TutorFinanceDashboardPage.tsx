@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Table, Badge, message } from 'antd';
+import { Button, Table, Badge } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import {
     PlusOutlined,
@@ -13,6 +13,7 @@ import type { FinanceSummary, TutorTransaction } from '../../../types/finance.ty
 import FinanceOverviewCards from './components/FinanceOverviewCards';
 import EarningsChart from './components/EarningsChart';
 import '../../../styles/pages/tutor-finance.css';
+import { toast } from 'react-toastify';
 
 const TutorFinanceDashboardPage: React.FC = () => {
     const navigate = useNavigate();
@@ -32,7 +33,7 @@ const TutorFinanceDashboardPage: React.FC = () => {
                 setRecentTransactions(transRes.transactions);
             } catch (error) {
                 console.error('Failed to fetch finance dashboard data:', error);
-                message.error('Không thể tải dữ liệu tổng quan tài chính');
+                toast.error('Không thể tải dữ liệu tổng quan tài chính');
             } finally {
                 setLoading(false);
             }

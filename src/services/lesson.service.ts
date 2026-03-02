@@ -112,6 +112,7 @@ export interface TutorDashboardStats {
   averageRating: number;
   totalReviews: number;
   nextLessons: UpcomingLesson[];
+  profileStatus: string | null;
 }
 
 export interface CalendarLesson {

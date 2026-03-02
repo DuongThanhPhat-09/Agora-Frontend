@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Table, Card, Breadcrumb, Typography, Button, message } from 'antd';
+import { Table, Card, Breadcrumb, Typography, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { EyeOutlined, SyncOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { getWithdrawals } from '../../../services/tutorFinance.service';
@@ -7,6 +7,7 @@ import type { WithdrawalItem } from '../../../types/finance.types';
 import { formatCurrency, formatDateTime } from '../../../utils/formatters';
 import WithdrawalStatusBadge from './components/WithdrawalStatusBadge';
 import '../../../styles/pages/tutor-finance.css';
+import { toast } from 'react-toastify';
 
 const { Title, Text } = Typography;
 
@@ -26,7 +27,7 @@ const WithdrawalListPage: React.FC = () => {
             setTotal(response.total);
         } catch (error) {
             console.error('Failed to fetch withdrawals:', error);
-            message.error('Không thể tải danh sách yêu cầu rút tiền');
+            toast.error('Không thể tải danh sách yêu cầu rút tiền');
         } finally {
             setLoading(false);
         }

@@ -1,27 +1,21 @@
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
+import { Popconfirm } from 'antd';
 import styles from './styles.module.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getUnreadCount } from '../../services/notification.service';
 import { signalRService } from '../../services/signalr.service';
 import NotificationDropdown from '../../components/NotificationDropdown/NotificationDropdown';
 import { getUserInfoFromToken, clearUserFromStorage } from '../../services/auth.service';
-import { getStudents } from '../../services/student.service';
 import { getNextLesson } from '../../services/lesson.service';
 import type { LessonResponse } from '../../services/lesson.service';
+import { StudentProvider, useStudentContext } from '../../contexts/StudentContext';
+import { toast } from 'react-toastify';
 
 // Logo Icon (Agora symbol) - same as TutorPortalLayout
 const LogoIcon = () => (
   <svg width="28" height="28" viewBox="0 0 28 28" fill="currentColor">
     <path d="M14 2L2 8V20L14 26L26 20V8L14 2ZM14 4.5L22.5 9V19L14 23.5L5.5 19V9L14 4.5Z" />
     <path d="M14 8L8 11V17L14 20L20 17V11L14 8Z" />
-  </svg>
-);
-
-// Search Icon
-const SearchIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <circle cx="6" cy="6" r="4.5" />
-    <path d="M9.5 9.5L13 13" strokeLinecap="round" />
   </svg>
 );
 
@@ -116,6 +110,15 @@ const CloseIcon = () => (
   </svg>
 );
 
+// Logout Icon
+const LogoutIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M6 16H3C2.44772 16 2 15.5523 2 15V3C2 2.44772 2.44772 2 3 2H6" strokeLinecap="round" />
+    <path d="M12 12L16 9L12 6" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M16 9H7" strokeLinecap="round" />
+  </svg>
+);
+
 // Navigation items matching Figma design
 // Lessons Icon
 const LessonsIcon = () => (
@@ -165,24 +168,28 @@ interface ParentLayoutProps {
   children?: React.ReactNode;
 }
 
-const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
+const ParentLayoutInner: React.FC<ParentLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [notificationCount, setNotificationCount] = useState(0);
   const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
+  const [showStudentDropdown, setShowStudentDropdown] = useState(false);
+  const studentDropdownRef = useRef<HTMLDivElement>(null);
   const [parentData, setParentData] = useState({
     name: 'User',
     initials: 'U',
     role: 'PARENT',
   });
   const [studentData, setStudentData] = useState({
-    name: 'Student',
-    grade: 'Grade 8 • Active',
-    initials: 'S',
+    name: '',
+    grade: '',
+    initials: '',
   });
   const [nextLesson, setNextLesson] = useState<LessonResponse | null>(null);
+
+  // Student context from StudentProvider
+  const { students, selectedStudent, selectStudent } = useStudentContext();
 
   const isStudentContext = location.pathname.startsWith('/student');
   const navItems = isStudentContext ? studentNavItems : parentNavItems;
@@ -220,9 +227,9 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
         role: user.role || 'PARENT',
       });
 
-      // Only load students/lessons for Parent role (Student role gets 403 on /parent/students)
+      // Only load next lesson for Parent role (Student role gets 403 on /parent/students)
       if (user.role?.toLowerCase() !== 'student') {
-        loadStudentsAndLessons();
+        loadNextLesson();
       } else {
         // For Student role, set student data directly from token
         setStudentData({
@@ -236,36 +243,27 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
     }
   }, []);
 
-  // Load students and next lesson from API
-  const loadStudentsAndLessons = async () => {
+  const loadNextLesson = async () => {
     try {
-      // Load students
-      const studentsResponse = await getStudents();
-      if (studentsResponse.content && studentsResponse.content.length > 0) {
-        const firstStudent = studentsResponse.content[0];
-        const studentName = firstStudent.fullName || 'Student';
-        const studentGrade = firstStudent.gradeLevel || 'Grade 8';
-        const studentInitials = getInitials(studentName);
-
-        setStudentData({
-          name: studentName,
-          grade: `${studentGrade} • Active`,
-          initials: studentInitials,
-        });
-
-        console.log('✅ ParentLayout - Student data loaded:', { studentName, studentGrade });
-      }
-
-      // Load next lesson
       const lesson = await getNextLesson();
       if (lesson) {
         setNextLesson(lesson);
-        console.log('✅ ParentLayout - Next lesson loaded:', lesson);
       }
     } catch (error) {
-      console.error('❌ ParentLayout - Error loading students/lessons:', error);
+      console.error('❌ ParentLayout - Error loading next lesson:', error);
     }
   };
+
+  // Close student dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (studentDropdownRef.current && !studentDropdownRef.current.contains(event.target as Node)) {
+        setShowStudentDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Close sidebar on route change
   useEffect(() => {
@@ -331,7 +329,43 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
         />
       )}
 
-      {/* Main Content (Left) */}
+      {/* Sidebar (Left) — must be before main for CSS sibling selector */}
+      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
+        {/* Logo Section */}
+        <div className={styles.sidebarLogo}>
+          <Link to="/" className={styles.logoLink}>
+            <LogoIcon />
+            <span className={styles.logoText}>AGORA</span>
+          </Link>
+          {/* Mobile Close Button */}
+          <button
+            className={styles.sidebarClose}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <CloseIcon />
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className={styles.sidebarNav}>
+          {navItems.map((item) => (
+            <div
+              key={item.path}
+              className={`${styles.navItem} ${isActive(item.path) ? styles.navItemActive : ''}`}
+              title={item.label}
+              onClick={() => {
+                navigate(item.path);
+                setSidebarOpen(false);
+              }}
+            >
+              <item.icon />
+              <span className={styles.navText}>{item.label}</span>
+            </div>
+          ))}
+        </nav>
+      </aside>
+
+      {/* Main Content (Right) */}
       <main className={styles.main}>
         {/* Header */}
         <header className={styles.header}>
@@ -347,50 +381,72 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
             {/* Left: Student Selector + Next Lesson */}
             <div className={styles.headerLeft}>
               {/* Student Selector */}
-              <button className={styles.studentSelector}>
-                <div className={styles.studentAvatar}>
-                  <span>{studentData.initials}</span>
-                </div>
-                <div className={styles.studentInfo}>
-                  <span className={styles.studentName}>{studentData.name}</span>
-                  <span className={styles.studentGrade}>{studentData.grade}</span>
-                </div>
-                <div className={styles.dropdownArrow}>
-                  <ChevronDown />
-                </div>
-              </button>
+              <div className={styles.studentSelectorWrap} ref={studentDropdownRef}>
+                <button
+                  className={styles.studentSelector}
+                  onClick={() => setShowStudentDropdown(!showStudentDropdown)}
+                >
+                  <div className={styles.studentAvatar}>
+                    <span>{selectedStudent ? getInitials(selectedStudent.fullName) : '?'}</span>
+                  </div>
+                  <div className={styles.studentInfo}>
+                    <span className={styles.studentName}>{selectedStudent?.fullName || 'Chọn học sinh'}</span>
+                    <span className={styles.studentGrade}>{selectedStudent?.gradeLevel || ''}{selectedStudent?.school ? ` • ${selectedStudent.school}` : ''}</span>
+                  </div>
+                  <div className={`${styles.dropdownArrow} ${showStudentDropdown ? styles.dropdownArrowOpen : ''}`}>
+                    <ChevronDown />
+                  </div>
+                </button>
+
+                {/* Student Dropdown */}
+                {showStudentDropdown && students.length > 0 && (
+                  <div className={styles.studentDropdown}>
+                    {students.map(student => (
+                      <div
+                        key={student.studentId}
+                        className={`${styles.studentDropdownItem} ${selectedStudent?.studentId === student.studentId ? styles.studentDropdownItemActive : ''}`}
+                        onClick={() => {
+                          selectStudent(student);
+                          setShowStudentDropdown(false);
+                        }}
+                      >
+                        <div className={styles.studentDropdownAvatar}>
+                          <span>{getInitials(student.fullName)}</span>
+                        </div>
+                        <div className={styles.studentDropdownInfo}>
+                          <span className={styles.studentDropdownName}>{student.fullName}</span>
+                          <span className={styles.studentDropdownGrade}>
+                            {student.gradeLevel}{student.school ? ` • ${student.school}` : ''}
+                          </span>
+                        </div>
+                        {selectedStudent?.studentId === student.studentId && (
+                          <span className={styles.studentDropdownCheck}>✓</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* Next Lesson Indicator */}
               {nextLesson && (
                 <div className={styles.nextLesson}>
                   <ClockIcon />
                   <span>
-                    Next: {new Date(nextLesson.scheduledStart).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric'
-                    })} {new Date(nextLesson.scheduledStart).toLocaleTimeString('en-US', {
-                      hour: 'numeric',
-                      minute: '2-digit',
-                      hour12: true
+                    Tiếp: {new Date(nextLesson.scheduledStart).toLocaleDateString('vi-VN', {
+                      day: '2-digit',
+                      month: '2-digit'
+                    })} {new Date(nextLesson.scheduledStart).toLocaleTimeString('vi-VN', {
+                      hour: '2-digit',
+                      minute: '2-digit'
                     })}
                   </span>
-                  <span className={styles.nextLessonDot}>•</span>
-                  <span>{(nextLesson as LessonResponse & { subjectName?: string; tutorName?: string }).subjectName || 'Lesson'} with {(nextLesson as LessonResponse & { subjectName?: string; tutorName?: string }).tutorName || 'Tutor'}</span>
                 </div>
               )}
             </div>
 
-            {/* Center: Search Bar */}
-            <div className={styles.headerSearch}>
-              <SearchIcon />
-              <input
-                type="text"
-                className={styles.searchInput}
-                placeholder="Search classes, students, notes..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+            {/* Spacer */}
+            <div style={{ flex: 1 }} />
 
             {/* Right: Notifications + User */}
             <div className={styles.headerRight}>
@@ -418,11 +474,35 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
 
               {/* User Info */}
               <div className={styles.headerUser}>
-                <span className={styles.headerUserName}>{parentData.name}</span>
+                <div className={styles.headerUserInfo}>
+                  <span className={styles.headerUserName}>{parentData.name}</span>
+                  <span className={styles.headerUserRole}>{parentData.role}</span>
+                </div>
                 <div className={styles.headerAvatar}>
                   <span>{parentData.initials}</span>
                 </div>
               </div>
+
+              {/* Logout Button */}
+              <Popconfirm
+                title="Đăng xuất"
+                description="Bạn có chắc muốn đăng xuất không?"
+                onConfirm={() => {
+                  clearUserFromStorage();
+                  toast.success('Đăng xuất thành công!');
+                  navigate('/login');
+                }}
+                okText="Đăng xuất"
+                cancelText="Hủy"
+                okButtonProps={{ danger: true }}
+              >
+                <button
+                  className={styles.logoutBtn}
+                  title="Đăng xuất"
+                >
+                  <LogoutIcon />
+                </button>
+              </Popconfirm>
             </div>
           </div>
         </header>
@@ -433,76 +513,15 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
         </div>
       </main>
 
-      {/* Sidebar (Right) */}
-      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
-        {/* Logo Section */}
-        <div className={styles.sidebarLogo}>
-          <Link to="/" className={styles.logoLink}>
-            <LogoIcon />
-            <span className={styles.logoText}>AGORA</span>
-          </Link>
-          {/* Mobile Close Button */}
-          <button
-            className={styles.sidebarClose}
-            onClick={() => setSidebarOpen(false)}
-          >
-            <CloseIcon />
-          </button>
-        </div>
 
-        {/* Navigation */}
-        <nav className={styles.sidebarNav}>
-          {navItems.map((item) => (
-            <div
-              key={item.path}
-              className={`${styles.navItem} ${isActive(item.path) ? styles.navItemActive : ''}`}
-              onClick={() => {
-                navigate(item.path);
-                setSidebarOpen(false);
-              }}
-            >
-              <item.icon />
-              <span className={styles.navText}>{item.label}</span>
-            </div>
-          ))}
-        </nav>
-
-        {/* User Profile Card at Bottom */}
-        <div className={styles.sidebarUser}>
-          <div
-            className={styles.userCard}
-            onClick={() => { navigate(accountPath); setSidebarOpen(false); }}
-            style={{ cursor: 'pointer' }}
-            title="Xem tài khoản"
-          >
-            <div className={styles.userAvatar}>
-              <span>{parentData.initials}</span>
-            </div>
-            <div className={styles.userInfo}>
-              <span className={styles.userName}>{parentData.name}</span>
-              <span className={styles.userRole}>{parentData.role}</span>
-            </div>
-          </div>
-        </div>
-        {/* Logout Button */}
-        <button
-          className={styles.logoutBtn}
-          onClick={() => {
-            clearUserFromStorage();
-            navigate('/login');
-          }}
-          title="Đăng xuất"
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M6 15H3C2.44772 15 2 14.5523 2 14V4C2 3.44772 2.44772 3 3 3H6" strokeLinecap="round" />
-            <path d="M12 12L16 9L12 6" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M16 9H7" strokeLinecap="round" />
-          </svg>
-          <span>Đăng xuất</span>
-        </button>
-      </aside>
     </div>
   );
 };
+
+const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => (
+  <StudentProvider>
+    <ParentLayoutInner>{children}</ParentLayoutInner>
+  </StudentProvider>
+);
 
 export default ParentLayout;

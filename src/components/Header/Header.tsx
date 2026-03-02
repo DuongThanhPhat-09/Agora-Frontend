@@ -10,6 +10,7 @@ const Header = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userDisplayName, setUserDisplayName] = useState<string>("User");
 
   // Determine portal path based on role
@@ -51,6 +52,7 @@ const Header = () => {
   const confirmLogout = () => {
     clearUserFromStorage();
     setIsLoggedIn(false);
+    setIsLoggedIn(false);
     setIsMenuOpen(false);
     navigate("/login");
   };
@@ -84,42 +86,15 @@ const Header = () => {
         {/* Auth Buttons - Xử lý điều kiện hiển thị */}
         <div className="auth-buttons">
           {isLoggedIn && !isAuthPage ? (
-            // --- GIAO DIỆN TỐI GIẢN KHI ĐÃ ĐĂNG NHẬP ---
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              {/* Nút Portal tương ứng theo Role - Icon version */}
-              <Link
-                to={portalPath}
-                className="btn-portal-icon"
-                style={{
-                  color: "var(--color-navy)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "8px",
-                  borderRadius: "50%",
-                  cursor: "pointer",
-                  transition: "background 0.2s ease",
-                }}
-                title="Go to Portal"
-              >
-                <LayoutDashboard size={20} />
-              </Link>
-
-              {/* Nút Đăng xuất - Icon version */}
-              <Popconfirm
-                title="Đăng xuất"
-                description="Bạn có chắc chắn muốn đăng xuất?"
-                onConfirm={confirmLogout}
-                okText="Đồng ý"
-                cancelText="Hủy"
-                placement="bottomRight"
-              >
-                <button
-                  className="btn-logout-icon"
+            { isLoggedIn && !isAuthPage ? (
+              // --- GIAO DIỆN TỐI GIẢN KHI ĐÃ ĐĂNG NHẬP ---
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                {/* Nút Portal tương ứng theo Role - Icon version */}
+                <Link
+                  to={portalPath}
+                  className="btn-portal-icon"
                   style={{
-                    background: "none",
-                    border: "none",
-                    color: "#ef4444",
+                    color: "var(--color-navy)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -128,22 +103,50 @@ const Header = () => {
                     cursor: "pointer",
                     transition: "background 0.2s ease",
                   }}
-                  title="Đăng xuất"
+                  title="Go to Portal"
                 >
-                  <LogOut size={20} />
-                </button>
-              </Popconfirm>
-            </div>
-          ) : (
-            <>
-              <Link to="/login" className="btn-login">
-                LOG IN
-              </Link>
-              <Link to="/register" className="btn-signup">
-                SIGN UP
-              </Link>
-            </>
-          )}
+                  <LayoutDashboard size={20} />
+                </Link>
+
+                {/* Nút Đăng xuất - Icon version */}
+                <Popconfirm
+                  title="Đăng xuất"
+                  description="Bạn có chắc chắn muốn đăng xuất?"
+                  onConfirm={confirmLogout}
+                  okText="Đồng ý"
+                  cancelText="Hủy"
+                  placement="bottomRight"
+                >
+                  <button
+                    className="btn-logout-icon"
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "#ef4444",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "8px",
+                      borderRadius: "50%",
+                      cursor: "pointer",
+                      transition: "background 0.2s ease",
+                    }}
+                    title="Đăng xuất"
+                  >
+                    <LogOut size={20} />
+                  </button>
+                </Popconfirm>
+              </div>
+            ) : (
+              <>
+                <Link to="/login" className="btn-login">
+                  LOG IN
+                </Link>
+                <Link to="/register" className="btn-signup">
+                  SIGN UP
+                </Link>
+              </>
+            )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -195,91 +198,92 @@ const Header = () => {
           {/* Mobile Auth Section */}
           <div className="mobile-auth">
             {isLoggedIn && !isAuthPage ? (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: "1rem",
-                  width: "100%",
-                }}
-              >
+              { isLoggedIn && !isAuthPage ? (
                 <div
                   style={{
                     display: "flex",
+                    flexDirection: "column",
                     alignItems: "center",
-                    gap: "0.5rem",
+                    gap: "1rem",
+                    width: "100%",
                   }}
                 >
                   <div
                     style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      border: '2px solid #d4b483',
-                      background: '#631b1b',
-                      color: '#fff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '14px',
-                      fontWeight: 600,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
                     }}
                   >
-                    {userDisplayName.charAt(0).toUpperCase()}
+                    <div
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        border: '2px solid #d4b483',
+                        background: '#631b1b',
+                        color: '#fff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {userDisplayName.charAt(0).toUpperCase()}
+                    </div>
+                    <span style={{ fontWeight: 600 }}>
+                      {userDisplayName}
+                    </span>
                   </div>
-                  <span style={{ fontWeight: 600 }}>
-                    {userDisplayName}
-                  </span>
-                </div>
 
-                <Link
-                  to={portalPath}
-                  className="btn-signup"
-                  style={{ width: "100%", textAlign: "center" }}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  TRANG CÁ NHÂN
-                </Link>
-
-                <Popconfirm
-                  title="Đăng xuất"
-                  description="Bạn có muốn đăng xuất không?"
-                  onConfirm={confirmLogout}
-                  okText="Có"
-                  cancelText="Không"
-                >
-                  <button
-                    className="btn-login"
-                    style={{
-                      width: "100%",
-                      border: "1px solid #ef4444",
-                      color: "#ef4444",
-                      cursor: "pointer",
-                    }}
+                  <Link
+                    to={portalPath}
+                    className="btn-signup"
+                    style={{ width: "100%", textAlign: "center" }}
+                    onClick={() => setIsMenuOpen(false)}
                   >
-                    LOG OUT
-                  </button>
-                </Popconfirm>
-              </div>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="btn-login"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  LOG IN
-                </Link>
-                <Link
-                  to="/register"
-                  className="btn-signup"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  SIGN UP
-                </Link>
-              </>
-            )}
+                    TRANG CÁ NHÂN
+                  </Link>
+
+                  <Popconfirm
+                    title="Đăng xuất"
+                    description="Bạn có muốn đăng xuất không?"
+                    onConfirm={confirmLogout}
+                    okText="Có"
+                    cancelText="Không"
+                  >
+                    <button
+                      className="btn-login"
+                      style={{
+                        width: "100%",
+                        border: "1px solid #ef4444",
+                        color: "#ef4444",
+                        cursor: "pointer",
+                      }}
+                    >
+                      LOG OUT
+                    </button>
+                  </Popconfirm>
+                </div>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="btn-login"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    LOG IN
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="btn-signup"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    SIGN UP
+                  </Link>
+                </>
+              )}
           </div>
         </div>
       )}
