@@ -11,7 +11,8 @@ import { AddAvailabilityModal, EditAvailabilityModal } from './components';
 import { getAvailability, deleteAvailability, DAY_OF_WEEK_MAP } from '../../services/availability.service';
 import type { AvailabilitySlot } from '../../services/availability.service';
 import { getUserIdFromToken } from '../../services/auth.service';
-import { getTutorLessons, type LessonResponse } from '../../services/lesson.service';
+import { getTutorCalendar } from '../../services/lesson.service';
+import { CalendarView, type CalendarDayDto } from '../../components/CalendarView/CalendarView';
 
 // Mở rộng dayjs với các plugin
 dayjs.extend(weekday);
@@ -112,7 +113,7 @@ const TutorPortalSchedule: React.FC = () => {
     const [deletingSlotId, setDeletingSlotId] = useState<number | null>(null);
 
     // FROM MILESTONE_3: State cho lessons tab
-    const [lessons, setLessons] = useState<LessonResponse[]>([]);
+    const [calendarData, setCalendarData] = useState<CalendarDayDto[]>([]);
     const [isLoadingLessons, setIsLoadingLessons] = useState(false);
 
     // Lấy các ngày trong tuần sử dụng dayjs
@@ -170,15 +171,16 @@ const TutorPortalSchedule: React.FC = () => {
         }
     }, []);
 
-    // FROM MILESTONE_3: Fetch lessons từ API
-    const fetchLessons = useCallback(async () => {
+    // FETCH CALENDAR FOR LESSONS TAB
+    const fetchCalendar = useCallback(async () => {
         setIsLoadingLessons(true);
         try {
-            const response = await getTutorLessons(1, 100);
-            const lessonsData = Array.isArray(response.content)
-                ? response.content
-                : response.content?.items || [];
-            setLessons(lessonsData);
+            const startDate = dayjs().subtract(7, 'day').format('YYYY-MM-DD');
+            const endDate = dayjs().add(30, 'day').format('YYYY-MM-DD');
+            const response = await getTutorCalendar(startDate, endDate);
+
+            // Map specific fields if necessary or cast directly (same interface fields mostly)
+            setCalendarData((response.content || []) as unknown as CalendarDayDto[]);
         } catch (error) {
             toast.error('Không thể tải lịch dạy. Vui lòng thử lại.');
         } finally {
@@ -191,12 +193,12 @@ const TutorPortalSchedule: React.FC = () => {
         fetchAvailability();
     }, [fetchAvailability]);
 
-    // FROM MILESTONE_3: Fetch lessons khi chuyển sang tab lessons
+    // Fetch calendar when switching to lessons tab
     useEffect(() => {
         if (activeTab === 'lessons') {
-            fetchLessons();
+            fetchCalendar();
         }
-    }, [activeTab, fetchLessons]);
+    }, [activeTab, fetchCalendar]);
 
     // Xử lý xóa lịch rảnh với Popconfirm
     const handleDeleteAvailability = async (slot: LocalAvailabilitySlot) => {
@@ -556,99 +558,17 @@ const TutorPortalSchedule: React.FC = () => {
                             </div>
                         </div>
 
-                        {isLoadingLessons ? (
-                            <div className={styles.loadingOverlay}>
-                                <Spin size="large" />
-                            </div>
-                        ) : lessons.length === 0 ? (
-                            <div className={styles.emptyState}>
-                                <div className={styles.emptyIcon}>📚</div>
-                                <h3 className={styles.emptyTitle}>Chưa có lịch dạy</h3>
-                                <p className={styles.emptyDescription}>
-                                    Các buổi học đã được đặt sẽ hiển thị tại đây
-                                </p>
-                            </div>
-                        ) : (
-                            /* Calendar Grid */
-                            <div className={styles.calendarGrid}>
-                                {/* Header row */}
-                                <div className={styles.calendarHeader}>
-                                    <div className={styles.timeColumn} />
-                                    {weekDates.map((date, index) => (
-                                        <div
-                                            key={index}
-                                            className={`${styles.dayColumn} ${isToday(date) ? styles.today : ''}`}
-                                        >
-                                            <span className={styles.dayName}>{DAYS_OF_WEEK[index]}</span>
-                                            <span className={styles.dayNumber}>{date.format('DD')}</span>
-                                            <span className={styles.monthName}>{date.format('MMM')}</span>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {/* Time rows */}
-                                <div className={styles.calendarBody}>
-                                    {TIME_SLOTS.map((hour, index) => (
-                                        <div
-                                            key={hour}
-                                            className={styles.timeRow}
-                                            style={{
-                                                zIndex: TIME_SLOTS.length - index,
-                                                position: 'relative'
-                                            }}
-                                        >
-                                            <div className={styles.timeLabel}>
-                                                {hour.toString().padStart(2, '0')}:00
-                                            </div>
-                                            {weekDates.map((date, dayIndex) => {
-                                                // Find lessons for this time slot
-                                                const lessonsInSlot = lessons.filter(lesson => {
-                                                    const lessonDate = dayjs(lesson.scheduledStart);
-                                                    const lessonHour = lessonDate.hour();
-
-                                                    // Check if lesson is on the same DATE (not just same day of week) and same hour
-                                                    return lessonDate.isSame(date, 'day') && lessonHour === hour;
-                                                });
-
-                                                return (
-                                                    <div
-                                                        key={dayIndex}
-                                                        className={`${styles.timeCell} ${isToday(date) ? styles.todayColumn : ''}`}
-                                                    >
-                                                        {lessonsInSlot.map(lesson => {
-                                                            const start = dayjs(lesson.scheduledStart);
-                                                            const end = dayjs(lesson.scheduledEnd);
-                                                            const duration = end.diff(start, 'hour', true);
-                                                            const heightPx = duration * 70 - 6;
-
-                                                            return (
-                                                                <div
-                                                                    key={lesson.lessonId}
-                                                                    className={styles.lessonBlock}
-                                                                    style={{ height: `${heightPx}px` }}
-                                                                >
-                                                                    <div className={styles.lessonContent}>
-                                                                        <span className={styles.lessonLabel}>
-                                                                            {lesson.subject?.subjectName || 'N/A'}
-                                                                        </span>
-                                                                        <span className={styles.lessonTime}>
-                                                                            {start.format('HH:mm')} - {end.format('HH:mm')}
-                                                                        </span>
-                                                                        <span className={styles.lessonStudent}>
-                                                                            {lesson.student?.fullName || 'Unknown'}
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                        {/* Tab Lịch dạy: Sử dụng CalendarView component */}
+                        <div className={styles.lessonsTabContent}>
+                            <CalendarView
+                                data={calendarData}
+                                isLoading={isLoadingLessons}
+                                onLessonClick={(lessonId) => {
+                                    // Mặc định tutor detail page là `/tutor/classes/lessons/:id`
+                                    console.log('Navigate to lesson', lessonId);
+                                }}
+                            />
+                        </div>
                     </div>
                 )}
             </div>

@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import '../../styles/layouts/admin-layout.css';
+import { clearUserFromStorage } from '../../services/auth.service';
 
 const AdminSidebar = () => {
     const navigate = useNavigate();
@@ -43,14 +44,15 @@ const AdminSidebar = () => {
                         <span className="admin-nav-badge">4</span>
                     </a>
 
-                    <a
+                    {/* MVP Phase 1: Tạm ẩn tính năng quản lý khiếu nại */}
+                    {/* <a
                         className={`admin-nav-item ${location.pathname.startsWith('/admin/disputes') ? 'admin-nav-item-active' : ''}`}
                         onClick={() => navigate('/admin/disputes')}
                     >
                         <span className="material-symbols-outlined admin-nav-icon">gavel</span>
                         <span className="admin-nav-text">Khiếu nại</span>
                         <span className="admin-nav-badge-alert">!</span>
-                    </a>
+                    </a> */}
 
                     <a
                         className={`admin-nav-item ${location.pathname.startsWith('/admin/warnings') ? 'admin-nav-item-active' : ''}`}
@@ -88,7 +90,7 @@ const AdminSidebar = () => {
 
             {/* Sidebar Footer */}
             <div className="admin-sidebar-footer">
-                <button className="admin-signout-btn">
+                <button className="admin-signout-btn" onClick={() => { clearUserFromStorage(); navigate('/login'); }}>
                     <span className="material-symbols-outlined">logout</span>
                     Đăng xuất
                 </button>

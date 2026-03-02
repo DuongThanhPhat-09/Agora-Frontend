@@ -4,7 +4,7 @@ import '../styles/layouts/tutor-portal-layout.css';
 import { getUnreadCount } from '../services/notification.service';
 import { signalRService } from '../services/signalr.service';
 import NotificationDropdown from '../components/NotificationDropdown/NotificationDropdown';
-import { getUserInfoFromToken } from '../services/auth.service';
+import { getUserInfoFromToken, clearUserFromStorage } from '../services/auth.service';
 
 // Logo Icon (Agora symbol)
 const LogoIcon = () => (
@@ -60,12 +60,13 @@ const ClassIcon = () => (
     </svg>
 );
 
-const SessionsIcon = () => (
-    <svg className="tutor-portal-nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2">
-        <circle cx="9" cy="9" r="7" />
-        <path d="M9 5V9L12 11" strokeLinecap="round" />
-    </svg>
-);
+// SessionsIcon removed — Sessions nav item no longer used
+// const SessionsIcon = () => (
+//     <svg className="tutor-portal-nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2">
+//         <circle cx="9" cy="9" r="7" />
+//         <path d="M9 5V9L12 11" strokeLinecap="round" />
+//     </svg>
+// );
 
 const FinanceIcon = () => (
     <svg className="tutor-portal-nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
@@ -74,12 +75,13 @@ const FinanceIcon = () => (
     </svg>
 );
 
-const SettingsIcon = () => (
-    <svg className="tutor-portal-nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <circle cx="9" cy="9" r="2.5" />
-        <path d="M9 1V3M9 15V17M1 9H3M15 9H17M3.05 3.05L4.46 4.46M13.54 13.54L14.95 14.95M3.05 14.95L4.46 13.54M13.54 4.46L14.95 3.05" strokeLinecap="round" />
-    </svg>
-);
+// SettingsIcon removed — Settings nav item no longer used
+// const SettingsIcon = () => (
+//     <svg className="tutor-portal-nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+//         <circle cx="9" cy="9" r="2.5" />
+//         <path d="M9 1V3M9 15V17M1 9H3M15 9H17M3.05 3.05L4.46 4.46M13.54 13.54L14.95 14.95M3.05 14.95L4.46 13.54M13.54 4.46L14.95 3.05" strokeLinecap="round" />
+//     </svg>
+// );
 
 const MessagesIcon = () => (
     <svg className="tutor-portal-nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -117,9 +119,7 @@ const navItems = [
     { path: '/tutor-portal/bookings', label: 'Booking Requests', icon: BookingIcon },
     { path: '/tutor-portal/schedule', label: 'Teaching Schedule', icon: ScheduleIcon },
     { path: '/tutor-portal/classes', label: 'Class Management', icon: ClassIcon },
-    { path: '/tutor-portal/sessions', label: 'Sessions', icon: SessionsIcon },
     { path: '/tutor-portal/finance', label: 'Finance', icon: FinanceIcon },
-    { path: '/tutor-portal/settings', label: 'Settings', icon: SettingsIcon },
 ];
 
 const TutorPortalLayout: React.FC = () => {
@@ -277,6 +277,22 @@ const TutorPortalLayout: React.FC = () => {
                         </div>
                     </div>
                 </div>
+                {/* Logout Button */}
+                <button
+                    className="tutor-portal-logout-btn"
+                    onClick={() => {
+                        clearUserFromStorage();
+                        navigate('/login');
+                    }}
+                    title="Đăng xuất"
+                >
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M6 15H3C2.44772 15 2 14.5523 2 14V4C2 3.44772 2.44772 3 3 3H6" strokeLinecap="round" />
+                        <path d="M12 12L16 9L12 6" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M16 9H7" strokeLinecap="round" />
+                    </svg>
+                    <span>Đăng xuất</span>
+                </button>
             </aside>
 
             {/* Main Content */}

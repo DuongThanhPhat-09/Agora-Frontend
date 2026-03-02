@@ -1,19 +1,16 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./Header.css";
-// Import Supabase và kiểu dữ liệu User
-import { supabase } from "../../lib/supabase";
-import { type User } from "@supabase/supabase-js";
-import { clearUserFromStorage, getUserInfoFromToken } from "../../services/auth.service";
+import { clearUserFromStorage, getCurrentUser, getUserInfoFromToken } from "../../services/auth.service";
 import { Popconfirm } from "antd";
 import { LogOut, LayoutDashboard } from "lucide-react";
 
 const Header = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userDisplayName, setUserDisplayName] = useState<string>("User");
-  const [userAvatar, setUserAvatar] = useState<string>("");
 
   // Determine portal path based on role
   const getPortalPath = () => {
@@ -31,68 +28,31 @@ const Header = () => {
 
   const portalPath = getPortalPath();
 
-  // Ẩn user info trên trang đăng ký/đăng nhập (vì có thể có OAuth session chưa complete)
+  // Ẩn user info trên trang đăng ký/đăng nhập
   const isAuthPage = location.pathname === "/register" || location.pathname === "/login";
 
-  // Helper function to generate avatar from name
-  const generateAvatarFromName = (name: string) => {
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=631b1b&color=fff&size=128`;
-  };
-
   useEffect(() => {
-    // 1. Kiểm tra session hiện tại (Cho trường hợp F5 lại trang)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
+    // Check if user is logged in from localStorage
+    const user = getCurrentUser();
+    if (user && user.accessToken) {
+      setIsLoggedIn(true);
 
-      if (currentUser) {
-        // Lấy thông tin từ JWT token
-        const userData = getUserInfoFromToken();
+      const userInfo = getUserInfoFromToken();
+      const displayName = userInfo?.fullname ||
+        (userInfo?.firstName && userInfo?.lastName ? `${userInfo.firstName} ${userInfo.lastName}` : null) ||
+        userInfo?.email?.split('@')[0] ||
+        "User";
+      setUserDisplayName(displayName);
+    } else {
+      setIsLoggedIn(false);
+    }
+  }, [location.pathname]); // Re-check on navigation
 
-        // Ưu tiên: JWT token > user_metadata > email
-        const displayName = userData?.fullname ||
-          (userData?.firstName && userData?.lastName ? `${userData.firstName} ${userData.lastName}` : null) ||
-          currentUser.user_metadata?.full_name ||
-          currentUser.email?.split('@')[0] ||
-          "User";
-        setUserDisplayName(displayName);
-
-        // Avatar: Generate từ tên
-        const avatarUrl = currentUser.user_metadata?.avatar_url || generateAvatarFromName(displayName);
-        setUserAvatar(avatarUrl);
-      }
-    });
-
-    // 2. Lắng nghe sự kiện thay đổi auth (Login/Logout)
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-
-      if (currentUser) {
-        const userData = getUserInfoFromToken();
-        const displayName = userData?.fullname ||
-          (userData?.firstName && userData?.lastName ? `${userData.firstName} ${userData.lastName}` : null) ||
-          currentUser.user_metadata?.full_name ||
-          currentUser.email?.split('@')[0] ||
-          "User";
-        setUserDisplayName(displayName);
-
-        // Avatar: Generate từ tên
-        const avatarUrl = currentUser.user_metadata?.avatar_url || generateAvatarFromName(displayName);
-        setUserAvatar(avatarUrl);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const confirmLogout = async () => {
-    await supabase.auth.signOut();
+  const confirmLogout = () => {
     clearUserFromStorage();
-    setUser(null);
+    setIsLoggedIn(false);
     setIsMenuOpen(false);
+    navigate("/login");
   };
   return (
     <header className="header">
@@ -123,7 +83,7 @@ const Header = () => {
 
         {/* Auth Buttons - Xử lý điều kiện hiển thị */}
         <div className="auth-buttons">
-          {user && !isAuthPage ? (
+          {isLoggedIn && !isAuthPage ? (
             // --- GIAO DIỆN TỐI GIẢN KHI ĐÃ ĐĂNG NHẬP ---
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
               {/* Nút Portal tương ứng theo Role - Icon version */}
@@ -234,7 +194,7 @@ const Header = () => {
 
           {/* Mobile Auth Section */}
           <div className="mobile-auth">
-            {user && !isAuthPage ? (
+            {isLoggedIn && !isAuthPage ? (
               <div
                 style={{
                   display: "flex",
@@ -251,16 +211,23 @@ const Header = () => {
                     gap: "0.5rem",
                   }}
                 >
-                  <img
-                    src={userAvatar}
-                    alt="Avatar"
+                  <div
                     style={{
-                      width: "32px",
-                      height: "32px",
-                      borderRadius: "50%",
-                      border: "2px solid #d4b483",
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      border: '2px solid #d4b483',
+                      background: '#631b1b',
+                      color: '#fff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '14px',
+                      fontWeight: 600,
                     }}
-                  />
+                  >
+                    {userDisplayName.charAt(0).toUpperCase()}
+                  </div>
                   <span style={{ fontWeight: 600 }}>
                     {userDisplayName}
                   </span>
