@@ -16,13 +16,6 @@ const LogoIcon = () => (
     </svg>
 );
 
-// Search Icon
-const SearchIcon = () => (
-    <svg className="tutor-portal-search-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <circle cx="6" cy="6" r="4.5" />
-        <path d="M9.5 9.5L13 13" strokeLinecap="round" />
-    </svg>
-);
 
 // Notification Bell Icon
 const NotificationIcon = () => (
