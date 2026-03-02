@@ -139,7 +139,6 @@ const TutorPortalLayout: React.FC = () => {
     const [notificationCount, setNotificationCount] = useState(0);
     const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
     const [userData, setUserData] = useState({
         name: 'User',
         initials: 'U',
@@ -276,19 +275,6 @@ const TutorPortalLayout: React.FC = () => {
                         </div>
                     ))}
                 </nav>
-
-                {/* User Profile Card at Bottom */}
-                <div className="tutor-portal-sidebar-user">
-                    <div className="tutor-portal-user-card">
-                        <div className="tutor-portal-user-avatar">
-                            <span className="tutor-portal-user-initials">{userData.initials}</span>
-                        </div>
-                        <div className="tutor-portal-user-info">
-                            <span className="tutor-portal-user-name">{userData.name}</span>
-                            <span className="tutor-portal-user-role">{userData.role}</span>
-                        </div>
-                    </div>
-                </div>
             </aside>
 
             {/* Main Content */}
@@ -304,17 +290,8 @@ const TutorPortalLayout: React.FC = () => {
                             <MenuIcon />
                         </button>
 
-                        {/* Search Bar */}
-                        <div className="tutor-portal-header-search">
-                            <SearchIcon />
-                            <input
-                                type="text"
-                                className="tutor-portal-search-input"
-                                placeholder="Tìm lớp học, học sinh..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
+                        {/* Spacer */}
+                        <div style={{ flex: 1 }} />
 
                         {/* Right: User Info + Notifications + Avatar */}
                         <div className="tutor-portal-header-right">
