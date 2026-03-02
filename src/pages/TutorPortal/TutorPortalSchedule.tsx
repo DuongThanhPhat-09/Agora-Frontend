@@ -19,14 +19,6 @@ dayjs.extend(isoWeek);
 dayjs.locale('vi');
 
 // Biểu tượng
-const CalendarSyncIcon = () => (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-        <path d="M6 1.5V3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-        <path d="M1.5 7.5H3.75C4.5 7.5 4.5 7.5 4.5 6.75V6.75C4.5 6 4.5 6 5.25 6H6.75C7.5 6 7.5 6 7.5 6.75V6.75C7.5 7.5 7.5 7.5 8.25 7.5H10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-        <rect x="1.5" y="2" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-    </svg>
-);
-
 const PlusIcon = () => (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
         <path d="M7 3V11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

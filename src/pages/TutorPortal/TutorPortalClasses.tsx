@@ -24,21 +24,7 @@ const SortIcon = () => (
     </svg>
 );
 
-const MoreIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-        <circle cx="7" cy="2.5" r="1.5" />
-        <circle cx="7" cy="7" r="1.5" />
-        <circle cx="7" cy="11.5" r="1.5" />
-    </svg>
-);
 
-const EditIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M10 1L13 4L5 12H2V9L10 1Z" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
-
-// ChevronRightIcon - commented out (only used in commented-out sidebar)
 // const ChevronRightIcon = () => (
 //     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
 //         <path d="M5 3L9 7L5 11" strokeLinecap="round" strokeLinejoin="round" />
@@ -235,7 +221,7 @@ const TutorPortalClasses: React.FC = () => {
                 {/* Header */}
                 <div className={styles.header}>
                     <h1 className={styles.title}>Quản lý lớp học</h1>
-                    <button className={styles.createBtn}>
+                    <button className={styles.createBtn} onClick={() => navigate('/tutor-portal/schedule')}>
                         <PlusIcon />
                         <span>Tạo lớp học</span>
                     </button>
@@ -305,7 +291,11 @@ const TutorPortalClasses: React.FC = () => {
                                 </thead>
                                 <tbody>
                                     {paginatedClasses.map((classData) => (
-                                        <tr key={classData.bookingId}>
+                                        <tr
+                                            key={classData.bookingId}
+                                            className={styles.clickableRow}
+                                            onClick={() => handleOpenClass(classData.bookingId)}
+                                        >
                                             <td>
                                                 <div className={styles.classInfo}>
                                                     <div className={styles.className}>{classData.subjectName}</div>
@@ -356,15 +346,9 @@ const TutorPortalClasses: React.FC = () => {
                                                 <div className={styles.actions}>
                                                     <button
                                                         className={styles.openBtn}
-                                                        onClick={() => handleOpenClass(classData.bookingId)}
+                                                        onClick={(e) => { e.stopPropagation(); handleOpenClass(classData.bookingId); }}
                                                     >
                                                         Mở
-                                                    </button>
-                                                    <button className={styles.iconBtn}>
-                                                        <EditIcon />
-                                                    </button>
-                                                    <button className={styles.iconBtn}>
-                                                        <MoreIcon />
                                                     </button>
                                                 </div>
                                             </td>
