@@ -18,13 +18,6 @@ const PlusIcon = () => (
     </svg>
 );
 
-const SortIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M2 4H12M4 7H10M6 10H8" strokeLinecap="round" />
-    </svg>
-);
-
-
 // const ChevronRightIcon = () => (
 //     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
 //         <path d="M5 3L9 7L5 11" strokeLinecap="round" strokeLinejoin="round" />
@@ -77,6 +70,7 @@ const TutorPortalClasses: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<string>('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [sortBy, setSortBy] = useState<string>('nextLesson');
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 10;
 
@@ -84,10 +78,9 @@ const TutorPortalClasses: React.FC = () => {
         fetchLessons();
     }, [statusFilter]);
 
-    // Reset page khi filter hoặc search thay đổi
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchTerm, statusFilter]);
+    }, [searchTerm, statusFilter, sortBy]);
 
     const fetchLessons = async () => {
         try {
@@ -200,9 +193,25 @@ const TutorPortalClasses: React.FC = () => {
         return studentMatch || subjectMatch;
     });
 
+    // Sort classes
+    const sortedClasses = [...filteredClasses].sort((a, b) => {
+        switch (sortBy) {
+            case 'subjectName':
+                return a.subjectName.localeCompare(b.subjectName);
+            case 'completedLessons':
+                return (b.completedLessons / b.totalLessons) - (a.completedLessons / a.totalLessons);
+            case 'nextLesson':
+            default: {
+                const aTime = a.nextLesson ? new Date(a.nextLesson.scheduledStart).getTime() : Infinity;
+                const bTime = b.nextLesson ? new Date(b.nextLesson.scheduledStart).getTime() : Infinity;
+                return aTime - bTime;
+            }
+        }
+    });
+
     // Pagination
-    const totalPages = Math.max(1, Math.ceil(filteredClasses.length / ITEMS_PER_PAGE));
-    const paginatedClasses = filteredClasses.slice(
+    const totalPages = Math.max(1, Math.ceil(sortedClasses.length / ITEMS_PER_PAGE));
+    const paginatedClasses = sortedClasses.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
@@ -212,7 +221,8 @@ const TutorPortalClasses: React.FC = () => {
         lessonsCount: lessons.length,
         classesCount: classes.length,
         filteredClassesCount: filteredClasses.length,
-        searchTerm
+        searchTerm,
+        sortBy
     });
 
     return (
@@ -252,10 +262,15 @@ const TutorPortalClasses: React.FC = () => {
                         <option value="completed">Hoàn thành</option>
                         <option value="cancelled">Đã hủy</option>
                     </select>
-                    <button className={styles.sortBtn}>
-                        <SortIcon />
-                        <span>Sắp xếp: Buổi học tiếp theo</span>
-                    </button>
+                    <select
+                        className={styles.sortBtn}
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                    >
+                        <option value="nextLesson">Sắp xếp: Buổi học tiếp theo</option>
+                        <option value="subjectName">Sắp xếp: Tên môn học</option>
+                        <option value="completedLessons">Sắp xếp: Tiến độ</option>
+                    </select>
                 </div>
 
                 {/* Table */}
