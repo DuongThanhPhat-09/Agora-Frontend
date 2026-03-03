@@ -12,6 +12,32 @@ const api = axios.create({
 });
 setupAuthInterceptor(api);
 
+export interface WalletBalanceResponse {
+  balance: number;
+  frozenBalance: number;
+  totalBalance: number;
+  lastUpdated?: string;
+}
+
+/**
+ * Get wallet balance
+ */
+export const getWalletBalance = async (): Promise<ApiResponse<WalletBalanceResponse>> => {
+  try {
+    const response = await api.get('/wallet/balance', {
+      headers: getAuthHeaders(),
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ Error fetching wallet balance:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+    throw error;
+  };
+};
+
 export interface TransactionHistory {
   transactionId: number;
   amount: number;

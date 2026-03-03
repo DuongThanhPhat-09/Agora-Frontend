@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+// src/pages/Register/RegisterForm.tsx — Dùng SimpleAuth API (không qua Supabase)
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import InputGroup from "../../components/InputGroup";
-import {
-    simpleRegister,
-    saveUserToStorage,
-    checkEmailExists,
-} from "../../services/auth.service";
+import axios from "axios";
+import { saveUserToStorage } from "../../services/auth.service";
+
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5166') + '/api';
 
 const RegisterForm: React.FC = () => {
     const navigate = useNavigate();
@@ -23,7 +23,6 @@ const RegisterForm: React.FC = () => {
         terms: false,
     });
 
-    // --- UI STATES ---
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // ========================================================================
@@ -37,13 +36,12 @@ const RegisterForm: React.FC = () => {
         }));
     };
 
-    // ========================================================================
-    // SUBMIT: SIMPLE REGISTER (Không qua Supabase)
-    // ========================================================================
+
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!formData.fullname || !formData.email || !formData.password || !formData.phone || !formData.confirmPassword) {
+        if (!formData.fullname || !formData.email || !formData.password || !formData.confirmPassword) {
             toast.warning("Vui lòng điền đầy đủ thông tin!");
             return;
         }
@@ -70,51 +68,36 @@ const RegisterForm: React.FC = () => {
         try {
             setIsSubmitting(true);
 
-            // Check if email already exists
-            const existingUser = await checkEmailExists(formData.email);
-            if (existingUser && existingUser.content) {
-                toast.error("Email đã tồn tại. Vui lòng đăng nhập.");
-                setIsSubmitting(false);
-                setTimeout(() => navigate("/login", { state: { email: formData.email } }), 2000);
-                return;
-            }
-
-            // Call simple register API directly (no Supabase)
-            const response = await simpleRegister({
+            // Call SimpleAuth register API directly (no Supabase, no OTP)
+            const response = await axios.post(`${API_BASE_URL}/SimpleAuth/register`, {
                 email: formData.email,
-                phone: formData.phone,
+                phone: formData.phone || undefined,
                 password: formData.password,
                 fullName: formData.fullname,
                 role: formData.role,
             });
 
-            console.log("✅ Register response:", response);
+            const data = response.data;
+            const token = data.content?.token;
 
-            // Extract token from response
-            const token = response.content?.token || response.token;
             if (!token) {
-                throw new Error("Không nhận được token từ server.");
+                throw new Error("Không nhận được token từ server");
             }
 
-            // Get user profile to save to storage
-            const userProfile = await checkEmailExists(formData.email);
-            const fullUserData = {
-                ...userProfile?.content,
-                accessToken: token,
-            };
-
-            saveUserToStorage(fullUserData);
+            // Save user data with accessToken
+            saveUserToStorage({ accessToken: token });
             window.dispatchEvent(new Event("auth-change"));
-            toast.success(`Chào mừng ${formData.fullname} đến với Agora!`);
+            toast.success(`Chào mừng ${formData.fullname} đến với TUTORA!`);
             setTimeout(() => navigate("/"), 1500);
-
         } catch (error: any) {
-            console.error("Register error:", error);
-            const errorMsg = error.response?.data?.message
-                || error.response?.data?.content
-                || error.message
-                || "Đăng ký thất bại. Vui lòng thử lại.";
-            toast.error(errorMsg);
+            console.error("Register Error:", error);
+
+            const errorMessage =
+                error.response?.data?.message ||
+                error.response?.data?.content ||
+                error.message ||
+                "Đăng ký thất bại";
+            toast.error(errorMessage);
         } finally {
             setIsSubmitting(false);
         }
@@ -128,26 +111,26 @@ const RegisterForm: React.FC = () => {
             {/* --- MAIN FORM --- */}
             <div className="register-form__header animate-fade-in-up">
                 <h2 className="register-form__title">Bắt đầu hành trình</h2>
-                <p className="register-form__subtitle">Tạo tài khoản Agora LMS.</p>
+                <p className="register-form__subtitle">Tạo tài khoản TUTORA LMS.</p>
             </div>
 
             <div className="register-form__body">
                 <form onSubmit={handleSubmit} className="register-form__form">
                     <div className="space-y-3">
                         <div className="animate-fade-in-up delay-75">
-                            <InputGroup id="fullname" name="fullname" type="text" label="Họ và Tên" placeholder="Nguyễn Văn A" icon="person" value={formData.fullname} onChange={handleChange} />
+                            <InputGroup id="fullname" name="fullname" type="text" label="Họ và Tên" placeholder="Nguyễn Văn A" icon="person" value={formData.fullname} onChange={handleChange} disabled={isSubmitting} />
                         </div>
                         <div className="animate-fade-in-up delay-100">
-                            <InputGroup id="email" name="email" type="email" label="Email" placeholder="student@example.com" icon="mail" value={formData.email} onChange={handleChange} />
+                            <InputGroup id="email" name="email" type="email" label="Email" placeholder="student@example.com" icon="mail" value={formData.email} onChange={handleChange} disabled={isSubmitting} />
                         </div>
                         <div className="animate-fade-in-up delay-150">
-                            <InputGroup id="phone" name="phone" type="tel" label="Số Điện Thoại" placeholder="090..." icon="phone" value={formData.phone} onChange={handleChange} />
+                            <InputGroup id="phone" name="phone" type="tel" label="Số Điện Thoại (tùy chọn)" placeholder="090..." icon="phone" value={formData.phone} onChange={handleChange} disabled={isSubmitting} />
                         </div>
                         <div className="animate-fade-in-up delay-200">
-                            <InputGroup id="password" name="password" type="password" label="Mật Khẩu" placeholder="••••••••" icon="lock" value={formData.password} onChange={handleChange} showPasswordToggle={true} />
+                            <InputGroup id="password" name="password" type="password" label="Mật Khẩu" placeholder="••••••••" icon="lock" value={formData.password} onChange={handleChange} showPasswordToggle={true} disabled={isSubmitting} />
                         </div>
                         <div className="animate-fade-in-up delay-200">
-                            <InputGroup id="confirmPassword" name="confirmPassword" type="password" label="Nhập lại Mật Khẩu" placeholder="••••••••" icon="lock" value={formData.confirmPassword} onChange={handleChange} showPasswordToggle={true} />
+                            <InputGroup id="confirmPassword" name="confirmPassword" type="password" label="Nhập lại Mật Khẩu" placeholder="••••••••" icon="lock" value={formData.confirmPassword} onChange={handleChange} showPasswordToggle={true} disabled={isSubmitting} />
                         </div>
                     </div>
 
@@ -158,21 +141,44 @@ const RegisterForm: React.FC = () => {
                         </label>
                         <div className="flex gap-3">
                             <label className="flex-1 cursor-pointer">
-                                <input type="radio" name="role" value="Student" checked={formData.role === "Student"} onChange={handleChange} className="peer hidden" />
+                                <input
+                                    type="radio"
+                                    name="role"
+                                    value="Student"
+                                    checked={formData.role === "Student"}
+                                    onChange={handleChange}
+                                    className="peer hidden"
+                                />
                                 <div className="border-2 border-gray-300 rounded-lg p-3 text-center transition-all peer-checked:border-blue-600 peer-checked:bg-blue-50 hover:border-blue-400">
                                     <div className="text-2xl mb-1">🎓</div>
                                     <div className="text-sm font-medium text-gray-700 peer-checked:text-blue-600">Học sinh</div>
                                 </div>
                             </label>
+
                             <label className="flex-1 cursor-pointer">
-                                <input type="radio" name="role" value="Parent" checked={formData.role === "Parent"} onChange={handleChange} className="peer hidden" />
+                                <input
+                                    type="radio"
+                                    name="role"
+                                    value="Parent"
+                                    checked={formData.role === "Parent"}
+                                    onChange={handleChange}
+                                    className="peer hidden"
+                                />
                                 <div className="border-2 border-gray-300 rounded-lg p-3 text-center transition-all peer-checked:border-green-600 peer-checked:bg-green-50 hover:border-green-400">
                                     <div className="text-2xl mb-1">👨‍👩‍👧</div>
                                     <div className="text-sm font-medium text-gray-700 peer-checked:text-green-600">Phụ huynh</div>
                                 </div>
                             </label>
+
                             <label className="flex-1 cursor-pointer">
-                                <input type="radio" name="role" value="Tutor" checked={formData.role === "Tutor"} onChange={handleChange} className="peer hidden" />
+                                <input
+                                    type="radio"
+                                    name="role"
+                                    value="Tutor"
+                                    checked={formData.role === "Tutor"}
+                                    onChange={handleChange}
+                                    className="peer hidden"
+                                />
                                 <div className="border-2 border-gray-300 rounded-lg p-3 text-center transition-all peer-checked:border-purple-600 peer-checked:bg-purple-50 hover:border-purple-400">
                                     <div className="text-2xl mb-1">👨‍🏫</div>
                                     <div className="text-sm font-medium text-gray-700 peer-checked:text-purple-600">Gia sư</div>
@@ -182,7 +188,7 @@ const RegisterForm: React.FC = () => {
                     </div>
                     <div className="register-form__terms animate-fade-in-up delay-300 mt-3">
                         <div className="register-form__checkbox-wrapper">
-                            <input id="terms" name="terms" type="checkbox" checked={formData.terms} onChange={handleChange} className="register-form__checkbox" />
+                            <input id="terms" name="terms" type="checkbox" checked={formData.terms} onChange={handleChange} className="register-form__checkbox" disabled={isSubmitting} />
                         </div>
                         <label htmlFor="terms" className="register-form__terms-label text-xs">
                             Đồng ý với <a href="#" className="register-form__terms-link">Điều khoản</a> & <a href="#" className="register-form__terms-link">Chính sách</a>.

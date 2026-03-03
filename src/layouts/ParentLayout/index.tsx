@@ -1,29 +1,21 @@
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { Popconfirm } from 'antd';
 import styles from './styles.module.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getUnreadCount } from '../../services/notification.service';
 import { signalRService } from '../../services/signalr.service';
 import NotificationDropdown from '../../components/NotificationDropdown/NotificationDropdown';
 import { getUserInfoFromToken, clearUserFromStorage } from '../../services/auth.service';
-import { toast } from 'react-toastify';
-import { getStudents } from '../../services/student.service';
 import { getNextLesson } from '../../services/lesson.service';
 import type { LessonResponse } from '../../services/lesson.service';
+import { StudentProvider, useStudentContext } from '../../contexts/StudentContext';
+import { toast } from 'react-toastify';
 
-// Logo Icon (Agora symbol) - same as TutorPortalLayout
+// Logo Icon (TUTORA symbol) - same as TutorPortalLayout
 const LogoIcon = () => (
   <svg width="28" height="28" viewBox="0 0 28 28" fill="currentColor">
     <path d="M14 2L2 8V20L14 26L26 20V8L14 2ZM14 4.5L22.5 9V19L14 23.5L5.5 19V9L14 4.5Z" />
     <path d="M14 8L8 11V17L14 20L20 17V11L14 8Z" />
-  </svg>
-);
-
-// Search Icon
-const SearchIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <circle cx="6" cy="6" r="4.5" />
-    <path d="M9.5 9.5L13 13" strokeLinecap="round" />
   </svg>
 );
 
@@ -73,12 +65,13 @@ const MessagesIcon = () => (
   </svg>
 );
 
-const FinanceIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
-    <path d="M2 4C2 2.89543 2.89543 2 4 2H14C15.1046 2 16 2.89543 16 4V14C16 15.1046 15.1046 16 14 16H4C2.89543 16 2 15.1046 2 14V4Z" />
-    <path d="M9 5V13M6 8H12M6 10H12" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-  </svg>
-);
+// MVP Phase 12: FinanceIcon hidden (Wallet removed from sidebar)
+// const FinanceIcon = () => (
+//   <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
+//     <path d="M2 4C2 2.89543 2.89543 2 4 2H14C15.1046 2 16 2.89543 16 4V14C16 15.1046 15.1046 16 14 16H4C2.89543 16 2 15.1046 2 14V4Z" />
+//     <path d="M9 5V13M6 8H12M6 10H12" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+//   </svg>
+// );
 
 const BookingIcon = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -88,10 +81,18 @@ const BookingIcon = () => (
   </svg>
 );
 
-const SettingsIcon = () => (
+// SettingsIcon removed — replaced Settings nav with logout button
+// const SettingsIcon = () => (
+//   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+//     <circle cx="9" cy="9" r="2.5" />
+//     <path d="M9 1V3M9 15V17M1 9H3M15 9H17M3.05 3.05L4.46 4.46M13.54 13.54L14.95 14.95M3.05 14.95L4.46 13.54M13.54 4.46L14.95 3.05" strokeLinecap="round" />
+//   </svg>
+// );
+
+const AccountIcon = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <circle cx="9" cy="9" r="2.5" />
-    <path d="M9 1V3M9 15V17M1 9H3M15 9H17M3.05 3.05L4.46 4.46M13.54 13.54L14.95 14.95M3.05 14.95L4.46 13.54M13.54 4.46L14.95 3.05" strokeLinecap="round" />
+    <circle cx="9" cy="7" r="3.5" />
+    <path d="M2 16c0-3.314 3.134-6 7-6s7 2.686 7 6" strokeLinecap="round" />
   </svg>
 );
 
@@ -128,45 +129,71 @@ const LessonsIcon = () => (
 );
 
 // Dispute Icon
-const DisputeIcon = () => (
+// MVP Phase 1: Ẩn Dispute
+// const DisputeIcon = () => (
+//   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+//     <path d="M9 6V9M9 12H9.01M3 14V4C3 2.89543 3.89543 2 5 2H13C14.1046 2 15 2.89543 15 4V14C15 15.1046 14.1046 16 13 16H5C3.89543 16 3 15.1046 3 14Z" strokeLinecap="round" strokeLinejoin="round" />
+//   </svg>
+// );
+
+const CalendarIcon = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M9 6V9M9 12H9.01M3 14V4C3 2.89543 3.89543 2 5 2H13C14.1046 2 15 2.89543 15 4V14C15 15.1046 14.1046 16 13 16H5C3.89543 16 3 15.1046 3 14Z" strokeLinecap="round" strokeLinejoin="round" />
+    <rect x="2" y="3" width="14" height="13" rx="2" />
+    <path d="M12 1v4" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M6 1v4" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M2 7h14" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
-const navItems = [
-  { path: '/parent/dashboard', label: 'Tổng quan', icon: DashboardIcon },
-  { path: '/parent/student', label: 'Con em', icon: ChildrenIcon },
+const parentNavItems = [
+  { path: '/parent/dashboard', label: 'Dashboard', icon: DashboardIcon },
+  { path: '/parent/student', label: 'Children', icon: ChildrenIcon },
   { path: '/parent/lessons', label: 'Buổi học', icon: LessonsIcon },
-  { path: '/parent/messages', label: 'Tin nhắn', icon: MessagesIcon },
-  { path: '/parent/wallet', label: 'Tài chính', icon: FinanceIcon },
-  { path: '/parent/booking', label: 'Đặt lịch', icon: BookingIcon },
-  { path: '/parent/disputes', label: 'Khiếu nại', icon: DisputeIcon },
-  { path: '/parent/settings', label: 'Cài đặt', icon: SettingsIcon },
+  { path: '/parent/calendar', label: 'Thời khóa biểu', icon: CalendarIcon },
+  { path: '/parent/messages', label: 'Messages', icon: MessagesIcon },
+  { path: '/parent/booking', label: 'Booking', icon: BookingIcon },
+  // { path: '/parent/disputes', label: 'Khiếu nại', icon: DisputeIcon },
+];
+
+const studentNavItems = [
+  { path: '/student/dashboard', label: 'Dashboard', icon: DashboardIcon },
+  { path: '/student/booking', label: 'Booking', icon: BookingIcon },
+  { path: '/student/lessons', label: 'Buổi học', icon: LessonsIcon },
+  { path: '/student/calendar', label: 'Thời khóa biểu', icon: CalendarIcon },
+  { path: '/student/messages', label: 'Messages', icon: MessagesIcon },
+  { path: '/student/account', label: 'Tài khoản', icon: AccountIcon },
 ];
 
 interface ParentLayoutProps {
   children?: React.ReactNode;
 }
 
-const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
+const ParentLayoutInner: React.FC<ParentLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [notificationCount, setNotificationCount] = useState(0);
   const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
+  const [showStudentDropdown, setShowStudentDropdown] = useState(false);
+  const studentDropdownRef = useRef<HTMLDivElement>(null);
   const [parentData, setParentData] = useState({
     name: 'User',
     initials: 'U',
     role: 'PARENT',
   });
-  const [studentData, setStudentData] = useState({
-    name: 'Student',
-    grade: 'Grade 8 • Active',
-    initials: 'S',
+  const [_studentData, setStudentData] = useState({
+    name: '',
+    grade: '',
+    initials: '',
   });
   const [nextLesson, setNextLesson] = useState<LessonResponse | null>(null);
+
+  // Student context from StudentProvider
+  const { students, selectedStudent, selectStudent } = useStudentContext();
+
+  const isStudentContext = location.pathname.startsWith('/student');
+  const navItems = isStudentContext ? studentNavItems : parentNavItems;
+  // accountPath removed — not currently used
 
   const isActive = (path: string) => location.pathname.startsWith(path);
 
@@ -200,43 +227,43 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
         role: user.role || 'PARENT',
       });
 
-      // Load students data
-      loadStudentsAndLessons();
+      // Only load next lesson for Parent role (Student role gets 403 on /parent/students)
+      if (user.role?.toLowerCase() !== 'student') {
+        loadNextLesson();
+      } else {
+        // For Student role, set student data directly from token
+        setStudentData({
+          name: displayName,
+          grade: 'Grade 8 • Active',
+          initials: initials,
+        });
+      }
     } else {
       console.warn('⚠️ ParentLayout - No user data found in localStorage');
     }
   }, []);
 
-  // Load students and next lesson from API
-  const loadStudentsAndLessons = async () => {
+  const loadNextLesson = async () => {
     try {
-      // Load students
-      const studentsResponse = await getStudents();
-      if (studentsResponse.content && studentsResponse.content.length > 0) {
-        const firstStudent = studentsResponse.content[0];
-        const studentName = firstStudent.fullName || 'Student';
-        const studentGrade = firstStudent.gradeLevel || 'Grade 8';
-        const studentInitials = getInitials(studentName);
-
-        setStudentData({
-          name: studentName,
-          grade: `${studentGrade} • Active`,
-          initials: studentInitials,
-        });
-
-        console.log('✅ ParentLayout - Student data loaded:', { studentName, studentGrade });
-      }
-
-      // Load next lesson
       const lesson = await getNextLesson();
       if (lesson) {
         setNextLesson(lesson);
-        console.log('✅ ParentLayout - Next lesson loaded:', lesson);
       }
     } catch (error) {
-      console.error('❌ ParentLayout - Error loading students/lessons:', error);
+      console.error('❌ ParentLayout - Error loading next lesson:', error);
     }
   };
+
+  // Close student dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (studentDropdownRef.current && !studentDropdownRef.current.contains(event.target as Node)) {
+        setShowStudentDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Close sidebar on route change
   useEffect(() => {
@@ -308,7 +335,7 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
         <div className={styles.sidebarLogo}>
           <Link to="/" className={styles.logoLink}>
             <LogoIcon />
-            <span className={styles.logoText}>AGORA</span>
+            <span className={styles.logoText}>TUTORA</span>
           </Link>
           {/* Mobile Close Button */}
           <button
@@ -336,19 +363,6 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
             </div>
           ))}
         </nav>
-
-        {/* User Profile Card at Bottom */}
-        <div className={styles.sidebarUser}>
-          <div className={styles.userCard}>
-            <div className={styles.userAvatar}>
-              <span>{parentData.initials}</span>
-            </div>
-            <div className={styles.userInfo}>
-              <span className={styles.userName}>{parentData.name}</span>
-              <span className={styles.userRole}>{parentData.role}</span>
-            </div>
-          </div>
-        </div>
       </aside>
 
       {/* Main Content (Right) */}
@@ -367,50 +381,72 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
             {/* Left: Student Selector + Next Lesson */}
             <div className={styles.headerLeft}>
               {/* Student Selector */}
-              <button className={styles.studentSelector}>
-                <div className={styles.studentAvatar}>
-                  <span>{studentData.initials}</span>
-                </div>
-                <div className={styles.studentInfo}>
-                  <span className={styles.studentName}>{studentData.name}</span>
-                  <span className={styles.studentGrade}>{studentData.grade}</span>
-                </div>
-                <div className={styles.dropdownArrow}>
-                  <ChevronDown />
-                </div>
-              </button>
+              <div className={styles.studentSelectorWrap} ref={studentDropdownRef}>
+                <button
+                  className={styles.studentSelector}
+                  onClick={() => setShowStudentDropdown(!showStudentDropdown)}
+                >
+                  <div className={styles.studentAvatar}>
+                    <span>{selectedStudent ? getInitials(selectedStudent.fullName) : '?'}</span>
+                  </div>
+                  <div className={styles.studentInfo}>
+                    <span className={styles.studentName}>{selectedStudent?.fullName || 'Chọn học sinh'}</span>
+                    <span className={styles.studentGrade}>{selectedStudent?.gradeLevel || ''}{selectedStudent?.school ? ` • ${selectedStudent.school}` : ''}</span>
+                  </div>
+                  <div className={`${styles.dropdownArrow} ${showStudentDropdown ? styles.dropdownArrowOpen : ''}`}>
+                    <ChevronDown />
+                  </div>
+                </button>
+
+                {/* Student Dropdown */}
+                {showStudentDropdown && students.length > 0 && (
+                  <div className={styles.studentDropdown}>
+                    {students.map(student => (
+                      <div
+                        key={student.studentId}
+                        className={`${styles.studentDropdownItem} ${selectedStudent?.studentId === student.studentId ? styles.studentDropdownItemActive : ''}`}
+                        onClick={() => {
+                          selectStudent(student);
+                          setShowStudentDropdown(false);
+                        }}
+                      >
+                        <div className={styles.studentDropdownAvatar}>
+                          <span>{getInitials(student.fullName)}</span>
+                        </div>
+                        <div className={styles.studentDropdownInfo}>
+                          <span className={styles.studentDropdownName}>{student.fullName}</span>
+                          <span className={styles.studentDropdownGrade}>
+                            {student.gradeLevel}{student.school ? ` • ${student.school}` : ''}
+                          </span>
+                        </div>
+                        {selectedStudent?.studentId === student.studentId && (
+                          <span className={styles.studentDropdownCheck}>✓</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* Next Lesson Indicator */}
               {nextLesson && (
                 <div className={styles.nextLesson}>
                   <ClockIcon />
                   <span>
-                    Next: {new Date(nextLesson.scheduledStart).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric'
-                    })} {new Date(nextLesson.scheduledStart).toLocaleTimeString('en-US', {
-                      hour: 'numeric',
-                      minute: '2-digit',
-                      hour12: true
+                    Tiếp: {new Date(nextLesson.scheduledStart).toLocaleDateString('vi-VN', {
+                      day: '2-digit',
+                      month: '2-digit'
+                    })} {new Date(nextLesson.scheduledStart).toLocaleTimeString('vi-VN', {
+                      hour: '2-digit',
+                      minute: '2-digit'
                     })}
                   </span>
-                  <span className={styles.nextLessonDot}>•</span>
-                  <span>{(nextLesson as LessonResponse & { subjectName?: string; tutorName?: string }).subjectName || 'Lesson'} with {(nextLesson as LessonResponse & { subjectName?: string; tutorName?: string }).tutorName || 'Tutor'}</span>
                 </div>
               )}
             </div>
 
-            {/* Center: Search Bar */}
-            <div className={styles.headerSearch}>
-              <SearchIcon />
-              <input
-                type="text"
-                className={styles.searchInput}
-                placeholder="Tìm lớp học, ghi chú..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+            {/* Spacer */}
+            <div style={{ flex: 1 }} />
 
             {/* Right: Notifications + User */}
             <div className={styles.headerRight}>
@@ -438,7 +474,10 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
 
               {/* User Info */}
               <div className={styles.headerUser}>
-                <span className={styles.headerUserName}>{parentData.name}</span>
+                <div className={styles.headerUserInfo}>
+                  <span className={styles.headerUserName}>{parentData.name}</span>
+                  <span className={styles.headerUserRole}>{parentData.role}</span>
+                </div>
                 <div className={styles.headerAvatar}>
                   <span>{parentData.initials}</span>
                 </div>
@@ -473,8 +512,16 @@ const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => {
           {children || <Outlet />}
         </div>
       </main>
+
+
     </div>
   );
 };
+
+const ParentLayout: React.FC<ParentLayoutProps> = ({ children }) => (
+  <StudentProvider>
+    <ParentLayoutInner>{children}</ParentLayoutInner>
+  </StudentProvider>
+);
 
 export default ParentLayout;

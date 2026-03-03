@@ -11,7 +11,9 @@ import { AddAvailabilityModal, EditAvailabilityModal } from './components';
 import { getAvailability, deleteAvailability, DAY_OF_WEEK_MAP } from '../../services/availability.service';
 import type { AvailabilitySlot } from '../../services/availability.service';
 import { getUserIdFromToken } from '../../services/auth.service';
-import { getTutorLessons, type LessonResponse } from '../../services/lesson.service';
+import { getTutorCalendar } from '../../services/lesson.service';
+import { type CalendarDayDto } from '../../components/CalendarView/CalendarView';
+import type { LessonResponse } from '../../services/lesson.service';
 
 // Mở rộng dayjs với các plugin
 dayjs.extend(weekday);
@@ -63,8 +65,24 @@ interface EditAvailabilityData {
 // Hằng số
 const DAYS_OF_WEEK = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 const TIME_SLOTS = Array.from({ length: 24 }, (_, i) => i); // 0:00 đến 23:00
-const ROW_HEIGHT = 70; // px cho mỗi hàng giờ
-const PX_PER_MINUTE = ROW_HEIGHT / 60; // px cho mỗi phút
+const DEFAULT_ROW_HEIGHT = 70; // px mặc định cho mỗi hàng giờ
+const MIN_ROW_HEIGHT = 30;
+const MAX_ROW_HEIGHT = 150;
+const ZOOM_STEP = 20;
+
+// Zoom icons
+const ZoomInIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+        <line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" />
+    </svg>
+);
+const ZoomOutIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+        <line x1="8" y1="11" x2="14" y2="11" />
+    </svg>
+);
 
 // Hàm trợ giúp: Chuyển đổi API dayofweek (0-6) sang ISO week day (1-7)
 // API: 0=Chủ Nhật, 1=Thứ Hai, 2=Thứ Ba, 3=Thứ Tư, 4=Thứ Năm, 5=Thứ Sáu, 6=Thứ Bảy
@@ -104,8 +122,21 @@ const TutorPortalSchedule: React.FC = () => {
     const [deletingSlotId, setDeletingSlotId] = useState<number | null>(null);
 
     // FROM MILESTONE_3: State cho lessons tab
-    const [lessons, setLessons] = useState<LessonResponse[]>([]);
+    const [calendarData, setCalendarData] = useState<CalendarDayDto[]>([]);
     const [isLoadingLessons, setIsLoadingLessons] = useState(false);
+
+    // Flatten calendar data into lessons array for the lessons tab grid
+    const lessons: LessonResponse[] = useMemo(() => {
+        return calendarData.flatMap(day => (day.lessons || []) as unknown as LessonResponse[]);
+    }, [calendarData]);
+
+    // Zoom state
+    const [rowHeight, setRowHeight] = useState(DEFAULT_ROW_HEIGHT);
+    const pxPerMinute = rowHeight / 60;
+
+    const handleZoomIn = () => setRowHeight(prev => Math.min(prev + ZOOM_STEP, MAX_ROW_HEIGHT));
+    const handleZoomOut = () => setRowHeight(prev => Math.max(prev - ZOOM_STEP, MIN_ROW_HEIGHT));
+    const handleZoomReset = () => setRowHeight(DEFAULT_ROW_HEIGHT);
 
     // Lấy các ngày hiển thị dựa trên viewMode
     const displayDates = useMemo(() => {
@@ -188,15 +219,16 @@ const TutorPortalSchedule: React.FC = () => {
         }
     }, []);
 
-    // FROM MILESTONE_3: Fetch lessons từ API
-    const fetchLessons = useCallback(async () => {
+    // FETCH CALENDAR FOR LESSONS TAB
+    const fetchCalendar = useCallback(async () => {
         setIsLoadingLessons(true);
         try {
-            const response = await getTutorLessons(1, 100);
-            const lessonsData = Array.isArray(response.content)
-                ? response.content
-                : response.content?.items || [];
-            setLessons(lessonsData);
+            const startDate = dayjs().subtract(7, 'day').format('YYYY-MM-DD');
+            const endDate = dayjs().add(30, 'day').format('YYYY-MM-DD');
+            const response = await getTutorCalendar(startDate, endDate);
+
+            // Map specific fields if necessary or cast directly (same interface fields mostly)
+            setCalendarData((response.content || []) as unknown as CalendarDayDto[]);
         } catch (error) {
             toast.error('Không thể tải lịch dạy. Vui lòng thử lại.');
         } finally {
@@ -209,12 +241,12 @@ const TutorPortalSchedule: React.FC = () => {
         fetchAvailability();
     }, [fetchAvailability]);
 
-    // FROM MILESTONE_3: Fetch lessons khi chuyển sang tab lessons
+    // Fetch calendar when switching to lessons tab
     useEffect(() => {
         if (activeTab === 'lessons') {
-            fetchLessons();
+            fetchCalendar();
         }
-    }, [activeTab, fetchLessons]);
+    }, [activeTab, fetchCalendar]);
 
     // Xử lý xóa lịch rảnh với Popconfirm
     const handleDeleteAvailability = async (slot: LocalAvailabilitySlot) => {
@@ -269,7 +301,7 @@ const TutorPortalSchedule: React.FC = () => {
 
     // Helper: check if a day has lessons
     const getDayLessons = (date: Dayjs): LessonResponse[] => {
-        return lessons.filter(l => dayjs(l.scheduledStart).isSame(date, 'day'));
+        return lessons.filter((l: LessonResponse) => dayjs(l.scheduledStart).isSame(date, 'day'));
     };
 
     const handleAddAvailabilityClick = () => {
@@ -384,14 +416,23 @@ const TutorPortalSchedule: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Chú giải */}
+                        {/* Chú giải + Zoom */}
                         <div className={styles.legend}>
                             <div className={styles.legendItem}>
                                 <div className={styles.legendDot} />
                                 <span>Rảnh</span>
                             </div>
-                            <div className={styles.timezone}>
-                                UTC+7 • Giờ Việt Nam
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <div className={styles.timezone} style={{ marginRight: '12px' }}>
+                                    UTC+7 • Giờ Việt Nam
+                                </div>
+                                {viewMode !== 'month' && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '2px', background: '#f5f5f5', borderRadius: '6px', padding: '2px' }}>
+                                        <button onClick={handleZoomOut} disabled={rowHeight <= MIN_ROW_HEIGHT} style={{ background: 'none', border: 'none', cursor: rowHeight <= MIN_ROW_HEIGHT ? 'not-allowed' : 'pointer', padding: '4px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', opacity: rowHeight <= MIN_ROW_HEIGHT ? 0.3 : 1, color: '#555' }} title="Thu nhỏ"><ZoomOutIcon /></button>
+                                        <button onClick={handleZoomReset} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', fontSize: '11px', fontWeight: 600, color: '#555', borderRadius: '4px' }} title="Mặc định">{Math.round((rowHeight / DEFAULT_ROW_HEIGHT) * 100)}%</button>
+                                        <button onClick={handleZoomIn} disabled={rowHeight >= MAX_ROW_HEIGHT} style={{ background: 'none', border: 'none', cursor: rowHeight >= MAX_ROW_HEIGHT ? 'not-allowed' : 'pointer', padding: '4px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', opacity: rowHeight >= MAX_ROW_HEIGHT ? 0.3 : 1, color: '#555' }} title="Phóng to"><ZoomInIcon /></button>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -473,6 +514,7 @@ const TutorPortalSchedule: React.FC = () => {
                                             key={hour}
                                             className={styles.timeRow}
                                             style={{
+                                                minHeight: `${rowHeight}px`,
                                                 zIndex: TIME_SLOTS.length - index,
                                                 position: 'relative',
                                                 ...(viewMode === 'day' ? { gridTemplateColumns: '70px 1fr' } : {})
@@ -484,8 +526,8 @@ const TutorPortalSchedule: React.FC = () => {
                                             {displayDates.map((date, dayIndex) => {
                                                 const slot = getAvailabilityStartingAtHour(date, hour);
                                                 const minuteOffset = slot ? (slot.startMinutes - hour * 60) : 0;
-                                                const topOffsetPx = minuteOffset * PX_PER_MINUTE;
-                                                const heightPx = slot ? slot.durationMinutes * PX_PER_MINUTE : 0;
+                                                const topOffsetPx = minuteOffset * pxPerMinute;
+                                                const heightPx = slot ? slot.durationMinutes * pxPerMinute : 0;
 
                                                 return (
                                                     <div
@@ -595,14 +637,23 @@ const TutorPortalSchedule: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Legend */}
+                        {/* Legend + Zoom */}
                         <div className={styles.legend}>
                             <div className={styles.legendItem}>
                                 <div className={styles.legendDot} style={{ backgroundColor: '#3d4a3e' }} />
                                 <span>Buổi học</span>
                             </div>
-                            <div className={styles.timezone}>
-                                UTC+7 • Giờ Việt Nam
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <div className={styles.timezone} style={{ marginRight: '12px' }}>
+                                    UTC+7 • Giờ Việt Nam
+                                </div>
+                                {viewMode !== 'month' && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '2px', background: '#f5f5f5', borderRadius: '6px', padding: '2px' }}>
+                                        <button onClick={handleZoomOut} disabled={rowHeight <= MIN_ROW_HEIGHT} style={{ background: 'none', border: 'none', cursor: rowHeight <= MIN_ROW_HEIGHT ? 'not-allowed' : 'pointer', padding: '4px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', opacity: rowHeight <= MIN_ROW_HEIGHT ? 0.3 : 1, color: '#555' }} title="Thu nhỏ"><ZoomOutIcon /></button>
+                                        <button onClick={handleZoomReset} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', fontSize: '11px', fontWeight: 600, color: '#555', borderRadius: '4px' }} title="Mặc định">{Math.round((rowHeight / DEFAULT_ROW_HEIGHT) * 100)}%</button>
+                                        <button onClick={handleZoomIn} disabled={rowHeight >= MAX_ROW_HEIGHT} style={{ background: 'none', border: 'none', cursor: rowHeight >= MAX_ROW_HEIGHT ? 'not-allowed' : 'pointer', padding: '4px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', opacity: rowHeight >= MAX_ROW_HEIGHT ? 0.3 : 1, color: '#555' }} title="Phóng to"><ZoomInIcon /></button>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -673,6 +724,7 @@ const TutorPortalSchedule: React.FC = () => {
                                             key={hour}
                                             className={styles.timeRow}
                                             style={{
+                                                minHeight: `${rowHeight}px`,
                                                 zIndex: TIME_SLOTS.length - index,
                                                 position: 'relative',
                                                 ...(viewMode === 'day' ? { gridTemplateColumns: '70px 1fr' } : {})
@@ -696,7 +748,7 @@ const TutorPortalSchedule: React.FC = () => {
                                                             const start = dayjs(lesson.scheduledStart);
                                                             const end = dayjs(lesson.scheduledEnd);
                                                             const duration = end.diff(start, 'hour', true);
-                                                            const heightPx = duration * 70 - 6;
+                                                            const heightPx = duration * rowHeight - 6;
 
                                                             return (
                                                                 <div

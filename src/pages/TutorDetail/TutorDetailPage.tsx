@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { createChannel } from '../../services/chat.service';
+import { getCurrentUserRole } from '../../services/auth.service';
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import BookingModal from './BookingModal';
@@ -98,11 +100,11 @@ const HeroSection = ({ profile }: { profile: TutorFullProfile }) => {
                     <b className="click-to-view">Click để xem phỏng vấn học thuật</b>
                 </div>
 
-                {/* Agora Badge */}
-                <div className="agora-badge-container">
-                    <div className="agora-badge">
-                        <div className="agora-badge-dot"></div>
-                        <b className="agora-badge-text">Agora Original Interview</b>
+                {/* TUTORA Badge */}
+                <div className="TUTORA-badge-container">
+                    <div className="TUTORA-badge">
+                        <div className="TUTORA-badge-dot"></div>
+                        <b className="TUTORA-badge-text">TUTORA Original Interview</b>
                     </div>
                 </div>
 
@@ -188,7 +190,7 @@ const AcademicPortfolioSection = ({ certificates }: { certificates: CertificateI
         <div className="portfolio-header">
             <div className="portfolio-title-group">
                 <h2 className="section-title">Hồ sơ năng lực học thuật</h2>
-                <span className="portfolio-subtitle">Hệ thống Agora Academic Ledger v2.4</span>
+                <span className="portfolio-subtitle">Hệ thống TUTORA Academic Ledger v2.4</span>
             </div>
             <div className="verified-badge-green">
                 <b>Xác thực 100%</b>
@@ -232,7 +234,7 @@ const AcademicPortfolioSection = ({ certificates }: { certificates: CertificateI
             <div className="portfolio-footer">
                 <div className="portfolio-note">
                     <div className="note-dot green"></div>
-                    <b>Hồ sơ gốc lưu trữ bởi Agora</b>
+                    <b>Hồ sơ gốc lưu trữ bởi TUTORA</b>
                 </div>
                 <div className="portfolio-note">
                     <div className="note-dot green"></div>
@@ -397,7 +399,7 @@ const TestimonialsSection = ({ feedbacks, totalFeedbacks, tutorId }: {
                                 </div>
                                 <div className="container92">
                                     <div className="border2">
-                                        <b className="xc-thc-bi">Xác thực bởi Agora LMS</b>
+                                        <b className="xc-thc-bi">Xác thực bởi TUTORA LMS</b>
                                     </div>
                                     {('courseDuration' in testimonial && (testimonial as any).courseDuration) && (
                                         <div className="border2">
@@ -492,12 +494,14 @@ const BookingSidebar = ({
     hourlyRate,
     trialLessonPrice,
     availabilities,
-    onBooking
+    onBooking,
+    onChat
 }: {
     hourlyRate: number | null,
     trialLessonPrice: number | null,
     availabilities: AvailabilitySlot[] | null,
-    onBooking: () => void
+    onBooking: () => void,
+    onChat: () => void
 }) => {
     // Group availability by day
     const dayLabelsMap: Record<number, string> = {
@@ -526,7 +530,7 @@ const BookingSidebar = ({
                 <div className="booking-header">
                     <span className="booking-label">Bắt đầu lộ trình học thuật</span>
                     <div className="price-display">
-                        <b className="price-amount">{formatCurrency(hourlyRate)}</b>
+                        <b className="price-amount">{formatCurrency(hourlyRate ? Math.round(hourlyRate * 1.05) : null)}</b>
                         <b className="price-unit">/ BUỔI HỌC</b>
                     </div>
                 </div>
@@ -571,7 +575,7 @@ const BookingSidebar = ({
                     <button className="btn-start" onClick={onBooking}>
                         <b>ĐẶT LỊCH NGAY</b>
                     </button>
-                    <button className="btn-chat">
+                    <button className="btn-chat" onClick={onChat}>
                         <b>CHAT TƯ VẤN</b>
                     </button>
                 </div>
@@ -580,7 +584,7 @@ const BookingSidebar = ({
             <div className="verification-note">
                 <div className="note-header">
                     <VerifyIcon />
-                    <b>Đã xác minh bởi Agora Council</b>
+                    <b>Đã xác minh bởi TUTORA Council</b>
                 </div>
                 <i className="note-text">Hoàn học phí nếu không hài lòng sau buổi học đầu tiên.</i>
             </div>
@@ -701,10 +705,33 @@ const TutorDetailSkeleton = () => (
 // Main TutorDetailPage Component
 const TutorDetailPage = () => {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const [profile, setProfile] = useState<TutorFullProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showBooking, setShowBooking] = useState(false);
+    const [chatLoading, setChatLoading] = useState(false);
+
+    // Handle "CHAT TƯ VẤN" button
+    const handleChatTuVan = async () => {
+        if (!id || chatLoading) return;
+        setChatLoading(true);
+        try {
+            const res = await createChannel(id);
+            const channelId = res?.content?.channelId;
+            // Navigate to messages page based on role
+            const role = getCurrentUserRole();
+            const basePath = role === 'Student' ? '/student/messages' : '/parent/messages';
+            navigate(channelId ? `${basePath}?channel=${channelId}` : basePath);
+        } catch (err) {
+            console.error('❌ Failed to create chat channel:', err);
+            // Fallback: navigate to messages page anyway
+            const role = getCurrentUserRole();
+            navigate(role === 'Student' ? '/student/messages' : '/parent/messages');
+        } finally {
+            setChatLoading(false);
+        }
+    };
 
     useEffect(() => {
         let mounted = true;
@@ -788,6 +815,7 @@ const TutorDetailPage = () => {
                         trialLessonPrice={profile.trialLessonPrice}
                         availabilities={profile.availabilities}
                         onBooking={() => setShowBooking(true)}
+                        onChat={handleChatTuVan}
                     />
                 </div>
             </main>
