@@ -12,7 +12,8 @@ import { getAvailability, deleteAvailability, DAY_OF_WEEK_MAP } from '../../serv
 import type { AvailabilitySlot } from '../../services/availability.service';
 import { getUserIdFromToken } from '../../services/auth.service';
 import { getTutorCalendar } from '../../services/lesson.service';
-import { CalendarView, type CalendarDayDto } from '../../components/CalendarView/CalendarView';
+import { type CalendarDayDto } from '../../components/CalendarView/CalendarView';
+import type { LessonResponse } from '../../services/lesson.service';
 
 // Mở rộng dayjs với các plugin
 dayjs.extend(weekday);
@@ -123,6 +124,11 @@ const TutorPortalSchedule: React.FC = () => {
     // FROM MILESTONE_3: State cho lessons tab
     const [calendarData, setCalendarData] = useState<CalendarDayDto[]>([]);
     const [isLoadingLessons, setIsLoadingLessons] = useState(false);
+
+    // Flatten calendar data into lessons array for the lessons tab grid
+    const lessons: LessonResponse[] = useMemo(() => {
+        return calendarData.flatMap(day => (day.lessons || []) as unknown as LessonResponse[]);
+    }, [calendarData]);
 
     // Zoom state
     const [rowHeight, setRowHeight] = useState(DEFAULT_ROW_HEIGHT);
@@ -295,7 +301,7 @@ const TutorPortalSchedule: React.FC = () => {
 
     // Helper: check if a day has lessons
     const getDayLessons = (date: Dayjs): LessonResponse[] => {
-        return lessons.filter(l => dayjs(l.scheduledStart).isSame(date, 'day'));
+        return lessons.filter((l: LessonResponse) => dayjs(l.scheduledStart).isSame(date, 'day'));
     };
 
     const handleAddAvailabilityClick = () => {

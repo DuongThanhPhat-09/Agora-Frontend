@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getTutorLessons, /* checkInLesson, checkOutLesson, */ type LessonResponse } from '../../services/lesson.service';
-import { message as antMessage, Tag } from 'antd';
+import { Tag } from 'antd';
+import { toast } from 'react-toastify';
 import styles from '../../styles/pages/tutor-portal-class-detail.module.css';
 import LessonReportForm from './components/LessonReportForm';
 import AttachmentUploader from './components/AttachmentUploader';

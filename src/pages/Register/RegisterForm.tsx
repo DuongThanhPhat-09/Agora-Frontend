@@ -36,31 +36,7 @@ const RegisterForm: React.FC = () => {
         }));
     };
 
-    /**
-     * Decode JWT payload to extract role-based portal path
-     */
-    const getPortalPathFromToken = (token: string): string => {
-        try {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const payload = JSON.parse(
-                decodeURIComponent(
-                    atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
-                )
-            );
-            const roleClaim = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
-            const role = (payload[roleClaim] || '').toLowerCase();
-            switch (role) {
-                case 'admin': return '/admin/dashboard';
-                case 'tutor': return '/tutor-portal';
-                case 'parent': return '/parent/dashboard';
-                case 'student': return '/student/dashboard';
-                default: return '/';
-            }
-        } catch {
-            return '/';
-        }
-    };
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -110,16 +86,9 @@ const RegisterForm: React.FC = () => {
 
             // Save user data with accessToken
             saveUserToStorage({ accessToken: token });
-
-            saveUserToStorage(fullUserData);
             window.dispatchEvent(new Event("auth-change"));
             toast.success(`Chào mừng ${formData.fullname} đến với TUTORA!`);
             setTimeout(() => navigate("/"), 1500);
-
-            toast.success("Đăng ký thành công!");
-            setTimeout(() => {
-                navigate(portalPath);
-            }, 800);
         } catch (error: any) {
             console.error("Register Error:", error);
 

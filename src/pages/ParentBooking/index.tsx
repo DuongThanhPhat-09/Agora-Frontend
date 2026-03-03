@@ -73,7 +73,7 @@ const ParentBooking = () => {
       setBookings(res.content.items || []);
       setTotalItems(res.content.totalCount || 0);
     } catch {
-      antMessage.error('Không thể tải danh sách đặt lịch.');
+      toast.error('Không thể tải danh sách đặt lịch.');
     } finally {
       setLoading(false);
     }

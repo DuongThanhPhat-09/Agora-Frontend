@@ -181,7 +181,7 @@ const ParentLayoutInner: React.FC<ParentLayoutProps> = ({ children }) => {
     initials: 'U',
     role: 'PARENT',
   });
-  const [studentData, setStudentData] = useState({
+  const [_studentData, setStudentData] = useState({
     name: '',
     grade: '',
     initials: '',
@@ -193,7 +193,7 @@ const ParentLayoutInner: React.FC<ParentLayoutProps> = ({ children }) => {
 
   const isStudentContext = location.pathname.startsWith('/student');
   const navItems = isStudentContext ? studentNavItems : parentNavItems;
-  const accountPath = isStudentContext ? '/student/account' : '/parent/settings';
+  // accountPath removed — not currently used
 
   const isActive = (path: string) => location.pathname.startsWith(path);
 
