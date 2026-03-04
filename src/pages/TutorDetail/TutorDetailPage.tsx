@@ -827,13 +827,13 @@ const TutorDetailPage = () => {
             const channelId = res?.content?.channelId;
             // Navigate to messages page based on role
             const role = getCurrentUserRole();
-            const basePath = role === 'Student' ? '/student/messages' : '/parent/messages';
+            const basePath = role === 'Student' ? '/student-portal/messages' : '/parent-portal/messages';
             navigate(channelId ? `${basePath}?channel=${channelId}` : basePath);
         } catch (err) {
             console.error('❌ Failed to create chat channel:', err);
             // Fallback: navigate to messages page anyway
             const role = getCurrentUserRole();
-            navigate(role === 'Student' ? '/student/messages' : '/parent/messages');
+            navigate(role === 'Student' ? '/student-portal/messages' : '/parent-portal/messages');
         } finally {
             setChatLoading(false);
         }

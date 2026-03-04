@@ -199,19 +199,19 @@ const StudentDashboard = () => {
 
           {/* Quick Actions */}
           <div className={styles.quickActions}>
-            <Link to="/student/booking" className={styles.quickActionBtn}>
+            <Link to="/student-portal/booking" className={styles.quickActionBtn}>
               <div className={styles.quickActionIcon} style={{ background: 'rgba(79, 209, 197, 0.1)', color: '#4FD1C5' }}>
                 <BookOpen size={18} />
               </div>
               Đặt lịch học
             </Link>
-            <Link to="/student/lessons" className={styles.quickActionBtn}>
+            <Link to="/student-portal/lessons" className={styles.quickActionBtn}>
               <div className={styles.quickActionIcon} style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366F1' }}>
                 <GraduationCap size={18} />
               </div>
               Buổi học
             </Link>
-            <Link to="/student/calendar" className={styles.quickActionBtn}>
+            <Link to="/student-portal/calendar" className={styles.quickActionBtn}>
               <div className={styles.quickActionIcon} style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B' }}>
                 <CalendarDays size={18} />
               </div>
@@ -223,7 +223,7 @@ const StudentDashboard = () => {
           <div>
             <div className={styles.sectionHeader}>
               <h3 className={styles.sectionTitle}>Buổi học gần đây</h3>
-              <Link to="/student/lessons" className={styles.sectionLink}>
+              <Link to="/student-portal/lessons" className={styles.sectionLink}>
                 Xem tất cả <ArrowRight size={14} />
               </Link>
             </div>
@@ -238,7 +238,7 @@ const StudentDashboard = () => {
 
                   return (
                     <Link
-                      to={`/student/lessons/${lesson.lessonId}`}
+                      to={`/student-portal/lessons/${lesson.lessonId}`}
                       key={lesson.lessonId || idx}
                       className={styles.pendingItem}
                     >
@@ -275,7 +275,7 @@ const StudentDashboard = () => {
             <div>
               <div className={styles.sectionHeader}>
                 <h3 className={styles.sectionTitle}>Booking của bạn</h3>
-                <Link to="/student/booking" className={styles.sectionLink}>
+                <Link to="/student-portal/booking" className={styles.sectionLink}>
                   Tất cả booking <ArrowRight size={14} />
                 </Link>
               </div>
@@ -293,7 +293,7 @@ const StudentDashboard = () => {
 
                   return (
                     <Link
-                      to={`/student/booking/${booking.bookingId}`}
+                      to={`/student-portal/booking/${booking.bookingId}`}
                       key={booking.bookingId || idx}
                       className={styles.bookingCard}
                     >

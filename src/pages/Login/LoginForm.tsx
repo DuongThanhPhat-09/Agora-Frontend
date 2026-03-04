@@ -37,10 +37,10 @@ const LoginForm: React.FC = () => {
       const roleClaim = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
       const role = (payload[roleClaim] || '').toLowerCase();
       switch (role) {
-        case 'admin': return '/admin/dashboard';
+        case 'admin': return '/admin-portal/dashboard';
         case 'tutor': return '/tutor-portal';
-        case 'parent': return '/parent/dashboard';
-        case 'student': return '/student/dashboard';
+        case 'parent': return '/parent-portal/dashboard';
+        case 'student': return '/student-portal/dashboard';
         default: return '/';
       }
     } catch {

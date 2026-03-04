@@ -5,8 +5,8 @@
 
 /* --- Design Tokens --- */
 .page {
-  background: #F8F7F3;
-  min-height: 100vh;
+  background: #f2f0e4;
+  min-height: 100%;
   padding: 24px 32px;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }

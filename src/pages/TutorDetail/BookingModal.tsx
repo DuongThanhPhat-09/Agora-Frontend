@@ -159,7 +159,7 @@ const StepStudentSubject = ({ formData, setFormData, students, loadingStudents, 
                 ) : students.length === 0 ? (
                     <div className="bm-empty-msg">
                         <p>Chưa có hồ sơ học sinh nào.</p>
-                        <a href="/parent/student" target="_blank" className="bm-btn-add-student">
+                        <a href="/parent-portal/student" target="_blank" className="bm-btn-add-student">
                             + Thêm hồ sơ học sinh
                         </a>
                     </div>

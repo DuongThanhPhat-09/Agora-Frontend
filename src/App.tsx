@@ -111,14 +111,14 @@ function App() {
 
         {/* Admin Layout - PROTECTED */}
         <Route
-          path="/admin"
+          path="/admin-portal"
           element={
             <ProtectedRoute allowedRoles={["Admin"]}>
               <AdminLayout />
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          <Route index element={<Navigate to="/admin-portal/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboardPage />} />
           <Route path="users" element={<UserManagementPage />} />
           <Route path="vetting" element={<AdminVettingPage />} />
@@ -160,14 +160,14 @@ function App() {
 
         {/* Parent Layout - PROTECTED */}
         <Route
-          path="/parent"
+          path="/parent-portal"
           element={
             <ProtectedRoute allowedRoles={["Parent"]}>
               <ParentLayout />
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="/parent/dashboard" replace />} />
+          <Route index element={<Navigate to="/parent-portal/dashboard" replace />} />
           <Route path="dashboard" element={<ParentDashboard />} />
           <Route path="booking" element={<ParentBooking />} />
           <Route path="booking/:id" element={<BookingDetail />} />
@@ -183,14 +183,14 @@ function App() {
 
         {/* Student Layout - PROTECTED */}
         <Route
-          path="/student"
+          path="/student-portal"
           element={
             <ProtectedRoute allowedRoles={["Student"]}>
               <StudentLayout />
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="/student/dashboard" replace />} />
+          <Route index element={<Navigate to="/student-portal/dashboard" replace />} />
           <Route path="dashboard" element={<StudentDashboard />} />
           <Route path="booking" element={<StudentBooking />} />
           <Route path="booking/:id" element={<BookingDetail />} />

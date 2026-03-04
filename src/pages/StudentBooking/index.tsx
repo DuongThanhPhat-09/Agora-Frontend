@@ -106,7 +106,7 @@ const StudentBooking = () => {
                                         <div
                                             key={b.bookingId || b.id}
                                             className={s.card}
-                                            onClick={() => navigate(`/student/booking/${b.bookingId || b.id}`)}
+                                            onClick={() => navigate(`/student-portal/booking/${b.bookingId || b.id}`)}
                                         >
                                             <div
                                                 className={s.cardIcon}

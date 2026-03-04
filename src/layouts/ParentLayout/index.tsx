@@ -1,7 +1,7 @@
 import { Outlet, useNavigate, Link } from 'react-router-dom';
 import { Popconfirm } from 'antd';
 import styles from './styles.module.css';
-import { useState, useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import NotificationDropdown from '../../components/NotificationDropdown/NotificationDropdown';
 import { clearUserFromStorage, getUserInfoFromToken } from '../../services/auth.service';
 import { StudentProvider, useStudentContext } from '../../contexts/StudentContext';
@@ -9,22 +9,22 @@ import { toast } from 'react-toastify';
 
 // Shared icons & hooks
 import {
-  LogoIcon, NotificationIcon, ClockIcon, ChevronDown,
+  LogoIcon, NotificationIcon, ClockIcon,
   DashboardIcon, ChildrenIcon, MessagesIcon, BookingIcon,
   MenuIcon, CloseIcon, LogoutIcon, LessonsIcon, CalendarIcon,
 } from '../shared/icons';
 import {
-  useUserData, useNotifications, useSidebarState, useNextLesson, getInitials,
+  useUserData, useNotifications, useSidebarState, useNextLesson,
 } from '../shared/useLayoutData';
 
 // Parent-specific navigation items
 const parentNavItems = [
-  { path: '/parent/dashboard', label: 'Dashboard', icon: DashboardIcon },
-  { path: '/parent/student', label: 'Children', icon: ChildrenIcon },
-  { path: '/parent/lessons', label: 'Buổi học', icon: LessonsIcon },
-  { path: '/parent/calendar', label: 'Thời khóa biểu', icon: CalendarIcon },
-  { path: '/parent/messages', label: 'Messages', icon: MessagesIcon },
-  { path: '/parent/booking', label: 'Booking', icon: BookingIcon },
+  { path: '/parent-portal/dashboard', label: 'Dashboard', icon: DashboardIcon },
+  { path: '/parent-portal/student', label: 'Children', icon: ChildrenIcon },
+  { path: '/parent-portal/lessons', label: 'Buổi học', icon: LessonsIcon },
+  { path: '/parent-portal/calendar', label: 'Thời khóa biểu', icon: CalendarIcon },
+  { path: '/parent-portal/messages', label: 'Messages', icon: MessagesIcon },
+  { path: '/parent-portal/booking', label: 'Booking', icon: BookingIcon },
 ];
 
 interface ParentLayoutProps {
@@ -41,11 +41,10 @@ const ParentLayoutInner: React.FC<ParentLayoutProps> = ({ children }) => {
   } = useNotifications();
   const { nextLesson, loadNextLesson } = useNextLesson();
 
-  const [showStudentDropdown, setShowStudentDropdown] = useState(false);
-  const studentDropdownRef = useRef<HTMLDivElement>(null);
+
 
   // Student context from StudentProvider
-  const { students, selectedStudent, selectStudent } = useStudentContext();
+  useStudentContext();
 
   const isActive = (path: string) => location.pathname.startsWith(path);
 
@@ -57,16 +56,7 @@ const ParentLayoutInner: React.FC<ParentLayoutProps> = ({ children }) => {
     }
   }, [loadNextLesson]);
 
-  // Close student dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (studentDropdownRef.current && !studentDropdownRef.current.contains(event.target as Node)) {
-        setShowStudentDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+
 
   return (
     <div className={styles.layout}>
@@ -127,56 +117,8 @@ const ParentLayoutInner: React.FC<ParentLayoutProps> = ({ children }) => {
               <MenuIcon />
             </button>
 
-            {/* Left: Student Selector + Next Lesson */}
+            {/* Left */}
             <div className={styles.headerLeft}>
-              {/* Student Selector */}
-              <div className={styles.studentSelectorWrap} ref={studentDropdownRef}>
-                <button
-                  className={styles.studentSelector}
-                  onClick={() => setShowStudentDropdown(!showStudentDropdown)}
-                >
-                  <div className={styles.studentAvatar}>
-                    <span>{selectedStudent ? getInitials(selectedStudent.fullName) : '?'}</span>
-                  </div>
-                  <div className={styles.studentInfo}>
-                    <span className={styles.studentName}>{selectedStudent?.fullName || 'Chọn học sinh'}</span>
-                    <span className={styles.studentGrade}>{selectedStudent?.gradeLevel || ''}{selectedStudent?.school ? ` • ${selectedStudent.school}` : ''}</span>
-                  </div>
-                  <div className={`${styles.dropdownArrow} ${showStudentDropdown ? styles.dropdownArrowOpen : ''}`}>
-                    <ChevronDown />
-                  </div>
-                </button>
-
-                {/* Student Dropdown */}
-                {showStudentDropdown && students.length > 0 && (
-                  <div className={styles.studentDropdown}>
-                    {students.map(student => (
-                      <div
-                        key={student.studentId}
-                        className={`${styles.studentDropdownItem} ${selectedStudent?.studentId === student.studentId ? styles.studentDropdownItemActive : ''}`}
-                        onClick={() => {
-                          selectStudent(student);
-                          setShowStudentDropdown(false);
-                        }}
-                      >
-                        <div className={styles.studentDropdownAvatar}>
-                          <span>{getInitials(student.fullName)}</span>
-                        </div>
-                        <div className={styles.studentDropdownInfo}>
-                          <span className={styles.studentDropdownName}>{student.fullName}</span>
-                          <span className={styles.studentDropdownGrade}>
-                            {student.gradeLevel}{student.school ? ` • ${student.school}` : ''}
-                          </span>
-                        </div>
-                        {selectedStudent?.studentId === student.studentId && (
-                          <span className={styles.studentDropdownCheck}>✓</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
               {/* Next Lesson Indicator */}
               {nextLesson && (
                 <div className={styles.nextLesson}>

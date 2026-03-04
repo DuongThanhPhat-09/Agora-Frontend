@@ -112,7 +112,7 @@ const StudentLessonDetail = () => {
             {/* Main Content */}
             <div className={s.mainContent} style={{ maxWidth: '900px' }}>
                 {/* Back */}
-                <button className={s.backBtn} onClick={() => navigate('/student/lessons')}>
+                <button className={s.backBtn} onClick={() => navigate('/student-portal/lessons')}>
                     <ArrowLeft size={16} /> Quay lại danh sách
                 </button>
 

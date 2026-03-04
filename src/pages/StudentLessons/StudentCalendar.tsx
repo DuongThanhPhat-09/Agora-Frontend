@@ -32,7 +32,7 @@ const StudentCalendar: React.FC = () => {
     }, []);
 
     const handleLessonClick = (lessonId: number) => {
-        navigate(`/student/lessons/${lessonId}`);
+        navigate(`/student-portal/lessons/${lessonId}`);
     };
 
     return (

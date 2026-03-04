@@ -77,7 +77,7 @@ const StudentLinkAccount = () => {
           </div>
           <h2 style={successTitle}>Liên kết thành công!</h2>
           <p style={successDesc}>Tài khoản của bạn đã được liên kết với hồ sơ học sinh. Bạn có thể xem lịch học và thông tin từ trang dashboard.</p>
-          <button style={primaryBtn} onClick={() => navigate('/student/dashboard')} type="button">
+          <button style={primaryBtn} onClick={() => navigate('/student-portal/dashboard')} type="button">
             Về trang Dashboard
           </button>
         </div>

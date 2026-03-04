@@ -14,17 +14,17 @@ import {
     LessonsIcon, CalendarIcon,
 } from '../shared/icons';
 import {
-    useUserData, useNotifications, useSidebarState, getInitials,
+    useUserData, useNotifications, useSidebarState,
 } from '../shared/useLayoutData';
 
 // Student-specific navigation items
 const studentNavItems = [
-    { path: '/student/dashboard', label: 'Dashboard', icon: DashboardIcon },
-    { path: '/student/booking', label: 'Booking', icon: BookingIcon },
-    { path: '/student/lessons', label: 'Buổi học', icon: LessonsIcon },
-    { path: '/student/calendar', label: 'Thời khóa biểu', icon: CalendarIcon },
-    { path: '/student/messages', label: 'Messages', icon: MessagesIcon },
-    { path: '/student/account', label: 'Tài khoản', icon: AccountIcon },
+    { path: '/student-portal/dashboard', label: 'Dashboard', icon: DashboardIcon },
+    { path: '/student-portal/booking', label: 'Booking', icon: BookingIcon },
+    { path: '/student-portal/lessons', label: 'Buổi học', icon: LessonsIcon },
+    { path: '/student-portal/calendar', label: 'Thời khóa biểu', icon: CalendarIcon },
+    { path: '/student-portal/messages', label: 'Messages', icon: MessagesIcon },
+    { path: '/student-portal/account', label: 'Tài khoản', icon: AccountIcon },
 ];
 
 interface StudentLayoutProps {
@@ -102,22 +102,8 @@ const StudentLayout: React.FC<StudentLayoutProps> = ({ children }) => {
                             <MenuIcon />
                         </button>
 
-                        {/* Left: User greeting + Next Lesson */}
+                        {/* Left */}
                         <div className={styles.headerLeft}>
-                            {/* Student avatar + name (replaces the student selector dropdown) */}
-                            <div className={styles.studentSelectorWrap}>
-                                <div className={styles.studentSelector} style={{ cursor: 'default', borderColor: 'transparent' }}>
-                                    <div className={styles.studentAvatar}>
-                                        <span>{getInitials(userData.name)}</span>
-                                    </div>
-                                    <div className={styles.studentInfo}>
-                                        <span className={styles.studentName}>{userData.name}</span>
-                                        <span className={styles.studentGrade}>Student</span>
-                                    </div>
-                                </div>
-                            </div>
-
-
                         </div>
 
                         {/* Spacer */}
