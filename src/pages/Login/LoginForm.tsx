@@ -113,8 +113,8 @@ const LoginForm: React.FC = () => {
               id="email"
               name="email"
               type="text"
-              label="Email hoặc SĐT"
-              placeholder="name@example.com"
+              label="Email, SĐT hoặc Username"
+              placeholder="name@example.com hoặc username"
               icon="mail"
               value={formData.email}
               onChange={handleChange}
