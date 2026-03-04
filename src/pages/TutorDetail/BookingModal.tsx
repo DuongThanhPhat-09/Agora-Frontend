@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getStudents } from '../../services/student.service';
 import { createBooking, validatePromotion } from '../../services/booking.service';
+import { getCurrentUserRole, getUserIdFromToken } from '../../services/auth.service';
 import type { StudentType } from '../../types/student.type';
 import type { CreateBookingPayload, PromotionValidateResult } from '../../services/booking.service';
 import type { SubjectInfo, AvailabilitySlot } from '../../services/tutorDetail.service';
@@ -143,47 +144,53 @@ interface StepProps {
     availabilities: AvailabilitySlot[];
     slotDuration: number;
     setSlotDuration: React.Dispatch<React.SetStateAction<number>>;
+    userRole: string | null;
 }
 
 // Step 1: Select Student & Subject
-const StepStudentSubject = ({ formData, setFormData, students, loadingStudents, availableSubjects }: StepProps) => (
+const StepStudentSubject = ({ formData, setFormData, students, loadingStudents, availableSubjects, userRole }: StepProps) => (
     <div className="bm-step">
-        <div className="bm-step-title">Chọn học sinh</div>
-        {loadingStudents ? (
-            <div className="bm-loading">Đang tải danh sách học sinh...</div>
-        ) : students.length === 0 ? (
-            <div className="bm-empty-msg">
-                <p>Chưa có hồ sơ học sinh nào.</p>
-                <a href="/parent/student" target="_blank" className="bm-btn-add-student">
-                    + Thêm hồ sơ học sinh
-                </a>
-            </div>
-        ) : (
-            <div className="bm-student-grid">
-                {students.map((s) => (
-                    <div
-                        key={s.studentId}
-                        className={`bm-student-card ${formData.studentId === s.studentId ? 'selected' : ''}`}
-                        onClick={() => setFormData((d) => ({ ...d, studentId: s.studentId }))}
-                    >
-                        <div className="bm-student-avatar">
-                            {s.avatarURL ? (
-                                <img src={s.avatarURL} alt={s.fullName} />
-                            ) : (
-                                s.fullName.charAt(0)
-                            )}
-                        </div>
-                        <div className="bm-student-info">
-                            <span className="bm-student-name">{s.fullName}</span>
-                            <span className="bm-student-grade">{s.gradeLevel || s.school}</span>
-                        </div>
-                        {formData.studentId === s.studentId && <div className="bm-check">✓</div>}
+        {/* Only show student selection for Parent role */}
+        {userRole === 'Parent' && (
+            <>
+                <div className="bm-step-title">Chọn học sinh</div>
+                {loadingStudents ? (
+                    <div className="bm-loading">Đang tải danh sách học sinh...</div>
+                ) : students.length === 0 ? (
+                    <div className="bm-empty-msg">
+                        <p>Chưa có hồ sơ học sinh nào.</p>
+                        <a href="/parent/student" target="_blank" className="bm-btn-add-student">
+                            + Thêm hồ sơ học sinh
+                        </a>
                     </div>
-                ))}
-            </div>
+                ) : (
+                    <div className="bm-student-grid">
+                        {students.map((s) => (
+                            <div
+                                key={s.studentId}
+                                className={`bm-student-card ${formData.studentId === s.studentId ? 'selected' : ''}`}
+                                onClick={() => setFormData((d) => ({ ...d, studentId: s.studentId }))}
+                            >
+                                <div className="bm-student-avatar">
+                                    {s.avatarURL ? (
+                                        <img src={s.avatarURL} alt={s.fullName} />
+                                    ) : (
+                                        s.fullName.charAt(0)
+                                    )}
+                                </div>
+                                <div className="bm-student-info">
+                                    <span className="bm-student-name">{s.fullName}</span>
+                                    <span className="bm-student-grade">{s.gradeLevel || s.school}</span>
+                                </div>
+                                {formData.studentId === s.studentId && <div className="bm-check">✓</div>}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </>
         )}
 
-        <div className="bm-step-title" style={{ marginTop: 24 }}>Chọn môn học</div>
+        <div className="bm-step-title" style={{ marginTop: userRole === 'Parent' ? 24 : 0 }}>Chọn môn học</div>
         {availableSubjects.length === 0 ? (
             <div className="bm-empty-msg">Gia sư này chưa cập nhật môn học.</div>
         ) : (
@@ -731,6 +738,9 @@ const STEPS = [
 ];
 
 const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subjects, availabilities }: BookingModalProps) => {
+    const userRole = getCurrentUserRole();
+    const currentUserId = getUserIdFromToken();
+
     const [step, setStep] = useState(0);
     const [students, setStudents] = useState<StudentType[]>([]);
     const [loadingStudents, setLoadingStudents] = useState(false);
@@ -738,7 +748,7 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [slotDuration, setSlotDuration] = useState(2);
     const [formData, setFormData] = useState<BookingFormData>({
-        studentId: '',
+        studentId: userRole === 'Student' ? (currentUserId || '') : '',
         subjectId: 0,
         teachingMode: 'online',
         startDate: new Date().toISOString().split('T')[0],
@@ -755,9 +765,10 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
         subjects.some(tutorSubj => tutorSubj.subjectId === s.id)
     );
 
-    // Fetch students on modal open
+    // Fetch students on modal open (only for Parent role)
     useEffect(() => {
         if (!isOpen) return;
+        if (userRole !== 'Parent') return; // Students don't need to fetch student profiles
         const fetchStudents = async () => {
             setLoadingStudents(true);
             try {
@@ -774,7 +785,7 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
             }
         };
         fetchStudents();
-    }, [isOpen]);
+    }, [isOpen, userRole]);
 
     // Reset form when modal closes
     useEffect(() => {
@@ -783,7 +794,7 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
             setSubmitError(null);
             setSlotDuration(2);
             setFormData({
-                studentId: '',
+                studentId: userRole === 'Student' ? (currentUserId || '') : '',
                 subjectId: 0,
                 teachingMode: 'online',
                 startDate: new Date().toISOString().split('T')[0],
@@ -801,7 +812,11 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
 
     const canNext = () => {
         switch (step) {
-            case 0: return formData.studentId !== '' && formData.subjectId !== 0;
+            case 0:
+                // Student role: only need subject selected (studentId is auto-set)
+                if (userRole === 'Student') return formData.subjectId !== 0;
+                // Parent role: need both student and subject selected
+                return formData.studentId !== '' && formData.subjectId !== 0;
             case 1: {
                 if (formData.teachingMode === 'offline' || formData.teachingMode === 'hybrid') {
                     return formData.locationCity.trim() !== '' && formData.locationDistrict.trim() !== '';
@@ -859,6 +874,7 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
         availabilities: availabilities || [],
         slotDuration,
         setSlotDuration,
+        userRole,
     };
 
     return (
