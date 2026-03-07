@@ -11,6 +11,15 @@
     overflow-x: hidden;
 }
 
+/* Footer spacing on register page */
+.register-page .footer {
+    margin-top: 10px;
+}
+
+.register-page .header-content {
+    margin-top: -10px;
+}
+
 /* Main Content Area */
 .register-page__main {
     flex: 1;
@@ -605,6 +614,10 @@
     .register-page__form-wrapper {
         justify-content: center;
         width: 100%;
+    }
+
+    .register-page .footer {
+        margin-top: -10px;
     }
 }
 
