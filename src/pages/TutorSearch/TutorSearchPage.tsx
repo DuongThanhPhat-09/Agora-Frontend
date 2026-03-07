@@ -63,14 +63,14 @@ const FilterIcon = () => (
 // ============================================
 const categories = [
     { id: "all", name: "Tất cả", icon: <CategoryIcon /> },
-    { id: "science", name: "Khoa học", icon: <CategoryIcon /> },
-    { id: "language", name: "Ngôn ngữ", icon: <CategoryIcon /> },
-    { id: "art", name: "Nghệ thuật", icon: <CategoryIcon /> },
-    { id: "it_tech", name: "IT & Tech", icon: <CategoryIcon /> },
+    { id: "Math", name: "Toán", icon: <CategoryIcon /> },
+    { id: "Physics", name: "Vật Lý", icon: <CategoryIcon /> },
+    { id: "Chemistry", name: "Hóa Học", icon: <CategoryIcon /> },
+    { id: "English", name: "Tiếng Anh", icon: <CategoryIcon /> },
 ];
 
 // Trending tags
-const trendingTags = ["SAT Prep", "Calculus III", "UX Design", "Ancient History"];
+const trendingTags = ["Toán", "Vật Lý", "Hóa Học", "Tiếng Anh"];
 
 // ============================================
 // Filter options (khớp với backend TutorSearchParameters)
