@@ -7,6 +7,7 @@ import {
     validateGPA,
     validateExperience
 } from '../utils/validation';
+import { useFormDraft } from '../../../hooks/useFormDraft';
 import styles from './AboutMeModal.module.css';
 
 interface AboutMeData {
@@ -39,14 +40,16 @@ const AboutMeModal: React.FC<AboutMeModalProps> = ({
     const [formData, setFormData] = useState<AboutMeData>(initialData);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isLoading, setIsLoading] = useState(false);
+    const { saveDraft, loadDraft, clearDraft } = useFormDraft<AboutMeData>('draft_aboutme');
 
-    // Reset form when modal opens
+    // Reset form when modal opens — prioritize draft over initialData
     useEffect(() => {
         if (isOpen) {
-            setFormData(initialData);
+            const draft = loadDraft();
+            setFormData(draft ?? initialData);
             setErrors({});
         }
-    }, [isOpen, initialData]);
+    }, [isOpen, initialData, loadDraft]);
 
     // Handle GPA scale change
     const handleGpaScaleChange = (value: string) => {
@@ -102,6 +105,13 @@ const AboutMeModal: React.FC<AboutMeModalProps> = ({
         return Object.keys(newErrors).length === 0;
     };
 
+    // Auto-save draft on form data change
+    useEffect(() => {
+        if (isOpen) {
+            saveDraft(formData);
+        }
+    }, [formData, isOpen, saveDraft]);
+
     // Handle save
     const handleSave = async () => {
         if (!validateForm()) return;
@@ -111,6 +121,7 @@ const AboutMeModal: React.FC<AboutMeModalProps> = ({
         setIsLoading(false);
 
         if (success) {
+            clearDraft();
             onClose();
         }
     };

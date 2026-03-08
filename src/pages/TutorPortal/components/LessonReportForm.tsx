@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Form, Input, Checkbox, Button } from 'antd';
 import { toast } from 'react-toastify';
 import { submitLessonReport, type SubmitReportRequest } from '../../../services/lesson.service';
+import { useFormDraft } from '../../../hooks/useFormDraft';
 
 const { TextArea } = Input;
 
@@ -18,6 +19,20 @@ const LessonReportForm: React.FC<LessonReportFormProps> = ({
 }) => {
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
+  const { saveDraft, loadDraft, clearDraft } = useFormDraft<Record<string, any>>(`draft_lesson_report_${lessonId}`);
+
+  // Load draft on mount
+  useEffect(() => {
+    const draft = loadDraft();
+    if (draft) {
+      form.setFieldsValue(draft);
+    }
+  }, [loadDraft, form]);
+
+  // Auto-save draft on field changes
+  const handleValuesChange = useCallback((_: any, allValues: any) => {
+    saveDraft(allValues);
+  }, [saveDraft]);
 
   const handleSubmit = async (values: any) => {
     try {
@@ -31,6 +46,7 @@ const LessonReportForm: React.FC<LessonReportFormProps> = ({
       };
       await submitLessonReport(lessonId, request);
       toast.success('Nộp báo cáo buổi học thành công!');
+      clearDraft();
       onSubmitSuccess();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Không thể nộp báo cáo. Vui lòng thử lại.');
@@ -48,6 +64,7 @@ const LessonReportForm: React.FC<LessonReportFormProps> = ({
         form={form}
         layout="vertical"
         onFinish={handleSubmit}
+        onValuesChange={handleValuesChange}
         initialValues={{ isStudentPresent: true }}
       >
         <Form.Item
