@@ -18,6 +18,7 @@ import {
     type CertificateValidationResult
 } from '../../../services/certificate.service';
 import { getUserIdFromToken } from '../../../services/auth.service';
+import { useFormDraft } from '../../../hooks/useFormDraft';
 import styles from './CredentialModal.module.css';
 
 // Icons
@@ -57,7 +58,7 @@ const PendingIcon = () => (
 
 const WarningIcon = () => (
     <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-        <path d="M12 9V13M12 17H12.01M10.29 3.86L1.82 18C1.64 18.3 1.55 18.64 1.55 19C1.55 19.36 1.64 19.7 1.82 20C2 20.3 2.26 20.56 2.58 20.74C2.9 20.92 3.26 21.01 3.64 21H20.36C20.74 21.01 21.1 20.92 21.42 20.74C21.74 20.56 22 20.3 22.18 20C22.36 19.7 22.45 19.36 22.45 19C22.45 18.64 22.36 18.3 22.18 18L13.71 3.86C13.53 3.56 13.27 3.32 12.95 3.15C12.63 2.98 12.27 2.89 11.9 2.89C11.53 2.89 11.17 2.98 10.85 3.15C10.53 3.32 10.27 3.56 10.09 3.86H10.29Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M12 9V13M12 17H12.01M10.29 3.86L1.82 18C1.64 18.3 1.55 18.64 1.55 19C1.55 19.36 1.64 19.7 1.82 20C2 20.3 2.26 20.56 2.58 20.74C2.9 20.92 3.26 21.01 3.64 21H20.36C20.74 21.01 21.1 20.92 21.42 20.74C21.74 20.56 22 20.3 22.18 20C22.36 19.7 22.45 19.36 22.45 19C22.45 18.64 22.36 18.3 22.18 18L13.71 3.86C13.53 3.56 13.27 3.32 12.95 3.15C12.63 2.98 12.27 2.89 11.9 2.89C11.53 2.89 11.17 2.98 10.85 3.15C10.53 3.32 10.27 3.56 10.09 3.86H10.29Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
 );
 
@@ -120,16 +121,19 @@ const CredentialModal: React.FC<CredentialModalProps> = ({
     const [pendingCertificateId, setPendingCertificateId] = useState<string | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const { saveDraft, loadDraft, clearDraft } = useFormDraft<CredentialData>('draft_credential');
 
-    // Reset form when modal opens
+    // Reset form when modal opens — prioritize draft over initialData
     useEffect(() => {
         if (isOpen) {
-            setFormData(initialData || defaultData);
+            const draft = loadDraft();
+            const dataToUse = draft ? { ...draft, certificateFile: null } : (initialData || defaultData);
+            setFormData(dataToUse);
             setErrors({});
-            setFilePreview(initialData?.certificateUrl || null);
+            setFilePreview(dataToUse.certificateUrl || null);
             // Set initial search value
-            if (initialData?.certificateType) {
-                setCertificateTypeSearch(getCertificateLabel(initialData.certificateType));
+            if (dataToUse.certificateType) {
+                setCertificateTypeSearch(getCertificateLabel(dataToUse.certificateType));
             } else {
                 setCertificateTypeSearch('');
             }
@@ -137,7 +141,14 @@ const CredentialModal: React.FC<CredentialModalProps> = ({
             setValidationResult(null);
             setPendingCertificateId(null);
         }
-    }, [isOpen, initialData]);
+    }, [isOpen, initialData, loadDraft]);
+
+    // Auto-save draft on form data change
+    useEffect(() => {
+        if (isOpen) {
+            saveDraft(formData);
+        }
+    }, [formData, isOpen, saveDraft]);
 
     // Handle file upload
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -256,6 +267,7 @@ const CredentialModal: React.FC<CredentialModalProps> = ({
 
                 // Success - validation passed
                 toast.success('Tải lên chứng chỉ thành công!');
+                clearDraft();
 
                 onSave({
                     ...formData,
@@ -303,6 +315,7 @@ const CredentialModal: React.FC<CredentialModalProps> = ({
                     id: pendingCertificateId,
                     verificationStatus: 'pending'
                 });
+                clearDraft();
                 setShowValidationError(false);
                 onClose();
             } else {

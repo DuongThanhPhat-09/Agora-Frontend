@@ -3,6 +3,7 @@ import { X, Clock } from 'lucide-react';
 import { toast } from 'react-toastify';
 import styles from './AddAvailabilityModal.module.css';
 import { createAvailability, DAY_OF_WEEK_MAP } from '../../../services/availability.service';
+import { useFormDraft } from '../../../hooks/useFormDraft';
 
 // Hour options: 0 to 23 (temporarily expanded)
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => {
@@ -60,6 +61,9 @@ const AddAvailabilityModal: FunctionComponent<AddAvailabilityModalProps> = ({
     const [isLoading, setIsLoading] = useState(false);
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
     const [isVisible, setIsVisible] = useState(false);
+    const { saveDraft, loadDraft, clearDraft } = useFormDraft<{
+        dayOfWeek: number; fromHour: string; fromMinute: string; toHour: string; toMinute: string;
+    }>('draft_add_availability');
 
     // Handle animation - delay visibility for smooth transition
     useEffect(() => {
@@ -71,6 +75,27 @@ const AddAvailabilityModal: FunctionComponent<AddAvailabilityModalProps> = ({
             setIsVisible(false);
         }
     }, [isOpen]);
+
+    // Load draft on open
+    useEffect(() => {
+        if (isOpen) {
+            const draft = loadDraft();
+            if (draft) {
+                setDayOfWeek(draft.dayOfWeek ?? 1);
+                setFromHour(draft.fromHour ?? '');
+                setFromMinute(draft.fromMinute ?? '0');
+                setToHour(draft.toHour ?? '');
+                setToMinute(draft.toMinute ?? '0');
+            }
+        }
+    }, [isOpen, loadDraft]);
+
+    // Auto-save draft on field changes
+    useEffect(() => {
+        if (isOpen) {
+            saveDraft({ dayOfWeek, fromHour, fromMinute, toHour, toMinute });
+        }
+    }, [dayOfWeek, fromHour, fromMinute, toHour, toMinute, isOpen, saveDraft]);
 
     // Get available end hours based on start time
     const getAvailableEndHours = () => {
@@ -159,7 +184,8 @@ const AddAvailabilityModal: FunctionComponent<AddAvailabilityModalProps> = ({
 
             toast.success('Thêm lịch rảnh thành công!');
 
-            // Reset form
+            // Reset form and clear draft
+            clearDraft();
             setDayOfWeek(1);  // Monday=1
             setFromHour('');
             setFromMinute('0');
@@ -195,13 +221,6 @@ const AddAvailabilityModal: FunctionComponent<AddAvailabilityModalProps> = ({
     };
 
     const handleCancel = () => {
-        // Reset form
-        setDayOfWeek(1);  // Monday=1
-        setFromHour('');
-        setFromMinute('0');
-        setToHour('');
-        setToMinute('0');
-        setFieldErrors({});
         onClose();
     };
 

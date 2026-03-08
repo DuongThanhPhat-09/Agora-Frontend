@@ -7,6 +7,7 @@ import {
     formatVND,
     parseVND
 } from '../utils/validation';
+import { useFormDraft } from '../../../hooks/useFormDraft';
 import styles from './PricingModal.module.css';
 
 interface PricingData {
@@ -35,16 +36,26 @@ const PricingModal: React.FC<PricingModalProps> = ({
     );
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isLoading, setIsLoading] = useState(false);
+    const { saveDraft, loadDraft, clearDraft } = useFormDraft<PricingData>('draft_pricing');
 
-    // Reset form when modal opens
+    // Reset form when modal opens — prioritize draft over initialData
     useEffect(() => {
         if (isOpen) {
-            setFormData(initialData);
-            setHourlyRateDisplay(formatVND(initialData.hourlyRate));
-            setTrialPriceDisplay(initialData.trialLessonPrice ? formatVND(initialData.trialLessonPrice) : '');
+            const draft = loadDraft();
+            const dataToUse = draft ?? initialData;
+            setFormData(dataToUse);
+            setHourlyRateDisplay(formatVND(dataToUse.hourlyRate));
+            setTrialPriceDisplay(dataToUse.trialLessonPrice ? formatVND(dataToUse.trialLessonPrice) : '');
             setErrors({});
         }
-    }, [isOpen, initialData]);
+    }, [isOpen, initialData, loadDraft]);
+
+    // Auto-save draft on form data change
+    useEffect(() => {
+        if (isOpen) {
+            saveDraft(formData);
+        }
+    }, [formData, isOpen, saveDraft]);
 
     // Handle hourly rate change
     const handleHourlyRateChange = (value: string) => {
@@ -96,6 +107,7 @@ const PricingModal: React.FC<PricingModalProps> = ({
         setIsLoading(false);
 
         if (success) {
+            clearDraft();
             onClose();
         }
     };

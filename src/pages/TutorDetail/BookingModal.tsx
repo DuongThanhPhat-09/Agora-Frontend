@@ -5,6 +5,7 @@ import { getCurrentUserRole, getUserIdFromToken } from '../../services/auth.serv
 import type { StudentType } from '../../types/student.type';
 import type { CreateBookingPayload, PromotionValidateResult } from '../../services/booking.service';
 import type { SubjectInfo, AvailabilitySlot } from '../../services/tutorDetail.service';
+import { useFormDraft } from '../../hooks/useFormDraft';
 import './BookingModal.css';
 
 // ===== TYPES =====
@@ -749,7 +750,8 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
     const [bookingSuccess, setBookingSuccess] = useState(false);
     const [successBookingId, setSuccessBookingId] = useState<number | null>(null);
     const [slotDuration, setSlotDuration] = useState(2);
-    const [formData, setFormData] = useState<BookingFormData>({
+
+    const defaultFormData: BookingFormData = {
         studentId: userRole === 'Student' ? (currentUserId || '') : '',
         subjectId: 0,
         teachingMode: 'online',
@@ -760,7 +762,10 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
         locationWard: '',
         locationDetail: '',
         promotionCode: '',
-    });
+    };
+
+    const [formData, setFormData] = useState<BookingFormData>(defaultFormData);
+    const { saveDraft, loadDraft, clearDraft } = useFormDraft<{ formData: BookingFormData; step: number; slotDuration: number }>(`draft_booking_${tutorId}`);
 
     // Compute available subjects
     const availableSubjects = SUBJECT_MAPPING.filter(s =>
@@ -789,28 +794,29 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
         fetchStudents();
     }, [isOpen, userRole]);
 
-    // Reset form when modal closes
+    // Load draft on open, reset UI state on close
     useEffect(() => {
-        if (!isOpen) {
+        if (isOpen) {
+            const draft = loadDraft();
+            if (draft) {
+                setFormData(draft.formData || defaultFormData);
+                setStep(draft.step || 0);
+                setSlotDuration(draft.slotDuration || 2);
+            }
+        } else {
             setStep(0);
             setSubmitError(null);
             setBookingSuccess(false);
             setSuccessBookingId(null);
-            setSlotDuration(2);
-            setFormData({
-                studentId: userRole === 'Student' ? (currentUserId || '') : '',
-                subjectId: 0,
-                teachingMode: 'online',
-                startDate: new Date().toISOString().split('T')[0],
-                schedule: [],
-                locationCity: '',
-                locationDistrict: '',
-                locationWard: '',
-                locationDetail: '',
-                promotionCode: '',
-            });
         }
-    }, [isOpen]);
+    }, [isOpen, loadDraft]);
+
+    // Auto-save draft on form data changes
+    useEffect(() => {
+        if (isOpen && !bookingSuccess) {
+            saveDraft({ formData, step, slotDuration });
+        }
+    }, [formData, step, slotDuration, isOpen, bookingSuccess, saveDraft]);
 
     // Auto-dismiss error toast after 5 seconds
     useEffect(() => {
@@ -865,6 +871,7 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
             const result = await createBooking(payload);
             setSuccessBookingId(result.content?.bookingId || null);
             setBookingSuccess(true);
+            clearDraft();
             // Auto-close after 5 seconds
             setTimeout(() => {
                 onClose();

@@ -15,6 +15,7 @@ import {
     VIETNAM_PROVINCES,
     VIETNAM_DISTRICTS
 } from '../data/vietnamLocations';
+import { useFormDraft } from '../../../hooks/useFormDraft';
 import styles from './ProfileHeroModal.module.css';
 
 
@@ -105,20 +106,30 @@ const ProfileHeroModal: React.FC<ProfileHeroModalProps> = ({
     const [citySearch, setCitySearch] = useState<string>('');
     const [districtSearch, setDistrictSearch] = useState<string>('');
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const { saveDraft, loadDraft, clearDraft } = useFormDraft<ProfileHeroData>('draft_hero');
 
-    // Reset form when modal opens
+    // Reset form when modal opens — prioritize draft over initialData
     useEffect(() => {
         if (isOpen) {
-            setFormData(initialData);
-            setAvatarPreview(initialData.avatarUrl);
+            const draft = loadDraft();
+            const dataToUse = draft ? { ...draft, avatarFile: null } : initialData;
+            setFormData(dataToUse);
+            setAvatarPreview(dataToUse.avatarUrl);
             setErrors({});
             // Set initial search values from saved data
-            const selectedCity = VIETNAM_PROVINCES.find(p => p.value === initialData.teachingAreaCity);
+            const selectedCity = VIETNAM_PROVINCES.find(p => p.value === dataToUse.teachingAreaCity);
             setCitySearch(selectedCity?.label || '');
-            const selectedDistrict = VIETNAM_DISTRICTS[initialData.teachingAreaCity]?.find(d => d.value === initialData.teachingAreaDistrict);
+            const selectedDistrict = VIETNAM_DISTRICTS[dataToUse.teachingAreaCity]?.find(d => d.value === dataToUse.teachingAreaDistrict);
             setDistrictSearch(selectedDistrict?.label || '');
         }
-    }, [isOpen, initialData]);
+    }, [isOpen, initialData, loadDraft]);
+
+    // Auto-save draft on form data change
+    useEffect(() => {
+        if (isOpen) {
+            saveDraft(formData);
+        }
+    }, [formData, isOpen, saveDraft]);
 
     // Handle avatar upload
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -305,6 +316,7 @@ const ProfileHeroModal: React.FC<ProfileHeroModalProps> = ({
         try {
             // Call onSave - parent handles API call and closing modal
             await onSave(formData);
+            clearDraft();
         } finally {
             setIsLoading(false);
         }
