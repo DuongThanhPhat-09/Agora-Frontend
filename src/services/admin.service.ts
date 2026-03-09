@@ -205,7 +205,7 @@ export const updateTutorApproval = async (
     };
     // AdminController không có [Route("api")] nên endpoint thực tế là /tutors/{id}/approval
     const { data } = await api.put(`/tutors/${tutorId}/approval`, requestBody, {
-      baseURL: 'http://localhost:5166',
+      baseURL: import.meta.env.VITE_BACKEND_URL || 'http://localhost:5166',
     });
     return data;
   } catch (error) {
