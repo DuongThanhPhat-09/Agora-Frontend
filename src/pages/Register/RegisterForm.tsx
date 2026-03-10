@@ -127,26 +127,16 @@ const RegisterForm: React.FC = () => {
 
             <div className="register-form__body">
                 <form onSubmit={handleSubmit} className="register-form__form">
-                    <div className="space-y-3">
-                        <div className="animate-fade-in-up delay-75">
-                            <InputGroup id="fullname" name="fullname" type="text" label="Họ và Tên" placeholder="Nguyễn Văn A" icon="person" value={formData.fullname} onChange={handleChange} disabled={isSubmitting} />
-                        </div>
-                        <div className="animate-fade-in-up delay-100">
-                            <InputGroup id="email" name="email" type="email" label="Email" placeholder="student@example.com" icon="mail" value={formData.email} onChange={handleChange} disabled={isSubmitting} />
-                        </div>
-                        <div className="animate-fade-in-up delay-150">
-                            <InputGroup id="phone" name="phone" type="tel" label="Số Điện Thoại (tùy chọn)" placeholder="090..." icon="phone" value={formData.phone} onChange={handleChange} disabled={isSubmitting} />
-                        </div>
-                        <div className="animate-fade-in-up delay-200">
-                            <InputGroup id="password" name="password" type="password" label="Mật Khẩu" placeholder="••••••••" icon="lock" value={formData.password} onChange={handleChange} showPasswordToggle={true} disabled={isSubmitting} />
-                        </div>
-                        <div className="animate-fade-in-up delay-200">
-                            <InputGroup id="confirmPassword" name="confirmPassword" type="password" label="Nhập lại Mật Khẩu" placeholder="••••••••" icon="lock" value={formData.confirmPassword} onChange={handleChange} showPasswordToggle={true} disabled={isSubmitting} />
-                        </div>
+                    <div className="space-y-3 animate-fade-in-up delay-100">
+                        <InputGroup id="fullname" name="fullname" type="text" label="Họ và Tên" placeholder="Nguyễn Văn A" icon="person" value={formData.fullname} onChange={handleChange} disabled={isSubmitting} />
+                        <InputGroup id="email" name="email" type="email" label="Email" placeholder="student@example.com" icon="mail" value={formData.email} onChange={handleChange} disabled={isSubmitting} />
+                        <InputGroup id="phone" name="phone" type="tel" label="Số Điện Thoại (tùy chọn)" placeholder="090..." icon="phone" value={formData.phone} onChange={handleChange} disabled={isSubmitting} />
+                        <InputGroup id="password" name="password" type="password" label="Mật Khẩu" placeholder="••••••••" icon="lock" value={formData.password} onChange={handleChange} showPasswordToggle={true} disabled={isSubmitting} />
+                        <InputGroup id="confirmPassword" name="confirmPassword" type="password" label="Nhập lại Mật Khẩu" placeholder="••••••••" icon="lock" value={formData.confirmPassword} onChange={handleChange} showPasswordToggle={true} disabled={isSubmitting} />
                     </div>
 
                     {/* Role Selection */}
-                    <div className="animate-fade-in-up delay-175">
+                    <div className="animate-fade-in-up delay-200">
                         <label className="register-form__role-label">
                             Tôi là <span className="register-form__role-required">*</span>
                         </label>

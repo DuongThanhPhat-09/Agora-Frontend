@@ -4,6 +4,7 @@ import { X, Clock } from 'lucide-react';
 import { toast } from 'react-toastify';
 import styles from './AddAvailabilityModal.module.css';
 import { updateAvailability, DAY_OF_WEEK_MAP } from '../../../services/availability.service';
+import { useFormDraft } from '../../../hooks/useFormDraft';
 
 // Hour options: 0 to 23 (temporarily expanded)
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => {
@@ -75,6 +76,9 @@ const EditAvailabilityModal: FunctionComponent<EditAvailabilityModalProps> = ({
     const [isLoading, setIsLoading] = useState(false);
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
     const [isVisible, setIsVisible] = useState(false);
+    const { saveDraft, loadDraft, clearDraft } = useFormDraft<{
+        dayOfWeek: number; fromHour: string; fromMinute: string; toHour: string; toMinute: string;
+    }>(`draft_edit_availability_${availabilityData?.id ?? 0}`);
 
     // Handle animation - delay visibility for smooth transition
     useEffect(() => {
@@ -87,19 +91,35 @@ const EditAvailabilityModal: FunctionComponent<EditAvailabilityModalProps> = ({
         }
     }, [isOpen]);
 
-    // Update form when availabilityData changes
+    // Update form when availabilityData changes — prioritize draft
     useEffect(() => {
-        if (availabilityData) {
-            setDayOfWeek(availabilityData.dayOfWeek);
-            const startParsed = parseTime(availabilityData.startTime);
-            const endParsed = parseTime(availabilityData.endTime);
-            setFromHour(startParsed.hour);
-            setFromMinute(startParsed.minute);
-            setToHour(endParsed.hour);
-            setToMinute(endParsed.minute);
+        if (availabilityData && isOpen) {
+            const draft = loadDraft();
+            if (draft) {
+                setDayOfWeek(draft.dayOfWeek ?? availabilityData.dayOfWeek);
+                setFromHour(draft.fromHour ?? '');
+                setFromMinute(draft.fromMinute ?? '0');
+                setToHour(draft.toHour ?? '');
+                setToMinute(draft.toMinute ?? '0');
+            } else {
+                setDayOfWeek(availabilityData.dayOfWeek);
+                const startParsed = parseTime(availabilityData.startTime);
+                const endParsed = parseTime(availabilityData.endTime);
+                setFromHour(startParsed.hour);
+                setFromMinute(startParsed.minute);
+                setToHour(endParsed.hour);
+                setToMinute(endParsed.minute);
+            }
             setFieldErrors({});
         }
-    }, [availabilityData]);
+    }, [availabilityData, isOpen, loadDraft]);
+
+    // Auto-save draft on field changes
+    useEffect(() => {
+        if (isOpen) {
+            saveDraft({ dayOfWeek, fromHour, fromMinute, toHour, toMinute });
+        }
+    }, [dayOfWeek, fromHour, fromMinute, toHour, toMinute, isOpen, saveDraft]);
 
     // Get available end hours based on start time
     const getAvailableEndHours = () => {
@@ -187,6 +207,7 @@ const EditAvailabilityModal: FunctionComponent<EditAvailabilityModalProps> = ({
             });
 
             toast.success('Cập nhật lịch rảnh thành công!');
+            clearDraft();
             setFieldErrors({});
 
             // Call success callback

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Rate, Input, Spin } from 'antd';
 import { toast } from 'react-toastify';
 import { createFeedback, type CreateFeedbackRequest } from '../../../services/feedback.service';
+import { useFormDraft } from '../../../hooks/useFormDraft';
 
 const { TextArea } = Input;
 
@@ -26,6 +27,30 @@ const CreateFeedbackModal: React.FC<CreateFeedbackModalProps> = ({
     const [actualResult, setActualResult] = useState('');
     const [courseDuration, setCourseDuration] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const { saveDraft, loadDraft, clearDraft } = useFormDraft<{
+        rating: number; comment: string; initialGoal: string; actualResult: string; courseDuration: string;
+    }>(`draft_feedback_${bookingId}`);
+
+    // Load draft on open
+    useEffect(() => {
+        if (open) {
+            const draft = loadDraft();
+            if (draft) {
+                setRating(draft.rating || 0);
+                setComment(draft.comment || '');
+                setInitialGoal(draft.initialGoal || '');
+                setActualResult(draft.actualResult || '');
+                setCourseDuration(draft.courseDuration || '');
+            }
+        }
+    }, [open, loadDraft]);
+
+    // Auto-save draft on field changes
+    useEffect(() => {
+        if (open) {
+            saveDraft({ rating, comment, initialGoal, actualResult, courseDuration });
+        }
+    }, [rating, comment, initialGoal, actualResult, courseDuration, open, saveDraft]);
 
     const handleSubmit = async () => {
         if (rating === 0) {
@@ -48,6 +73,7 @@ const CreateFeedbackModal: React.FC<CreateFeedbackModalProps> = ({
             };
             await createFeedback(request);
             toast.success('Đã gửi đánh giá thành công!');
+            clearDraft();
             handleReset();
             onSuccess();
         } catch (error) {
@@ -66,7 +92,6 @@ const CreateFeedbackModal: React.FC<CreateFeedbackModalProps> = ({
     };
 
     const handleCancel = () => {
-        handleReset();
         onClose();
     };
 

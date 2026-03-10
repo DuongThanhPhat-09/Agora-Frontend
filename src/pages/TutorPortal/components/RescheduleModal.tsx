@@ -1,6 +1,7 @@
 import type { FunctionComponent } from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, Clock } from 'lucide-react';
+import { useFormDraft } from '../../../hooks/useFormDraft';
 import styles from './RescheduleModal.module.css';
 
 interface RescheduleModalProps {
@@ -21,6 +22,28 @@ const RescheduleModal: FunctionComponent<RescheduleModalProps> = ({
   const [alternativeDate, setAlternativeDate] = useState('');
   const [alternativeTime, setAlternativeTime] = useState('');
   const [note, setNote] = useState('');
+  const { saveDraft, loadDraft, clearDraft } = useFormDraft<{
+    alternativeDate: string; alternativeTime: string; note: string;
+  }>('draft_reschedule');
+
+  // Load draft on open
+  useEffect(() => {
+    if (isOpen) {
+      const draft = loadDraft();
+      if (draft) {
+        setAlternativeDate(draft.alternativeDate || '');
+        setAlternativeTime(draft.alternativeTime || '');
+        setNote(draft.note || '');
+      }
+    }
+  }, [isOpen, loadDraft]);
+
+  // Auto-save draft on field changes
+  useEffect(() => {
+    if (isOpen) {
+      saveDraft({ alternativeDate, alternativeTime, note });
+    }
+  }, [alternativeDate, alternativeTime, note, isOpen, saveDraft]);
 
   if (!isOpen) return null;
 
@@ -28,6 +51,7 @@ const RescheduleModal: FunctionComponent<RescheduleModalProps> = ({
     e.preventDefault();
     // TODO: Implement reschedule logic
     console.log('Reschedule request:', { alternativeDate, alternativeTime, note });
+    clearDraft();
     onClose();
   };
 

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Input, Rate, Spin } from 'antd';
 import { toast } from 'react-toastify';
 import { replyFeedback, type ReplyFeedbackRequest } from '../../../services/feedback.service';
+import { useFormDraft } from '../../../hooks/useFormDraft';
 
 const { TextArea } = Input;
 
@@ -22,6 +23,24 @@ const ReplyFeedbackModal: React.FC<ReplyFeedbackModalProps> = ({
 }) => {
     const [replyText, setReplyText] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const { saveDraft, loadDraft, clearDraft } = useFormDraft<{ replyText: string }>(`draft_reply_${feedbackId}`);
+
+    // Load draft on open
+    useEffect(() => {
+        if (open) {
+            const draft = loadDraft();
+            if (draft?.replyText) {
+                setReplyText(draft.replyText);
+            }
+        }
+    }, [open, loadDraft]);
+
+    // Auto-save draft on text change
+    useEffect(() => {
+        if (open && replyText) {
+            saveDraft({ replyText });
+        }
+    }, [replyText, open, saveDraft]);
 
     const handleSubmit = async () => {
         if (!replyText.trim()) {
@@ -36,6 +55,7 @@ const ReplyFeedbackModal: React.FC<ReplyFeedbackModalProps> = ({
             };
             await replyFeedback(feedbackId, request);
             toast.success('Đã gửi phản hồi thành công!');
+            clearDraft();
             setReplyText('');
             onSuccess();
         } catch (error) {
@@ -46,7 +66,6 @@ const ReplyFeedbackModal: React.FC<ReplyFeedbackModalProps> = ({
     };
 
     const handleCancel = () => {
-        setReplyText('');
         onClose();
     };
 
