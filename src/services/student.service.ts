@@ -201,3 +201,21 @@ export const studentSelfLink = async (parentCode: string): Promise<ApiResponse<S
   }
 };
 
+/**
+ * Parent resets student password — returns new credentials
+ */
+export const resetStudentPassword = async (
+  studentId: string
+): Promise<ApiResponse<StudentCredentials>> => {
+  try {
+    const response = await api.put<ApiResponse<StudentCredentials>>(
+      `/parent/students/${studentId}/reset-password`,
+      {},
+      { headers: getAuthHeaders() }
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ Error resetting student password:', error.response?.data);
+    throw error;
+  }
+};

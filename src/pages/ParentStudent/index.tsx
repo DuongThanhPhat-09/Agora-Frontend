@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Popconfirm } from 'antd';
 import { toast } from 'react-toastify';
 import styles from './styles.module.css';
@@ -8,6 +9,7 @@ import {
   deleteStudent,
   createParentStudentWithCredentials,
   updateParentStudent,
+  resetStudentPassword,
   type ICreateParentStudent,
   type StudentCredentials,
 } from '../../services/student.service';
@@ -136,7 +138,15 @@ const TrashIcon = () => (
   </svg>
 );
 
+const KeyIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3">
+    <circle cx="9.5" cy="4.5" r="3" />
+    <path d="M7 7l-5 5M4 10l2 2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 const ParentStudent = () => {
+  const navigate = useNavigate();
   const [students, setStudents] = useState<StudentType[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -146,6 +156,7 @@ const ParentStudent = () => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [linkCodeStudent, setLinkCodeStudent] = useState<StudentType | null>(null);
   const [newCredentials, setNewCredentials] = useState<StudentCredentials | null>(null);
+  const [credentialsTitle, setCredentialsTitle] = useState<string | undefined>(undefined);
   const [isParentCodeOpen, setIsParentCodeOpen] = useState(false);
 
   useEffect(() => {
@@ -180,7 +191,7 @@ const ParentStudent = () => {
   const handleAddStudent = async (payload: ICreateParentStudent) => {
     try {
       const result = await createParentStudentWithCredentials(payload);
-      toast.success('Student added successfully');
+      toast.success('Thêm học sinh thành công!');
       const response = await getStudents();
       if (response.statusCode === 200) setStudents(response.content);
       setIsAddModalOpen(false);
@@ -190,7 +201,7 @@ const ParentStudent = () => {
       }
     } catch (err) {
       console.error('Error adding student:', err);
-      toast.error('Failed to add student');
+      toast.error('Thêm học sinh thất bại');
     }
   };
 
@@ -218,25 +229,40 @@ const ParentStudent = () => {
   const handleEditSubmit = async (id: string, payload: ICreateParentStudent) => {
     try {
       await updateParentStudent(id, payload);
-      toast.success('Student updated successfully');
+      toast.success('Cập nhật thông tin thành công!');
       const response = await getStudents();
       if (response.statusCode === 200) setStudents(response.content);
       handleEditModalClose();
     } catch (err) {
       console.error('Error updating student:', err);
-      toast.error('Failed to update student');
+      toast.error('Cập nhật thất bại');
     }
   };
 
   const handleDeleteConfirm = async (student: StudentType) => {
     try {
       await deleteStudent(student.studentId);
-      toast.success('Student deleted successfully');
+      toast.success('Xoá học sinh thành công!');
       setStudents((prev) => prev.filter((s) => s.studentId !== student.studentId));
       setOpenMenuId(null);
     } catch (err) {
       console.error('Error deleting student:', err);
-      toast.error('Failed to delete student');
+      toast.error('Xoá học sinh thất bại');
+    }
+  };
+
+  const handleResetPassword = async (student: StudentType) => {
+    setOpenMenuId(null);
+    try {
+      const result = await resetStudentPassword(student.studentId);
+      toast.success('Đặt lại mật khẩu thành công!');
+      if (result.content) {
+        setCredentialsTitle('Đặt lại mật khẩu thành công!');
+        setNewCredentials(result.content);
+      }
+    } catch (err) {
+      console.error('Error resetting password:', err);
+      toast.error('Đặt lại mật khẩu thất bại');
     }
   };
 
@@ -248,21 +274,19 @@ const ParentStudent = () => {
     name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
 
   const activeCount = students.length;
-  const totalSessions = students.length > 0 ? students.length * 4 + 1 : 0;
-  const avgProgress = students.length > 0 ? 91 : 0;
 
   return (
     <div className={styles.page}>
       {/* ── Header Top Bar ── */}
       <div className={styles.topBar}>
-        <h1 className={styles.pageTitle}>Children</h1>
+        <h1 className={styles.pageTitle}>Quản lý con</h1>
         <div className={styles.topBarActions}>
           <div className={styles.searchWrap}>
             <div className={styles.searchIconPos}><SearchIcon /></div>
             <input
               type="text"
               className={styles.searchInput}
-              placeholder="Search..."
+              placeholder="Tìm kiếm..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -274,11 +298,11 @@ const ParentStudent = () => {
             style={{ background: '#3b82f6', marginRight: 8 }}
           >
             <LinkIcon />
-            <span>Invite Code</span>
+            <span>Mã mời</span>
           </button>
           <button className={styles.addChildBtn} onClick={handleAddClick} type="button">
             <PlusIcon />
-            <span>Add Child</span>
+            <span>Thêm con</span>
           </button>
         </div>
       </div>
@@ -286,7 +310,7 @@ const ParentStudent = () => {
       {loading ? (
         <div className={styles.loadingContainer}>
           <div className={styles.spinner} />
-          <p className={styles.loadingText}>Loading children...</p>
+          <p className={styles.loadingText}>Đang tải...</p>
         </div>
       ) : (
         <div className={styles.content}>
@@ -295,35 +319,35 @@ const ParentStudent = () => {
             <div className={styles.statCard}>
               <div className={`${styles.statIcon} ${styles.statIconGreen}`}><PeopleIcon /></div>
               <div className={styles.statValue}>{activeCount}</div>
-              <div className={styles.statLabel}>Active Children</div>
+              <div className={styles.statLabel}>Số con</div>
             </div>
             <div className={styles.statCard}>
               <div className={`${styles.statIcon} ${styles.statIconNavy}`}><SessionsStatIcon /></div>
-              <div className={styles.statValue}>{totalSessions}</div>
-              <div className={styles.statLabel}>Total Sessions</div>
+              <div className={styles.statValue}>—</div>
+              <div className={styles.statLabel}>Tổng buổi học</div>
             </div>
             <div className={styles.statCard}>
               <div className={`${styles.statIcon} ${styles.statIconGreen}`}><ChartIcon /></div>
-              <div className={styles.statValue}>{avgProgress}%</div>
-              <div className={styles.statLabel}>Avg. Progress</div>
+              <div className={styles.statValue}>—</div>
+              <div className={styles.statLabel}>Tiến độ TB</div>
             </div>
             <div className={styles.statCard}>
               <div className={`${styles.statIcon} ${styles.statIconRed}`}><PendingClockIcon /></div>
               <div className={styles.statValue}>0</div>
-              <div className={styles.statLabel}>Pending Invite</div>
+              <div className={styles.statLabel}>Lời mời chờ</div>
             </div>
           </div>
 
           {students.length === 0 ? (
             <div className={styles.emptyState}>
               <div className={styles.emptyIcon}><PlusIcon /></div>
-              <h3 className={styles.emptyTitle}>No Children Yet</h3>
+              <h3 className={styles.emptyTitle}>Chưa có học sinh nào</h3>
               <p className={styles.emptyText}>
-                Get started by adding your first child to begin tracking their learning journey.
+                Bắt đầu bằng cách thêm con để theo dõi hành trình học tập.
               </p>
               <button className={styles.emptyBtn} onClick={handleAddClick} type="button">
                 <PlusIcon />
-                <span>Add Your First Child</span>
+                <span>Thêm con đầu tiên</span>
               </button>
             </div>
           ) : (
@@ -360,9 +384,15 @@ const ParentStudent = () => {
                         <div className={styles.childInfo}>
                           <h4 className={styles.childName}>{student.fullName}</h4>
                           <div className={styles.childMeta}>
+                            {student.username && (
+                              <>
+                                <span className={styles.childGrade} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}>@{student.username}</span>
+                                <span className={styles.metaDot}>•</span>
+                              </>
+                            )}
                             <span className={styles.childGrade}>{student.gradeLevel || 'N/A'}</span>
                             <span className={styles.metaDot}>•</span>
-                            <span className={styles.childStatus}>Active</span>
+                            <span className={styles.childStatus}>Đang hoạt động</span>
                           </div>
                         </div>
                       </div>
@@ -383,18 +413,21 @@ const ParentStudent = () => {
                               <LinkIcon /><span>Mã liên kết</span>
                             </button>
                             <button className={styles.dropdownItem} onClick={() => handleEditClick(student)} type="button">
-                              <EditIcon /><span>Edit</span>
+                              <EditIcon /><span>Chỉnh sửa</span>
+                            </button>
+                            <button className={styles.dropdownItem} onClick={() => handleResetPassword(student)} type="button">
+                              <KeyIcon /><span>Đặt lại mật khẩu</span>
                             </button>
                             <Popconfirm
-                              title="Delete Student"
-                              description={`Are you sure you want to delete ${student.fullName}?`}
+                              title="Xoá học sinh"
+                              description={`Bạn có chắc muốn xoá ${student.fullName}?`}
                               onConfirm={() => handleDeleteConfirm(student)}
-                              okText="Delete"
-                              cancelText="Cancel"
+                              okText="Xoá"
+                              cancelText="Huỷ"
                               okButtonProps={{ danger: true }}
                             >
                               <button className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`} type="button">
-                                <TrashIcon /><span>Delete</span>
+                                <TrashIcon /><span>Xoá</span>
                               </button>
                             </Popconfirm>
                           </div>
@@ -405,15 +438,15 @@ const ParentStudent = () => {
                     {/* Stats Row */}
                     <div className={styles.cardStats}>
                       <div className={styles.cardStatItem}>
-                        <span className={styles.cardStatLabel}>Sessions</span>
+                        <span className={styles.cardStatLabel}>Buổi học</span>
                         <span className={styles.cardStatValue}>—</span>
                       </div>
                       <div className={styles.cardStatItem}>
-                        <span className={styles.cardStatLabel}>Progress</span>
+                        <span className={styles.cardStatLabel}>Tiến độ</span>
                         <span className={styles.cardStatValue}>—</span>
                       </div>
                       <div className={styles.cardStatItem}>
-                        <span className={styles.cardStatLabel}>Streak</span>
+                        <span className={styles.cardStatLabel}>Chuỗi</span>
                         <span className={styles.cardStatValue}>—</span>
                       </div>
                     </div>
@@ -422,14 +455,14 @@ const ParentStudent = () => {
                     <div className={styles.nextBar}>
                       <CalSmallIcon />
                       <span className={styles.nextBarText}>
-                        School: <strong>{student.school || 'N/A'}</strong>
+                        Trường: <strong>{student.school || 'N/A'}</strong>
                       </span>
                     </div>
 
                     {/* Card Actions */}
                     <div className={styles.cardActions}>
-                      <button className={styles.viewDetailsBtn} type="button">View Details</button>
-                      <button className={styles.chatBtn} type="button" title="Message">
+                      <button className={styles.viewDetailsBtn} type="button" onClick={() => handleEditClick(student)}>Xem chi tiết</button>
+                      <button className={styles.chatBtn} type="button" title="Tin nhắn" onClick={() => navigate('/parent-portal/messages')}>
                         <ChatIcon />
                       </button>
                     </div>
@@ -442,24 +475,24 @@ const ParentStudent = () => {
                 <div className={styles.tipsCard}>
                   <div className={styles.tipsHeader}>
                     <div className={styles.tipsIconWrap}><LightbulbIcon /></div>
-                    <h3 className={styles.tipsTitle}>Linking Tips</h3>
+                    <h3 className={styles.tipsTitle}>Mẹo liên kết</h3>
                   </div>
                   <div className={styles.tipsList}>
                     <div className={styles.tipItem}>
                       <CheckIcon />
-                      <p>Share invite link via Zalo or WhatsApp for instant delivery to your child.</p>
+                      <p>Chia sẻ mã mời qua Zalo hoặc WhatsApp để gửi nhanh đến con.</p>
                     </div>
                     <div className={styles.tipItem}>
                       <CheckIcon />
-                      <p>Use QR code for in-person linking if your child is nearby.</p>
+                      <p>Dùng mã QR để liên kết trực tiếp khi con ở gần.</p>
                     </div>
                     <div className={styles.tipItem}>
                       <CheckIcon />
-                      <p>Invites expire after 7 days for security purposes.</p>
+                      <p>Lời mời hết hạn sau 7 ngày vì lý do bảo mật.</p>
                     </div>
                     <div className={styles.tipItem}>
                       <CheckIcon />
-                      <p>You can link multiple children to one parent account.</p>
+                      <p>Bạn có thể liên kết nhiều con vào một tài khoản phụ huynh.</p>
                     </div>
                   </div>
                 </div>
@@ -480,7 +513,8 @@ const ParentStudent = () => {
       )}
       <CredentialsModal
         credentials={newCredentials}
-        onClose={() => setNewCredentials(null)}
+        onClose={() => { setNewCredentials(null); setCredentialsTitle(undefined); }}
+        title={credentialsTitle}
       />
       {isParentCodeOpen && (
         <ParentCodeModal onClose={() => setIsParentCodeOpen(false)} />

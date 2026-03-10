@@ -4,6 +4,7 @@ import type { StudentCredentials } from '../../../services/student.service';
 interface Props {
     credentials: StudentCredentials | null;
     onClose: () => void;
+    title?: string;
 }
 
 const CopyIcon = () => (
@@ -13,7 +14,7 @@ const CopyIcon = () => (
     </svg>
 );
 
-const CredentialsModal = ({ credentials, onClose }: Props) => {
+const CredentialsModal = ({ credentials, onClose, title }: Props) => {
     const [copiedField, setCopiedField] = useState<string | null>(null);
 
     if (!credentials) return null;
@@ -36,7 +37,7 @@ const CredentialsModal = ({ credentials, onClose }: Props) => {
                             <path d="M9 14l4 4 6-7" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                     </div>
-                    <h2 style={titleStyle}>Tạo tài khoản thành công!</h2>
+                    <h2 style={titleStyle}>{title || 'Tạo tài khoản thành công!'}</h2>
                     <p style={subtitleStyle}>
                         Hãy lưu lại thông tin đăng nhập cho <strong>{credentials.fullName}</strong>.
                         Mật khẩu chỉ hiển thị <strong>một lần duy nhất</strong>.
@@ -52,7 +53,7 @@ const CredentialsModal = ({ credentials, onClose }: Props) => {
                                     <circle cx="7" cy="5" r="3" />
                                     <path d="M2 13c0-2.76 2.24-5 5-5s5 2.24 5 5" strokeLinecap="round" />
                                 </svg>
-                                <span>Username</span>
+                                <span>Tên đăng nhập</span>
                             </div>
                             <div style={credentialValueWrap}>
                                 <span style={credentialValue}>{credentials.username}</span>
@@ -62,7 +63,7 @@ const CredentialsModal = ({ credentials, onClose }: Props) => {
                                     type="button"
                                 >
                                     <CopyIcon />
-                                    <span>{copiedField === 'username' ? '✓' : 'Copy'}</span>
+                                    <span>{copiedField === 'username' ? '✓' : 'Sao chép'}</span>
                                 </button>
                             </div>
                         </div>
@@ -87,7 +88,7 @@ const CredentialsModal = ({ credentials, onClose }: Props) => {
                                     type="button"
                                 >
                                     <CopyIcon />
-                                    <span>{copiedField === 'password' ? '✓' : 'Copy'}</span>
+                                    <span>{copiedField === 'password' ? '✓' : 'Sao chép'}</span>
                                 </button>
                             </div>
                         </div>

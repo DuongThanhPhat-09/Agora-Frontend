@@ -35,9 +35,9 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }: AddStudentModalProps) =>
 
         // Validate
         const newErrors: Record<string, string> = {};
-        if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
-        if (!formData.birthDate) newErrors.birthDate = 'Birth date is required';
-        if (!formData.school.trim()) newErrors.school = 'School is required';
+        if (!formData.fullName.trim()) newErrors.fullName = 'Họ tên là bắt buộc';
+        if (!formData.birthDate) newErrors.birthDate = 'Ngày sinh là bắt buộc';
+        if (!formData.school.trim()) newErrors.school = 'Trường là bắt buộc';
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
@@ -76,7 +76,7 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }: AddStudentModalProps) =>
         <div className={styles.modalOverlay} onClick={onClose}>
             <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
                 <div className={styles.modalHeader}>
-                    <h2 className={styles.modalTitle}>Add New Student</h2>
+                    <h2 className={styles.modalTitle}>Thêm học sinh mới</h2>
                     <button className={styles.modalCloseBtn} onClick={onClose} type="button" disabled={submitting}>
                         <Trash2 size={20} />
                     </button>
@@ -85,7 +85,7 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }: AddStudentModalProps) =>
                 <form className={styles.addStudentForm} onSubmit={handleSubmit}>
                     <div className={styles.formRow}>
                         <label className={styles.formLabel}>
-                            Full Name <span className={styles.required}>*</span>
+                            Họ và tên <span className={styles.required}>*</span>
                         </label>
                         <input
                             type="text"
@@ -93,7 +93,7 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }: AddStudentModalProps) =>
                             value={formData.fullName}
                             onChange={handleChange}
                             className={`${styles.formInput} ${errors.fullName ? styles.formInputError : ''}`}
-                            placeholder="Enter student's full name"
+                            placeholder="Nhập họ tên học sinh"
                             disabled={submitting}
                         />
                         {errors.fullName && <span className={styles.errorMessage}>{errors.fullName}</span>}
@@ -101,7 +101,7 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }: AddStudentModalProps) =>
 
                     <div className={styles.formRow}>
                         <label className={styles.formLabel}>
-                            Birth Date <span className={styles.required}>*</span>
+                            Ngày sinh <span className={styles.required}>*</span>
                         </label>
                         <input
                             type="date"
@@ -116,7 +116,7 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }: AddStudentModalProps) =>
 
                     <div className={styles.formRow}>
                         <label className={styles.formLabel}>
-                            School <span className={styles.required}>*</span>
+                            Trường <span className={styles.required}>*</span>
                         </label>
                         <input
                             type="text"
@@ -124,7 +124,7 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }: AddStudentModalProps) =>
                             value={formData.school}
                             onChange={handleChange}
                             className={`${styles.formInput} ${errors.school ? styles.formInputError : ''}`}
-                            placeholder="Enter school name"
+                            placeholder="Nhập tên trường"
                             disabled={submitting}
                         />
                         {errors.school && <span className={styles.errorMessage}>{errors.school}</span>}
@@ -132,7 +132,7 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }: AddStudentModalProps) =>
 
                     <div className={styles.formRow}>
                         <label className={styles.formLabel}>
-                            Grade Level
+                            Khối lớp
                         </label>
                         <input
                             type="text"
@@ -140,21 +140,21 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }: AddStudentModalProps) =>
                             value={formData.gradeLevel}
                             onChange={handleChange}
                             className={styles.formInput}
-                            placeholder="Enter grade level (e.g., Grade 8)"
+                            placeholder="Nhập khối lớp (ví dụ: Lớp 8)"
                             disabled={submitting}
                         />
                     </div>
 
                     <div className={styles.formRow}>
                         <label className={styles.formLabel}>
-                            Learning Goals
+                            Mục tiêu học tập
                         </label>
                         <textarea
                             name="learningGoals"
                             value={formData.learningGoals}
                             onChange={handleChange}
                             className={styles.formTextarea}
-                            placeholder="Enter learning goals..."
+                            placeholder="Nhập mục tiêu học tập..."
                             rows={3}
                             disabled={submitting}
                         />
@@ -162,10 +162,10 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }: AddStudentModalProps) =>
 
                     <div className={styles.modalActions}>
                         <button type="button" className={styles.modalBtn} onClick={onClose} disabled={submitting}>
-                            Cancel
+                            Huỷ
                         </button>
                         <button type="submit" className={styles.modalBtnPrimary} disabled={submitting}>
-                            {submitting ? 'Adding...' : 'Add Student'}
+                            {submitting ? 'Đang thêm...' : 'Thêm học sinh'}
                         </button>
                     </div>
                 </form>

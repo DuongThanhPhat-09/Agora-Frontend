@@ -413,7 +413,7 @@
     border-radius: 10px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     z-index: 20;
-    min-width: 140px;
+    min-width: 190px;
     padding: 4px;
 }
 
@@ -644,7 +644,9 @@
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .loadingText {
@@ -731,7 +733,10 @@
 /* ===== MODAL STYLES (kept for sub-components) ===== */
 .modalOverlay {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: rgba(23, 23, 23, 0.6);
     backdrop-filter: blur(8px);
     z-index: 1000;
@@ -739,7 +744,8 @@
 
 .modalContent {
     position: fixed;
-    top: 50%; left: 50%;
+    top: 50%;
+    left: 50%;
     transform: translate(-50%, -50%);
     background: #ffffff;
     border-radius: 16px;
@@ -770,7 +776,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px; height: 32px;
+    width: 32px;
+    height: 32px;
     border: none;
     background: #f5f5f5;
     border-radius: 8px;
@@ -882,7 +889,8 @@
 }
 
 .deleteModalIcon {
-    width: 64px; height: 64px;
+    width: 64px;
+    height: 64px;
     margin: 0 auto 20px;
     background: rgba(220, 38, 38, 0.1);
     border-radius: 50%;
@@ -893,7 +901,8 @@
 
 .deleteModalIcon svg {
     color: #dc2626;
-    width: 32px; height: 32px;
+    width: 32px;
+    height: 32px;
 }
 
 .deleteModalTitle {
