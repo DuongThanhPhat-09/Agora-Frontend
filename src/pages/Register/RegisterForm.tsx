@@ -53,8 +53,8 @@ const RegisterForm: React.FC = () => {
             toast.warning("Bạn phải đồng ý điều khoản dịch vụ.");
             return;
         }
-        if (formData.password.length < 6) {
-            toast.warning("Mật khẩu phải có ít nhất 6 ký tự.");
+        if (formData.password.length < 8) {
+            toast.warning("Mật khẩu phải có ít nhất 8 ký tự.");
             return;
         }
 
