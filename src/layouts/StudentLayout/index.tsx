@@ -19,11 +19,11 @@ import {
 
 // Student-specific navigation items
 const studentNavItems = [
-    { path: '/student-portal/dashboard', label: 'Dashboard', icon: DashboardIcon },
-    { path: '/student-portal/booking', label: 'Booking', icon: BookingIcon },
+    { path: '/student-portal/dashboard', label: 'Tổng quan', icon: DashboardIcon },
+    { path: '/student-portal/booking', label: 'Đặt lịch', icon: BookingIcon },
     { path: '/student-portal/lessons', label: 'Buổi học', icon: LessonsIcon },
     { path: '/student-portal/calendar', label: 'Thời khóa biểu', icon: CalendarIcon },
-    { path: '/student-portal/messages', label: 'Messages', icon: MessagesIcon },
+    { path: '/student-portal/messages', label: 'Tin nhắn', icon: MessagesIcon },
     { path: '/student-portal/account', label: 'Tài khoản', icon: AccountIcon },
 ];
 
