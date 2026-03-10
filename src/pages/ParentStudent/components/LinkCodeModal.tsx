@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { message } from 'antd';
+import { toast } from 'react-toastify';
 import type { StudentType } from '../../../types/student.type';
 import { generateLinkCode } from '../../../services/student.service';
 
@@ -66,9 +66,9 @@ const LinkCodeModal = ({ student, onClose, onCodeGenerated }: Props) => {
       const updated = res.content;
       setCurrentStudent(updated);
       onCodeGenerated(updated);
-      message.success('Đã tạo mã liên kết mới');
+      toast.success('Đã tạo mã liên kết mới');
     } catch {
-      message.error('Không thể tạo mã liên kết');
+      toast.error('Không thể tạo mã liên kết');
     } finally {
       setLoading(false);
     }
