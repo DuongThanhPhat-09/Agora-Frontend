@@ -38,7 +38,7 @@ const LoginForm: React.FC = () => {
       const role = (payload[roleClaim] || '').toLowerCase();
       switch (role) {
         case 'admin': return '/admin-portal/dashboard';
-        case 'tutor': return '/tutor-portal';
+        case 'tutor': return '/tutor-portal/dashboard';
         case 'parent': return '/parent-portal/dashboard';
         case 'student': return '/student-portal/dashboard';
         default: return '/';

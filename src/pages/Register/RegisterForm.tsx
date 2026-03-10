@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import InputGroup from "../../components/InputGroup";
 import axios from "axios";
-import { saveUserToStorage } from "../../services/auth.service";
+import { saveUserToStorage, getRoleFromToken } from "../../services/auth.service";
 
 const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5166') + '/api';
 
@@ -87,8 +87,19 @@ const RegisterForm: React.FC = () => {
             // Save user data with accessToken
             saveUserToStorage({ accessToken: token });
             window.dispatchEvent(new Event("auth-change"));
+
+            // Redirect theo role
+            const role = (getRoleFromToken(token) || '').toLowerCase();
+            let portalPath = '/';
+            switch (role) {
+                case 'admin': portalPath = '/admin-portal/dashboard'; break;
+                case 'tutor': portalPath = '/tutor-portal/dashboard'; break;
+                case 'parent': portalPath = '/parent-portal/dashboard'; break;
+                case 'student': portalPath = '/student-portal/dashboard'; break;
+            }
+
             toast.success(`Chào mừng ${formData.fullname} đến với TUTORA!`);
-            setTimeout(() => navigate("/"), 1500);
+            setTimeout(() => navigate(portalPath), 1500);
         } catch (error: any) {
             console.error("Register Error:", error);
 
