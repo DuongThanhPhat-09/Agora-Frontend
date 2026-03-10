@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { message } from 'antd';
+import { toast } from 'react-toastify';
 import { generateParentCode } from '../../../services/student.service';
 
 interface Props {
@@ -36,9 +36,9 @@ const ParentCodeModal = ({ onClose }: Props) => {
         try {
             const res = await generateParentCode();
             setParentCode(res.content.parentCode);
-            message.success('Đã tạo mã mời thành công!');
+            toast.success('Đã tạo mã mời thành công!');
         } catch {
-            message.error('Không thể tạo mã mời');
+            toast.error('Không thể tạo mã mời');
         } finally {
             setLoading(false);
         }

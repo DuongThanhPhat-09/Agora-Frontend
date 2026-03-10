@@ -11,4 +11,5 @@ export type StudentType = {
   studentCodeExpiresAt: string;
   createdAt: string;
   age: number;
+  username: string;
 };
