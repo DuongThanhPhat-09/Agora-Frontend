@@ -12,6 +12,7 @@ import {
   LogoIcon, NotificationIcon, ClockIcon,
   DashboardIcon, ChildrenIcon, MessagesIcon, BookingIcon,
   MenuIcon, CloseIcon, LogoutIcon, LessonsIcon, CalendarIcon,
+  AccountIcon,
 } from '../shared/icons';
 import {
   useUserData, useNotifications, useSidebarState, useNextLesson,
@@ -25,6 +26,7 @@ const parentNavItems = [
   { path: '/parent-portal/calendar', label: 'Thời khóa biểu', icon: CalendarIcon },
   { path: '/parent-portal/messages', label: 'Messages', icon: MessagesIcon },
   { path: '/parent-portal/booking', label: 'Booking', icon: BookingIcon },
+  { path: '/parent-portal/account', label: 'Tài khoản', icon: AccountIcon },
 ];
 
 interface ParentLayoutProps {

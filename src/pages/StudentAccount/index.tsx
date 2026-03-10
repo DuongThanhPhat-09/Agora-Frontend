@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { message } from 'antd';
+import { toast } from 'react-toastify';
 import { getUserIdFromToken, changePassword } from '../../services/auth.service';
 import { getUserProfile, updateUserProfile } from '../../services/user.service';
 
@@ -66,7 +66,7 @@ const StudentAccount = () => {
           gender: data.gender || '',
         });
       } catch {
-        message.error('Không thể tải thông tin tài khoản');
+        toast.error('Không thể tải thông tin tài khoản');
       } finally {
         setLoading(false);
       }
@@ -77,7 +77,7 @@ const StudentAccount = () => {
   const handleSave = async () => {
     if (!profile) return;
     if (!form.fullname.trim()) {
-      message.warning('Họ tên không được để trống');
+      toast.warning('Họ tên không được để trống');
       return;
     }
     setSaving(true);
@@ -91,9 +91,9 @@ const StudentAccount = () => {
       });
       setProfile(prev => prev ? { ...prev, ...form } : null);
       setEditing(false);
-      message.success('Cập nhật thông tin thành công!');
+      toast.success('Cập nhật thông tin thành công!');
     } catch {
-      message.error('Cập nhật thất bại. Vui lòng thử lại.');
+      toast.error('Cập nhật thất bại. Vui lòng thử lại.');
     } finally {
       setSaving(false);
     }
@@ -113,25 +113,25 @@ const StudentAccount = () => {
 
   const handleChangePassword = async () => {
     if (!passwordForm.oldPassword || !passwordForm.newPassword) {
-      message.warning('Vui lòng điền đầy đủ thông tin');
+      toast.warning('Vui lòng điền đầy đủ thông tin');
       return;
     }
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      message.error('Mật khẩu mới không khớp');
+      toast.error('Mật khẩu mới không khớp');
       return;
     }
     if (passwordForm.newPassword.length < 8) {
-      message.warning('Mật khẩu mới phải có ít nhất 8 ký tự');
+      toast.warning('Mật khẩu mới phải có ít nhất 8 ký tự');
       return;
     }
     setChangingPassword(true);
     try {
       await changePassword(passwordForm.oldPassword, passwordForm.newPassword);
-      message.success('Đổi mật khẩu thành công!');
+      toast.success('Đổi mật khẩu thành công!');
       setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
       setShowPasswordSection(false);
     } catch {
-      message.error('Đổi mật khẩu thất bại. Kiểm tra lại mật khẩu cũ.');
+      toast.error('Đổi mật khẩu thất bại. Kiểm tra lại mật khẩu cũ.');
     } finally {
       setChangingPassword(false);
     }
@@ -211,6 +211,19 @@ const StudentAccount = () => {
 
         <div style={fieldGrid}>
           <div style={fieldGroup}>
+            <label style={fieldLabel}>Số điện thoại</label>
+            <p style={{ ...fieldValue, color: profile?.phone ? '#1a2238' : '#9ca3af' }}>
+              {profile?.phone || 'Chưa cập nhật'}
+            </p>
+          </div>
+
+          <div style={fieldGroup}>
+            <label style={fieldLabel}>Email</label>
+            <p style={{ ...fieldValue, color: '#525252' }}>{profile?.email || '—'}</p>
+            <span style={readOnlyHint}>Không thể thay đổi</span>
+          </div>
+
+          <div style={fieldGroup}>
             <label style={fieldLabel}>Họ và tên</label>
             {editing ? (
               <input
@@ -223,19 +236,6 @@ const StudentAccount = () => {
             ) : (
               <p style={fieldValue}>{profile?.fullname || '—'}</p>
             )}
-          </div>
-
-          <div style={fieldGroup}>
-            <label style={fieldLabel}>Email</label>
-            <p style={{ ...fieldValue, color: '#525252' }}>{profile?.email || '—'}</p>
-            <span style={readOnlyHint}>Không thể thay đổi</span>
-          </div>
-
-          <div style={fieldGroup}>
-            <label style={fieldLabel}>Số điện thoại</label>
-            <p style={{ ...fieldValue, color: profile?.phone ? '#1a2238' : '#9ca3af' }}>
-              {profile?.phone || 'Chưa cập nhật'}
-            </p>
           </div>
 
           <div style={fieldGroup}>
