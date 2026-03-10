@@ -12,6 +12,7 @@ import {
   LogoIcon, NotificationIcon, ClockIcon,
   DashboardIcon, ChildrenIcon, MessagesIcon, BookingIcon,
   MenuIcon, CloseIcon, LogoutIcon, LessonsIcon, CalendarIcon,
+  AccountIcon,
 } from '../shared/icons';
 import {
   useUserData, useNotifications, useSidebarState, useNextLesson,
@@ -19,12 +20,13 @@ import {
 
 // Parent-specific navigation items
 const parentNavItems = [
-  { path: '/parent-portal/dashboard', label: 'Dashboard', icon: DashboardIcon },
-  { path: '/parent-portal/student', label: 'Children', icon: ChildrenIcon },
+  { path: '/parent-portal/dashboard', label: 'Tổng quan', icon: DashboardIcon },
+  { path: '/parent-portal/student', label: 'Quản lý con', icon: ChildrenIcon },
   { path: '/parent-portal/lessons', label: 'Buổi học', icon: LessonsIcon },
   { path: '/parent-portal/calendar', label: 'Thời khóa biểu', icon: CalendarIcon },
-  { path: '/parent-portal/messages', label: 'Messages', icon: MessagesIcon },
-  { path: '/parent-portal/booking', label: 'Booking', icon: BookingIcon },
+  { path: '/parent-portal/messages', label: 'Tin nhắn', icon: MessagesIcon },
+  { path: '/parent-portal/booking', label: 'Đặt lịch', icon: BookingIcon },
+  { path: '/parent-portal/account', label: 'Tài khoản', icon: AccountIcon },
 ];
 
 interface ParentLayoutProps {

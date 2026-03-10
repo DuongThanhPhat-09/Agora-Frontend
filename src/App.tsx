@@ -67,6 +67,7 @@ const ParentStudent = lazy(() => import('./pages/ParentStudent'));
 const ParentLessons = lazy(() => import('./pages/ParentLessons'));
 const ParentLessonDetail = lazy(() => import('./pages/ParentLessons/ParentLessonDetail'));
 const ParentCalendar = lazy(() => import('./pages/ParentLessons/ParentCalendar'));
+const ParentAccount = lazy(() => import('./pages/ParentAccount'));
 
 // Student pages
 const StudentDashboard = lazy(() => import('./pages/StudentDashboard'));
@@ -191,6 +192,7 @@ function App() {
             <Route path="calendar" element={<ParentCalendar />} />
             <Route path="lessons" element={<ParentLessons />} />
             <Route path="lessons/:lessonId" element={<ParentLessonDetail />} />
+            <Route path="account" element={<ParentAccount />} />
             {/* <Route path="disputes" element={<ParentDisputes />} /> */}
           </Route>
 
