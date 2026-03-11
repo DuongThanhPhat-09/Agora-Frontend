@@ -10,9 +10,16 @@ const TrustedBanner = () => {
         { name: "FPT University", highlight: false },
     ];
 
+    // Build one long sequence of items (repeated many times to guarantee filling any viewport)
+    const REPEAT_COUNT = 10;
+    const items: { name: string; highlight: boolean }[] = [];
+    for (let i = 0; i < REPEAT_COUNT; i++) {
+        items.push(...investors);
+    }
+
     const renderGroup = (keyPrefix: string) => (
-        <div className="trusted-scroll-group" key={keyPrefix}>
-            {investors.map((inv, index) => (
+        <div className="trusted-scroll-group" key={keyPrefix} aria-hidden={keyPrefix !== 'a'}>
+            {items.map((inv, index) => (
                 <span
                     key={`${keyPrefix}-${index}`}
                     className={`university-name ${inv.highlight ? 'highlight' : ''}`}
@@ -20,16 +27,6 @@ const TrustedBanner = () => {
                     {inv.name}
                 </span>
             ))}
-            <span className="trusted-separator">·</span>
-            {investors.map((inv, index) => (
-                <span
-                    key={`${keyPrefix}-dup-${index}`}
-                    className={`university-name ${inv.highlight ? 'highlight' : ''}`}
-                >
-                    {inv.name}
-                </span>
-            ))}
-            <span className="trusted-separator">·</span>
         </div>
     );
 
