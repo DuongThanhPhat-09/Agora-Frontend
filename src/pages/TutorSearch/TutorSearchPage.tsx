@@ -219,14 +219,13 @@ const formatGradeLevelRanges = (grades: string[]): string => {
 const mapApiTutorToUi = (apiTutor: TutorSearchResultResponse): Tutor => {
     const type = mapSubscriptionToType(apiTutor.subscriptionType);
 
-    // Build subjects array from backend subjects + tags
+    // Build subjects array — only show subjectName (e.g. "Toán Học")
     const subjects: string[] = [];
     const gradeLevelSet = new Set<string>();
     if (apiTutor.subjects) {
         apiTutor.subjects.forEach((s) => {
-            if (s.tags && s.tags.length > 0) {
-                subjects.push(...s.tags);
-            } else if (s.subjectName) {
+            // Only add the subject name
+            if (s.subjectName && !subjects.includes(s.subjectName)) {
                 subjects.push(s.subjectName);
             }
             // Collect grade levels from each subject (only Grade_1 to Grade_12)
