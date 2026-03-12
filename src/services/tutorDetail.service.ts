@@ -66,6 +66,16 @@ export interface FeedbackItem {
     courseDuration: string | null;
 }
 
+export interface ActiveClassSummary {
+    bookingId: number;
+    subjectName: string | null;
+    studentName: string | null;
+    totalLessons: number;
+    completedLessons: number;
+    status: string | null;
+    startDate: string | null;
+}
+
 export interface TutorFullProfile {
     // Video
     videoIntroUrl: string | null;
@@ -103,6 +113,10 @@ export interface TutorFullProfile {
 
     // Feedback List
     feedbacks: FeedbackItem[] | null;
+
+    // Active Classes
+    totalActiveClasses: number;
+    activeClasses: ActiveClassSummary[] | null;
 }
 
 export interface ApiResponse<T> {
