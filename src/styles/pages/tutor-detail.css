@@ -2197,6 +2197,176 @@
     display: none;
 }
 
+/* ===== ACTIVE CLASSES SECTION ===== */
+
+.tutor-detail-page .active-classes-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 28px;
+    background: #ffffff;
+    border-radius: 20px;
+    border: 1px solid rgba(62, 47, 40, 0.08);
+    box-shadow: 0px 8px 24px -8px rgba(26, 34, 56, 0.06);
+}
+
+.tutor-detail-page .active-classes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tutor-detail-page .active-classes-count {
+    padding: 5px 14px;
+    background: rgba(61, 74, 62, 0.08);
+    border-radius: 20px;
+    font-size: 11px;
+    color: #3d4a3e;
+    letter-spacing: 0.3px;
+}
+
+.tutor-detail-page .active-classes-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+}
+
+.tutor-detail-page .active-class-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px;
+    background: rgba(242, 240, 228, 0.35);
+    border-radius: 14px;
+    border: 1px solid rgba(62, 47, 40, 0.06);
+    transition: all 0.2s ease;
+}
+
+.tutor-detail-page .active-class-card:hover {
+    background: rgba(242, 240, 228, 0.6);
+    box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.06);
+}
+
+.tutor-detail-page .active-class-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.tutor-detail-page .active-class-subject b {
+    font-size: 14px;
+    color: #1a2238;
+    letter-spacing: -0.2px;
+}
+
+.tutor-detail-page .active-class-status {
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.tutor-detail-page .active-class-status.status-ongoing {
+    background: rgba(76, 175, 80, 0.12);
+    color: #2e7d32;
+}
+
+.tutor-detail-page .active-class-status.status-paid {
+    background: rgba(33, 150, 243, 0.12);
+    color: #1565c0;
+}
+
+.tutor-detail-page .active-class-status.status-deposit {
+    background: rgba(255, 152, 0, 0.12);
+    color: #e65100;
+}
+
+.tutor-detail-page .active-class-status.status-default {
+    background: rgba(62, 47, 40, 0.08);
+    color: rgba(62, 47, 40, 0.6);
+}
+
+.tutor-detail-page .active-class-student {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+}
+
+.tutor-detail-page .active-class-student .student-label {
+    color: rgba(62, 47, 40, 0.5);
+}
+
+.tutor-detail-page .active-class-student .student-name {
+    color: #3e2f28;
+    font-weight: 500;
+}
+
+.tutor-detail-page .active-class-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.tutor-detail-page .active-class-progress .progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+}
+
+.tutor-detail-page .active-class-progress .progress-info span {
+    color: rgba(62, 47, 40, 0.5);
+}
+
+.tutor-detail-page .active-class-progress .progress-info b {
+    color: #1a2238;
+    font-size: 11px;
+}
+
+.tutor-detail-page .progress-bar-bg {
+    width: 100%;
+    height: 5px;
+    background: rgba(62, 47, 40, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.tutor-detail-page .progress-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #3d4a3e, #6b8f71);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 2px;
+}
+
+/* Mobile responsive for active classes */
+@media (max-width: 768px) {
+    .tutor-detail-page .active-classes-section {
+        padding: 20px;
+        border-radius: 16px;
+        gap: 16px;
+    }
+
+    .tutor-detail-page .active-classes-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .tutor-detail-page .active-class-card {
+        padding: 14px;
+        gap: 10px;
+    }
+
+    .tutor-detail-page .active-class-subject b {
+        font-size: 13px;
+    }
+}
+
 /* ===== SKELETON LOADING ===== */
 
 @keyframes skeleton-shimmer {

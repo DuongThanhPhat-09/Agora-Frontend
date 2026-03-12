@@ -227,24 +227,6 @@ const TutorPortalClasses: React.FC = () => {
 
     return (
         <div className={styles.classManagement}>
-            {/* Coming Soon Overlay */}
-            <div className={styles.comingSoonOverlay}>
-                <div className={styles.comingSoonCard}>
-                    <div className={styles.comingSoonIcon}>🚀</div>
-                    <h2 className={styles.comingSoonTitle}>Chức năng đang được phát triển</h2>
-                    <p className={styles.comingSoonDesc}>
-                        Tính năng quản lý lớp học đang được hoàn thiện và sẽ sớm được cập nhật.
-                        Cảm ơn bạn đã kiên nhẫn chờ đợi!
-                    </p>
-                    <div className={styles.comingSoonBadge}>
-                        <span className={styles.comingSoonDot}></span>
-                        Đang phát triển
-                    </div>
-                </div>
-            </div>
-
-            {/* Blurred original content */}
-            <div className={styles.blurredContent}>
                 <div className={styles.mainContent}>
                     {/* Header */}
                     <div className={styles.header}>
@@ -501,7 +483,6 @@ const TutorPortalClasses: React.FC = () => {
                     </div>
                 </div>
             </aside> */}
-            </div> {/* end blurredContent */}
         </div>
     );
 };
