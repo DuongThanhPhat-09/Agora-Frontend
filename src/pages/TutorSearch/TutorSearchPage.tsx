@@ -62,11 +62,15 @@ const FilterIcon = () => (
 // Categories data
 // ============================================
 const categories = [
-    { id: "all", name: "Tất cả", icon: <CategoryIcon /> },
-    { id: "Math", name: "Toán", icon: <CategoryIcon /> },
-    { id: "Physics", name: "Vật Lý", icon: <CategoryIcon /> },
-    { id: "Chemistry", name: "Hóa Học", icon: <CategoryIcon /> },
-    { id: "English", name: "Tiếng Anh", icon: <CategoryIcon /> },
+    { id: "all", name: "Tất cả", icon: "📚" },
+    { id: "math", name: "Toán Học", icon: "📐" },
+    { id: "physics", name: "Vật Lý", icon: "⚡" },
+    { id: "chemistry", name: "Hóa Học", icon: "🧪" },
+    { id: "english", name: "Tiếng Anh", icon: "🇬🇧" },
+    { id: "science", name: "Khoa Học", icon: "🔬" },
+    { id: "language", name: "Ngoại Ngữ", icon: "🌐" },
+    { id: "art", name: "Nghệ Thuật", icon: "🎨" },
+    { id: "it_tech", name: "Công Nghệ", icon: "💻" },
 ];
 
 // Trending tags
@@ -375,29 +379,51 @@ const SearchHero = ({ searchTerm, onSearchTermChange, onSearch, onTrendingClick 
 };
 
 // ============================================
-// Category Tabs Section
+// Category Tabs Section — Expandable Subject Selector
 // ============================================
 interface CategoryTabsProps {
     activeCategory: string;
     onCategoryChange: (category: string) => void;
 }
 
-const CategoryTabs = ({ activeCategory, onCategoryChange }: CategoryTabsProps) => (
-    <section className="category-section">
-        <div className="category-tabs">
-            {categories.map((category) => (
+const CategoryTabs = ({ activeCategory, onCategoryChange }: CategoryTabsProps) => {
+    const [showSubjects, setShowSubjects] = useState(false);
+    const activeLabel = categories.find(c => c.id === activeCategory)?.name || 'Tất cả';
+    const activeIcon = categories.find(c => c.id === activeCategory)?.icon || '📚';
+
+    return (
+        <section className="category-section">
+            <div className="category-header">
                 <button
-                    key={category.id}
-                    className={`category-tab ${activeCategory === category.id ? 'active' : ''}`}
-                    onClick={() => onCategoryChange(category.id)}
+                    className={`category-toggle-btn ${showSubjects ? 'open' : ''}`}
+                    onClick={() => setShowSubjects(!showSubjects)}
                 >
-                    <span className="category-tab-icon">{category.icon}</span>
-                    <span className="category-tab-text">{category.name}</span>
+                    <span className="category-toggle-icon">{activeIcon}</span>
+                    <span className="category-toggle-label">
+                        Môn học: <strong>{activeLabel}</strong>
+                    </span>
+                    <svg className="category-toggle-arrow" width="12" height="7" viewBox="0 0 12 7" fill="none" style={{ transform: showSubjects ? 'rotate(180deg)' : 'none', transition: 'transform 0.25s ease' }}>
+                        <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                 </button>
-            ))}
-        </div>
-    </section>
-);
+            </div>
+            {showSubjects && (
+                <div className="category-dropdown">
+                    {categories.map((category) => (
+                        <button
+                            key={category.id}
+                            className={`category-option ${activeCategory === category.id ? 'active' : ''}`}
+                            onClick={() => { onCategoryChange(category.id); setShowSubjects(false); }}
+                        >
+                            <span className="category-option-icon">{category.icon}</span>
+                            <span className="category-option-text">{category.name}</span>
+                        </button>
+                    ))}
+                </div>
+            )}
+        </section>
+    );
+};
 
 // ============================================
 // Filter Bar Section
