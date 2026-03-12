@@ -8,7 +8,7 @@ import isoWeek from 'dayjs/plugin/isoWeek';
 import 'dayjs/locale/vi';
 import styles from '../../styles/pages/tutor-portal-schedule.module.css';
 import { AddAvailabilityModal, EditAvailabilityModal } from './components';
-import { getAvailability, deleteAvailability, DAY_OF_WEEK_MAP } from '../../services/availability.service';
+import { getAvailability, deleteAvailability, createAvailability, updateAvailability, DAY_OF_WEEK_MAP } from '../../services/availability.service';
 import type { AvailabilitySlot } from '../../services/availability.service';
 import { getUserIdFromToken } from '../../services/auth.service';
 import { getTutorCalendar } from '../../services/lesson.service';
@@ -65,9 +65,9 @@ interface EditAvailabilityData {
 const DAYS_OF_WEEK = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 const TIME_SLOTS = Array.from({ length: 24 }, (_, i) => i); // 0:00 đến 23:00
 const DEFAULT_ROW_HEIGHT = 70; // px mặc định cho mỗi hàng giờ
-const MIN_ROW_HEIGHT = 30;
+const MIN_ROW_HEIGHT = 36;  // CSS minimum (timeLabel padding+font won't shrink below ~36px)
 const MAX_ROW_HEIGHT = 150;
-const ZOOM_STEP = 20;
+const ZOOM_STEP = 10;
 
 // Zoom icons
 const ZoomInIcon = () => (
@@ -91,6 +91,12 @@ const apiDayToIsoDay = (apiDay: number): number => {
     return apiDay;  // Thứ Hai=1, Thứ Ba=2, v.v. (giống như API)
 };
 
+// Reverse: ISO day (1-7) -> API day (0-6)
+const isoDayToApiDay = (isoDay: number): number => {
+    if (isoDay === 7) return 0; // CN -> 0
+    return isoDay;
+};
+
 // Hàm trợ giúp: Phân tích chuỗi thời gian thành giờ
 const parseTimeToHour = (timeStr: string): number => {
     const [hours] = timeStr.split(':').map(Number);
@@ -110,7 +116,7 @@ const calculateDurationMinutes = (startTime: string, endTime: string): number =>
 
 const TutorPortalSchedule: React.FC = () => {
     // FROM MILESTONE_3: 2 tabs - settings (lịch rảnh) + lessons (lịch dạy)
-    const [activeTab, setActiveTab] = useState<'settings' | 'lessons'>('lessons');
+    const [activeTab, setActiveTab] = useState<'settings' | 'lessons'>('settings');
     const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('week');
     const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
     const [availability, setAvailability] = useState<LocalAvailabilitySlot[]>([]);
@@ -136,6 +142,239 @@ const TutorPortalSchedule: React.FC = () => {
     const handleZoomIn = () => setRowHeight(prev => Math.min(prev + ZOOM_STEP, MAX_ROW_HEIGHT));
     const handleZoomOut = () => setRowHeight(prev => Math.max(prev - ZOOM_STEP, MIN_ROW_HEIGHT));
     const handleZoomReset = () => setRowHeight(DEFAULT_ROW_HEIGHT);
+
+    // ===== DRAG-TO-CREATE (Google Calendar style) =====
+    interface DragState {
+        isDragging: boolean;
+        dayIndex: number;       // which column (index in displayDates)
+        isoDay: number;         // ISO day (1-7)
+        startMinutes: number;   // drag anchor (minutes from 00:00)
+        currentMinutes: number; // current mouse position (minutes)
+    }
+    const [dragState, setDragState] = useState<DragState | null>(null);
+    const calendarBodyRef = React.useRef<HTMLDivElement>(null);
+
+    // Snap to 30-minute increments
+    const SNAP_MINUTES = 30;
+    const snapToGrid = (minutes: number): number => {
+        return Math.round(minutes / SNAP_MINUTES) * SNAP_MINUTES;
+    };
+
+    // Convert pixel Y position relative to calendar body into minutes
+    const pixelToMinutes = useCallback((clientY: number): number => {
+        if (!calendarBodyRef.current) return 0;
+        const rect = calendarBodyRef.current.getBoundingClientRect();
+        const scrollTop = calendarBodyRef.current.scrollTop;
+        const relativeY = clientY - rect.top + scrollTop;
+        const totalMinutes = (relativeY / rowHeight) * 60;
+        return Math.max(0, Math.min(totalMinutes, 24 * 60));
+    }, [rowHeight]);
+
+    // Format minutes -> "HH:mm"
+    const minutesToTimeStr = (minutes: number): string => {
+        const h = Math.floor(minutes / 60);
+        const m = minutes % 60;
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+    };
+
+    // Handle mousedown on a time cell (start drag)
+    const handleCellMouseDown = useCallback((e: React.MouseEvent, dayIndex: number, isoDay: number) => {
+        if (activeTab !== 'settings' || viewMode === 'month') return;
+        if (e.button !== 0) return; // left click only
+        e.preventDefault();
+
+        const minutes = snapToGrid(pixelToMinutes(e.clientY));
+
+        setDragState({
+            isDragging: true,
+            dayIndex,
+            isoDay,
+            startMinutes: minutes,
+            currentMinutes: minutes + SNAP_MINUTES, // minimum 30min
+        });
+    }, [activeTab, viewMode, pixelToMinutes]);
+
+    // Refs to avoid stale closures in drag/resize useEffects
+    const dragStateRef = React.useRef(dragState);
+    dragStateRef.current = dragState;
+    const pixelToMinutesRef = React.useRef(pixelToMinutes);
+    pixelToMinutesRef.current = pixelToMinutes;
+    // These refs are initialized later after their values are declared
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const resizeStateRef = React.useRef<any>(null);
+    const fetchAvailabilityRef = React.useRef<() => void>(() => {});
+
+    // Handle mousemove (update drag preview)
+    useEffect(() => {
+        if (!dragState?.isDragging) return;
+
+        const handleMouseMove = (e: MouseEvent) => {
+            const minutes = snapToGrid(pixelToMinutesRef.current(e.clientY));
+            setDragState(prev => prev ? { ...prev, currentMinutes: minutes } : null);
+        };
+
+        const handleMouseUp = async () => {
+            const ds = dragStateRef.current;
+            if (!ds) return;
+
+            const startMin = Math.min(ds.startMinutes, ds.currentMinutes);
+            const endMin = Math.max(ds.startMinutes, ds.currentMinutes);
+
+            // Must be at least 30 minutes
+            if (endMin - startMin < SNAP_MINUTES) {
+                setDragState(null);
+                return;
+            }
+
+            // Save to API
+            try {
+                const apiDay = isoDayToApiDay(ds.isoDay);
+                await createAvailability({
+                    dayofweek: apiDay,
+                    starttime: minutesToTimeStr(startMin),
+                    endtime: minutesToTimeStr(endMin),
+                });
+                toast.success(`Đã thêm lịch rảnh ${minutesToTimeStr(startMin)} - ${minutesToTimeStr(endMin)}`);
+                fetchAvailabilityRef.current();
+            } catch (error: any) {
+                const msg = error?.response?.data?.message || 'Không thể thêm lịch rảnh';
+                toast.error(msg);
+            } finally {
+                setDragState(null);
+            }
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dragState?.isDragging]);
+
+    // Compute ghost preview block position
+    const ghostPreview = useMemo(() => {
+        if (!dragState?.isDragging) return null;
+        const startMin = Math.min(dragState.startMinutes, dragState.currentMinutes);
+        const endMin = Math.max(dragState.startMinutes, dragState.currentMinutes);
+        const duration = endMin - startMin;
+        if (duration < SNAP_MINUTES) return null;
+        return {
+            dayIndex: dragState.dayIndex,
+            topPx: startMin * pxPerMinute,
+            heightPx: duration * pxPerMinute,
+            startTime: minutesToTimeStr(startMin),
+            endTime: minutesToTimeStr(endMin),
+        };
+    }, [dragState, pxPerMinute]);
+
+    // ===== DRAG-TO-RESIZE existing slots =====
+    interface ResizeState {
+        isResizing: boolean;
+        slot: LocalAvailabilitySlot;
+        edge: 'top' | 'bottom';
+        originalStartMinutes: number;
+        originalEndMinutes: number;
+        currentMinutes: number;
+    }
+    const [resizeState, setResizeState] = useState<ResizeState | null>(null);
+    // Keep ref in sync for stale closure fix
+    resizeStateRef.current = resizeState;
+
+    const handleResizeStart = useCallback((e: React.MouseEvent, slot: LocalAvailabilitySlot, edge: 'top' | 'bottom') => {
+        e.preventDefault();
+        e.stopPropagation();
+        const startMin = parseTimeToMinutes(slot.startTime);
+        const endMin = parseTimeToMinutes(slot.endTime);
+        setResizeState({
+            isResizing: true,
+            slot,
+            edge,
+            originalStartMinutes: startMin,
+            originalEndMinutes: endMin,
+            currentMinutes: edge === 'top' ? startMin : endMin,
+        });
+    }, []);
+
+    useEffect(() => {
+        if (!resizeState?.isResizing) return;
+
+        const handleMouseMove = (e: MouseEvent) => {
+            const minutes = snapToGrid(pixelToMinutesRef.current(e.clientY));
+            setResizeState(prev => prev ? { ...prev, currentMinutes: minutes } : null);
+        };
+
+        const handleMouseUp = async () => {
+            const rs = resizeStateRef.current;
+            if (!rs) return;
+
+            let newStart = rs.originalStartMinutes;
+            let newEnd = rs.originalEndMinutes;
+
+            if (rs.edge === 'top') {
+                newStart = Math.min(rs.currentMinutes, newEnd - SNAP_MINUTES);
+            } else {
+                newEnd = Math.max(rs.currentMinutes, newStart + SNAP_MINUTES);
+            }
+
+            // Clamp
+            newStart = Math.max(0, newStart);
+            newEnd = Math.min(24 * 60, newEnd);
+
+            if (newEnd - newStart < SNAP_MINUTES) {
+                setResizeState(null);
+                return;
+            }
+
+            try {
+                await updateAvailability(rs.slot.apiId, {
+                    dayofweek: rs.slot.apiDayOfWeek,
+                    starttime: minutesToTimeStr(newStart),
+                    endtime: minutesToTimeStr(newEnd),
+                });
+                toast.success('Đã cập nhật lịch rảnh');
+                fetchAvailabilityRef.current();
+            } catch (error: any) {
+                const msg = error?.response?.data?.message || 'Không thể cập nhật lịch rảnh';
+                toast.error(msg);
+            } finally {
+                setResizeState(null);
+            }
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [resizeState?.isResizing]);
+
+    // Compute resized slot dimensions
+    const getResizedSlotStyle = useCallback((slot: LocalAvailabilitySlot) => {
+        if (!resizeState?.isResizing || resizeState.slot.apiId !== slot.apiId) return null;
+
+        let startMin = resizeState.originalStartMinutes;
+        let endMin = resizeState.originalEndMinutes;
+
+        if (resizeState.edge === 'top') {
+            startMin = Math.min(resizeState.currentMinutes, endMin - SNAP_MINUTES);
+        } else {
+            endMin = Math.max(resizeState.currentMinutes, startMin + SNAP_MINUTES);
+        }
+
+        startMin = Math.max(0, startMin);
+        endMin = Math.min(24 * 60, endMin);
+
+        return {
+            topPx: startMin * pxPerMinute + 3,
+            heightPx: (endMin - startMin) * pxPerMinute - 6,
+            startTime: minutesToTimeStr(startMin),
+            endTime: minutesToTimeStr(endMin),
+        };
+    }, [resizeState, pxPerMinute]);
 
     // Lấy các ngày hiển thị dựa trên viewMode
     const displayDates = useMemo(() => {
@@ -217,6 +456,8 @@ const TutorPortalSchedule: React.FC = () => {
             setIsLoadingAvailability(false);
         }
     }, []);
+    // Keep ref in sync for drag/resize handlers
+    fetchAvailabilityRef.current = fetchAvailability;
 
     // FETCH CALENDAR FOR LESSONS TAB
     const fetchCalendar = useCallback(async () => {
@@ -458,21 +699,26 @@ const TutorPortalSchedule: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Chú giải + Zoom */}
+                        {/* Chú giải + Drag Hint */}
                         <div className={styles.legend}>
                             <div className={styles.legendItem}>
                                 <div className={styles.legendDot} />
                                 <span>Rảnh</span>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <div className={styles.timezone} style={{ marginRight: '12px' }}>
+                            {activeTab === 'settings' && viewMode !== 'month' && (
+                                <div className={styles.legendItem}>
+                                    <span style={{ color: 'rgba(79, 140, 255, 0.6)', fontSize: '9px', fontStyle: 'italic', letterSpacing: '0' }}>✦ Kéo trên lưới để tạo lịch rảnh</span>
+                                </div>
+                            )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                                <div className={styles.timezone}>
                                     UTC+7 • Giờ Việt Nam
                                 </div>
                                 {viewMode !== 'month' && (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '2px', background: '#f5f5f5', borderRadius: '6px', padding: '2px' }}>
-                                        <button onClick={handleZoomOut} disabled={rowHeight <= MIN_ROW_HEIGHT} style={{ background: 'none', border: 'none', cursor: rowHeight <= MIN_ROW_HEIGHT ? 'not-allowed' : 'pointer', padding: '4px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', opacity: rowHeight <= MIN_ROW_HEIGHT ? 0.3 : 1, color: '#555' }} title="Thu nhỏ"><ZoomOutIcon /></button>
-                                        <button onClick={handleZoomReset} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', fontSize: '11px', fontWeight: 600, color: '#555', borderRadius: '4px' }} title="Mặc định">{Math.round((rowHeight / DEFAULT_ROW_HEIGHT) * 100)}%</button>
-                                        <button onClick={handleZoomIn} disabled={rowHeight >= MAX_ROW_HEIGHT} style={{ background: 'none', border: 'none', cursor: rowHeight >= MAX_ROW_HEIGHT ? 'not-allowed' : 'pointer', padding: '4px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', opacity: rowHeight >= MAX_ROW_HEIGHT ? 0.3 : 1, color: '#555' }} title="Phóng to"><ZoomInIcon /></button>
+                                    <div className={styles.zoomControls}>
+                                        <button onClick={handleZoomOut} disabled={rowHeight <= MIN_ROW_HEIGHT} className={styles.zoomBtn} title="Thu nhỏ"><ZoomOutIcon /></button>
+                                        <button onClick={handleZoomReset} className={styles.zoomLabel} title="Mặc định">{Math.round((rowHeight / DEFAULT_ROW_HEIGHT) * 100)}%</button>
+                                        <button onClick={handleZoomIn} disabled={rowHeight >= MAX_ROW_HEIGHT} className={styles.zoomBtn} title="Phóng to"><ZoomInIcon /></button>
                                     </div>
                                 )}
                             </div>
@@ -511,6 +757,13 @@ const TutorPortalSchedule: React.FC = () => {
                                     {monthCalendarData.map((date, i) => {
                                         const daySlots = getDayAvailability(date);
                                         const isCurrentMonth = date.month() === currentDate.month();
+                                        // Calculate total available hours for this day
+                                        const totalMinutes = daySlots.reduce((sum, s) => sum + s.durationMinutes, 0);
+                                        const totalHours = Math.floor(totalMinutes / 60);
+                                        const remainMins = totalMinutes % 60;
+                                        const hoursLabel = totalHours > 0
+                                            ? (remainMins > 0 ? `${totalHours}h${remainMins}` : `${totalHours}h`)
+                                            : (remainMins > 0 ? `${remainMins}m` : '');
                                         return (
                                             <div
                                                 key={i}
@@ -520,10 +773,8 @@ const TutorPortalSchedule: React.FC = () => {
                                                 <span className={styles.monthCellDay}>{date.format('D')}</span>
                                                 {daySlots.length > 0 && (
                                                     <div className={styles.monthCellDots}>
-                                                        {daySlots.slice(0, 3).map((s, j) => (
-                                                            <div key={j} className={styles.monthDotAvail} title={`${s.startTime} - ${s.endTime}`} />
-                                                        ))}
-                                                        {daySlots.length > 3 && <span className={styles.monthMore}>+{daySlots.length - 3}</span>}
+                                                        <div className={styles.monthDotAvail} title={daySlots.map(s => `${s.startTime}-${s.endTime}`).join(', ')} />
+                                                        <span className={styles.monthHoursLabel}>{hoursLabel}</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -550,7 +801,7 @@ const TutorPortalSchedule: React.FC = () => {
                                 </div>
 
                                 {/* Các hàng thời gian */}
-                                <div className={styles.calendarBody}>
+                                <div className={styles.calendarBody} ref={calendarBodyRef} style={{ position: 'relative' }}>
                                     {TIME_SLOTS.map((hour, index) => (
                                         <div
                                             key={hour}
@@ -567,33 +818,54 @@ const TutorPortalSchedule: React.FC = () => {
                                             </div>
                                             {displayDates.map((date, dayIndex) => {
                                                 const slot = getAvailabilityStartingAtHour(date, hour);
+                                                const resizedStyle = slot ? getResizedSlotStyle(slot) : null;
                                                 const minuteOffset = slot ? (slot.startMinutes - hour * 60) : 0;
-                                                const topOffsetPx = minuteOffset * pxPerMinute;
-                                                const heightPx = slot ? slot.durationMinutes * pxPerMinute : 0;
+                                                const topOffsetPx = resizedStyle ? resizedStyle.topPx - hour * rowHeight : minuteOffset * pxPerMinute;
+                                                const heightPx = resizedStyle ? resizedStyle.heightPx : (slot ? slot.durationMinutes * pxPerMinute : 0);
+                                                const displayStartTime = resizedStyle ? resizedStyle.startTime : slot?.startTime;
+                                                const displayEndTime = resizedStyle ? resizedStyle.endTime : slot?.endTime;
 
                                                 return (
                                                     <div
                                                         key={dayIndex}
                                                         className={`${styles.timeCell} ${isToday(date) ? styles.todayColumn : ''}`}
+                                                        onMouseDown={(e) => {
+                                                            // Only start drag if click is on empty area
+                                                            const target = e.target as HTMLElement;
+                                                            if (target.closest(`.${styles.availableBlock}`)) return;
+                                                            if (target.closest('button')) return;
+                                                            if (target.closest('.ant-popover')) return;
+                                                            if (target.closest('.ant-popconfirm')) return;
+                                                            handleCellMouseDown(e, dayIndex, date.isoWeekday());
+                                                        }}
+                                                        style={{ cursor: dragState?.isDragging ? 'ns-resize' : 'crosshair' }}
                                                     >
                                                         {slot && (
                                                             <div
-                                                                className={styles.availableBlock}
+                                                                className={`${styles.availableBlock} ${resizedStyle ? styles.resizing : ''}`}
                                                                 style={{
                                                                     top: `${topOffsetPx + 3}px`,
                                                                     height: `${heightPx - 6}px`,
                                                                 }}
+                                                                onMouseDown={(e) => e.stopPropagation()}
                                                             >
+                                                                {/* Top resize handle */}
+                                                                <div
+                                                                    className={styles.resizeHandle}
+                                                                    style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '6px', cursor: 'n-resize', zIndex: 10 }}
+                                                                    onMouseDown={(e) => handleResizeStart(e, slot, 'top')}
+                                                                />
                                                                 <div className={styles.availableContent}>
                                                                     <span className={styles.availableLabel}>Rảnh</span>
                                                                     <span className={styles.availableTime}>
-                                                                        {slot.startTime} - {slot.endTime}
+                                                                        {displayStartTime} - {displayEndTime}
                                                                     </span>
                                                                 </div>
                                                                 <div className={styles.slotActions}>
                                                                     <Tooltip title="Chỉnh sửa">
                                                                         <button
                                                                             className={styles.editSlotBtn}
+                                                                            onMouseDown={(e) => e.stopPropagation()}
                                                                             onClick={(e) => {
                                                                                 e.stopPropagation();
                                                                                 handleEditAvailability(slot);
@@ -617,6 +889,7 @@ const TutorPortalSchedule: React.FC = () => {
                                                                         <Tooltip title="Xóa">
                                                                             <button
                                                                                 className={styles.deleteSlotBtn}
+                                                                                onMouseDown={(e) => e.stopPropagation()}
                                                                                 onClick={(e) => e.stopPropagation()}
                                                                             >
                                                                                 <DeleteOutlined />
@@ -624,6 +897,30 @@ const TutorPortalSchedule: React.FC = () => {
                                                                         </Tooltip>
                                                                     </Popconfirm>
                                                                 </div>
+                                                                {/* Bottom resize handle */}
+                                                                <div
+                                                                    className={styles.resizeHandle}
+                                                                    style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '6px', cursor: 's-resize', zIndex: 10 }}
+                                                                    onMouseDown={(e) => handleResizeStart(e, slot, 'bottom')}
+                                                                />
+                                                            </div>
+                                                        )}
+                                                        {/* Ghost preview for drag-to-create */}
+                                                        {ghostPreview && ghostPreview.dayIndex === dayIndex && hour === 0 && (
+                                                            <div
+                                                                className={styles.ghostBlock}
+                                                                style={{
+                                                                    position: 'absolute',
+                                                                    top: `${ghostPreview.topPx}px`,
+                                                                    left: '3px',
+                                                                    right: '3px',
+                                                                    height: `${ghostPreview.heightPx}px`,
+                                                                    pointerEvents: 'none',
+                                                                }}
+                                                            >
+                                                                <span className={styles.ghostLabel}>
+                                                                    {ghostPreview.startTime} - {ghostPreview.endTime}
+                                                                </span>
                                                             </div>
                                                         )}
                                                     </div>
