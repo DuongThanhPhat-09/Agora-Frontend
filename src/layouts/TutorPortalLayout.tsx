@@ -7,6 +7,7 @@ import { signalRService } from '../services/signalr.service';
 import NotificationDropdown from '../components/NotificationDropdown/NotificationDropdown';
 import { getUserInfoFromToken, clearUserFromStorage } from '../services/auth.service';
 import { toast } from 'react-toastify';
+import TutorTour, { type TourStep } from '../components/TutorTour/TutorTour';
 
 // Logo Icon (TUTORA symbol)
 const LogoIcon = () => (
@@ -129,6 +130,52 @@ const TutorPortalLayout: React.FC = () => {
     const [notificationCount, setNotificationCount] = useState(0);
     const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [showTour, setShowTour] = useState(false);
+
+    // Check if tour should show (only on first visit to dashboard)
+    useEffect(() => {
+        if (
+            location.pathname === '/tutor-portal/dashboard' &&
+            !localStorage.getItem('tutorTourCompleted')
+        ) {
+            // Delay to let dashboard load
+            const timer = setTimeout(() => setShowTour(true), 800);
+            return () => clearTimeout(timer);
+        }
+    }, [location.pathname]);
+
+    const tourSteps: TourStep[] = [
+        {
+            target: '[data-tour="sidebar"]',
+            title: '🏠 Chào mừng đến TUTORA!',
+            description: 'Đây là Bảng điều khiển của bạn. Menu bên trái giúp bạn truy cập nhanh mọi chức năng quản lý gia sư.',
+            placement: 'right',
+        },
+        {
+            target: '[data-tour="nav-dashboard"]',
+            title: '📊 Tổng quan',
+            description: 'Xem tổng quan hoạt động: thống kê buổi học, đánh giá, doanh thu, và lịch dạy.',
+            placement: 'right',
+        },
+        {
+            target: '[data-tour="stats-grid"]',
+            title: '📈 Thống kê nhanh',
+            description: 'Các thẻ thống kê giúp bạn theo dõi số buổi học, đánh giá trung bình, số dư ví, và doanh thu.',
+            placement: 'bottom',
+        },
+        {
+            target: '[data-tour="quick-actions"]',
+            title: '⚡ Thao tác nhanh',
+            description: 'Điểm danh, thêm lịch rảnh, tạo lớp học, rút tiền — chỉ 1 click!',
+            placement: 'bottom',
+        },
+        {
+            target: '[data-tour="calendar-widget"]',
+            title: '📅 Lịch mini',
+            description: 'Xem nhanh những ngày có lớp (chấm xanh). Click vào ngày để xem chi tiết lịch dạy.',
+            placement: 'left',
+        },
+    ];
     const [userData, setUserData] = useState({
         name: 'User',
         initials: 'U',
@@ -232,7 +279,7 @@ const TutorPortalLayout: React.FC = () => {
             )}
 
             {/* Sidebar */}
-            <aside className={`tutor-portal-sidebar ${sidebarOpen ? 'open' : ''}`}>
+            <aside className={`tutor-portal-sidebar ${sidebarOpen ? 'open' : ''}`} data-tour="sidebar">
                 {/* Logo Section */}
                 <div className="tutor-portal-sidebar-logo">
                     <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'inherit' }}>
@@ -255,6 +302,7 @@ const TutorPortalLayout: React.FC = () => {
                             key={item.path}
                             className={`tutor-portal-nav-item ${isActive(item.path) ? 'active' : ''}`}
                             title={item.label}
+                            data-tour={`nav-${item.path.split('/').pop()}`}
                             onClick={() => {
                                 navigate(item.path);
                                 setSidebarOpen(false);
@@ -303,6 +351,7 @@ const TutorPortalLayout: React.FC = () => {
                             <div style={{ position: 'relative' }}>
                                 <button
                                     className="tutor-portal-notification-btn"
+                                    data-tour="notification-btn"
                                     onClick={() => setShowNotificationDropdown(!showNotificationDropdown)}
                                 >
                                     <NotificationIcon />
@@ -361,6 +410,17 @@ const TutorPortalLayout: React.FC = () => {
                     <Outlet />
                 </div>
             </main>
+
+            {/* Tutor Onboarding Tour */}
+            {showTour && (
+                <TutorTour
+                    steps={tourSteps}
+                    onComplete={() => {
+                        setShowTour(false);
+                        localStorage.setItem('tutorTourCompleted', 'true');
+                    }}
+                />
+            )}
         </div>
     );
 };
