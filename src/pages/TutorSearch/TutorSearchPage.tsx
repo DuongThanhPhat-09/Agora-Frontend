@@ -75,36 +75,7 @@ const trendingTags = ["Toán", "Vật Lý", "Hóa Học", "Tiếng Anh"];
 // ============================================
 // Filter options (khớp với backend TutorSearchParameters)
 // ============================================
-// Grade level options grouped by school level, values match DB (Grade_1, Grade_2, ...)
-const gradeLevelGroups = [
-    {
-        label: "Tiểu học",
-        options: [
-            { value: "Grade_1", label: "Lớp 1" },
-            { value: "Grade_2", label: "Lớp 2" },
-            { value: "Grade_3", label: "Lớp 3" },
-            { value: "Grade_4", label: "Lớp 4" },
-            { value: "Grade_5", label: "Lớp 5" },
-        ],
-    },
-    {
-        label: "THCS",
-        options: [
-            { value: "Grade_6", label: "Lớp 6" },
-            { value: "Grade_7", label: "Lớp 7" },
-            { value: "Grade_8", label: "Lớp 8" },
-            { value: "Grade_9", label: "Lớp 9" },
-        ],
-    },
-    {
-        label: "THPT",
-        options: [
-            { value: "Grade_10", label: "Lớp 10" },
-            { value: "Grade_11", label: "Lớp 11" },
-            { value: "Grade_12", label: "Lớp 12" },
-        ],
-    },
-];
+// Grade level options are defined as gradeLevelChips below
 
 const budgetRangeOptions = [
     { value: "all", label: "MỌI GIÁ" },
@@ -120,6 +91,33 @@ const teachingModeOptions = [
     { value: "online", label: "ONLINE" },
     { value: "offline", label: "OFFLINE" },
     { value: "hybrid", label: "HYBRID" },
+];
+
+const cityOptions = [
+    { value: "", label: "Tất cả" },
+    { value: "hochiminh", label: "TP. Hồ Chí Minh" },
+    { value: "hanoi", label: "Hà Nội" },
+    { value: "danang", label: "Đà Nẵng" },
+    { value: "cantho", label: "Cần Thơ" },
+    { value: "haiphong", label: "Hải Phòng" },
+    { value: "binhduong", label: "Bình Dương" },
+    { value: "dongnai", label: "Đồng Nai" },
+];
+
+// Flat grade level options for chip buttons
+const gradeLevelChips = [
+    { value: "Grade_1", label: "Lớp 1" },
+    { value: "Grade_2", label: "Lớp 2" },
+    { value: "Grade_3", label: "Lớp 3" },
+    { value: "Grade_4", label: "Lớp 4" },
+    { value: "Grade_5", label: "Lớp 5" },
+    { value: "Grade_6", label: "Lớp 6" },
+    { value: "Grade_7", label: "Lớp 7" },
+    { value: "Grade_8", label: "Lớp 8" },
+    { value: "Grade_9", label: "Lớp 9" },
+    { value: "Grade_10", label: "Lớp 10" },
+    { value: "Grade_11", label: "Lớp 11" },
+    { value: "Grade_12", label: "Lớp 12" },
 ];
 
 const sortByOptions = [
@@ -294,6 +292,7 @@ interface SearchFilters {
     gradeLevel: string;
     budgetRange: string;
     teachingMode: string;
+    city: string;
     sortBy: string;
     pageNumber: number;
     pageSize: number;
@@ -305,6 +304,7 @@ const defaultFilters: SearchFilters = {
     gradeLevel: "",
     budgetRange: "all",
     teachingMode: "",
+    city: "",
     sortBy: "rating_desc",
     pageNumber: 1,
     pageSize: 10,
@@ -406,10 +406,12 @@ interface FilterBarProps {
     gradeLevel: string;
     budgetRange: string;
     teachingMode: string;
+    city: string;
     sortBy: string;
     onGradeLevelChange: (value: string) => void;
     onBudgetRangeChange: (value: string) => void;
     onTeachingModeChange: (value: string) => void;
+    onCityChange: (value: string) => void;
     onSortByChange: (value: string) => void;
     onResetFilters: () => void;
 }
@@ -418,65 +420,104 @@ const FilterBar = ({
     gradeLevel,
     budgetRange,
     teachingMode,
+    city,
     sortBy,
     onGradeLevelChange,
     onBudgetRangeChange,
     onTeachingModeChange,
+    onCityChange,
     onSortByChange,
     onResetFilters,
 }: FilterBarProps) => {
-    const hasActiveFilters = gradeLevel !== "" || budgetRange !== "all" || teachingMode !== "" || sortBy !== "rating_desc";
+    const [showGrades, setShowGrades] = useState(false);
+    const hasActiveFilters = gradeLevel !== "" || budgetRange !== "all" || teachingMode !== "" || city !== "" || sortBy !== "rating_desc";
 
     return (
         <section className="filter-section">
             <div className="filter-container">
-                <div className="filter-groups">
-                    <div className="filter-group">
-                        <span className="filter-label">Cấp học</span>
-                        <CustomDropdown
-                            variant="filter"
-                            value={gradeLevel}
-                            onChange={onGradeLevelChange}
-                            optionGroups={gradeLevelGroups}
-                            placeholder={{ value: "", label: "Tất cả" }}
-                        />
+                {/* Row 1: Main filter dropdowns */}
+                <div className="filter-row-main">
+                    <div className="filter-groups">
+                        <div className="filter-group">
+                            <span className="filter-label">Cấp học</span>
+                            <button
+                                className={`filter-toggle-btn ${showGrades ? 'active' : ''} ${gradeLevel ? 'has-value' : ''}`}
+                                onClick={() => setShowGrades(!showGrades)}
+                            >
+                                <span>{gradeLevel ? gradeLevelChips.find(g => g.value === gradeLevel)?.label || 'Tất cả' : 'Tất cả'}</span>
+                                <svg width="10" height="6" viewBox="0 0 10 6" fill="none" style={{ transform: showGrades ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+                                    <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="filter-divider"></div>
+                        <div className="filter-group">
+                            <span className="filter-label">Khu vực</span>
+                            <CustomDropdown
+                                variant="filter"
+                                value={city}
+                                onChange={onCityChange}
+                                options={cityOptions}
+                            />
+                        </div>
+                        <div className="filter-divider"></div>
+                        <div className="filter-group">
+                            <span className="filter-label">Ngân sách</span>
+                            <CustomDropdown
+                                variant="filter"
+                                value={budgetRange}
+                                onChange={onBudgetRangeChange}
+                                options={budgetRangeOptions}
+                            />
+                        </div>
+                        <div className="filter-divider"></div>
+                        <div className="filter-group">
+                            <span className="filter-label">Hình thức</span>
+                            <CustomDropdown
+                                variant="filter"
+                                value={teachingMode}
+                                onChange={onTeachingModeChange}
+                                options={teachingModeOptions}
+                            />
+                        </div>
                     </div>
-                    <div className="filter-divider"></div>
-                    <div className="filter-group">
-                        <span className="filter-label">Ngân sách</span>
-                        <CustomDropdown
-                            variant="filter"
-                            value={budgetRange}
-                            onChange={onBudgetRangeChange}
-                            options={budgetRangeOptions}
-                        />
-                    </div>
-                    <div className="filter-divider"></div>
-                    <div className="filter-group">
-                        <span className="filter-label">Hình thức</span>
-                        <CustomDropdown
-                            variant="filter"
-                            value={teachingMode}
-                            onChange={onTeachingModeChange}
-                            options={teachingModeOptions}
-                        />
+                    <div className="filter-actions">
+                        <div className="sort-group">
+                            <span className="sort-label">Sort by</span>
+                            <CustomDropdown
+                                variant="sort"
+                                value={sortBy}
+                                onChange={onSortByChange}
+                                options={sortByOptions}
+                            />
+                        </div>
+                        <button className="btn-filter" onClick={onResetFilters} title={hasActiveFilters ? "Xóa bộ lọc" : "Bộ lọc"}>
+                            <span className="btn-filter-icon"><FilterIcon /></span>
+                            <span className="btn-filter-text">{hasActiveFilters ? "Xóa lọc" : "Filters"}</span>
+                        </button>
                     </div>
                 </div>
-                <div className="filter-actions">
-                    <div className="sort-group">
-                        <span className="sort-label">Sort by</span>
-                        <CustomDropdown
-                            variant="sort"
-                            value={sortBy}
-                            onChange={onSortByChange}
-                            options={sortByOptions}
-                        />
+
+                {/* Row 2: Expandable grade level chips */}
+                {showGrades && (
+                    <div className="grade-chips-row">
+                        <button
+                            className={`grade-chip ${gradeLevel === '' ? 'active' : ''}`}
+                            onClick={() => { onGradeLevelChange(''); setShowGrades(false); }}
+                        >
+                            Tất cả
+                        </button>
+                        {gradeLevelChips.map((chip) => (
+                            <button
+                                key={chip.value}
+                                className={`grade-chip ${gradeLevel === chip.value ? 'active' : ''}`}
+                                onClick={() => { onGradeLevelChange(chip.value); setShowGrades(false); }}
+                            >
+                                {chip.label}
+                            </button>
+                        ))}
                     </div>
-                    <button className="btn-filter" onClick={onResetFilters} title={hasActiveFilters ? "Xóa bộ lọc" : "Bộ lọc"}>
-                        <span className="btn-filter-icon"><FilterIcon /></span>
-                        <span className="btn-filter-text">{hasActiveFilters ? "Xóa lọc" : "Filters"}</span>
-                    </button>
-                </div>
+                )}
             </div>
         </section>
     );
@@ -728,6 +769,9 @@ const TutorSearchPage = () => {
         if (f.teachingMode) {
             params.teachingMode = f.teachingMode;
         }
+        if (f.city) {
+            params.teachingAreaCity = f.city;
+        }
 
         return params;
     }, []);
@@ -811,6 +855,10 @@ const TutorSearchPage = () => {
         updateFilter("sortBy", value);
     }, [updateFilter]);
 
+    const handleCityChange = useCallback((value: string) => {
+        updateFilter("city", value);
+    }, [updateFilter]);
+
     const handleResetFilters = useCallback(() => {
         setInputSearchTerm("");
         setFilters({ ...defaultFilters });
@@ -843,10 +891,12 @@ const TutorSearchPage = () => {
                     gradeLevel={filters.gradeLevel}
                     budgetRange={filters.budgetRange}
                     teachingMode={filters.teachingMode}
+                    city={filters.city}
                     sortBy={filters.sortBy}
                     onGradeLevelChange={handleGradeLevelChange}
                     onBudgetRangeChange={handleBudgetRangeChange}
                     onTeachingModeChange={handleTeachingModeChange}
+                    onCityChange={handleCityChange}
                     onSortByChange={handleSortByChange}
                     onResetFilters={handleResetFilters}
                 />
