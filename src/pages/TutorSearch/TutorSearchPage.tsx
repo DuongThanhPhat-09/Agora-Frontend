@@ -294,8 +294,8 @@ const statsLabels: Record<TutorType, { experience: string; result: string }> = {
 // ============================================
 interface SearchFilters {
     searchTerm: string;
-    category: string;
-    gradeLevel: string;
+    categories: string[];
+    gradeLevels: string[];
     budgetRange: string;
     teachingMode: string;
     city: string;
@@ -306,8 +306,8 @@ interface SearchFilters {
 
 const defaultFilters: SearchFilters = {
     searchTerm: "",
-    category: "all",
-    gradeLevel: "",
+    categories: [],
+    gradeLevels: [],
     budgetRange: "all",
     teachingMode: "",
     city: "",
@@ -384,14 +384,27 @@ const SearchHero = ({ searchTerm, onSearchTermChange, onSearch, onTrendingClick 
 // Category Tabs Section — Expandable Subject Selector
 // ============================================
 interface CategoryTabsProps {
-    activeCategory: string;
-    onCategoryChange: (category: string) => void;
+    activeCategories: string[];
+    onCategoryToggle: (category: string) => void;
 }
 
-const CategoryTabs = ({ activeCategory, onCategoryChange }: CategoryTabsProps) => {
+const CategoryTabs = ({ activeCategories, onCategoryToggle }: CategoryTabsProps) => {
     const [showSubjects, setShowSubjects] = useState(false);
-    const activeLabel = categories.find(c => c.id === activeCategory)?.name || 'Tất cả';
-    const activeCat = categories.find(c => c.id === activeCategory);
+
+    // Build display label
+    const getLabel = () => {
+        if (activeCategories.length === 0) return 'Tất cả';
+        if (activeCategories.length === 1) return categories.find(c => c.id === activeCategories[0])?.name || 'Tất cả';
+        return `${activeCategories.length} môn`;
+    };
+
+    // Get icon for display
+    const getIcon = () => {
+        if (activeCategories.length === 1) {
+            return categories.find(c => c.id === activeCategories[0])?.icon || SubjectIcons.all;
+        }
+        return SubjectIcons.all;
+    };
 
     return (
         <section className="category-section">
@@ -400,9 +413,9 @@ const CategoryTabs = ({ activeCategory, onCategoryChange }: CategoryTabsProps) =
                     className={`category-toggle-btn ${showSubjects ? 'open' : ''}`}
                     onClick={() => setShowSubjects(!showSubjects)}
                 >
-                    <span className="category-toggle-icon">{activeCat?.icon || SubjectIcons.all}</span>
+                    <span className="category-toggle-icon">{getIcon()}</span>
                     <span className="category-toggle-label">
-                        Môn học: <strong>{activeLabel}</strong>
+                        Môn học: <strong>{getLabel()}</strong>
                     </span>
                     <svg className="category-toggle-arrow" width="12" height="7" viewBox="0 0 12 7" fill="none" style={{ transform: showSubjects ? 'rotate(180deg)' : 'none', transition: 'transform 0.25s ease' }}>
                         <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -411,16 +424,27 @@ const CategoryTabs = ({ activeCategory, onCategoryChange }: CategoryTabsProps) =
             </div>
             {showSubjects && (
                 <div className="category-dropdown">
-                    {categories.map((category) => (
-                        <button
-                            key={category.id}
-                            className={`category-option ${activeCategory === category.id ? 'active' : ''}`}
-                            onClick={() => { onCategoryChange(category.id); setShowSubjects(false); }}
-                        >
-                            <span className="category-option-icon">{category.icon}</span>
-                            <span className="category-option-text">{category.name}</span>
-                        </button>
-                    ))}
+                    {categories.map((category) => {
+                        const isAll = category.id === 'all';
+                        const isActive = isAll ? activeCategories.length === 0 : activeCategories.includes(category.id);
+                        return (
+                            <button
+                                key={category.id}
+                                className={`category-option ${isActive ? 'active' : ''}`}
+                                onClick={() => {
+                                    if (isAll) {
+                                        // "Tất cả" clears all selections
+                                        onCategoryToggle('all');
+                                    } else {
+                                        onCategoryToggle(category.id);
+                                    }
+                                }}
+                            >
+                                <span className="category-option-icon">{category.icon}</span>
+                                <span className="category-option-text">{category.name}</span>
+                            </button>
+                        );
+                    })}
                 </div>
             )}
         </section>
@@ -431,12 +455,12 @@ const CategoryTabs = ({ activeCategory, onCategoryChange }: CategoryTabsProps) =
 // Filter Bar Section
 // ============================================
 interface FilterBarProps {
-    gradeLevel: string;
+    gradeLevels: string[];
     budgetRange: string;
     teachingMode: string;
     city: string;
     sortBy: string;
-    onGradeLevelChange: (value: string) => void;
+    onGradeLevelToggle: (value: string) => void;
     onBudgetRangeChange: (value: string) => void;
     onTeachingModeChange: (value: string) => void;
     onCityChange: (value: string) => void;
@@ -445,12 +469,12 @@ interface FilterBarProps {
 }
 
 const FilterBar = ({
-    gradeLevel,
+    gradeLevels,
     budgetRange,
     teachingMode,
     city,
     sortBy,
-    onGradeLevelChange,
+    onGradeLevelToggle,
     onBudgetRangeChange,
     onTeachingModeChange,
     onCityChange,
@@ -458,7 +482,14 @@ const FilterBar = ({
     onResetFilters,
 }: FilterBarProps) => {
     const [showGrades, setShowGrades] = useState(false);
-    const hasActiveFilters = gradeLevel !== "" || budgetRange !== "all" || teachingMode !== "" || city !== "" || sortBy !== "rating_desc";
+    const hasActiveFilters = gradeLevels.length > 0 || budgetRange !== "all" || teachingMode !== "" || city !== "" || sortBy !== "rating_desc";
+
+    // Build grade level display label
+    const getGradeLabel = () => {
+        if (gradeLevels.length === 0) return 'Tất cả';
+        if (gradeLevels.length === 1) return gradeLevelChips.find(g => g.value === gradeLevels[0])?.label || 'Tất cả';
+        return `${gradeLevels.length} lớp`;
+    };
 
     return (
         <section className="filter-section">
@@ -469,10 +500,10 @@ const FilterBar = ({
                         <div className="filter-group">
                             <span className="filter-label">Cấp học</span>
                             <button
-                                className={`filter-toggle-btn ${showGrades ? 'active' : ''} ${gradeLevel ? 'has-value' : ''}`}
+                                className={`filter-toggle-btn ${showGrades ? 'active' : ''} ${gradeLevels.length > 0 ? 'has-value' : ''}`}
                                 onClick={() => setShowGrades(!showGrades)}
                             >
-                                <span>{gradeLevel ? gradeLevelChips.find(g => g.value === gradeLevel)?.label || 'Tất cả' : 'Tất cả'}</span>
+                                <span>{getGradeLabel()}</span>
                                 <svg width="10" height="6" viewBox="0 0 10 6" fill="none" style={{ transform: showGrades ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
                                     <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                                 </svg>
@@ -526,20 +557,20 @@ const FilterBar = ({
                     </div>
                 </div>
 
-                {/* Row 2: Expandable grade level chips */}
+                {/* Row 2: Expandable grade level chips — multi-select */}
                 {showGrades && (
                     <div className="grade-chips-row">
                         <button
-                            className={`grade-chip ${gradeLevel === '' ? 'active' : ''}`}
-                            onClick={() => { onGradeLevelChange(''); setShowGrades(false); }}
+                            className={`grade-chip ${gradeLevels.length === 0 ? 'active' : ''}`}
+                            onClick={() => onGradeLevelToggle('all')}
                         >
                             Tất cả
                         </button>
                         {gradeLevelChips.map((chip) => (
                             <button
                                 key={chip.value}
-                                className={`grade-chip ${gradeLevel === chip.value ? 'active' : ''}`}
-                                onClick={() => { onGradeLevelChange(chip.value); setShowGrades(false); }}
+                                className={`grade-chip ${gradeLevels.includes(chip.value) ? 'active' : ''}`}
+                                onClick={() => onGradeLevelToggle(chip.value)}
                             >
                                 {chip.label}
                             </button>
@@ -548,6 +579,70 @@ const FilterBar = ({
                 )}
             </div>
         </section>
+    );
+};
+
+// ============================================
+// Active Filter Chips — shows selected filters with remove buttons
+// ============================================
+interface ActiveFiltersProps {
+    categories: string[];
+    gradeLevels: string[];
+    onRemoveCategory: (category: string) => void;
+    onRemoveGradeLevel: (gradeLevel: string) => void;
+    onClearAll: () => void;
+}
+
+const ActiveFilters = ({ categories, gradeLevels, onRemoveCategory, onRemoveGradeLevel, onClearAll }: ActiveFiltersProps) => {
+    const hasAny = categories.length > 0 || gradeLevels.length > 0;
+    if (!hasAny) return null;
+
+    return (
+        <div className="active-filters-bar">
+            <div className="active-filters-container">
+                <span className="active-filters-label">Bộ lọc đang chọn:</span>
+                <div className="active-filters-chips">
+                    {categories.map(catId => {
+                        const catDef = [
+                            { id: 'math', name: 'Toán Học' },
+                            { id: 'physics', name: 'Vật Lý' },
+                            { id: 'chemistry', name: 'Hóa Học' },
+                            { id: 'english', name: 'Tiếng Anh' },
+                            { id: 'science', name: 'Khoa Học' },
+                            { id: 'language', name: 'Ngoại Ngữ' },
+                            { id: 'art', name: 'Nghệ Thuật' },
+                            { id: 'it_tech', name: 'Công Nghệ' },
+                        ].find(c => c.id === catId);
+                        return (
+                            <span key={`cat-${catId}`} className="active-filter-chip category-chip">
+                                {catDef?.name || catId}
+                                <button className="chip-remove" onClick={() => onRemoveCategory(catId)} aria-label="Remove">
+                                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                                        <path d="M9 3L3 9M3 3l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                                    </svg>
+                                </button>
+                            </span>
+                        );
+                    })}
+                    {gradeLevels.map(gl => {
+                        const chip = gradeLevelChips.find(g => g.value === gl);
+                        return (
+                            <span key={`gl-${gl}`} className="active-filter-chip grade-chip">
+                                {chip?.label || gl}
+                                <button className="chip-remove" onClick={() => onRemoveGradeLevel(gl)} aria-label="Xóa">
+                                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                                        <path d="M9 3L3 9M3 3l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                                    </svg>
+                                </button>
+                            </span>
+                        );
+                    })}
+                </div>
+                <button className="active-filters-clear" onClick={onClearAll}>
+                    Xóa tất cả
+                </button>
+            </div>
+        </div>
     );
 };
 
@@ -774,6 +869,8 @@ const TutorSearchPage = () => {
     const isLoadMore = useRef(false);
 
     // Build API params from filters
+    // NOTE: Backend only supports single `category` and `gradeLevel` values.
+    // For multi-select, we fetch all results and filter client-side.
     const buildApiParams = useCallback((f: SearchFilters): TutorSearchParams => {
         const params: TutorSearchParams = {
             pageNumber: f.pageNumber,
@@ -784,12 +881,13 @@ const TutorSearchPage = () => {
         if (f.searchTerm.trim()) {
             params.searchTerm = f.searchTerm.trim();
         }
-        if (f.category && f.category !== "all") {
-            params.category = f.category;
+        // Only send single category to API (backend limitation)
+        if (f.categories.length === 1) {
+            params.category = f.categories[0];
         }
-        if (f.gradeLevel && f.gradeLevel !== "") {
-            params.gradeLevel = f.gradeLevel;
-            console.log("🎓 GradeLevel filter applied:", f.gradeLevel);
+        // Only send single gradeLevel to API (backend limitation)
+        if (f.gradeLevels.length === 1) {
+            params.gradeLevel = f.gradeLevels[0];
         }
         if (f.budgetRange && f.budgetRange !== "all") {
             params.budgetRange = f.budgetRange;
@@ -804,6 +902,44 @@ const TutorSearchPage = () => {
         return params;
     }, []);
 
+    // Map category IDs → subject names for client-side filtering
+    const categoryNameMap: Record<string, string> = {
+        math: 'Toán Học',
+        physics: 'Vật Lý',
+        chemistry: 'Hóa Học',
+        english: 'Tiếng Anh',
+        science: 'Khoa Học',
+        language: 'Ngoại Ngữ',
+        art: 'Nghệ Thuật',
+        it_tech: 'Công Nghệ',
+    };
+
+    // Client-side filter for multi-select (when backend can't handle it)
+    const applyClientSideFilters = useCallback((tutorsList: Tutor[], f: SearchFilters): Tutor[] => {
+        let filtered = tutorsList;
+
+        // Filter by categories (AND logic — tutor must teach ALL selected subjects)
+        if (f.categories.length > 1) {
+            const selectedNames = f.categories.map(id => categoryNameMap[id]).filter(Boolean);
+            filtered = filtered.filter(tutor =>
+                selectedNames.every(name => tutor.subjects.includes(name))
+            );
+        }
+
+        // Filter by grade levels (AND logic — tutor must cover ALL selected grades)
+        if (f.gradeLevels.length > 1) {
+            const selectedGradeLabels = f.gradeLevels.map(gl => {
+                const match = gl.match(/^Grade_(\d+)$/i);
+                return match ? `Lớp ${match[1]}` : gl;
+            });
+            filtered = filtered.filter(tutor =>
+                selectedGradeLabels.every(gl => tutor.gradeLevels.includes(gl))
+            );
+        }
+
+        return filtered;
+    }, []);
+
     // Fetch tutors whenever filters change
     useEffect(() => {
         const fetchTutors = async () => {
@@ -813,7 +949,10 @@ const TutorSearchPage = () => {
                 const apiParams = buildApiParams(filters);
                 console.log("📡 API call with params:", apiParams);
                 const response = await searchTutors(apiParams);
-                const mapped = response.content.items.map(mapApiTutorToUi);
+                let mapped = response.content.items.map(mapApiTutorToUi);
+
+                // Apply client-side filtering for multi-select
+                mapped = applyClientSideFilters(mapped, filters);
 
                 if (isLoadMore.current) {
                     // Append new results for "Load More"
@@ -824,8 +963,10 @@ const TutorSearchPage = () => {
                     setTutors(mapped);
                 }
 
-                setTotalCount(response.content.totalCount);
-                setHasNext(response.content.hasNext);
+                // Update count — use filtered count for multi-select
+                const needsClientFilter = filters.categories.length > 1 || filters.gradeLevels.length > 1;
+                setTotalCount(needsClientFilter ? mapped.length : response.content.totalCount);
+                setHasNext(needsClientFilter ? false : response.content.hasNext);
             } catch (err) {
                 console.error("Failed to fetch tutors:", err);
                 setError("Không thể tải danh sách gia sư. Vui lòng thử lại.");
@@ -840,7 +981,7 @@ const TutorSearchPage = () => {
         };
 
         fetchTutors();
-    }, [filters, buildApiParams]);
+    }, [filters, buildApiParams, applyClientSideFilters]);
 
     // ---- Handler: update a single filter and reset to page 1 ----
     const updateFilter = useCallback(<K extends keyof SearchFilters>(key: K, value: SearchFilters[K]) => {
@@ -861,16 +1002,39 @@ const TutorSearchPage = () => {
         updateFilter("searchTerm", tag);
     }, [updateFilter]);
 
-    // ---- Category handler ----
-    const handleCategoryChange = useCallback((category: string) => {
-        updateFilter("category", category);
+    // ---- Category handler (multi-select toggle) ----
+    const handleCategoryToggle = useCallback((category: string) => {
+        if (category === 'all') {
+            // "Tất cả" clears all selections
+            updateFilter("categories", []);
+        } else {
+            setFilters(prev => {
+                const current = prev.categories;
+                const next = current.includes(category)
+                    ? current.filter(c => c !== category)
+                    : [...current, category];
+                return { ...prev, categories: next, pageNumber: 1 };
+            });
+        }
+    }, [updateFilter]);
+
+    // ---- Grade level handler (multi-select toggle) ----
+    const handleGradeLevelToggle = useCallback((value: string) => {
+        if (value === 'all') {
+            // "Tất cả" clears all selections
+            updateFilter("gradeLevels", []);
+        } else {
+            setFilters(prev => {
+                const current = prev.gradeLevels;
+                const next = current.includes(value)
+                    ? current.filter(g => g !== value)
+                    : [...current, value];
+                return { ...prev, gradeLevels: next, pageNumber: 1 };
+            });
+        }
     }, [updateFilter]);
 
     // ---- Filter handlers ----
-    const handleGradeLevelChange = useCallback((value: string) => {
-        updateFilter("gradeLevel", value);
-    }, [updateFilter]);
-
     const handleBudgetRangeChange = useCallback((value: string) => {
         updateFilter("budgetRange", value);
     }, [updateFilter]);
@@ -912,21 +1076,30 @@ const TutorSearchPage = () => {
                     onTrendingClick={handleTrendingClick}
                 />
                 <CategoryTabs
-                    activeCategory={filters.category}
-                    onCategoryChange={handleCategoryChange}
+                    activeCategories={filters.categories}
+                    onCategoryToggle={handleCategoryToggle}
                 />
                 <FilterBar
-                    gradeLevel={filters.gradeLevel}
+                    gradeLevels={filters.gradeLevels}
                     budgetRange={filters.budgetRange}
                     teachingMode={filters.teachingMode}
                     city={filters.city}
                     sortBy={filters.sortBy}
-                    onGradeLevelChange={handleGradeLevelChange}
+                    onGradeLevelToggle={handleGradeLevelToggle}
                     onBudgetRangeChange={handleBudgetRangeChange}
                     onTeachingModeChange={handleTeachingModeChange}
                     onCityChange={handleCityChange}
                     onSortByChange={handleSortByChange}
                     onResetFilters={handleResetFilters}
+                />
+                <ActiveFilters
+                    categories={filters.categories}
+                    gradeLevels={filters.gradeLevels}
+                    onRemoveCategory={(cat) => handleCategoryToggle(cat)}
+                    onRemoveGradeLevel={(gl) => handleGradeLevelToggle(gl)}
+                    onClearAll={() => {
+                        setFilters(prev => ({ ...prev, categories: [], gradeLevels: [], pageNumber: 1 }));
+                    }}
                 />
                 <ResultsSection
                     tutors={tutors}
