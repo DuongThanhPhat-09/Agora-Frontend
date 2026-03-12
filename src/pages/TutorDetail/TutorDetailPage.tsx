@@ -77,18 +77,22 @@ const formatCurrency = (amount: number | null) => {
 // Hero Section
 const HeroSection = ({ profile }: { profile: TutorFullProfile }) => {
     const [showVideoModal, setShowVideoModal] = useState(false);
-    // Flatten subjects tags (handle tags being a JSON string or an array)
-    const parseTags = (tags: unknown): string[] => {
-        if (Array.isArray(tags)) return tags;
-        if (typeof tags === 'string') {
+    // Build subject groups: each subject with its associated tags
+    const parseTags = (rawTags: unknown): string[] => {
+        if (Array.isArray(rawTags)) return rawTags;
+        if (typeof rawTags === 'string') {
             try {
-                const parsed = JSON.parse(tags);
+                const parsed = JSON.parse(rawTags);
                 return Array.isArray(parsed) ? parsed : [];
             } catch { return []; }
         }
         return [];
     };
-    const tags = profile.subjects?.flatMap(s => parseTags(s.tags)) || [];
+
+    const subjectGroups = (profile.subjects || []).map(s => ({
+        name: s.subjectName || 'Chưa rõ',
+        tags: parseTags(s.tags),
+    }));
 
     return (
         <>
@@ -180,11 +184,18 @@ const HeroSection = ({ profile }: { profile: TutorFullProfile }) => {
                     </div>
                 </div>
 
-                {/* Subject Tags */}
+                {/* Subject Tags — grouped by subject */}
                 <div className="subject-tags">
-                    {tags.length > 0 ? tags.map((tag, index) => (
-                        <div key={index} className="subject-tag">
-                            <b>{tag}</b>
+                    {subjectGroups.length > 0 ? subjectGroups.map((group, index) => (
+                        <div key={index} className="subject-group">
+                            <div className="subject-tag subject-name-tag">
+                                <b>{group.name}</b>
+                            </div>
+                            {group.tags.length > 0 && group.tags.map((tag, tIdx) => (
+                                <div key={tIdx} className="subject-tag child-tag">
+                                    <b>{tag}</b>
+                                </div>
+                            ))}
                         </div>
                     )) : (
                         <div className="subject-tag"><b>Chưa cập nhật môn học</b></div>
