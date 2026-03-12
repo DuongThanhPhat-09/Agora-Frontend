@@ -181,13 +181,13 @@ const HeroSection: React.FC<{ data: TutorProfileFormData; onPlayVideo: () => voi
         return city || district || '';
     })();
 
-    // Collect all tags: subject names + per-subject tags
-    const allTags = [
-        ...data.subjects
-            .filter(s => s.subjectName && s.subjectName.trim())
-            .map(s => s.subjectName),
-        ...data.subjects.flatMap(s => s.tags || [])
-    ];
+    // Build subject groups: each subject with its associated tags
+    const subjectGroups = data.subjects
+        .filter(s => s.subjectName && s.subjectName.trim())
+        .map(s => ({
+            name: s.subjectName,
+            tags: s.tags || [],
+        }));
 
     return (
         <section className="tutor-hero-section">
@@ -218,7 +218,7 @@ const HeroSection: React.FC<{ data: TutorProfileFormData; onPlayVideo: () => voi
                         <div className="play-button">
                             <PlayIcon />
                         </div>
-                        <b className="click-to-view">Click to View Academic Interview</b>
+                        <b className="click-to-view">Click để xem phỏng vấn học thuật</b>
                     </div>
                 )}
 
@@ -291,16 +291,42 @@ const HeroSection: React.FC<{ data: TutorProfileFormData; onPlayVideo: () => voi
                 </div>
             </div>
 
-            {/* Subject Tags */}
-            {allTags.length > 0 && (
-                <div className="subject-tags">
-                    {allTags.map((tag, index) => (
-                        <div key={index} className="subject-tag">
-                            <b>{tag}</b>
+            {/* Subject Tags — grouped by subject */}
+            <div className="subject-tags">
+                {subjectGroups.length > 0 ? subjectGroups.map((group, index) => (
+                    <div key={index} className="subject-group">
+                        <div className="subject-tag subject-name-tag">
+                            <b>{group.name}</b>
                         </div>
-                    ))}
+                        {group.tags.length > 0 && group.tags.map((tag, tIdx) => (
+                            <div key={tIdx} className="subject-tag child-tag">
+                                <b>{tag}</b>
+                            </div>
+                        ))}
+                    </div>
+                )) : (
+                    <div className="subject-tag"><b>Chưa cập nhật môn học</b></div>
+                )}
+            </div>
+
+            {/* Mobile Rating Bar (visible only on mobile) */}
+            <div className="mobile-rating-bar">
+                <div className="rating-stars">
+                    <div className="stars-row">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                            <StarIcon key={i} filled={i <= Math.round(data.averageRating)} />
+                        ))}
+                    </div>
+                    <b className="rating-text">
+                        {data.averageRating > 0
+                            ? `${data.averageRating} (${data.totalReviews} đánh giá)`
+                            : 'Chưa có đánh giá'}
+                    </b>
                 </div>
-            )}
+                <div className="favorite-button">
+                    <HeartIcon />
+                </div>
+            </div>
         </section>
     );
 };
@@ -342,36 +368,22 @@ const AboutSection: React.FC<{ data: TutorProfileFormData }> = ({ data }) => {
                     {data.experience && <p className="about-experience">{data.experience}</p>}
                 </div>
                 <div className="credentials-card">
-                    {data.education && (
-                        <div className="credential-item">
-                            <span className="credential-label">Học vấn</span>
-                            <b className="credential-institution">{data.education}</b>
-                            {data.gpa && data.gpaScale && (
-                                <i className="credential-detail">GPA: {data.gpa}/{data.gpaScale}</i>
-                            )}
-                        </div>
-                    )}
-                    {data.experience && (
-                        <div className="credential-item">
-                            <span className="credential-label">Kinh nghiệm</span>
-                            <b className="credential-institution">
-                                {data.experience.length > 50
-                                    ? data.experience.substring(0, 50) + '...'
-                                    : data.experience}
-                            </b>
-                        </div>
-                    )}
-                    {data.credentials.filter(c => c.verificationStatus === 'verified').length > 0 && (
-                        <div className="credential-item">
-                            <span className="credential-label">Chứng chỉ</span>
-                            <b className="credential-institution">
-                                {data.credentials.filter(c => c.verificationStatus === 'verified')[0].name}
-                            </b>
-                            <i className="credential-detail">
-                                {data.credentials.filter(c => c.verificationStatus === 'verified')[0].institution}
-                            </i>
-                        </div>
-                    )}
+                    <div className="credential-item">
+                        <span className="credential-label">Học vấn</span>
+                        <b className="credential-institution">{data.education || '—'}</b>
+                        <i className="credential-detail">GPA: {data.gpa || '—'}/{data.gpaScale || '—'}</i>
+                    </div>
+                    <div className="credential-item">
+                        <span className="credential-label">Hình thức dạy</span>
+                        <b className="credential-institution">
+                            {data.teachingMode === 'online' ? 'Online' :
+                             data.teachingMode === 'offline' ? 'Offline' :
+                             data.teachingMode === 'both' ? 'Online & Offline' : '—'}
+                        </b>
+                        <i className="credential-detail">
+                            {CITY_LABELS[data.teachingAreaCity] || data.teachingAreaCity || 'Toàn quốc'}
+                        </i>
+                    </div>
                 </div>
             </div>
         </section>
