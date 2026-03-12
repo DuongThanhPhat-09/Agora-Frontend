@@ -104,43 +104,6 @@ const gradeLevelGroups = [
             { value: "Grade_12", label: "Lớp 12" },
         ],
     },
-    {
-        label: "Đại học",
-        options: [
-            { value: "University", label: "Đại học" },
-        ],
-    },
-
-    // Split international certificates into separate optgroups for clarity
-    {
-        label: "IELTS",
-        options: [
-            { value: "IELTS_5.0", label: "IELTS 5.0+" },
-            { value: "IELTS_6.0", label: "IELTS 6.0+" },
-            { value: "IELTS_7.0", label: "IELTS 7.0+" },
-            { value: "IELTS_8.0", label: "IELTS 8.0+" },
-            { value: "IELTS_9.0", label: "IELTS 9.0" },
-        ],
-    },
-    {
-        label: "TOEIC",
-        options: [
-            { value: "TOEIC_500", label: "TOEIC 500+" },
-            { value: "TOEIC_600", label: "TOEIC 600+" },
-            { value: "TOEIC_700", label: "TOEIC 700+" },
-            { value: "TOEIC_800", label: "TOEIC 800+" },
-            { value: "TOEIC_900", label: "TOEIC 900+" },
-        ],
-    },
-    {
-        label: "SAT",
-        options: [
-            { value: "SAT_1200", label: "SAT 1200+" },
-            { value: "SAT_1300", label: "SAT 1300+" },
-            { value: "SAT_1400", label: "SAT 1400+" },
-            { value: "SAT_1500", label: "SAT 1500+" },
-        ],
-    },
 ];
 
 const budgetRangeOptions = [
@@ -183,6 +146,7 @@ interface Tutor {
     rating: number;
     university: string;
     subjects: string[];
+    gradeLevels: string[];
     experience: string;
     result: string;
     resultType: "success" | "primary" | "muted" | "warning";
@@ -214,11 +178,50 @@ const getResultType = (type: TutorType): "success" | "primary" | "muted" | "warn
     return map[type];
 };
 
+// Helper: Convert grade level keys (e.g. "Grade_6") to display labels ("Lớp 6")
+const formatGradeLevel = (grade: string): string => {
+    const match = grade.match(/^Grade_(\d+)$/i);
+    if (match) return `Lớp ${match[1]}`;
+    return grade;
+};
+
+// Helper: Convert sorted grade numbers into compact ranges (e.g. [1,2,3,6,7,8,9,10] → "Lớp 1-3, 6-10")
+const formatGradeLevelRanges = (grades: string[]): string => {
+    if (grades.length === 0) return "";
+    
+    // Extract numbers
+    const nums = grades.map(g => {
+        const m = g.match(/\d+/);
+        return m ? parseInt(m[0]) : 0;
+    }).filter(n => n > 0).sort((a, b) => a - b);
+    
+    if (nums.length === 0) return "";
+    
+    // Build ranges
+    const ranges: string[] = [];
+    let start = nums[0];
+    let end = nums[0];
+    
+    for (let i = 1; i < nums.length; i++) {
+        if (nums[i] === end + 1) {
+            end = nums[i];
+        } else {
+            ranges.push(start === end ? `${start}` : `${start}-${end}`);
+            start = nums[i];
+            end = nums[i];
+        }
+    }
+    ranges.push(start === end ? `${start}` : `${start}-${end}`);
+    
+    return `Lớp ${ranges.join(", ")}`;
+};
+
 const mapApiTutorToUi = (apiTutor: TutorSearchResultResponse): Tutor => {
     const type = mapSubscriptionToType(apiTutor.subscriptionType);
 
     // Build subjects array from backend subjects + tags
     const subjects: string[] = [];
+    const gradeLevelSet = new Set<string>();
     if (apiTutor.subjects) {
         apiTutor.subjects.forEach((s) => {
             if (s.tags && s.tags.length > 0) {
@@ -226,8 +229,28 @@ const mapApiTutorToUi = (apiTutor: TutorSearchResultResponse): Tutor => {
             } else if (s.subjectName) {
                 subjects.push(s.subjectName);
             }
+            // Collect grade levels from each subject (only Grade_1 to Grade_12)
+            if (s.gradeLevels) {
+                s.gradeLevels.forEach((gl) => {
+                    if (/^Grade_(\d+)$/i.test(gl)) {
+                        const num = parseInt(gl.match(/^Grade_(\d+)$/i)![1]);
+                        if (num >= 1 && num <= 12) {
+                            gradeLevelSet.add(gl);
+                        }
+                    }
+                });
+            }
         });
     }
+
+    // Sort grade levels numerically and format
+    const sortedGradeLevels = Array.from(gradeLevelSet)
+        .sort((a, b) => {
+            const numA = parseInt(a.match(/\d+/)![0]);
+            const numB = parseInt(b.match(/\d+/)![0]);
+            return numA - numB;
+        })
+        .map(formatGradeLevel);
 
     return {
         id: apiTutor.tutorId,
@@ -238,6 +261,7 @@ const mapApiTutorToUi = (apiTutor: TutorSearchResultResponse): Tutor => {
         rating: apiTutor.averageRating || 0,
         university: apiTutor.education || "",
         subjects: subjects.length > 0 ? subjects : ["Chưa cập nhật"],
+        gradeLevels: sortedGradeLevels,
         experience: apiTutor.yearsOfExperience ? `${apiTutor.yearsOfExperience} Năm` : "N/A",
         result: apiTutor.successRate || apiTutor.specialty || "—",
         resultType: getResultType(type),
@@ -518,12 +542,25 @@ const TutorCard = ({ tutor }: TutorCardProps) => {
                     </div>
                 </div>
 
-                {/* Subject Tags */}
+                {/* Subject Tags + Grade Levels combined */}
                 <div className="tutor-subjects">
                     {tutor.subjects.map((subject, index) => (
                         <span key={index} className="subject-tag">{subject}</span>
                     ))}
                 </div>
+
+                {/* Grade Levels — compact range display */}
+                {tutor.gradeLevels.length > 0 && (
+                    <div className="tutor-grade-levels">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0, color: '#2563eb'}}>
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                        </svg>
+                        <span className="grade-level-range">
+                            {formatGradeLevelRanges(tutor.gradeLevels)}
+                        </span>
+                    </div>
+                )}
 
                 {/* Stats Row */}
                 <div className="tutor-stats">
@@ -537,15 +574,17 @@ const TutorCard = ({ tutor }: TutorCardProps) => {
                     </div>
                 </div>
 
-                {/* Highlights */}
+                {/* Highlights — max 2 */}
+                {tutor.highlights.length > 0 && (
                 <div className="tutor-highlights">
-                    {tutor.highlights.map((highlight, index) => (
+                    {tutor.highlights.slice(0, 2).map((highlight, index) => (
                         <div key={index} className="highlight-item">
                             <span className="highlight-icon"><CheckIcon /></span>
                             <span className="highlight-text">{highlight}</span>
                         </div>
                     ))}
                 </div>
+                )}
             </div>
 
             {/* Card Footer */}
