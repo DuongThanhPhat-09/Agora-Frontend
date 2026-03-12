@@ -316,7 +316,7 @@
     }
 
     .tutor-search-page .filter-container {
-        flex-direction: row;
+        flex-direction: column;
         flex-wrap: nowrap;
         overflow-x: auto;
         gap: 0;
@@ -326,6 +326,18 @@
     }
 
     .tutor-search-page .filter-container::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tutor-search-page .filter-row-main {
+        flex-wrap: nowrap;
+        gap: 0;
+        overflow-x: auto;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .tutor-search-page .filter-row-main::-webkit-scrollbar {
         display: none;
     }
 
@@ -368,6 +380,23 @@
 
     .tutor-search-page .filter-select-wrapper::after {
         right: 10px;
+        width: 8px;
+        height: 5px;
+    }
+
+    /* Grade Level Toggle Button — mobile compact style */
+    .tutor-search-page .filter-toggle-btn {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 8px 12px;
+        gap: 6px;
+        letter-spacing: 0;
+        text-transform: none;
+        color: var(--color-navy, #1a2238);
+        white-space: nowrap;
+    }
+
+    .tutor-search-page .filter-toggle-btn svg {
         width: 8px;
         height: 5px;
     }
@@ -438,6 +467,19 @@
         letter-spacing: 0;
         text-transform: none;
         color: var(--color-white);
+    }
+
+    /* Grade chips row on mobile */
+    .tutor-search-page .grade-chips-row {
+        flex-wrap: wrap;
+        padding: 10px 0 4px;
+        margin-top: 8px;
+        gap: 6px;
+    }
+
+    .tutor-search-page .grade-chip {
+        padding: 6px 14px;
+        font-size: 11px;
     }
 }
 
