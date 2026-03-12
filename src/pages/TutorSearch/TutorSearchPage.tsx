@@ -18,14 +18,6 @@ const SearchIcon = () => (
     </svg>
 );
 
-const CategoryIcon = () => (
-    <svg width="13" height="13" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M7.08333 2.125H2.125V7.08333H7.08333V2.125Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M14.875 2.125H9.91667V7.08333H14.875V2.125Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M14.875 9.91667H9.91667V14.875H14.875V9.91667Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M7.08333 9.91667H2.125V14.875H7.08333V9.91667Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
 
 const VerifiedIcon = () => (
     <svg width="7" height="7" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -58,19 +50,29 @@ const FilterIcon = () => (
     </svg>
 );
 
-// ============================================
-// Categories data
-// ============================================
-const categories = [
-    { id: "all", name: "Tất cả", icon: "📚" },
-    { id: "math", name: "Toán Học", icon: "📐" },
-    { id: "physics", name: "Vật Lý", icon: "⚡" },
-    { id: "chemistry", name: "Hóa Học", icon: "🧪" },
-    { id: "english", name: "Tiếng Anh", icon: "🇬🇧" },
-    { id: "science", name: "Khoa Học", icon: "🔬" },
-    { id: "language", name: "Ngoại Ngữ", icon: "🌐" },
-    { id: "art", name: "Nghệ Thuật", icon: "🎨" },
-    { id: "it_tech", name: "Công Nghệ", icon: "💻" },
+// Subject SVG Icons
+const SubjectIcons = {
+    all: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>,
+    math: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="5" y1="5" x2="19" y2="19"/></svg>,
+    physics: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/></svg>,
+    chemistry: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 3h6v7l5 8H4l5-8V3z"/><line x1="9" y1="3" x2="15" y2="3"/></svg>,
+    english: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
+    science: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15 15 0 014 10 15 15 0 01-4 10 15 15 0 01-4-10 15 15 0 014-10z"/><line x1="2" y1="12" x2="22" y2="12"/></svg>,
+    language: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 8l6 6"/><path d="M4 14l6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="M22 22l-5-10-5 10"/><path d="M14 18h6"/></svg>,
+    art: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.7-.8 1.7-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.8-1.7 1.7-1.7H16c3.3 0 6-2.7 6-6 0-5.5-4.5-9.6-10-9.6z"/></svg>,
+    it_tech: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="14" y1="4" x2="10" y2="20"/></svg>,
+};
+
+const categories: { id: string; name: string; icon: React.ReactNode }[] = [
+    { id: "all", name: "Tất cả", icon: SubjectIcons.all },
+    { id: "math", name: "Toán Học", icon: SubjectIcons.math },
+    { id: "physics", name: "Vật Lý", icon: SubjectIcons.physics },
+    { id: "chemistry", name: "Hóa Học", icon: SubjectIcons.chemistry },
+    { id: "english", name: "Tiếng Anh", icon: SubjectIcons.english },
+    { id: "science", name: "Khoa Học", icon: SubjectIcons.science },
+    { id: "language", name: "Ngoại Ngữ", icon: SubjectIcons.language },
+    { id: "art", name: "Nghệ Thuật", icon: SubjectIcons.art },
+    { id: "it_tech", name: "Công Nghệ", icon: SubjectIcons.it_tech },
 ];
 
 // Trending tags
@@ -389,7 +391,7 @@ interface CategoryTabsProps {
 const CategoryTabs = ({ activeCategory, onCategoryChange }: CategoryTabsProps) => {
     const [showSubjects, setShowSubjects] = useState(false);
     const activeLabel = categories.find(c => c.id === activeCategory)?.name || 'Tất cả';
-    const activeIcon = categories.find(c => c.id === activeCategory)?.icon || '📚';
+    const activeCat = categories.find(c => c.id === activeCategory);
 
     return (
         <section className="category-section">
@@ -398,7 +400,7 @@ const CategoryTabs = ({ activeCategory, onCategoryChange }: CategoryTabsProps) =
                     className={`category-toggle-btn ${showSubjects ? 'open' : ''}`}
                     onClick={() => setShowSubjects(!showSubjects)}
                 >
-                    <span className="category-toggle-icon">{activeIcon}</span>
+                    <span className="category-toggle-icon">{activeCat?.icon || SubjectIcons.all}</span>
                     <span className="category-toggle-label">
                         Môn học: <strong>{activeLabel}</strong>
                     </span>

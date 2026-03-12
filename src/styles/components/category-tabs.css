@@ -3,7 +3,7 @@
 .tutor-search-page .category-section {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 20px 35px 0;
+    padding: 20px 35px 20px 0;
     position: relative;
 }
 
@@ -38,8 +38,12 @@
 }
 
 .tutor-search-page .category-toggle-icon {
-    font-size: 18px;
-    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    color: var(--color-navy);
 }
 
 .tutor-search-page .category-toggle-label {
@@ -64,7 +68,7 @@
 /* Dropdown Grid */
 .tutor-search-page .category-dropdown {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
     padding: 16px 0 8px;
     animation: categorySlideDown 0.25s ease;
@@ -109,8 +113,13 @@
 }
 
 .tutor-search-page .category-option-icon {
-    font-size: 16px;
-    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    color: rgba(62, 47, 40, 0.6);
+    flex-shrink: 0;
 }
 
 .tutor-search-page .category-option-text {
@@ -122,6 +131,10 @@
 }
 
 .tutor-search-page .category-option.active .category-option-text {
+    color: #fff;
+}
+
+.tutor-search-page .category-option.active .category-option-icon {
     color: #fff;
 }
 
