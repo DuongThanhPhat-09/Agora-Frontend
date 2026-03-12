@@ -116,25 +116,54 @@
 /* ===== RESPONSIVE — MOBILE ===== */
 @media (max-width: 768px) {
     .tutor-search-page .active-filters-bar {
-        padding: 8px 16px;
+        padding: 8px 12px;
+        overflow: hidden;
     }
 
     .tutor-search-page .active-filters-container {
+        flex-wrap: nowrap;
         gap: 8px;
+        overflow-x: auto;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .tutor-search-page .active-filters-container::-webkit-scrollbar {
+        display: none;
     }
 
     .tutor-search-page .active-filters-label {
-        font-size: 10px;
-        letter-spacing: 0.5px;
+        font-size: 9px;
+        letter-spacing: 0.3px;
+        flex-shrink: 0;
+    }
+
+    .tutor-search-page .active-filters-chips {
+        flex-wrap: nowrap;
+        gap: 6px;
+        flex-shrink: 0;
     }
 
     .tutor-search-page .active-filter-chip {
         font-size: 11px;
-        padding: 4px 8px 4px 10px;
+        padding: 4px 6px 4px 8px;
+        gap: 4px;
+        flex-shrink: 0;
     }
 
     .tutor-search-page .chip-remove {
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
+    }
+
+    .tutor-search-page .chip-remove svg {
+        width: 8px;
+        height: 8px;
+    }
+
+    .tutor-search-page .active-filters-clear {
+        font-size: 10px;
+        padding: 3px 6px;
+        flex-shrink: 0;
     }
 }
