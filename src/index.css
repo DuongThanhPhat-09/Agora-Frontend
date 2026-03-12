@@ -29,6 +29,7 @@
 @import "./styles/components/search-bar.css";
 @import "./styles/components/category-tabs.css";
 @import "./styles/components/filter-bar.css";
+@import "./styles/components/active-filters.css";
 @import "./styles/components/tutor-card.css";
 
 /* ===== MOBILE PERFORMANCE ===== */

@@ -166,7 +166,7 @@
     }
 
     .tutor-search-page .category-dropdown {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         gap: 8px;
     }
 
@@ -178,10 +178,12 @@
 
     .tutor-search-page .category-option-text {
         font-size: 11px;
+        white-space: normal;
     }
 
     .tutor-search-page .category-option-icon {
-        font-size: 14px;
+        width: 16px;
+        height: 16px;
     }
 }
 
