@@ -14,6 +14,7 @@ const LoginForm: React.FC = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const [rememberMe, setRememberMe] = useState(false);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -135,7 +136,17 @@ const LoginForm: React.FC = () => {
               showPasswordToggle={true}
               disabled={isSubmitting}
             />
-            <div className="text-right mt-2">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none', marginLeft: '5px' }}>
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  disabled={isSubmitting}
+                  style={{ width: '16px', height: '16px', accentColor: '#1a2238', cursor: 'pointer' }}
+                />
+                <span style={{ fontSize: '13px', color: '#555', fontWeight: 500 }}>Ghi nhớ đăng nhập</span>
+              </label>
               <button
                 type="button"
                 onClick={() => setIsForgotPasswordOpen(true)}
