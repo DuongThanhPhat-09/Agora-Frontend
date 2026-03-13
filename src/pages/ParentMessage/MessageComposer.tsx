@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import styles from './styles.module.css';
-import { Loader2, SendHorizontal } from 'lucide-react';
+import { Loader2, SendHorizontal, Paperclip } from 'lucide-react';
 
-const attachIcon = 'https://www.figma.com/api/mcp/asset/9eb5351d-9a24-43a9-8521-a6e4ca4ace17';
 
 interface MessageComposerProps {
   onSend: (content: string) => void;
@@ -37,7 +36,7 @@ const MessageComposer = ({ onSend, disabled = false }: MessageComposerProps) => 
   return (
     <div className={styles.composer}>
       <button className={styles.iconButton} type="button" title="Đính kèm tệp" disabled={disabled}>
-        <img alt="" src={attachIcon} />
+        <Paperclip size={18} />
       </button>
       <textarea
         className={styles.composerInput}
