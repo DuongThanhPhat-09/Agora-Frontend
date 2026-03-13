@@ -93,6 +93,22 @@ const TutorTour: React.FC<TutorTourProps> = ({ steps, onComplete }) => {
         });
     }, []);
 
+    // Find the nearest scrollable ancestor
+    const findScrollParent = (el: Element): Element | null => {
+        let parent = el.parentElement;
+        while (parent) {
+            const style = getComputedStyle(parent);
+            if (
+                style.overflow === 'auto' || style.overflow === 'scroll' ||
+                style.overflowY === 'auto' || style.overflowY === 'scroll'
+            ) {
+                return parent;
+            }
+            parent = parent.parentElement;
+        }
+        return null;
+    };
+
     // Main: highlight target and position tooltip
     const highlightStep = useCallback(() => {
         if (!step) return;
@@ -108,12 +124,27 @@ const TutorTour: React.FC<TutorTourProps> = ({ steps, onComplete }) => {
             return;
         }
 
-        // Scroll into view inside the nearest scrollable ancestor
-        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        // Check if element is inside a sticky/fixed parent
+        const elStyle = getComputedStyle(el as HTMLElement);
+        const parentStyle = el.parentElement ? getComputedStyle(el.parentElement) : null;
+        const isSticky = elStyle.position === 'sticky' || elStyle.position === 'fixed' ||
+                         parentStyle?.position === 'sticky' || parentStyle?.position === 'fixed';
+
+        if (isSticky) {
+            // For sticky elements, scroll the main content area to top first
+            // so the sticky element is at its natural position
+            const scrollParent = findScrollParent(el);
+            if (scrollParent) {
+                scrollParent.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        } else {
+            // For regular elements, scroll into view
+            el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
 
         // Measure after scroll settles
         setTimeout(() => {
-            const rect = el.getBoundingClientRect();
+            const rect = (el as HTMLElement).getBoundingClientRect();
             const newRect: TargetRect = {
                 top: rect.top - PADDING,
                 left: rect.left - PADDING,
@@ -123,14 +154,16 @@ const TutorTour: React.FC<TutorTourProps> = ({ steps, onComplete }) => {
             setTargetRect(newRect);
             positionTooltip(newRect, step.placement || 'right');
             setIsVisible(true);
-        }, 200);
+        }, 350);
     }, [step, currentStep, steps.length, onComplete, positionTooltip]);
 
     // Re-highlight on step change
     useEffect(() => {
         setIsVisible(false);
+        setTargetRect(null);
+        setTooltipPos({ top: -9999, left: -9999 });
         retryRef.current = 0;
-        const timer = setTimeout(highlightStep, 100);
+        const timer = setTimeout(highlightStep, 150);
         return () => clearTimeout(timer);
     }, [currentStep, highlightStep]);
 
