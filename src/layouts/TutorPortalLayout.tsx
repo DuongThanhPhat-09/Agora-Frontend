@@ -131,23 +131,13 @@ const TutorPortalLayout: React.FC = () => {
     const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showTour, setShowTour] = useState(false);
+    const [showTourPrompt, setShowTourPrompt] = useState(false);
 
-    // Check if tour should show (only on first visit to dashboard)
-    useEffect(() => {
-        if (
-            location.pathname === '/tutor-portal/dashboard' &&
-            !localStorage.getItem('tutorTourCompleted')
-        ) {
-            // Delay to let dashboard load
-            const timer = setTimeout(() => setShowTour(true), 800);
-            return () => clearTimeout(timer);
-        }
-    }, [location.pathname]);
-
+    // Dashboard tour steps
     const tourSteps: TourStep[] = [
         {
             target: '[data-tour="sidebar"]',
-            title: '🏠 Chào mừng đến TUTORA!',
+            title: '🎯 Chào mừng đến TUTORA!',
             description: 'Đây là Bảng điều khiển của bạn. Menu bên trái giúp bạn truy cập nhanh mọi chức năng quản lý gia sư.',
             placement: 'right',
         },
@@ -175,7 +165,73 @@ const TutorPortalLayout: React.FC = () => {
             description: 'Xem nhanh những ngày có lớp (chấm xanh). Click vào ngày để xem chi tiết lịch dạy.',
             placement: 'left',
         },
+        {
+            target: '[data-tour="nav-profile"]',
+            title: '🪪 Hồ sơ công khai',
+            description: 'Chỉnh sửa hồ sơ hiển thị cho phụ huynh: ảnh đại diện, giới thiệu, bằng cấp, giá dạy, video giới thiệu.',
+            placement: 'right',
+        },
+        {
+            target: '[data-tour="nav-messages"]',
+            title: '💌 Tin nhắn',
+            description: 'Nhắn tin trực tiếp với phụ huynh và học sinh. Hỗ trợ gửi file đính kèm.',
+            placement: 'right',
+        },
+        {
+            target: '[data-tour="nav-bookings"]',
+            title: '📥 Yêu cầu đặt lịch',
+            description: 'Xem và phản hồi yêu cầu đặt lịch từ phụ huynh. Chấp nhận hoặc từ chối lịch học.',
+            placement: 'right',
+        },
+        {
+            target: '[data-tour="nav-schedule"]',
+            title: '🗓️ Lịch dạy',
+            description: 'Cài đặt lịch rảnh để phụ huynh có thể đặt lịch. Kéo thả trên lưới để tạo nhanh!',
+            placement: 'right',
+        },
+        {
+            target: '[data-tour="nav-classes"]',
+            title: '🎓 Quản lý lớp học',
+            description: 'Xem danh sách lớp, điểm danh học sinh, ghi nhận bài học, theo dõi tiến độ.',
+            placement: 'right',
+        },
+        {
+            target: '[data-tour="nav-finance"]',
+            title: '💳 Tài chính',
+            description: 'Xem thu nhập, lịch sử giao dịch, rút tiền về tài khoản ngân hàng của bạn.',
+            placement: 'right',
+        },
     ];
+
+    // Show tour prompt only on first visit to dashboard
+    useEffect(() => {
+        if (
+            location.pathname === '/tutor-portal/dashboard' &&
+            !localStorage.getItem('tutorTourCompleted')
+        ) {
+            const timer = setTimeout(() => setShowTourPrompt(true), 800);
+            return () => clearTimeout(timer);
+        }
+    }, [location.pathname]);
+
+    const handleAcceptTour = () => {
+        setShowTourPrompt(false);
+        setShowTour(true);
+    };
+
+    // Prefetch all tutor portal pages after initial load
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            import('../pages/TutorPortal/TutorPortalProfile');
+            import('../pages/TutorPortal/TutorPortalDashboard');
+            import('../pages/TutorPortal/TutorPortalSchedule');
+            import('../pages/TutorPortal/TutorPortalMessages');
+            import('../pages/TutorPortal/TutorPortalClasses');
+            import('../pages/TutorPortal/TutorPortalBookings');
+            import('../pages/TutorFinance/TutorFinanceDashboard/TutorFinanceDashboardPage');
+        }, 1500);
+        return () => clearTimeout(timer);
+    }, []);
     const [userData, setUserData] = useState({
         name: 'User',
         initials: 'U',
@@ -410,6 +466,45 @@ const TutorPortalLayout: React.FC = () => {
                     <Outlet />
                 </div>
             </main>
+
+            {/* Tour Welcome Prompt */}
+            {showTourPrompt && (
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 99998,
+                    background: 'rgba(0,0,0,0.5)', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center',
+                }}>
+                    <div style={{
+                        background: '#fff', borderRadius: 20, padding: '40px 36px',
+                        maxWidth: 420, width: '90%', textAlign: 'center',
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+                    }}>
+                        <div style={{ fontSize: 48, marginBottom: 16 }}>👋</div>
+                        <h2 style={{
+                            fontFamily: "'Bricolage Grotesque', sans-serif",
+                            fontSize: 22, fontWeight: 700, color: '#1a2238',
+                            margin: '0 0 12px',
+                        }}>Chào mừng bạn đến TUTORA!</h2>
+                        <p style={{
+                            fontFamily: "'IBM Plex Sans', sans-serif",
+                            fontSize: 15, color: 'rgba(62,47,40,0.7)',
+                            lineHeight: 1.6, margin: '0 0 28px',
+                        }}>
+                            Hãy để TUTORA hướng dẫn bạn khám phá các tính năng để có trải nghiệm mượt mà nhất nhé!
+                        </p>
+                        <button
+                            onClick={handleAcceptTour}
+                            style={{
+                                display: 'block', width: '100%', padding: '14px 20px',
+                                border: 'none', borderRadius: 12, background: '#1a2238',
+                                color: '#fff', fontSize: 15, fontWeight: 700,
+                                cursor: 'pointer', marginBottom: 12,
+                                fontFamily: "'IBM Plex Sans', sans-serif",
+                            }}
+                        >Bắt đầu khám phá ✨</button>
+                    </div>
+                </div>
+            )}
 
             {/* Tutor Onboarding Tour */}
             {showTour && (
