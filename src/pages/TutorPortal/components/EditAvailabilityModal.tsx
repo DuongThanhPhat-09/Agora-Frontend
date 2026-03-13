@@ -6,6 +6,21 @@ import styles from './AddAvailabilityModal.module.css';
 import { updateAvailability, DAY_OF_WEEK_MAP } from '../../../services/availability.service';
 import { useFormDraft } from '../../../hooks/useFormDraft';
 
+// Translate common English API messages to Vietnamese
+const translateScheduleMsg = (msg: string): string => {
+    if (!msg) return 'Không thể cập nhật lịch rảnh. Vui lòng thử lại.';
+    if (/time slot overlaps/i.test(msg)) {
+        const match = msg.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+        return match
+            ? `Khung giờ bị trùng với lịch hiện có: ${match[1]} - ${match[2]}`
+            : 'Khung giờ bị trùng với lịch rảnh hiện có';
+    }
+    if (/start time must be before/i.test(msg)) return 'Giờ bắt đầu phải trước giờ kết thúc';
+    if (/invalid time/i.test(msg)) return 'Thời gian không hợp lệ';
+    if (/already exists/i.test(msg)) return 'Lịch rảnh này đã tồn tại';
+    return msg;
+};
+
 // Hour options: 0 to 23 (temporarily expanded)
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => {
     const hour = i;
@@ -231,8 +246,8 @@ const EditAvailabilityModal: FunctionComponent<EditAvailabilityModalProps> = ({
                 toast.error('Vui lòng kiểm tra lại thông tin nhập vào');
             } else {
                 // Generic error message
-                const errorMessage = axiosError.response?.data?.message || axiosError.response?.data?.title || 'Không thể cập nhật lịch rảnh. Vui lòng thử lại.';
-                toast.error(errorMessage);
+                const rawMsg = axiosError.response?.data?.message || axiosError.response?.data?.title || '';
+                toast.error(translateScheduleMsg(rawMsg));
             }
         } finally {
             setIsLoading(false);
