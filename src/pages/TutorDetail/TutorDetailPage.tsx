@@ -92,6 +92,7 @@ const HeroSection = ({ profile }: { profile: TutorFullProfile }) => {
     const subjectGroups = (profile.subjects || []).map(s => ({
         name: s.subjectName || 'Chưa rõ',
         tags: parseTags(s.tags),
+        gradeLevels: parseTags(s.gradeLevels),
     }));
 
     return (
@@ -202,6 +203,27 @@ const HeroSection = ({ profile }: { profile: TutorFullProfile }) => {
                     )}
                 </div>
 
+                {/* Grade Levels — separate section */}
+                {subjectGroups.some(g => g.gradeLevels.length > 0) && (
+                    <div className="grade-levels-section">
+                        <span className="grade-levels-label">Cấp lớp giảng dạy</span>
+                        <div className="grade-levels-list">
+                            {subjectGroups.map((group, index) => (
+                                group.gradeLevels.length > 0 && (
+                                    <div key={index} className="grade-level-group">
+                                        <span className="grade-level-subject">{group.name}:</span>
+                                        {group.gradeLevels.map((level, gIdx) => (
+                                            <div key={gIdx} className="subject-tag grade-level-tag">
+                                                <b>{level.replace(/^Grade_(\d+)$/i, 'Lớp $1')}</b>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* Mobile Rating Bar (visible only on mobile) */}
                 <div className="mobile-rating-bar">
                     <div className="rating-stars">
@@ -276,6 +298,29 @@ const HeroSection = ({ profile }: { profile: TutorFullProfile }) => {
     );
 };
 
+// About Section helpers
+const formatTeachingMode = (mode: string | null | undefined): string => {
+    const m = (mode || '').toLowerCase();
+    if (m === 'both' || m === 'hybrid') return 'Linh hoạt';
+    if (m === 'online') return 'Online';
+    if (m === 'offline') return 'Tại nhà';
+    return mode || '—';
+};
+
+const formatCity = (city: string | null | undefined): string => {
+    const c = (city || '').toLowerCase();
+    const map: Record<string, string> = {
+        'hochiminh': 'TP. Hồ Chí Minh',
+        'hanoi': 'Hà Nội',
+        'danang': 'Đà Nẵng',
+        'cantho': 'Cần Thơ',
+        'haiphong': 'Hải Phòng',
+        'binhduong': 'Bình Dương',
+        'dongnai': 'Đồng Nai',
+    };
+    return map[c] || city || 'Toàn quốc';
+};
+
 // About Section
 const AboutSection = ({ profile }: { profile: TutorFullProfile }) => (
     <section className="about-section">
@@ -287,15 +332,31 @@ const AboutSection = ({ profile }: { profile: TutorFullProfile }) => (
             </div>
             <div className="credentials-card">
                 <div className="credential-item">
-                    <span className="credential-label">Học vấn</span>
+                    <div className="credential-icon-row">
+                        <span className="credential-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                                <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                            </svg>
+                        </span>
+                        <span className="credential-label">Học vấn</span>
+                    </div>
                     <b className="credential-institution">{profile.education || "—"}</b>
                     <i className="credential-detail">GPA: {profile.gpa || "—"}/{profile.gpaScale || "—"}</i>
                 </div>
-                {/* Additional fixed cards if you want to keep the UI symmetry, or hide if data missing */}
+                <div className="credential-divider"></div>
                 <div className="credential-item">
-                    <span className="credential-label">Hình thức dạy</span>
-                    <b className="credential-institution">{profile.teachingMode || "—"}</b>
-                    <i className="credential-detail">{profile.teachingAreaCity || "Toàn quốc"}</i>
+                    <div className="credential-icon-row">
+                        <span className="credential-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                        </span>
+                        <span className="credential-label">Hình thức & khu vực</span>
+                    </div>
+                    <b className="credential-institution">{formatTeachingMode(profile.teachingMode)}</b>
+                    <i className="credential-detail">{formatCity(profile.teachingAreaCity)}</i>
                 </div>
             </div>
         </div>

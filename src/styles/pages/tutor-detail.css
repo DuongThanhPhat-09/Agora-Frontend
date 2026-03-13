@@ -313,6 +313,52 @@
     font-size: 9px;
 }
 
+.tutor-detail-page .grade-level-tag {
+    background-color: rgba(61, 74, 62, 0.08);
+    border: 1px solid rgba(61, 74, 62, 0.18);
+    color: #3d4a3e;
+    letter-spacing: 1.5px;
+    padding: 7px 16px 8px;
+    font-size: 9px;
+}
+
+.tutor-detail-page .grade-levels-section {
+    padding: 12px 7px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tutor-detail-page .grade-levels-label {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: rgba(62, 47, 40, 0.4);
+}
+
+.tutor-detail-page .grade-levels-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.tutor-detail-page .grade-level-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.tutor-detail-page .grade-level-subject {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: #1a2238;
+    letter-spacing: 0.5px;
+}
+
 /* ===== ABOUT SECTION ===== */
 .tutor-detail-page .about-section {
     box-shadow: 0px 10px 30px -10px rgba(26, 34, 56, 0.08);
@@ -365,53 +411,81 @@
 
 /* Credentials Card */
 .tutor-detail-page .credentials-card {
-    width: 223px;
+    width: 260px;
     min-width: 0;
     flex-shrink: 0;
     border-radius: 20px;
-    background-color: var(--color-cream);
-    border: 1px solid rgba(62, 47, 40, 0.5);
-    padding: 20.9px;
+    background: linear-gradient(145deg, #faf9f6 0%, #f5f2ec 100%);
+    border: 1px solid rgba(62, 47, 40, 0.1);
+    padding: 24px;
     box-sizing: border-box;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    gap: 21px;
+    gap: 0;
+    box-shadow: 0 4px 16px -6px rgba(26, 34, 56, 0.08);
 }
 
 .tutor-detail-page .credential-item {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     min-width: 0;
+    padding: 4px 0;
+}
+
+.tutor-detail-page .credential-icon-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tutor-detail-page .credential-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--color-navy, #1a2238);
+    color: #f2f0e4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .tutor-detail-page .credential-label {
-    font-size: 9px;
-    letter-spacing: 0.9px;
-    line-height: 13.5px;
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    line-height: 14px;
     text-transform: uppercase;
     font-weight: 700;
-    color: rgba(62, 47, 40, 0.4);
+    color: rgba(62, 47, 40, 0.45);
     white-space: nowrap;
 }
 
 .tutor-detail-page .credential-institution {
     font-size: 14px;
-    line-height: 17.5px;
+    line-height: 19px;
     color: var(--color-navy);
+    font-weight: 700;
     overflow-wrap: break-word;
     word-break: break-word;
     max-width: 100%;
 }
 
 .tutor-detail-page .credential-detail {
-    font-size: 10.5px;
-    line-height: 14px;
-    color: rgba(62, 47, 40, 0.6);
+    font-size: 11px;
+    line-height: 15px;
+    color: rgba(62, 47, 40, 0.5);
+    font-style: normal;
     overflow-wrap: break-word;
     word-break: break-word;
     max-width: 100%;
+}
+
+.tutor-detail-page .credential-divider {
+    height: 1px;
+    background: rgba(62, 47, 40, 0.1);
+    margin: 16px 0;
 }
 
 /* ===== PORTFOLIO SECTION ===== */
@@ -2480,5 +2554,162 @@
 
     .skeleton-hero-img {
         height: 240px;
+    }
+}
+
+/* ============================================
+   Active Classes Section
+   ============================================ */
+.active-classes-section {
+    margin: 40px 0;
+    padding: 32px;
+    background: #faf9f6;
+    border-radius: 16px;
+    border: 1px solid rgba(62, 47, 40, 0.08);
+}
+
+.active-classes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.active-classes-header .section-title {
+    margin: 0;
+}
+
+.active-classes-count {
+    padding: 6px 16px;
+    background: #3d4a3e;
+    color: #f2f0e4;
+    border-radius: 20px;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+
+.active-classes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.active-class-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px;
+    border: 1px solid rgba(62, 47, 40, 0.06);
+    transition: box-shadow 0.2s ease;
+}
+
+.active-class-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.active-class-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.active-class-subject b {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a2238;
+}
+
+.active-class-status {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.status-ongoing {
+    background: rgba(34, 139, 34, 0.1);
+    color: #228b22;
+}
+
+.status-paid {
+    background: rgba(26, 34, 56, 0.1);
+    color: #1a2238;
+}
+
+.status-deposit {
+    background: rgba(212, 180, 131, 0.2);
+    color: #8b6914;
+}
+
+.status-default {
+    background: rgba(62, 47, 40, 0.08);
+    color: rgba(62, 47, 40, 0.7);
+}
+
+.active-class-student {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 16px;
+    font-size: 13px;
+}
+
+.student-label {
+    color: rgba(62, 47, 40, 0.5);
+}
+
+.student-name {
+    color: #1a2238;
+    font-weight: 600;
+}
+
+.active-class-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: rgba(62, 47, 40, 0.6);
+}
+
+.progress-info b {
+    color: #1a2238;
+    font-weight: 700;
+}
+
+.progress-bar-bg {
+    height: 6px;
+    background: #f0ece3;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: #3d4a3e;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+}
+
+@media (max-width: 768px) {
+    .active-classes-section {
+        padding: 20px 16px;
+        margin: 24px 0;
+    }
+
+    .active-classes-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .active-classes-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
     }
 }

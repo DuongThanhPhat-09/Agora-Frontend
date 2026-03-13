@@ -96,7 +96,7 @@ const teachingModeOptions = [
     { value: "", label: "Tất cả" },
     { value: "online", label: "ONLINE" },
     { value: "offline", label: "OFFLINE" },
-    { value: "hybrid", label: "HYBRID" },
+    { value: "hybrid", label: "LINH HOẠT" },
 ];
 
 const cityOptions = [
