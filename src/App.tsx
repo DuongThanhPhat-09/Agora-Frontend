@@ -52,6 +52,7 @@ const TutorPortalBookings = lazy(() => import('./pages/TutorPortal/TutorPortalBo
 const TutorFinanceDashboardPage = lazy(() => import('./pages/TutorFinance/TutorFinanceDashboard/TutorFinanceDashboardPage'));
 const TransactionHistoryPage = lazy(() => import('./pages/TutorFinance/TransactionHistory/TransactionHistoryPage'));
 const BankInfoManagementPage = lazy(() => import('./pages/TutorFinance/BankInfoManagement/BankInfoManagementPage'));
+const TutorAccount = lazy(() => import('./pages/TutorAccount'));
 const CreateWithdrawalPage = lazy(() => import('./pages/TutorFinance/CreateWithdrawal/CreateWithdrawalPage'));
 const WithdrawalListPage = lazy(() => import('./pages/TutorFinance/WithdrawalList/WithdrawalListPage'));
 const WithdrawalDetailPage = lazy(() => import('./pages/TutorFinance/WithdrawalList/WithdrawalDetailPage'));
@@ -170,6 +171,7 @@ function App() {
             <Route path="finance/withdraw" element={<CreateWithdrawalPage />} />
             <Route path="finance/withdrawals" element={<WithdrawalListPage />} />
             <Route path="finance/withdrawals/:id" element={<WithdrawalDetailPage />} />
+            <Route path="account" element={<TutorAccount />} />
           </Route>
 
           {/* Parent Layout - PROTECTED */}

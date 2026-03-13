@@ -113,6 +113,13 @@ const BookingIcon = () => (
     </svg>
 );
 
+const AccountIcon = () => (
+    <svg className="tutor-portal-nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <circle cx="9" cy="5.5" r="3" />
+        <path d="M2.5 16.5C2.5 13.5 5.18629 11 9 11C12.8137 11 15.5 13.5 15.5 16.5" strokeLinecap="round" />
+    </svg>
+);
+
 // Navigation items matching Figma design
 const navItems = [
     { path: '/tutor-portal/dashboard', label: 'Tổng quan', icon: DashboardIcon },
@@ -122,6 +129,7 @@ const navItems = [
     { path: '/tutor-portal/schedule', label: 'Lịch dạy', icon: ScheduleIcon },
     { path: '/tutor-portal/classes', label: 'Quản lý lớp học', icon: ClassIcon },
     { path: '/tutor-portal/finance', label: 'Tài chính', icon: FinanceIcon },
+    { path: '/tutor-portal/account', label: 'Tài khoản', icon: AccountIcon },
 ];
 
 const TutorPortalLayout: React.FC = () => {
@@ -199,6 +207,12 @@ const TutorPortalLayout: React.FC = () => {
             target: '[data-tour="nav-finance"]',
             title: '💳 Tài chính',
             description: 'Xem thu nhập, lịch sử giao dịch, rút tiền về tài khoản ngân hàng của bạn.',
+            placement: 'right',
+        },
+        {
+            target: '[data-tour="nav-account"]',
+            title: '👤 Tài khoản',
+            description: 'Quản lý thông tin cá nhân, cập nhật hồ sơ và đổi mật khẩu tài khoản của bạn.',
             placement: 'right',
         },
     ];

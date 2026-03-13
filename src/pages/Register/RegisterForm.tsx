@@ -114,6 +114,21 @@ const RegisterForm: React.FC = () => {
         }
     };
 
+    const getPasswordStrength = (pw: string) => {
+        if (!pw) return { label: '', color: '', width: '0%' };
+        let score = 0;
+        if (pw.length >= 8) score++;
+        if (pw.length >= 12) score++;
+        if (/[A-Z]/.test(pw)) score++;
+        if (/[0-9]/.test(pw)) score++;
+        if (/[^A-Za-z0-9]/.test(pw)) score++;
+        if (score <= 1) return { label: 'Yếu', color: '#631b1b', width: '25%' };
+        if (score <= 3) return { label: 'Trung bình', color: '#d4b483', width: '60%' };
+        return { label: 'Mạnh', color: '#3d4a3e', width: '100%' };
+    };
+
+    const pwStrength = getPasswordStrength(formData.password);
+
     // ========================================================================
     // RENDER
     // ========================================================================
@@ -127,11 +142,22 @@ const RegisterForm: React.FC = () => {
 
             <div className="register-form__body">
                 <form onSubmit={handleSubmit} className="register-form__form">
-                    <div className="space-y-3 animate-fade-in-up delay-100">
+                    <div className="space-y-5 animate-fade-in-up delay-100">
                         <InputGroup id="fullname" name="fullname" type="text" label="Họ và Tên" placeholder="Nguyễn Văn A" icon="person" value={formData.fullname} onChange={handleChange} disabled={isSubmitting} />
                         <InputGroup id="email" name="email" type="email" label="Email" placeholder="student@example.com" icon="mail" value={formData.email} onChange={handleChange} disabled={isSubmitting} />
                         <InputGroup id="phone" name="phone" type="tel" label="Số Điện Thoại (tùy chọn)" placeholder="090..." icon="phone" value={formData.phone} onChange={handleChange} disabled={isSubmitting} />
                         <InputGroup id="password" name="password" type="password" label="Mật Khẩu" placeholder="••••••••" icon="lock" value={formData.password} onChange={handleChange} showPasswordToggle={true} disabled={isSubmitting} />
+                        {formData.password && (
+                            <div style={{ marginTop: 2, marginBottom: 8 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                    <span style={{ fontSize: 11, color: 'rgba(26,34,56,0.5)' }}>Độ mạnh</span>
+                                    <span style={{ fontSize: 11, fontWeight: 600, color: pwStrength.color }}>{pwStrength.label}</span>
+                                </div>
+                                <div style={{ width: '100%', height: 5, background: '#f0f0f0', borderRadius: 999, overflow: 'hidden' }}>
+                                    <div style={{ height: '100%', width: pwStrength.width, background: pwStrength.color, borderRadius: 999, transition: 'all 0.3s ease' }} />
+                                </div>
+                            </div>
+                        )}
                         <InputGroup id="confirmPassword" name="confirmPassword" type="password" label="Nhập lại Mật Khẩu" placeholder="••••••••" icon="lock" value={formData.confirmPassword} onChange={handleChange} showPasswordToggle={true} disabled={isSubmitting} />
                     </div>
 

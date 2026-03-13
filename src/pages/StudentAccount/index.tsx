@@ -137,6 +137,21 @@ const StudentAccount = () => {
     }
   };
 
+  const getPasswordStrength = (pw: string) => {
+      if (!pw) return { label: '', color: '', width: '0%' };
+      let score = 0;
+      if (pw.length >= 8) score++;
+      if (pw.length >= 12) score++;
+      if (/[A-Z]/.test(pw)) score++;
+      if (/[0-9]/.test(pw)) score++;
+      if (/[^A-Za-z0-9]/.test(pw)) score++;
+      if (score <= 1) return { label: 'Yếu', color: '#631b1b', width: '25%' };
+      if (score <= 3) return { label: 'Trung bình', color: '#d4b483', width: '60%' };
+      return { label: 'Mạnh', color: '#3d4a3e', width: '100%' };
+  };
+
+  const pwStrength = getPasswordStrength(passwordForm.newPassword);
+
   const getInitials = (name: string) => {
     const parts = name.trim().split(' ');
     if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
@@ -319,19 +334,18 @@ const StudentAccount = () => {
 
         {showPasswordSection && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            {/* Row 1: current + new password */}
+            <div style={fieldGroup}>
+              <label style={fieldLabel}>Mật khẩu hiện tại</label>
+              <input
+                style={fieldInput}
+                type="password"
+                value={passwordForm.oldPassword}
+                onChange={e => setPasswordForm(f => ({ ...f, oldPassword: e.target.value }))}
+                placeholder="Nhập mật khẩu hiện tại"
+                autoComplete="current-password"
+              />
+            </div>
             <div style={fieldGrid}>
-              <div style={fieldGroup}>
-                <label style={fieldLabel}>Mật khẩu hiện tại</label>
-                <input
-                  style={fieldInput}
-                  type="password"
-                  value={passwordForm.oldPassword}
-                  onChange={e => setPasswordForm(f => ({ ...f, oldPassword: e.target.value }))}
-                  placeholder="Nhập mật khẩu hiện tại"
-                  autoComplete="current-password"
-                />
-              </div>
               <div style={fieldGroup}>
                 <label style={fieldLabel}>Mật khẩu mới</label>
                 <input
@@ -342,19 +356,29 @@ const StudentAccount = () => {
                   placeholder="Ít nhất 8 ký tự"
                   autoComplete="new-password"
                 />
+                {passwordForm.newPassword && (
+                    <div style={{ marginTop: 4 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                            <span style={{ fontSize: 11, color: 'rgba(26,34,56,0.5)' }}>Độ mạnh</span>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: pwStrength.color }}>{pwStrength.label}</span>
+                        </div>
+                        <div style={{ width: '100%', height: 5, background: '#f0f0f0', borderRadius: 999, overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: pwStrength.width, background: pwStrength.color, borderRadius: 999, transition: 'all 0.3s ease' }} />
+                        </div>
+                    </div>
+                )}
               </div>
-            </div>
-            {/* Row 2: confirm password full-width */}
-            <div style={fieldGroup}>
-              <label style={fieldLabel}>Xác nhận mật khẩu mới</label>
-              <input
-                style={{ ...fieldInput, maxWidth: 'calc(50% - 16px)' }}
-                type="password"
-                value={passwordForm.confirmPassword}
-                onChange={e => setPasswordForm(f => ({ ...f, confirmPassword: e.target.value }))}
-                placeholder="Nhập lại mật khẩu mới"
-                autoComplete="new-password"
-              />
+              <div style={fieldGroup}>
+                <label style={fieldLabel}>Xác nhận mật khẩu mới</label>
+                <input
+                  style={fieldInput}
+                  type="password"
+                  value={passwordForm.confirmPassword}
+                  onChange={e => setPasswordForm(f => ({ ...f, confirmPassword: e.target.value }))}
+                  placeholder="Nhập lại mật khẩu mới"
+                  autoComplete="new-password"
+                />
+              </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 4 }}>
               <button
