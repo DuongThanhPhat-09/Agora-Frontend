@@ -93,6 +93,7 @@
     box-sizing: border-box;
 }
 
+
 .tutor-portal-nav-item:hover {
     background-color: rgba(242, 240, 228, 0.1);
     color: rgba(242, 240, 228, 0.9);
@@ -131,17 +132,16 @@
 .tutor-portal-user-card {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 10.5px;
     padding: 8px;
     border-radius: 10.5px;
     background-color: transparent;
     overflow: hidden;
-    transition: background-color 0.2s ease, justify-content 0.3s ease;
+    transition: background-color 0.2s ease;
 }
 
 .tutor-portal-sidebar:hover .tutor-portal-user-card {
-    justify-content: flex-start;
     background-color: rgba(255, 255, 255, 0.05);
 }
 
