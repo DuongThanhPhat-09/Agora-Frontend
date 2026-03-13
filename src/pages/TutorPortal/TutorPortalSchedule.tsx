@@ -135,6 +135,8 @@ const TutorPortalSchedule: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'settings' | 'lessons'>('settings');
     const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('week');
     const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
+    // Mobile: tapped slot shows action popup
+    const [tappedSlotId, setTappedSlotId] = useState<number | null>(null);
     const [availability, setAvailability] = useState<LocalAvailabilitySlot[]>([]);
     const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
     const [isAddAvailabilityModalOpen, setIsAddAvailabilityModalOpen] = useState(false);
@@ -210,6 +212,23 @@ const TutorPortalSchedule: React.FC = () => {
         });
     }, [activeTab, viewMode, pixelToMinutes]);
 
+    // Handle touchstart on a time cell (start drag on mobile)
+    const handleCellTouchStart = useCallback((e: React.TouchEvent, dayIndex: number, isoDay: number) => {
+        if (activeTab !== 'settings' || viewMode === 'month') return;
+        const touch = e.touches[0];
+        if (!touch) return;
+
+        const minutes = snapToGrid(pixelToMinutes(touch.clientY));
+
+        setDragState({
+            isDragging: true,
+            dayIndex,
+            isoDay,
+            startMinutes: minutes,
+            currentMinutes: minutes + SNAP_MINUTES,
+        });
+    }, [activeTab, viewMode, pixelToMinutes]);
+
     // Refs to avoid stale closures in drag/resize useEffects
     const dragStateRef = React.useRef(dragState);
     dragStateRef.current = dragState;
@@ -260,11 +279,24 @@ const TutorPortalSchedule: React.FC = () => {
             }
         };
 
+        const handleTouchMove = (e: TouchEvent) => {
+            const touch = e.touches[0];
+            if (!touch) return;
+            const minutes = snapToGrid(pixelToMinutesRef.current(touch.clientY));
+            setDragState(prev => prev ? { ...prev, currentMinutes: minutes } : null);
+        };
+
+        const handleTouchEnd = () => handleMouseUp();
+
         window.addEventListener('mousemove', handleMouseMove);
         window.addEventListener('mouseup', handleMouseUp);
+        window.addEventListener('touchmove', handleTouchMove, { passive: false });
+        window.addEventListener('touchend', handleTouchEnd);
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseup', handleMouseUp);
+            window.removeEventListener('touchmove', handleTouchMove);
+            window.removeEventListener('touchend', handleTouchEnd);
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dragState?.isDragging]);
@@ -359,11 +391,24 @@ const TutorPortalSchedule: React.FC = () => {
             }
         };
 
+        const handleTouchMove = (e: TouchEvent) => {
+            const touch = e.touches[0];
+            if (!touch) return;
+            const minutes = snapToGrid(pixelToMinutesRef.current(touch.clientY));
+            setResizeState(prev => prev ? { ...prev, currentMinutes: minutes } : null);
+        };
+
+        const handleTouchEnd = () => handleMouseUp();
+
         window.addEventListener('mousemove', handleMouseMove);
         window.addEventListener('mouseup', handleMouseUp);
+        window.addEventListener('touchmove', handleTouchMove, { passive: false });
+        window.addEventListener('touchend', handleTouchEnd);
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseup', handleMouseUp);
+            window.removeEventListener('touchmove', handleTouchMove);
+            window.removeEventListener('touchend', handleTouchEnd);
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [resizeState?.isResizing]);
@@ -849,21 +894,37 @@ const TutorPortalSchedule: React.FC = () => {
                                                             // Only start drag if click is on empty area
                                                             const target = e.target as HTMLElement;
                                                             if (target.closest(`.${styles.availableBlock}`)) return;
+                                                            if (target.closest(`.${styles.mobileSlotActions}`)) return;
                                                             if (target.closest('button')) return;
                                                             if (target.closest('.ant-popover')) return;
                                                             if (target.closest('.ant-popconfirm')) return;
                                                             handleCellMouseDown(e, dayIndex, date.isoWeekday());
                                                         }}
+                                                        onTouchStart={(e) => {
+                                                            const target = e.target as HTMLElement;
+                                                            if (target.closest(`.${styles.availableBlock}`)) return;
+                                                            if (target.closest(`.${styles.mobileSlotActions}`)) return;
+                                                            if (target.closest('button')) return;
+                                                            handleCellTouchStart(e, dayIndex, date.isoWeekday());
+                                                        }}
                                                         style={{ cursor: dragState?.isDragging ? 'ns-resize' : 'crosshair' }}
                                                     >
                                                         {slot && (
                                                             <div
-                                                                className={`${styles.availableBlock} ${resizedStyle ? styles.resizing : ''}`}
+                                                                className={`${styles.availableBlock} ${resizedStyle ? styles.resizing : ''} ${tappedSlotId === slot.apiId ? styles.tapped : ''}`}
                                                                 style={{
                                                                     top: `${topOffsetPx + 3}px`,
                                                                     height: `${heightPx - 6}px`,
                                                                 }}
                                                                 onMouseDown={(e) => e.stopPropagation()}
+                                                                onTouchStart={(e) => e.stopPropagation()}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    // On mobile, toggle action popup
+                                                                    if (window.innerWidth <= 768) {
+                                                                        setTappedSlotId(prev => prev === slot.apiId ? null : slot.apiId);
+                                                                    }
+                                                                }}
                                                             >
                                                                 {/* Top resize handle */}
                                                                 <div
@@ -877,6 +938,7 @@ const TutorPortalSchedule: React.FC = () => {
                                                                         {displayStartTime} - {displayEndTime}
                                                                     </span>
                                                                 </div>
+                                                                {/* Desktop: inline actions (hidden on mobile via CSS) */}
                                                                 <div className={styles.slotActions}>
                                                                     <Tooltip title="Chỉnh sửa">
                                                                         <button
@@ -913,6 +975,36 @@ const TutorPortalSchedule: React.FC = () => {
                                                                         </Tooltip>
                                                                     </Popconfirm>
                                                                 </div>
+                                                                {/* Mobile: floating action popup on tap */}
+                                                                {tappedSlotId === slot.apiId && (
+                                                                    <div
+                                                                        className={styles.mobileSlotActions}
+                                                                        style={topOffsetPx < 50 ? { bottom: 'auto', top: 'calc(100% + 6px)' } : undefined}
+                                                                    >
+                                                                        <button
+                                                                            className={styles.mobileEditBtn}
+                                                                            onTouchStart={(e) => e.stopPropagation()}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setTappedSlotId(null);
+                                                                                handleEditAvailability(slot);
+                                                                            }}
+                                                                        >
+                                                                            <EditOutlined /> Sửa
+                                                                        </button>
+                                                                        <button
+                                                                            className={styles.mobileDeleteBtn}
+                                                                            onTouchStart={(e) => e.stopPropagation()}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setTappedSlotId(null);
+                                                                                handleDeleteAvailability(slot);
+                                                                            }}
+                                                                        >
+                                                                            <DeleteOutlined /> Xóa
+                                                                        </button>
+                                                                    </div>
+                                                                )}
                                                                 {/* Bottom resize handle */}
                                                                 <div
                                                                     className={styles.resizeHandle}
