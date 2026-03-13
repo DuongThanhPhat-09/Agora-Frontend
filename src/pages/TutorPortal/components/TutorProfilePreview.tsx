@@ -81,9 +81,20 @@ const ShieldIcon = () => (
 const CITY_LABELS: Record<string, string> = {
     'hanoi': 'Hà Nội',
     'hcm': 'TP. Hồ Chí Minh',
+    'hochiminh': 'TP. Hồ Chí Minh',
     'danang': 'Đà Nẵng',
     'haiphong': 'Hải Phòng',
     'cantho': 'Cần Thơ',
+    'binhduong': 'Bình Dương',
+    'dongnai': 'Đồng Nai',
+};
+
+const formatTeachingModePreview = (mode: string | null | undefined): string => {
+    const m = (mode || '').toLowerCase();
+    if (m === 'both' || m === 'hybrid') return 'Linh hoạt';
+    if (m === 'online') return 'Online';
+    if (m === 'offline') return 'Tại nhà';
+    return mode || '—';
 };
 
 const DISTRICT_LABELS: Record<string, Record<string, string>> = {
@@ -181,12 +192,13 @@ const HeroSection: React.FC<{ data: TutorProfileFormData; onPlayVideo: () => voi
         return city || district || '';
     })();
 
-    // Build subject groups: each subject with its associated tags
+    // Build subject groups: each subject with its associated tags + grade levels
     const subjectGroups = data.subjects
         .filter(s => s.subjectName && s.subjectName.trim())
         .map(s => ({
             name: s.subjectName,
             tags: s.tags || [],
+            gradeLevels: s.gradeLevels || [],
         }));
 
     return (
@@ -309,6 +321,27 @@ const HeroSection: React.FC<{ data: TutorProfileFormData; onPlayVideo: () => voi
                 )}
             </div>
 
+                {/* Grade Levels — separate section */}
+                {subjectGroups.some(g => g.gradeLevels.length > 0) && (
+                    <div className="grade-levels-section">
+                        <span className="grade-levels-label">Cấp lớp giảng dạy</span>
+                        <div className="grade-levels-list">
+                            {subjectGroups.map((group, index) => (
+                                group.gradeLevels.length > 0 && (
+                                    <div key={index} className="grade-level-group">
+                                        <span className="grade-level-subject">{group.name}:</span>
+                                        {group.gradeLevels.map((level, gIdx) => (
+                                            <div key={gIdx} className="subject-tag grade-level-tag">
+                                                <b>{level.replace(/^Grade_(\d+)$/i, 'Lớp $1')}</b>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )
+                            ))}
+                        </div>
+                    </div>
+                )}
+
             {/* Mobile Rating Bar (visible only on mobile) */}
             <div className="mobile-rating-bar">
                 <div className="rating-stars">
@@ -369,17 +402,30 @@ const AboutSection: React.FC<{ data: TutorProfileFormData }> = ({ data }) => {
                 </div>
                 <div className="credentials-card">
                     <div className="credential-item">
-                        <span className="credential-label">Học vấn</span>
+                        <div className="credential-icon-row">
+                            <span className="credential-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                                </svg>
+                            </span>
+                            <span className="credential-label">Học vấn</span>
+                        </div>
                         <b className="credential-institution">{data.education || '—'}</b>
                         <i className="credential-detail">GPA: {data.gpa || '—'}/{data.gpaScale || '—'}</i>
                     </div>
+                    <div className="credential-divider"></div>
                     <div className="credential-item">
-                        <span className="credential-label">Hình thức dạy</span>
-                        <b className="credential-institution">
-                            {data.teachingMode === 'online' ? 'Online' :
-                             data.teachingMode === 'offline' ? 'Offline' :
-                             data.teachingMode === 'both' ? 'Online & Offline' : '—'}
-                        </b>
+                        <div className="credential-icon-row">
+                            <span className="credential-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                                    <circle cx="12" cy="10" r="3"/>
+                                </svg>
+                            </span>
+                            <span className="credential-label">Hình thức & khu vực</span>
+                        </div>
+                        <b className="credential-institution">{formatTeachingModePreview(data.teachingMode)}</b>
                         <i className="credential-detail">
                             {CITY_LABELS[data.teachingAreaCity] || data.teachingAreaCity || 'Toàn quốc'}
                         </i>
