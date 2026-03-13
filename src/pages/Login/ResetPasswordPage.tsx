@@ -306,7 +306,7 @@ const ResetPasswordPage: React.FC = () => {
                                 </div>
 
                                 {/* Submit */}
-                                <button type="submit" disabled={isLoading} className={styles.btnPrimary}>
+                                <button type="submit" disabled={isLoading || !isReady} className={styles.btnPrimary}>
                                     {isLoading ? (
                                         <span style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
                                             <svg className={styles.spinner} width="20" height="20" fill="none" viewBox="0 0 24 24">
