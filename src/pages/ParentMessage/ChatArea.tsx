@@ -15,9 +15,10 @@ interface ChatAreaProps {
   currentUserId: string | null;
   selectedChannel?: ChatChannel | null;
   isTutor?: boolean;
+  onBack?: () => void;
 }
 
-const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor = false }: ChatAreaProps) => {
+const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor = false, onBack }: ChatAreaProps) => {
   const [hasMore, setHasMore] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -264,6 +265,7 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
         connectionState={connectionState}
         channel={selectedChannel}
         booking={booking}
+        onBack={onBack}
       />
       <div className={styles.messagesAreaContainer}>
         <div className={styles.messagesArea}>
