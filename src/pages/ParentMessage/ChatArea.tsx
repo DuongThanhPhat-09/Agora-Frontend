@@ -250,7 +250,7 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
     return (
       <section className={styles.chatArea}>
         <div className={styles.chatEmptyState}>
-          <p className={styles.emptyStateText}>Select a conversation to start chatting</p>
+          <p className={styles.emptyStateText}>Chọn một cuộc trò chuyện để bắt đầu nhắn tin</p>
         </div>
       </section>
     );

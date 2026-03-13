@@ -8,6 +8,7 @@ interface MessageListSidebarProps {
     onChannelSelect: (channelId: number | null) => void;
     onChannelObjectSelect?: (channel: ChatChannel | null) => void;
     selectedChannelId: number | null;
+    isTutor?: boolean;
 }
 
 // Helper function to format date/time
@@ -20,17 +21,16 @@ const formatTimestamp = (dateString: string | null): string => {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffMins < 1) return 'Vừa xong';
+  if (diffMins < 60) return `${diffMins} phút trước`;
+  if (diffHours < 24) return `${diffHours} giờ trước`;
+  if (diffDays < 7) return `${diffDays} ngày trước`;
 
-  // For older dates, show formatted date
-  const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
-  return date.toLocaleDateString('en-US', options);
+  const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit' };
+  return date.toLocaleDateString('vi-VN', options);
 };
 
-const MessageListSidebar = ({ onChannelSelect, onChannelObjectSelect, selectedChannelId }: MessageListSidebarProps) => {
+const MessageListSidebar = ({ onChannelSelect, onChannelObjectSelect, selectedChannelId, isTutor = false }: MessageListSidebarProps) => {
   const [channels, setChannels] = useState<ChatChannel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,20 +75,20 @@ const MessageListSidebar = ({ onChannelSelect, onChannelObjectSelect, selectedCh
         {loading ? (
           <div className={styles.loadingContainer}>
             <div className={styles.spinner} />
-            <p className={styles.loadingText}>Loading messages...</p>
+            <p className={styles.loadingText}>Đang tải tin nhắn...</p>
           </div>
         ) : error ? (
           <div className={styles.errorContainer}>
             <p className={styles.errorText}>{error}</p>
             <button className={styles.retryButton} onClick={() => window.location.reload()} type="button">
-              Retry
+              Thử lại
             </button>
           </div>
         ) : filteredChannels.length === 0 ? (
           <div className={styles.emptyContainer}>
-            <p className={styles.emptyText}>{searchQuery ? 'No messages match your search' : 'No messages yet'}</p>
+            <p className={styles.emptyText}>{searchQuery ? 'Không tìm thấy tin nhắn' : 'Chưa có tin nhắn'}</p>
             <p className={styles.emptySubtext}>
-              {searchQuery ? 'Try a different keyword' : 'Start a conversation to see messages here'}
+              {searchQuery ? 'Thử từ khóa khác' : 'Bắt đầu cuộc trò chuyện để xem tin nhắn'}
             </p>
           </div>
         ) : (
@@ -97,10 +97,10 @@ const MessageListSidebar = ({ onChannelSelect, onChannelObjectSelect, selectedCh
               <MessageInfoItem
                 active={selectedChannelId === channel.channelId}
                 avatar={channel.otherUserAvatarUrl || 'https://via.placeholder.com/48'}
-                name={channel.otherUserName}
-                preview={channel.lastMessagePreview || 'No messages yet'}
-                role="Tutor"
-                session={`Session #${channel.bookingId}`}
+                name={channel.otherUserName || 'Người dùng'}
+                preview={channel.lastMessagePreview || 'Chưa có tin nhắn'}
+                role={isTutor ? 'Phụ huynh / Học sinh' : 'Gia sư'}
+                session={channel.bookingId ? `Buổi #${channel.bookingId}` : 'Tư vấn'}
                 status={channel.status}
                 timestamp={formatTimestamp(channel.lastMessageAt)}
               />

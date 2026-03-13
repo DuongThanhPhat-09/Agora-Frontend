@@ -30,17 +30,17 @@ const ChatHeader = ({ selectedChannelId, onLeaveChannel, connectionState, channe
                         <span className={styles.chatName}>{channel.otherUserName}</span>
                         <span className={styles.messageDot}>•</span>
                         <span className={styles.chatSession}>
-                            {booking ? `${booking.subject?.subjectName || 'Booking'}` : `Session #${channel.bookingId}`}
+                            {booking ? `${booking.subject?.subjectName || 'Đặt lịch'}` : (channel.bookingId ? `Buổi #${channel.bookingId}` : 'Tư vấn')}
                         </span>
                     </div>
                     <div className={styles.chatHeaderMetaRow}>
                         <span className={styles.chatRole}>
-                            {isBookingRequest ? 'New Booking Request' : 'Tutor'} • {connectionState === 'connected' ? 'Online' : 'Offline'}
+                            {isBookingRequest ? 'Yêu cầu đặt lịch mới' : 'Phụ huynh / Học sinh'} • {connectionState === 'connected' ? 'Trực tuyến' : 'Ngoại tuyến'}
                         </span>
                         {!isBookingRequest && (
                             <span className={styles.messageBadge}>
                                 <img alt="" className={styles.messageBadgeIcon} src={badgeAssigned} />
-                                <span>Session Active</span>
+                                <span>Đang hoạt động</span>
                             </span>
                         )}
                     </div>
@@ -57,7 +57,7 @@ const ChatHeader = ({ selectedChannelId, onLeaveChannel, connectionState, channe
                         </button>
                     </>
                 )}
-                <button className={styles.iconButton} type="button" title="More Options">
+                <button className={styles.iconButton} type="button" title="Tùy chọn">
                     <img alt="" src={moreIcon} />
                 </button>
                 <button
@@ -65,10 +65,10 @@ const ChatHeader = ({ selectedChannelId, onLeaveChannel, connectionState, channe
                     type="button"
                     onClick={onLeaveChannel}
                     disabled={!selectedChannelId}
-                    title="Leave Channel"
+                    title="Rời phòng chat"
                 >
                     <LogOut size={16} />
-                    <span>Leave</span>
+                    <span>Rời phòng</span>
                 </button>
             </div>
         </div>

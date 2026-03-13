@@ -62,9 +62,11 @@ const ClassIcon = () => (
 // );
 
 const FinanceIcon = () => (
-    <svg className="tutor-portal-nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
-        <path d="M2 4C2 2.89543 2.89543 2 4 2H14C15.1046 2 16 2.89543 16 4V14C16 15.1046 15.1046 16 14 16H4C2.89543 16 2 15.1046 2 14V4Z" />
-        <path d="M9 5V13M6 8H12M6 10H12" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+    <svg className="tutor-portal-nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <rect x="1" y="4" width="16" height="12" rx="2" strokeLinecap="round" />
+        <path d="M1 8H17" strokeLinecap="round" />
+        <path d="M12 12H14" strokeLinecap="round" />
+        <path d="M4 4V3C4 2.44772 4.44772 2 5 2H13C13.5523 2 14 2.44772 14 3V4" strokeLinecap="round" />
     </svg>
 );
 
@@ -214,6 +216,12 @@ const TutorPortalLayout: React.FC = () => {
             title: '👤 Tài khoản',
             description: 'Quản lý thông tin cá nhân, cập nhật hồ sơ và đổi mật khẩu tài khoản của bạn.',
             placement: 'right',
+        },
+        {
+            target: '[data-tour="stats-grid"]',
+            title: '🎉 Sẵn sàng rồi!',
+            description: 'Chúc bạn có trải nghiệm làm gia sư thật tuyệt vời với TUTORA! Nếu cần hỗ trợ, đừng ngần ngại liên hệ đội ngũ của chúng tôi nhé. 💪',
+            placement: 'bottom',
         },
     ];
 
@@ -526,8 +534,11 @@ const TutorPortalLayout: React.FC = () => {
                     steps={tourSteps}
                     onComplete={() => {
                         setShowTour(false);
+                        setSidebarOpen(false);
                         localStorage.setItem('tutorTourCompleted', 'true');
                     }}
+                    onSidebarOpen={() => setSidebarOpen(true)}
+                    onSidebarClose={() => setSidebarOpen(false)}
                 />
             )}
         </div>
