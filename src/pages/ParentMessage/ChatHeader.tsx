@@ -1,12 +1,7 @@
 import styles from './styles.module.css';
-import { LogOut } from 'lucide-react';
+import { ArrowLeft, Phone, Video, MoreVertical, CircleCheck } from 'lucide-react';
 import type { ChatChannel } from '../../services/chat.service';
 import type { BookingResponseDTO } from '../../services/booking.service';
-
-const badgeAssigned = 'https://www.figma.com/api/mcp/asset/d7adf34e-7b26-4007-8282-2540aba0e56e';
-const callIcon = 'https://www.figma.com/api/mcp/asset/e7357708-29a2-4580-956e-8751b3cafcbd';
-const videoIcon = 'https://www.figma.com/api/mcp/asset/dbce7cb1-79c1-43f3-9c44-3b84b6c1bc06';
-const moreIcon = 'https://www.figma.com/api/mcp/asset/4275581e-11bc-41b8-859c-6e795005d430';
 
 interface ChatHeaderProps {
     selectedChannelId: number | null;
@@ -14,15 +9,40 @@ interface ChatHeaderProps {
     connectionState: string;
     channel?: ChatChannel | null;
     booking?: BookingResponseDTO | null;
+    onBack?: () => void;
 }
 
-const ChatHeader = ({ selectedChannelId, onLeaveChannel, connectionState, channel, booking }: ChatHeaderProps) => {
+const ChatHeader = ({ selectedChannelId: _selectedChannelId, onLeaveChannel: _onLeaveChannel, connectionState, channel, booking, onBack }: ChatHeaderProps) => {
     if (!channel) return null;
 
     const isBookingRequest = channel.status === 'pending_tutor';
 
     return (
         <div className={styles.chatHeader}>
+            {/* Mobile: top nav row with back + actions */}
+            {onBack && (
+                <div className={styles.chatHeaderNav}>
+                    <button className={styles.backButton} type="button" onClick={onBack} title="Quay lại">
+                        <ArrowLeft size={20} />
+                    </button>
+                    <div className={styles.chatHeaderNavActions}>
+                        {!isBookingRequest && (
+                            <>
+                                <button className={styles.iconButton} type="button" title="Gọi điện">
+                                    <Phone size={18} />
+                                </button>
+                                <button className={styles.iconButton} type="button" title="Gọi video">
+                                    <Video size={18} />
+                                </button>
+                            </>
+                        )}
+                        <button className={styles.iconButton} type="button" title="Tùy chọn">
+                            <MoreVertical size={18} />
+                        </button>
+                    </div>
+                </div>
+            )}
+            {/* User info row */}
             <div className={styles.chatHeaderInfo}>
                 <img alt="" className={styles.chatAvatar} src={channel.otherUserAvatarUrl || 'https://via.placeholder.com/40'} />
                 <div className={styles.chatHeaderText}>
@@ -39,36 +59,27 @@ const ChatHeader = ({ selectedChannelId, onLeaveChannel, connectionState, channe
                         </span>
                         {!isBookingRequest && (
                             <span className={styles.messageBadge}>
-                                <img alt="" className={styles.messageBadgeIcon} src={badgeAssigned} />
+                                <CircleCheck size={10} />
                                 <span>Đang hoạt động</span>
                             </span>
                         )}
                     </div>
                 </div>
             </div>
+            {/* Desktop: actions on the right (hidden on mobile since nav row handles it) */}
             <div className={styles.chatHeaderActions}>
                 {!isBookingRequest && (
                     <>
-                        <button className={styles.iconButton} type="button" title="Call">
-                            <img alt="" src={callIcon} />
+                        <button className={styles.iconButton} type="button" title="Gọi điện">
+                            <Phone size={18} />
                         </button>
-                        <button className={styles.iconButton} type="button" title="Video Call">
-                            <img alt="" src={videoIcon} />
+                        <button className={styles.iconButton} type="button" title="Gọi video">
+                            <Video size={18} />
                         </button>
                     </>
                 )}
                 <button className={styles.iconButton} type="button" title="Tùy chọn">
-                    <img alt="" src={moreIcon} />
-                </button>
-                <button
-                    className={styles.leaveButton}
-                    type="button"
-                    onClick={onLeaveChannel}
-                    disabled={!selectedChannelId}
-                    title="Rời phòng chat"
-                >
-                    <LogOut size={16} />
-                    <span>Rời phòng</span>
+                    <MoreVertical size={18} />
                 </button>
             </div>
         </div>

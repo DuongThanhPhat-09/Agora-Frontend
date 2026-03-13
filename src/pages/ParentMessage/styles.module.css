@@ -294,7 +294,7 @@
   padding: 16px 20px;
   border: none;
   background: #ffffff;
-  border-bottom: 1px solid #f5f5f5;
+  border-bottom: 1px solid #e8e6da;
   text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -528,6 +528,41 @@
   padding: 20px 24px;
   border-bottom: 1px solid #f0f0f0;
   background: #ffffff;
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: rgba(242, 240, 228, 0.6);
+  border-radius: 10px;
+  padding: 0;
+  cursor: pointer;
+  color: #1a2238;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.backButton:hover {
+  background: rgba(242, 240, 228, 1);
+}
+
+.topBarHidden {
+  display: none;
+}
+
+/* Mobile nav row: hidden on desktop */
+.chatHeaderNav {
+  display: none;
+}
+
+.chatHeaderNavActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .chatHeaderInfo {
@@ -1011,11 +1046,13 @@
   .sidebar {
     width: 100%;
     min-width: unset;
-    max-height: 400px;
+    max-height: none;
+    flex: 1;
   }
 
   .chatArea {
-    min-height: 500px;
+    min-height: 0;
+    flex: 1;
   }
 }
 
@@ -1029,8 +1066,8 @@
   }
 
   .mainContent {
-    padding: 0 20px 24px;
-    gap: 16px;
+    padding: 0;
+    gap: 0;
   }
 
   .topBarActions {
@@ -1039,22 +1076,85 @@
   }
 
   .sidebar {
-    border-radius: 12px;
+    border-radius: 0;
+    border: none;
   }
 
   .chatArea {
-    border-radius: 12px;
+    border-radius: 0;
+    border: none;
   }
 
   .chatHeader {
-    padding: 16px;
-    flex-wrap: wrap;
-    gap: 12px;
+    padding: 0 0 0 0;
+    flex-direction: column;
+    gap: 0;
+    border-bottom: 2px solid #e0ddd0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   }
 
-  .chatHeaderActions {
+  .chatHeaderNav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     width: 100%;
-    justify-content: flex-end;
+    padding: 10px 16px;
+    border-bottom: 1px solid #f0ede3;
+    box-sizing: border-box;
+  }
+
+  .chatHeaderInfo {
+    gap: 10px;
+    padding: 10px 16px;
+    min-width: 0;
+  }
+
+  .chatAvatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border-width: 1px;
+  }
+
+  .chatHeaderTitleRow {
+    flex-wrap: nowrap;
+  }
+
+  .chatName {
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chatSession {
+    font-size: 12px;
+  }
+
+  .chatHeaderMetaRow {
+    display: flex;
+    gap: 6px;
+  }
+
+  .chatRole {
+    font-size: 11px;
+  }
+
+  .messageBadge {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  /* Hide the desktop actions row — nav row handles it */
+  .chatHeaderActions {
+    display: none;
+  }
+
+  .iconButton {
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: transparent;
   }
 
   .messagesArea {
@@ -1062,7 +1162,7 @@
   }
 
   .chatFooter {
-    padding: 16px;
+    padding: 12px 16px;
   }
 
   .messageBubbleContent {
