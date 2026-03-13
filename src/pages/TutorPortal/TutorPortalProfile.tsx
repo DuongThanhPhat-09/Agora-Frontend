@@ -325,6 +325,7 @@ const TutorPortalProfile: React.FC = () => {
                         {/* Left Column */}
                         <div className={styles.leftColumn}>
                             {/* Intro Video Section */}
+                            <div data-tour="profile-video">
                             <IntroVideoSection
                                 videoUrl={formData.videoIntroUrl}
                                 onChange={updateVideoUrl}
@@ -332,9 +333,10 @@ const TutorPortalProfile: React.FC = () => {
                                 isEditMode={isEditMode}
                                 isUploading={isVideoUploading}
                             />
+                            </div>
 
                             {/* Hero Section Card */}
-                            <div className={styles.sectionCard}>
+                            <div className={styles.sectionCard} data-tour="profile-hero">
                                 <div className={styles.sectionHeader}>
                                     <h2 className={styles.sectionTitle}>Thông tin cơ bản</h2>
                                     {isEditMode && (
@@ -409,7 +411,7 @@ const TutorPortalProfile: React.FC = () => {
                             </div>
 
                             {/* About Me Section */}
-                            <div className={styles.sectionCard}>
+                            <div className={styles.sectionCard} data-tour="profile-about">
                                 <div className={styles.sectionHeader}>
                                     <h2 className={styles.sectionTitle}>Giới thiệu</h2>
                                     {isEditMode && (
@@ -447,7 +449,7 @@ const TutorPortalProfile: React.FC = () => {
                             </div>
 
                             {/* Academic Credentials Section */}
-                            <div className={styles.sectionCard}>
+                            <div className={styles.sectionCard} data-tour="profile-credentials">
                                 <div className={styles.sectionHeader}>
                                     <h2 className={styles.sectionTitle}>Bằng cấp & Chứng chỉ</h2>
                                     {isEditMode && (
@@ -549,7 +551,7 @@ const TutorPortalProfile: React.FC = () => {
                             </div>
 
                             {/* Identity Verification Section */}
-                            <div className={styles.sectionCard}>
+                            <div className={styles.sectionCard} data-tour="profile-identity">
                                 <div className={styles.sectionHeader}>
                                     <h2 className={styles.sectionTitle}>Xác minh danh tính</h2>
                                     {/* Only show header button when already submitted (not for 'not_submitted' status) */}
@@ -621,7 +623,7 @@ const TutorPortalProfile: React.FC = () => {
                         {/* Right Column - Sidebar */}
                         <div className={styles.rightColumn}>
                             {/* Pricing Card */}
-                            <div className={styles.pricingCard}>
+                            <div className={styles.pricingCard} data-tour="profile-pricing">
                                 {isEditMode && (
                                     <button
                                         className={styles.editPriceBtn}
@@ -693,7 +695,7 @@ const TutorPortalProfile: React.FC = () => {
             )}
 
             {/* Edit Bar - Sticky Bottom */}
-            <div className={styles.editBar}>
+            <div className={styles.editBar} data-tour="profile-editbar">
                 <div className={styles.editBarLeft}>
                     {/* Preview/Edit Toggle */}
                     <div className={styles.toggleGroup}>

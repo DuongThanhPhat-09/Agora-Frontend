@@ -350,7 +350,7 @@ const TutorPortalDashboard: React.FC = () => {
                     <p>Đang tải dữ liệu...</p>
                 </div>
             ) : stats ? (
-                <div className={styles.statsGrid}>
+                <div className={styles.statsGrid} data-tour="stats-grid">
                     <div className={styles.statCard}>
                         <div className={styles.statHeader}>
                             <div className={styles.statIcon}>
@@ -415,7 +415,7 @@ const TutorPortalDashboard: React.FC = () => {
             ) : null}
 
             {/* Quick Actions */}
-            <div className={styles.quickActions}>
+            <div className={styles.quickActions} data-tour="quick-actions">
                 <button className={styles.actionBtn} onClick={() => navigate('/tutor-portal/classes')}>
                     <CheckInIcon />
                     <span>Bắt đầu điểm danh</span>
@@ -595,7 +595,7 @@ const TutorPortalDashboard: React.FC = () => {
                 {/* Right Column - Calendar & Notes */}
                 <div className={styles.rightColumn}>
                     {/* Calendar */}
-                    <div className={`${styles.sectionCard} ${styles.calendarSection}`}>
+                    <div className={`${styles.sectionCard} ${styles.calendarSection}`} data-tour="calendar-widget">
                         <div className={styles.calendarHeader}>
                             <h3 className={styles.calendarMonth}>
                                 {currentMonth.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' })}
