@@ -2,7 +2,7 @@
 
 // Logo Icon (TUTORA symbol)
 export const LogoIcon = () => (
-    <img src="/tutora-logo.png" alt="Tutora" width="36" height="36" />
+    <img src="/tutora-logo.png" alt="Tutora" width="28" height="28" />
 );
 
 // Notification Bell Icon

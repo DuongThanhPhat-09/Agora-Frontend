@@ -29,7 +29,7 @@ interface PasswordForm {
     confirmPassword: string;
 }
 
-const ParentAccount = () => {
+const TutorAccount = () => {
     const [profile, setProfile] = useState<UserProfileData | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -182,8 +182,8 @@ const ParentAccount = () => {
         );
     }
 
-    const displayName = profile?.fullname || 'Parent';
-    const initials = displayName ? getInitials(displayName) : 'PH';
+    const displayName = profile?.fullname || 'Tutor';
+    const initials = displayName ? getInitials(displayName) : 'GS';
 
     return (
         <div style={pageStyle}>
@@ -204,7 +204,7 @@ const ParentAccount = () => {
                 </div>
                 <div style={profileMeta}>
                     <h2 style={profileName}>{displayName}</h2>
-                    <span style={roleBadge}>PARENT</span>
+                    <span style={roleBadge}>GIA SƯ</span>
                     {profile?.createdat && (
                         <p style={memberSince}>
                             Thành viên từ {new Date(profile.createdat).toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' })}
@@ -439,7 +439,7 @@ const avatarCircle: React.CSSProperties = {
     width: 72,
     height: 72,
     borderRadius: '50%',
-    background: '#1a2238',
+    background: '#3d4a3e',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -478,8 +478,8 @@ const roleBadge: React.CSSProperties = {
     display: 'inline-block',
     fontSize: 11,
     fontWeight: 600,
-    color: '#274e13',
-    background: '#e8f5e3',
+    color: '#3d4a3e',
+    background: '#e8f0e5',
     padding: '2px 8px',
     borderRadius: 4,
     letterSpacing: 0.5,
@@ -620,4 +620,4 @@ const toggleBtn: React.CSSProperties = {
     cursor: 'pointer',
 };
 
-export default ParentAccount;
+export default TutorAccount;

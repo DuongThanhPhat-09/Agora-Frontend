@@ -193,6 +193,7 @@
 .login-hero__trust-text {
     font-size: 14px;
     color: var(--color-navy-60);
+    margin-bottom: 15px;
 }
 
 .login-hero__trust-count {
