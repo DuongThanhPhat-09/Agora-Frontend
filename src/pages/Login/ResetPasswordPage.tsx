@@ -57,21 +57,88 @@ const ResetPasswordPage: React.FC = () => {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [accessToken, setAccessToken] = useState<string | null>(null);
+    const [isReady, setIsReady] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     useEffect(() => {
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const token = hashParams.get("access_token");
-        const type = hashParams.get("type");
+        let isMounted = true;
 
-        if (token && type === "recovery") {
-            setAccessToken(token);
-        } else {
-            toast.error("Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn");
-            setTimeout(() => navigate("/login"), 2000);
-        }
+        const initSession = async () => {
+            try {
+                // === Flow 1: PKCE flow (Supabase v2 default) ===
+                // Supabase redirects with ?code=xxx in query string
+                const urlParams = new URLSearchParams(window.location.search);
+                const code = urlParams.get("code");
+
+                if (code) {
+                    console.log("🔑 PKCE flow detected, exchanging code for session...");
+                    const { error } = await supabase.auth.exchangeCodeForSession(code);
+                    if (error) {
+                        console.error("❌ Code exchange failed:", error);
+                        throw error;
+                    }
+                    console.log("✅ Session established via PKCE");
+                    if (isMounted) setIsReady(true);
+                    return;
+                }
+
+                // === Flow 2: Implicit/Hash flow (legacy fallback) ===
+                // Older Supabase redirects with #access_token=xxx&type=recovery
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                const token = hashParams.get("access_token");
+                const type = hashParams.get("type");
+
+                if (token && type === "recovery") {
+                    console.log("🔑 Hash flow detected, setting session...");
+                    const { error } = await supabase.auth.setSession({
+                        access_token: token,
+                        refresh_token: hashParams.get("refresh_token") || "",
+                    });
+                    if (error) {
+                        console.error("❌ Set session failed:", error);
+                        throw error;
+                    }
+                    console.log("✅ Session established via hash flow");
+                    if (isMounted) setIsReady(true);
+                    return;
+                }
+
+                // === Flow 3: Check if session already exists ===
+                // onAuthStateChange PASSWORD_RECOVERY may have already set the session
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    console.log("🔑 Existing recovery session found");
+                    if (isMounted) setIsReady(true);
+                    return;
+                }
+
+                // No valid token/code found
+                throw new Error("No recovery token found");
+
+            } catch (error) {
+                console.error("Reset password init error:", error);
+                if (isMounted) {
+                    toast.error("Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn");
+                    setTimeout(() => navigate("/login"), 2000);
+                }
+            }
+        };
+
+        initSession();
+
+        // Also listen for PASSWORD_RECOVERY event as additional fallback
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+            if (event === "PASSWORD_RECOVERY") {
+                console.log("🔑 PASSWORD_RECOVERY event received");
+                if (isMounted) setIsReady(true);
+            }
+        });
+
+        return () => {
+            isMounted = false;
+            subscription.unsubscribe();
+        };
     }, [navigate]);
 
     const getPasswordStrength = (password: string) => {
@@ -99,20 +166,25 @@ const ResetPasswordPage: React.FC = () => {
             return;
         }
 
-        if (!accessToken) {
-            toast.error("Phiên làm việc không hợp lệ. Vui lòng thử lại.");
-            return;
-        }
-
         try {
             setIsLoading(true);
 
+            // Update password on Supabase
             const { error: supabaseError } = await supabase.auth.updateUser({
                 password: newPassword,
             });
             if (supabaseError) throw supabaseError;
 
-            await syncPassword(accessToken, newPassword);
+            // Get the current session's access token to sync with backend
+            const { data: { session } } = await supabase.auth.getSession();
+            const currentToken = session?.access_token;
+
+            if (currentToken) {
+                await syncPassword(currentToken, newPassword);
+            } else {
+                console.warn("⚠️ No session token available for backend sync");
+            }
+
             await supabase.auth.signOut();
 
             toast.success("Đặt lại mật khẩu thành công! Vui lòng đăng nhập lại.");
@@ -234,7 +306,7 @@ const ResetPasswordPage: React.FC = () => {
                                 </div>
 
                                 {/* Submit */}
-                                <button type="submit" disabled={isLoading} className={styles.btnPrimary}>
+                                <button type="submit" disabled={isLoading || !isReady} className={styles.btnPrimary}>
                                     {isLoading ? (
                                         <span style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
                                             <svg className={styles.spinner} width="20" height="20" fill="none" viewBox="0 0 24 24">
