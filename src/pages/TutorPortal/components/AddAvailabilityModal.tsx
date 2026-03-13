@@ -3,6 +3,21 @@ import { X, Clock } from 'lucide-react';
 import { toast } from 'react-toastify';
 import styles from './AddAvailabilityModal.module.css';
 import { createAvailability, DAY_OF_WEEK_MAP } from '../../../services/availability.service';
+
+// Translate common English API messages to Vietnamese
+const translateScheduleMsg = (msg: string): string => {
+    if (!msg) return 'Không thể thêm lịch rảnh. Vui lòng thử lại.';
+    if (/time slot overlaps/i.test(msg)) {
+        const match = msg.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+        return match
+            ? `Khung giờ bị trùng với lịch hiện có: ${match[1]} - ${match[2]}`
+            : 'Khung giờ bị trùng với lịch rảnh hiện có';
+    }
+    if (/start time must be before/i.test(msg)) return 'Giờ bắt đầu phải trước giờ kết thúc';
+    if (/invalid time/i.test(msg)) return 'Thời gian không hợp lệ';
+    if (/already exists/i.test(msg)) return 'Lịch rảnh này đã tồn tại';
+    return msg;
+};
 import { useFormDraft } from '../../../hooks/useFormDraft';
 
 // Hour options: 0 to 23 (temporarily expanded)
@@ -212,8 +227,8 @@ const AddAvailabilityModal: FunctionComponent<AddAvailabilityModalProps> = ({
                 toast.error('Vui lòng kiểm tra lại thông tin nhập vào');
             } else {
                 // Generic error message
-                const errorMessage = error.response?.data?.message || error.response?.data?.title || 'Không thể thêm lịch rảnh. Vui lòng thử lại.';
-                toast.error(errorMessage);
+                const rawMsg = error.response?.data?.message || error.response?.data?.title || '';
+                toast.error(translateScheduleMsg(rawMsg));
             }
         } finally {
             setIsLoading(false);

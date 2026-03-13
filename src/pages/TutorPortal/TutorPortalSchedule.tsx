@@ -14,6 +14,22 @@ import { getUserIdFromToken } from '../../services/auth.service';
 import { getTutorCalendar } from '../../services/lesson.service';
 import type { CalendarDay, CalendarLesson } from '../../services/lesson.service';
 
+// Translate common English API messages to Vietnamese
+const translateScheduleMsg = (msg: string, fallback: string): string => {
+    if (!msg) return fallback;
+    if (/time slot overlaps/i.test(msg)) {
+        const match = msg.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+        return match
+            ? `Khung giờ bị trùng với lịch hiện có: ${match[1]} - ${match[2]}`
+            : 'Khung giờ bị trùng với lịch rảnh hiện có';
+    }
+    if (/start time must be before/i.test(msg)) return 'Giờ bắt đầu phải trước giờ kết thúc';
+    if (/invalid time/i.test(msg)) return 'Thời gian không hợp lệ';
+    if (/already exists/i.test(msg)) return 'Lịch rảnh này đã tồn tại';
+    if (/not found/i.test(msg)) return 'Không tìm thấy lịch rảnh';
+    return msg;
+};
+
 // Mở rộng dayjs với các plugin
 dayjs.extend(weekday);
 dayjs.extend(isoWeek);
@@ -237,8 +253,8 @@ const TutorPortalSchedule: React.FC = () => {
                 toast.success(`Đã thêm lịch rảnh ${minutesToTimeStr(startMin)} - ${minutesToTimeStr(endMin)}`);
                 fetchAvailabilityRef.current();
             } catch (error: any) {
-                const msg = error?.response?.data?.message || 'Không thể thêm lịch rảnh';
-                toast.error(msg);
+                const msg = error?.response?.data?.message || '';
+                toast.error(translateScheduleMsg(msg, 'Không thể thêm lịch rảnh'));
             } finally {
                 setDragState(null);
             }
@@ -336,8 +352,8 @@ const TutorPortalSchedule: React.FC = () => {
                 toast.success('Đã cập nhật lịch rảnh');
                 fetchAvailabilityRef.current();
             } catch (error: any) {
-                const msg = error?.response?.data?.message || 'Không thể cập nhật lịch rảnh';
-                toast.error(msg);
+                const msg = error?.response?.data?.message || '';
+                toast.error(translateScheduleMsg(msg, 'Không thể cập nhật lịch rảnh'));
             } finally {
                 setResizeState(null);
             }
