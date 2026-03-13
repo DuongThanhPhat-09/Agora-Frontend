@@ -774,6 +774,16 @@
     animation: ghostPulse 1.2s ease-in-out infinite;
 }
 
+/* Mobile-only action popup (hidden on desktop) */
+.mobileSlotActions {
+    display: none;
+}
+
+.mobileEditBtn,
+.mobileDeleteBtn {
+    display: none;
+}
+
 @keyframes ghostPulse {
     0%, 100% { background: rgba(79, 140, 255, 0.08); }
     50% { background: rgba(79, 140, 255, 0.16); }
@@ -1704,7 +1714,7 @@
     }
 
     .slotActions {
-        gap: 4px;
+        display: none; /* Hidden on mobile — use tap-to-show popup instead */
     }
 
     .editSlotBtn,
@@ -1719,6 +1729,70 @@
     .deleteSlotBtn svg,
     .deleteSlotBtn span {
         font-size: 11px;
+    }
+
+    /* Tapped state: visual feedback */
+    .availableBlock.tapped {
+        background: rgba(79, 140, 255, 0.18);
+        border-color: rgba(79, 140, 255, 0.6);
+        box-shadow: 0 2px 12px rgba(79, 140, 255, 0.25);
+        z-index: 500;
+    }
+
+    /* Mobile floating action popup */
+    .mobileSlotActions {
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 6px;
+        background: #fff;
+        border-radius: 10px;
+        padding: 6px 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.05);
+        z-index: 600;
+        white-space: nowrap;
+    }
+
+    /* If slot is near top, flip popup below */
+    .availableBlock.tapped {
+        overflow: visible;
+    }
+
+    .mobileEditBtn,
+    .mobileDeleteBtn {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 12px;
+        border: none;
+        border-radius: 8px;
+        font-family: 'IBM Plex Sans', sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .mobileEditBtn {
+        background: rgba(79, 140, 255, 0.1);
+        color: #4f8cff;
+    }
+
+    .mobileEditBtn:active {
+        background: #4f8cff;
+        color: #fff;
+    }
+
+    .mobileDeleteBtn {
+        background: rgba(220, 53, 69, 0.08);
+        color: #dc3545;
+    }
+
+    .mobileDeleteBtn:active {
+        background: #dc3545;
+        color: #fff;
     }
 
     /* Full width sidebar on mobile */

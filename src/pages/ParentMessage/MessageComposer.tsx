@@ -36,12 +36,12 @@ const MessageComposer = ({ onSend, disabled = false }: MessageComposerProps) => 
 
   return (
     <div className={styles.composer}>
-      <button className={styles.iconButton} type="button" title="Attach File" disabled={disabled}>
+      <button className={styles.iconButton} type="button" title="Đính kèm tệp" disabled={disabled}>
         <img alt="" src={attachIcon} />
       </button>
       <textarea
         className={styles.composerInput}
-        placeholder="Type your message..."
+        placeholder="Nhập tin nhắn..."
         rows={1}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
@@ -53,7 +53,7 @@ const MessageComposer = ({ onSend, disabled = false }: MessageComposerProps) => 
         type="button"
         onClick={handleSend}
         disabled={!message.trim() || sending || disabled}
-        title="Send Message"
+        title="Gửi tin nhắn"
       >
         {sending ? (
           <Loader2 size={20} className={styles.sendingSpinner} color="#ffffff" />

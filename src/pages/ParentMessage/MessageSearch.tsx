@@ -13,17 +13,17 @@ const MessageSearch = ({ onSearch }: MessageSearchProps) => {
                 <img alt="" className={styles.searchIcon} src={searchIcon} />
                 <input 
                     className={styles.searchInput} 
-                    placeholder="Search messages..." 
+                    placeholder="Tìm kiếm tin nhắn..." 
                     type="text" 
                     onChange={(e) => onSearch(e.target.value)}
                 />
             </div>
             <div className={styles.tabGroup}>
                 <button className={`${styles.tabButton} ${styles.tabButtonActive}`} type="button">
-                    Chat
+                    Trò chuyện
                 </button>
                 <button className={styles.tabButton} type="button">
-                    Auto-Reports
+                    Báo cáo tự động
                 </button>
             </div>
         </div>

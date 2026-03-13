@@ -11,6 +11,8 @@ export interface TourStep {
 interface TutorTourProps {
     steps: TourStep[];
     onComplete: () => void;
+    onSidebarOpen?: () => void;
+    onSidebarClose?: () => void;
 }
 
 interface TargetRect {
@@ -23,7 +25,7 @@ interface TargetRect {
 const PADDING = 8;
 const TOOLTIP_GAP = 16;
 
-const TutorTour: React.FC<TutorTourProps> = ({ steps, onComplete }) => {
+const TutorTour: React.FC<TutorTourProps> = ({ steps, onComplete, onSidebarOpen, onSidebarClose }) => {
     const [currentStep, setCurrentStep] = useState(0);
     const [targetRect, setTargetRect] = useState<TargetRect | null>(null);
     const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number }>({ top: 100, left: 100 });
@@ -38,8 +40,12 @@ const TutorTour: React.FC<TutorTourProps> = ({ steps, onComplete }) => {
         // Wait a tick for the tooltip to render, then measure it
         const doPosition = () => {
             const tooltip = tooltipRef.current;
+            const isMobile = window.innerWidth <= 1024;
+            // On mobile, limit tooltip width
+            const maxTw = isMobile ? window.innerWidth - 20 : 340;
             // Fallback tooltip size if ref not ready yet
-            const tw = tooltip ? tooltip.offsetWidth : 340;
+            let tw = tooltip ? tooltip.offsetWidth : 340;
+            if (tw > maxTw) tw = maxTw;
             const th = tooltip ? tooltip.offsetHeight : 180;
             const vw = window.innerWidth;
             const vh = window.innerHeight;
@@ -68,6 +74,14 @@ const TutorTour: React.FC<TutorTourProps> = ({ steps, onComplete }) => {
                 case 'bottom':
                     left = Math.max(20, rect.left + rect.width / 2 - tw / 2);
                     top = rect.top + rect.height + TOOLTIP_GAP;
+                    // If tooltip would overflow below viewport, flip to ABOVE the target
+                    if (top + th > vh - 10) {
+                        const topAbove = rect.top - th - TOOLTIP_GAP;
+                        if (topAbove >= 10) {
+                            top = topAbove;
+                        }
+                        // else keep bottom and let clamp handle it
+                    }
                     break;
                 case 'top':
                     left = Math.max(20, rect.left + rect.width / 2 - tw / 2);
@@ -84,7 +98,18 @@ const TutorTour: React.FC<TutorTourProps> = ({ steps, onComplete }) => {
             if (left < 10) left = 10;
             if (left + tw > vw - 10) left = vw - tw - 10;
 
+            // On mobile with sidebar open, ensure tooltip doesn't clip behind sidebar
+            if (isMobile && rect.left < 290) {
+                // Target is a sidebar item — position tooltip starting from right of sidebar
+                left = Math.max(10, Math.min(left, vw - tw - 10));
+            }
+
             setTooltipPos({ top, left });
+
+            // On mobile, set max-width on tooltip element
+            if (tooltip && isMobile) {
+                tooltip.style.maxWidth = `${vw - 20}px`;
+            }
         };
 
         // Double rAF to ensure DOM has painted
@@ -113,7 +138,37 @@ const TutorTour: React.FC<TutorTourProps> = ({ steps, onComplete }) => {
     const highlightStep = useCallback(() => {
         if (!step) return;
 
-        const el = document.querySelector(step.target);
+        // Last step: farewell modal — no element to highlight
+        const isLast = currentStep === steps.length - 1;
+        if (isLast) {
+            const isMobile = window.innerWidth <= 1024;
+            if (isMobile && onSidebarClose) onSidebarClose();
+            setTargetRect(null); // No spotlight
+            setIsVisible(true);
+            return;
+        }
+
+        const isMobile = window.innerWidth <= 1024;
+        const isSidebarTarget = step.target.includes('sidebar') || step.target.includes('nav-');
+
+        // On mobile, toggle sidebar visibility based on target
+        if (isMobile && isSidebarTarget && onSidebarOpen) {
+            onSidebarOpen();
+            // Wait for sidebar animation to finish before measuring
+            setTimeout(() => findAndHighlight(step), 500);
+            return;
+        } else if (isMobile && !isSidebarTarget && onSidebarClose) {
+            onSidebarClose();
+            setTimeout(() => findAndHighlight(step), 350);
+            return;
+        }
+
+        findAndHighlight(step);
+    }, [step, currentStep, steps.length, onComplete, positionTooltip, onSidebarOpen, onSidebarClose]);
+
+    // Extracted highlight logic
+    const findAndHighlight = useCallback((stepToHighlight: TourStep) => {
+        const el = document.querySelector(stepToHighlight.target);
         if (!el) {
             // Element not found — skip
             if (currentStep < steps.length - 1) {
@@ -131,14 +186,11 @@ const TutorTour: React.FC<TutorTourProps> = ({ steps, onComplete }) => {
                          parentStyle?.position === 'sticky' || parentStyle?.position === 'fixed';
 
         if (isSticky) {
-            // For sticky elements, scroll the main content area to top first
-            // so the sticky element is at its natural position
             const scrollParent = findScrollParent(el);
             if (scrollParent) {
                 scrollParent.scrollTo({ top: 0, behavior: 'smooth' });
             }
         } else {
-            // For regular elements, scroll into view
             el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
@@ -152,10 +204,17 @@ const TutorTour: React.FC<TutorTourProps> = ({ steps, onComplete }) => {
                 height: rect.height + PADDING * 2,
             };
             setTargetRect(newRect);
-            positionTooltip(newRect, step.placement || 'right');
+
+            // On mobile, force tooltip placement to bottom for sidebar items
+            const isMobile = window.innerWidth <= 1024;
+            const placement = (isMobile && (stepToHighlight.placement === 'right' || stepToHighlight.placement === 'left'))
+                ? 'bottom'
+                : (stepToHighlight.placement || 'right');
+
+            positionTooltip(newRect, placement);
             setIsVisible(true);
         }, 350);
-    }, [step, currentStep, steps.length, onComplete, positionTooltip]);
+    }, [currentStep, steps.length, onComplete, positionTooltip]);
 
     // Re-highlight on step change
     useEffect(() => {
@@ -242,24 +301,37 @@ const TutorTour: React.FC<TutorTourProps> = ({ steps, onComplete }) => {
             )}
 
             {/* Tooltip — always rendered to allow ref measurement */}
-            <div
-                ref={tooltipRef}
-                className={`tutor-tour-tooltip ${isVisible ? 'tutor-tour-tooltip-visible' : ''}`}
-                style={{
-                    position: 'fixed',
-                    top: tooltipPos.top,
-                    left: tooltipPos.left,
-                }}
-            >
-                <div className="tutor-tour-step-counter">
-                    {currentStep + 1} / {steps.length}
+            {isLastStep ? (
+                /* Final step: centered modal like the welcome prompt */
+                <div
+                    className={`tutor-tour-final-modal ${isVisible ? 'tutor-tour-final-modal-visible' : ''}`}
+                >
+                    <h3 className="tutor-tour-title">{step?.title}</h3>
+                    <p className="tutor-tour-description">{step?.description}</p>
+                    <button className="tutor-tour-next-btn" onClick={handleNext}>
+                        Hoàn tất! 🎉
+                    </button>
                 </div>
-                <h3 className="tutor-tour-title">{step?.title}</h3>
-                <p className="tutor-tour-description">{step?.description}</p>
-                <button className="tutor-tour-next-btn" onClick={handleNext}>
-                    {isLastStep ? 'Hoàn tất! 🎉' : 'Tiếp tục →'}
-                </button>
-            </div>
+            ) : (
+                <div
+                    ref={tooltipRef}
+                    className={`tutor-tour-tooltip ${isVisible ? 'tutor-tour-tooltip-visible' : ''} ${step && (step.target.includes('sidebar') || step.target.includes('nav-')) ? 'tutor-tour-tooltip-light' : ''}`}
+                    style={{
+                        position: 'fixed',
+                        top: tooltipPos.top,
+                        left: tooltipPos.left,
+                    }}
+                >
+                    <div className="tutor-tour-step-counter">
+                        {currentStep + 1} / {steps.length - 1}
+                    </div>
+                    <h3 className="tutor-tour-title">{step?.title}</h3>
+                    <p className="tutor-tour-description">{step?.description}</p>
+                    <button className="tutor-tour-next-btn" onClick={handleNext}>
+                        Tiếp tục →
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

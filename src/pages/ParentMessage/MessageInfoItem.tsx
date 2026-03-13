@@ -53,7 +53,7 @@ const MessageInfoItem = ({
                             <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1"/>
                             <path d="M6 3v3h2" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
                         </svg>
-                        <span>Booking Request</span>
+                        <span>Yêu cầu đặt lịch</span>
                     </div>
                 ) : badge ? (
                     <div className={`${styles.messageBadge} ${badge.muted ? styles.messageBadgeMuted : ''}`}>
