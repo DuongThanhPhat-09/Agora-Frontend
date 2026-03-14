@@ -88,6 +88,19 @@ function App() {
   const location = useLocation();
   const [showSessionExpired, setShowSessionExpired] = useState(false);
 
+  // Detect Supabase recovery hash and redirect to /reset-password
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && location.pathname === '/') {
+      const hashParams = new URLSearchParams(hash.substring(1));
+      const type = hashParams.get('type');
+      if (type === 'recovery') {
+        // Redirect to /reset-password while preserving the hash fragment
+        window.location.href = `/reset-password${hash}`;
+      }
+    }
+  }, [location.pathname]);
+
   const checkTokenExpiry = useCallback(() => {
     const user = getCurrentUser();
     // Chỉ check khi user đã đăng nhập (có data trong localStorage)
