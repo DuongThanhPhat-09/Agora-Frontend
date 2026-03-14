@@ -84,6 +84,8 @@ const DEFAULT_ROW_HEIGHT = 70; // px mặc định cho mỗi hàng giờ
 const MIN_ROW_HEIGHT = 36;  // CSS minimum (timeLabel padding+font won't shrink below ~36px)
 const MAX_ROW_HEIGHT = 150;
 const ZOOM_STEP = 10;
+const LONG_PRESS_DURATION = 500; // ms to hold before drag activates on mobile
+const LONG_PRESS_MOVE_THRESHOLD = 10; // px - cancel long-press if finger moves more than this
 
 // Zoom icons
 const ZoomInIcon = () => (
@@ -137,6 +139,7 @@ const TutorPortalSchedule: React.FC = () => {
     const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
     // Mobile: tapped slot shows action popup
     const [tappedSlotId, setTappedSlotId] = useState<number | null>(null);
+    const [tapPosition, setTapPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
     const [availability, setAvailability] = useState<LocalAvailabilitySlot[]>([]);
     const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
     const [isAddAvailabilityModalOpen, setIsAddAvailabilityModalOpen] = useState(false);
@@ -195,10 +198,13 @@ const TutorPortalSchedule: React.FC = () => {
         return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
     };
 
-    // Handle mousedown on a time cell (start drag)
+    // Handle mousedown on a time cell (start drag) — DESKTOP ONLY
+    // On mobile, we use long-press (handleCellTouchStart) instead
     const handleCellMouseDown = useCallback((e: React.MouseEvent, dayIndex: number, isoDay: number) => {
         if (activeTab !== 'settings' || viewMode === 'month') return;
         if (e.button !== 0) return; // left click only
+        // Skip on mobile — long-press handles drag-to-create there
+        if (window.innerWidth <= 768) return;
         e.preventDefault();
 
         const minutes = snapToGrid(pixelToMinutes(e.clientY));
@@ -212,22 +218,81 @@ const TutorPortalSchedule: React.FC = () => {
         });
     }, [activeTab, viewMode, pixelToMinutes]);
 
-    // Handle touchstart on a time cell (start drag on mobile)
+    // ===== LONG-PRESS TO DRAG on mobile =====
+    const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    const longPressTouchStartRef = React.useRef<{ x: number; y: number; dayIndex: number; isoDay: number } | null>(null);
+    const [isLongPressActive, setIsLongPressActive] = useState(false);
+
+    const cancelLongPress = useCallback(() => {
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
+        longPressTouchStartRef.current = null;
+    }, []);
+
+    // Handle touchstart on a time cell — start long-press timer (don't drag yet)
     const handleCellTouchStart = useCallback((e: React.TouchEvent, dayIndex: number, isoDay: number) => {
         if (activeTab !== 'settings' || viewMode === 'month') return;
         const touch = e.touches[0];
         if (!touch) return;
 
-        const minutes = snapToGrid(pixelToMinutes(touch.clientY));
+        // Store initial touch position
+        longPressTouchStartRef.current = { x: touch.clientX, y: touch.clientY, dayIndex, isoDay };
 
-        setDragState({
-            isDragging: true,
-            dayIndex,
-            isoDay,
-            startMinutes: minutes,
-            currentMinutes: minutes + SNAP_MINUTES,
-        });
+        // Start long-press timer
+        longPressTimerRef.current = setTimeout(() => {
+            // Long-press succeeded — activate drag
+            const touchData = longPressTouchStartRef.current;
+            if (!touchData) return;
+
+            // Haptic feedback if supported
+            if (navigator.vibrate) navigator.vibrate(50);
+
+            setIsLongPressActive(true);
+            const minutes = snapToGrid(pixelToMinutes(touch.clientY));
+            setDragState({
+                isDragging: true,
+                dayIndex: touchData.dayIndex,
+                isoDay: touchData.isoDay,
+                startMinutes: minutes,
+                currentMinutes: minutes + SNAP_MINUTES,
+            });
+            longPressTimerRef.current = null;
+        }, LONG_PRESS_DURATION);
     }, [activeTab, viewMode, pixelToMinutes]);
+
+    // Cancel long-press if finger moves too far (user is scrolling)
+    useEffect(() => {
+        const handleTouchMoveCancel = (e: TouchEvent) => {
+            if (!longPressTouchStartRef.current || !longPressTimerRef.current) return;
+            const touch = e.touches[0];
+            if (!touch) return;
+            const dx = Math.abs(touch.clientX - longPressTouchStartRef.current.x);
+            const dy = Math.abs(touch.clientY - longPressTouchStartRef.current.y);
+            if (dx > LONG_PRESS_MOVE_THRESHOLD || dy > LONG_PRESS_MOVE_THRESHOLD) {
+                cancelLongPress();
+            }
+        };
+
+        const handleTouchEndCancel = () => {
+            cancelLongPress();
+        };
+
+        window.addEventListener('touchmove', handleTouchMoveCancel, { passive: true });
+        window.addEventListener('touchend', handleTouchEndCancel);
+        return () => {
+            window.removeEventListener('touchmove', handleTouchMoveCancel);
+            window.removeEventListener('touchend', handleTouchEndCancel);
+        };
+    }, [cancelLongPress]);
+
+    // Reset long-press active flag when drag ends
+    useEffect(() => {
+        if (!dragState?.isDragging) {
+            setIsLongPressActive(false);
+        }
+    }, [dragState?.isDragging]);
 
     // Refs to avoid stale closures in drag/resize useEffects
     const dragStateRef = React.useRef(dragState);
@@ -768,7 +833,8 @@ const TutorPortalSchedule: React.FC = () => {
                             </div>
                             {activeTab === 'settings' && viewMode !== 'month' && (
                                 <div className={styles.legendItem}>
-                                    <span style={{ color: 'rgba(79, 140, 255, 0.6)', fontSize: '9px', fontStyle: 'italic', letterSpacing: '0' }}>✦ Kéo trên lưới để tạo lịch rảnh</span>
+                                    <span className={styles.dragHintDesktop} style={{ color: 'rgba(79, 140, 255, 0.6)', fontSize: '9px', fontStyle: 'italic', letterSpacing: '0' }}>✦ Kéo trên lưới để tạo lịch rảnh</span>
+                                    <span className={styles.dragHintMobile} style={{ color: 'rgba(79, 140, 255, 0.6)', fontSize: '9px', fontStyle: 'italic', letterSpacing: '0' }}>✦ Nhấn giữ trên lưới để tạo lịch rảnh</span>
                                 </div>
                             )}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
@@ -784,6 +850,13 @@ const TutorPortalSchedule: React.FC = () => {
                                 )}
                             </div>
                         </div>
+
+                        {/* Mobile drag hint (hidden on desktop via CSS) */}
+                        {activeTab === 'settings' && viewMode !== 'month' && (
+                            <div className={styles.mobileDragHint}>
+                                ✦ Nhấn giữ trên lưới để tạo lịch rảnh
+                            </div>
+                        )}
 
                         {/* Trạng thái đang tải */}
                         {isLoadingAvailability && (
@@ -907,7 +980,7 @@ const TutorPortalSchedule: React.FC = () => {
                                                             if (target.closest('button')) return;
                                                             handleCellTouchStart(e, dayIndex, date.isoWeekday());
                                                         }}
-                                                        style={{ cursor: dragState?.isDragging ? 'ns-resize' : 'crosshair' }}
+                                                        style={{ cursor: dragState?.isDragging ? 'ns-resize' : 'crosshair', touchAction: isLongPressActive ? 'none' : 'auto' }}
                                                     >
                                                         {slot && (
                                                             <div
@@ -920,9 +993,14 @@ const TutorPortalSchedule: React.FC = () => {
                                                                 onTouchStart={(e) => e.stopPropagation()}
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    // On mobile, toggle action popup
+                                                                    // On mobile, toggle action popup at tap position
                                                                     if (window.innerWidth <= 768) {
-                                                                        setTappedSlotId(prev => prev === slot.apiId ? null : slot.apiId);
+                                                                        if (tappedSlotId === slot.apiId) {
+                                                                            setTappedSlotId(null);
+                                                                        } else {
+                                                                            setTapPosition({ x: e.clientX, y: e.clientY });
+                                                                            setTappedSlotId(slot.apiId);
+                                                                        }
                                                                     }
                                                                 }}
                                                             >
@@ -934,8 +1012,14 @@ const TutorPortalSchedule: React.FC = () => {
                                                                 />
                                                                 <div className={styles.availableContent}>
                                                                     <span className={styles.availableLabel}>Rảnh</span>
-                                                                    <span className={styles.availableTime}>
+                                                                    <span className={`${styles.availableTime} ${styles.desktopOnly}`}>
                                                                         {displayStartTime} - {displayEndTime}
+                                                                    </span>
+                                                                    <span className={`${styles.availableTime} ${styles.mobileOnly}`}>
+                                                                        {`Từ ${parseInt(displayStartTime?.split(':')[0] || '0')}h`}
+                                                                    </span>
+                                                                    <span className={`${styles.availableTime} ${styles.mobileOnly}`}>
+                                                                        {`Đến ${parseInt(displayEndTime?.split(':')[0] || '0')}h`}
                                                                     </span>
                                                                 </div>
                                                                 {/* Desktop: inline actions (hidden on mobile via CSS) */}
@@ -975,11 +1059,11 @@ const TutorPortalSchedule: React.FC = () => {
                                                                         </Tooltip>
                                                                     </Popconfirm>
                                                                 </div>
-                                                                {/* Mobile: floating action popup on tap */}
+                                                                {/* Mobile: action buttons at tap position */}
                                                                 {tappedSlotId === slot.apiId && (
                                                                     <div
                                                                         className={styles.mobileSlotActions}
-                                                                        style={topOffsetPx < 50 ? { bottom: 'auto', top: 'calc(100% + 6px)' } : undefined}
+                                                                        style={{ top: tapPosition.y, left: tapPosition.x }}
                                                                     >
                                                                         <button
                                                                             className={styles.mobileEditBtn}
