@@ -1,5 +1,5 @@
 // src/components/ForgotPasswordModal.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import { supabase } from "../lib/supabase";
 import styles from "../styles/components/forgot-password-modal.module.css";
@@ -9,6 +9,9 @@ interface ForgotPasswordModalProps {
     onClose: () => void;
 }
 
+const COOLDOWN_SECONDS = 60;
+const MAX_RESEND_ATTEMPTS = 3;
+
 const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
     isOpen,
     onClose,
@@ -16,9 +19,28 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
     const [email, setEmail] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [emailSent, setEmailSent] = useState(false);
+    const [cooldown, setCooldown] = useState(0);
+    const [resendCount, setResendCount] = useState(0);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    // Cooldown timer
+    useEffect(() => {
+        if (cooldown <= 0) return;
+
+        const timer = setInterval(() => {
+            setCooldown((prev) => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [cooldown]);
+
+    const handleSubmit = useCallback(async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
 
         if (!email) {
             toast.warning("Vui lòng nhập email của bạn!");
@@ -28,6 +50,16 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             toast.error("Email không hợp lệ!");
+            return;
+        }
+
+        if (cooldown > 0) {
+            toast.info(`Vui lòng đợi ${cooldown} giây trước khi gửi lại.`);
+            return;
+        }
+
+        if (resendCount >= MAX_RESEND_ATTEMPTS) {
+            toast.warning("Bạn đã vượt quá số lần gửi cho phép. Vui lòng thử lại sau.");
             return;
         }
 
@@ -41,20 +73,41 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
             if (error) throw error;
 
             setEmailSent(true);
+            setResendCount((prev) => prev + 1);
+            setCooldown(COOLDOWN_SECONDS);
             toast.success("Email đặt lại mật khẩu đã được gửi!");
         } catch (error: any) {
             console.error("Forgot password error:", error);
-            toast.error(error.message || "Có lỗi xảy ra. Vui lòng thử lại.");
+
+            if (error?.code === "over_email_send_rate_limit") {
+                toast.error(
+                    "Hệ thống đang gửi quá nhiều email. Vui lòng đợi vài phút rồi thử lại."
+                );
+                setCooldown(COOLDOWN_SECONDS * 2); // Longer cooldown on rate limit
+            } else {
+                toast.error(error.message || "Có lỗi xảy ra. Vui lòng thử lại.");
+            }
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [email, cooldown, resendCount]);
 
     const handleClose = () => {
         setEmail("");
         setEmailSent(false);
         onClose();
     };
+
+    const handleResend = () => {
+        if (cooldown > 0 || resendCount >= MAX_RESEND_ATTEMPTS) return;
+        setEmailSent(false);
+        // Trigger submit again after re-rendering
+        setTimeout(() => {
+            handleSubmit();
+        }, 0);
+    };
+
+    const isResendDisabled = cooldown > 0 || resendCount >= MAX_RESEND_ATTEMPTS || isLoading;
 
     if (!isOpen) return null;
 
@@ -114,7 +167,11 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                                     </div>
                                 </div>
 
-                                <button type="submit" disabled={isLoading} className={styles.btnPrimary}>
+                                <button
+                                    type="submit"
+                                    disabled={isLoading || cooldown > 0}
+                                    className={styles.btnPrimary}
+                                >
                                     {isLoading ? (
                                         <>
                                             <svg className={styles.spinner} width="20" height="20" fill="none" viewBox="0 0 24 24">
@@ -124,6 +181,8 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                                             </svg>
                                             Đang gửi...
                                         </>
+                                    ) : cooldown > 0 ? (
+                                        `Gửi lại sau ${cooldown}s`
                                     ) : (
                                         "Gửi link đặt lại mật khẩu"
                                     )}
@@ -166,9 +225,21 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                                 Đóng
                             </button>
 
-                            <button onClick={() => setEmailSent(false)} className={styles.btnLink}>
-                                Không nhận được email? Gửi lại
-                            </button>
+                            {resendCount >= MAX_RESEND_ATTEMPTS ? (
+                                <p className={styles.cooldownText}>
+                                    Bạn đã gửi tối đa {MAX_RESEND_ATTEMPTS} lần. Vui lòng kiểm tra email hoặc thử lại sau.
+                                </p>
+                            ) : (
+                                <button
+                                    onClick={handleResend}
+                                    disabled={isResendDisabled}
+                                    className={`${styles.btnLink} ${isResendDisabled ? styles.btnLinkDisabled : ""}`}
+                                >
+                                    {cooldown > 0
+                                        ? `Gửi lại sau ${cooldown}s`
+                                        : "Không nhận được email? Gửi lại"}
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>
