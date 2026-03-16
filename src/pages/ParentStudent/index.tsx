@@ -295,7 +295,7 @@ const ParentStudent = () => {
             className={styles.addChildBtn}
             onClick={() => setIsParentCodeOpen(true)}
             type="button"
-            style={{ background: '#3b82f6', marginRight: 8 }}
+            style={{ background: '#3b82f6' }}
           >
             <LinkIcon />
             <span>Mã mời</span>

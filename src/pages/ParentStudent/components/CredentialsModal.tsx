@@ -110,7 +110,7 @@ const CredentialsModal = ({ credentials, onClose, title }: Props) => {
                     <button
                         style={copyAllBtn}
                         onClick={() => {
-                            const text = `Username: ${credentials.username}\nMật khẩu: ${credentials.temporaryPassword}`;
+                            const text = `Tên đăng nhập: ${credentials.username}\nMật khẩu: ${credentials.temporaryPassword}`;
                             navigator.clipboard.writeText(text);
                             setCopiedField('all');
                             setTimeout(() => setCopiedField(null), 2000);

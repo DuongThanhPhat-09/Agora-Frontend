@@ -1,6 +1,5 @@
 import styles from './styles.module.css';
-
-const searchIcon = 'https://www.figma.com/api/mcp/asset/56ad9189-7085-4c6a-989b-04082762f59b';
+import { Search } from 'lucide-react';
 
 interface MessageSearchProps {
     onSearch: (query: string) => void;
@@ -10,7 +9,7 @@ const MessageSearch = ({ onSearch }: MessageSearchProps) => {
     return (
         <div className={styles.searchBlock}>
             <div className={styles.searchInputWrapper}>
-                <img alt="" className={styles.searchIcon} src={searchIcon} />
+                <Search size={14} className={styles.searchIcon} />
                 <input 
                     className={styles.searchInput} 
                     placeholder="Tìm kiếm tin nhắn..." 

@@ -26,6 +26,10 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
   const [booking, setBooking] = useState<BookingResponseDTO | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedBookingForPayment, setSelectedBookingForPayment] = useState<number | null>(null);
+  const [isOtherTyping, setIsOtherTyping] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Use refs to avoid stale closures in SignalR callback
   const selectedChannelIdRef = useRef<number | null>(selectedChannelId);
@@ -108,7 +112,7 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
         console.error('SignalR connection error:', err);
         if (mounted) {
           setConnectionState('error');
-          toast.error('Failed to connect to chat server');
+          toast.error('Không thể kết nối đến máy chủ chat');
         }
       }
     };
@@ -120,6 +124,8 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
       signalRService.offMessageReceived();
       signalRService.offUserJoined();
       signalRService.offUserLeft();
+      signalRService.offUserTyping();
+      signalRService.offUserStoppedTyping();
     };
   }, []);
 
@@ -132,7 +138,7 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
           console.log(`✅ Joined channel ${selectedChannelId}`);
         } catch (err) {
           console.error('Error joining channel:', err);
-          toast.error('Failed to join chat channel');
+          toast.error('Không thể tham gia kênh chat');
         }
       }
     };
@@ -141,7 +147,7 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
   }, [selectedChannelId]);
 
   const loadMessages = useCallback(
-    async (query: { page: number; pageSize: number } = { page: 1, pageSize: 50 }) => {
+    async (query: { page: number; pageSize: number; search?: string } = { page: 1, pageSize: 50 }) => {
       if (!selectedChannelId) return;
 
       const response = await getChatMessages(selectedChannelId, query);
@@ -171,7 +177,7 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
         await loadMessages({ page: 1, pageSize: 50 });
       } catch (err) {
         console.error('Error fetching messages:', err);
-        toast.error('Failed to load messages');
+        toast.error('Không thể tải tin nhắn');
       } finally {
         setLoading(false);
       }
@@ -179,6 +185,42 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
 
     fetchMessages();
   }, [selectedChannelId]);
+
+  // Typing indicator listeners
+  useEffect(() => {
+    signalRService.onUserTyping((data: any) => {
+      const channelId = data.channelId || data.ChannelId;
+      if (channelId === selectedChannelIdRef.current) {
+        setIsOtherTyping(true);
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => setIsOtherTyping(false), 3000);
+      }
+    });
+
+    signalRService.onUserStoppedTyping((data: any) => {
+      const channelId = data.channelId || data.ChannelId;
+      if (channelId === selectedChannelIdRef.current) {
+        setIsOtherTyping(false);
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      }
+    });
+
+    return () => {
+      signalRService.offUserTyping();
+      signalRService.offUserStoppedTyping();
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    };
+  }, []);
+
+  // Search with debounce
+  useEffect(() => {
+    if (!selectedChannelId) return;
+    const timer = setTimeout(() => {
+      setHasMore(true);
+      loadMessages({ page: 1, pageSize: 50, search: searchQuery || undefined });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Handler gửi tin nhắn - hiển thị message ngay lên đầu
   const handleSendMessage = useCallback(
@@ -207,7 +249,7 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
         console.error('Error sending message:', err);
         // Xóa message thất bại khỏi UI
         setMessages((prev) => prev.filter((msg) => msg.messageId !== tempMessage.messageId));
-        toast.error('Failed to send message');
+        toast.error('Gửi tin nhắn thất bại');
       }
     },
     [selectedChannelId, currentUserId],
@@ -223,7 +265,7 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
       setMessages([]);
     } catch (err) {
       console.error('Error leaving channel:', err);
-      toast.error('Failed to leave chat channel');
+      toast.error('Không thể rời kênh chat');
     }
   }, [selectedChannelId]);
 
@@ -266,6 +308,10 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
         channel={selectedChannel}
         booking={booking}
         onBack={onBack}
+        isSearchOpen={isSearchOpen}
+        onSearchToggle={() => { setIsSearchOpen(v => !v); if (isSearchOpen) setSearchQuery(''); }}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
       />
       <div className={styles.messagesAreaContainer}>
         <div className={styles.messagesArea}>
@@ -278,11 +324,16 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
             hasMore={hasMore}
             isTutor={isTutor}
             onProceedToPayment={handleProceedToPayment}
+            isOtherTyping={isOtherTyping}
           />
         </div>
       </div>
       <div className={styles.chatFooter}>
-        <MessageComposer onSend={handleSendMessage} disabled={!signalRService.isConnected()} />
+        <MessageComposer
+          onSend={handleSendMessage}
+          disabled={!signalRService.isConnected()}
+          channelId={selectedChannelId}
+        />
       </div>
 
       {showPaymentModal && selectedBookingForPayment && (

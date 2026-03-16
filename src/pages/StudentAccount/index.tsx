@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { getUserIdFromToken, changePassword } from '../../services/auth.service';
 import { getUserProfile, updateUserProfile } from '../../services/user.service';
+import styles from './styles.module.css';
 
 interface UserProfileData {
   userid: string;
@@ -176,7 +177,7 @@ const StudentAccount = () => {
 
   if (loading) {
     return (
-      <div style={pageStyle}>
+      <div className={styles.page}>
         <div style={{ textAlign: 'center', color: '#737373', padding: 48 }}>Đang tải...</div>
       </div>
     );
@@ -186,7 +187,7 @@ const StudentAccount = () => {
   const initials = displayName ? getInitials(displayName) : 'ST';
 
   return (
-    <div style={pageStyle}>
+    <div className={styles.page}>
       {/* Page Header */}
       <div style={pageHeader}>
         <h1 style={pageTitle}>Tài khoản của tôi</h1>
@@ -194,7 +195,7 @@ const StudentAccount = () => {
       </div>
 
       {/* Profile Header Card */}
-      <div style={profileCard}>
+      <div className={styles.profileCard}>
         <div style={avatarCircle}>
           {profile?.avatarurl ? (
             <img src={profile.avatarurl} alt={displayName} style={avatarImg} />
@@ -219,12 +220,12 @@ const StudentAccount = () => {
       </div>
 
       {/* Personal Info Section */}
-      <div style={sectionCard}>
+      <div className={styles.sectionCard}>
         <div style={sectionHeader}>
           <h3 style={sectionTitle}>Thông tin cá nhân</h3>
         </div>
 
-        <div style={fieldGrid}>
+        <div className={styles.fieldGrid}>
           <div style={fieldGroup}>
             <label style={fieldLabel}>Số điện thoại</label>
             <p style={{ ...fieldValue, color: profile?.phone ? '#1a2238' : '#9ca3af' }}>
@@ -317,7 +318,7 @@ const StudentAccount = () => {
       </div>
 
       {/* Change Password Section */}
-      <div style={sectionCard}>
+      <div className={styles.sectionCard}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', ...(showPasswordSection ? { marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid #f5f5f5' } : {}) }}>
           <h3 style={sectionTitle}>Bảo mật</h3>
           <button
@@ -345,7 +346,7 @@ const StudentAccount = () => {
                 autoComplete="current-password"
               />
             </div>
-            <div style={fieldGrid}>
+            <div className={styles.fieldGrid}>
               <div style={fieldGroup}>
                 <label style={fieldLabel}>Mật khẩu mới</label>
                 <input
@@ -395,7 +396,7 @@ const StudentAccount = () => {
       </div>
 
       {/* Academic Info Note */}
-      <div style={noteCard}>
+      <div className={styles.noteCard}>
         <div style={noteIconWrap}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <circle cx="8" cy="8" r="7" stroke="#6366f1" strokeWidth="1.5" />
@@ -412,13 +413,6 @@ const StudentAccount = () => {
 };
 
 // ── Styles ──
-const pageStyle: React.CSSProperties = {
-  padding: '32px 32px 48px',
-  maxWidth: 820,
-  margin: '0 auto',
-  fontFamily: "'IBM Plex Sans', sans-serif",
-};
-
 const pageHeader: React.CSSProperties = {
   marginBottom: 28,
 };
@@ -435,18 +429,6 @@ const pageSubtitle: React.CSSProperties = {
   fontSize: 14,
   color: '#737373',
   margin: 0,
-};
-
-const profileCard: React.CSSProperties = {
-  background: '#fff',
-  borderRadius: 16,
-  border: '1px solid #f0f0f0',
-  padding: '28px 32px',
-  display: 'flex',
-  alignItems: 'center',
-  gap: 20,
-  marginBottom: 20,
-  boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
 };
 
 const avatarCircle: React.CSSProperties = {
@@ -515,35 +497,32 @@ const editBtn: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 600,
   cursor: 'pointer',
-  flexShrink: 0,
-};
-
-const sectionCard: React.CSSProperties = {
-  background: '#fff',
-  borderRadius: 16,
-  border: '1px solid #f0f0f0',
-  padding: '24px 32px',
-  marginBottom: 20,
-  boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+    flexShrink: 0,
 };
 
 const sectionHeader: React.CSSProperties = {
-  marginBottom: 24,
-  paddingBottom: 16,
-  borderBottom: '1px solid #f5f5f5',
+    marginBottom: 24,
+    paddingBottom: 16,
+    borderBottom: '1px solid #f5f5f5',
 };
 
 const sectionTitle: React.CSSProperties = {
-  fontSize: 16,
-  fontWeight: 700,
-  color: '#1a2238',
-  margin: 0,
+    fontSize: 16,
+    fontWeight: 700,
+    color: '#1a2238',
+    margin: 0,
 };
 
-const fieldGrid: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: '1fr 1fr',
-  gap: '20px 32px',
+const noteIconWrap: React.CSSProperties = {
+    flexShrink: 0,
+    marginTop: 1,
+};
+
+const noteText: React.CSSProperties = {
+    fontSize: 13,
+    color: '#4c4c7f',
+    margin: 0,
+    lineHeight: 1.6,
 };
 
 const fieldGroup: React.CSSProperties = {
@@ -632,28 +611,6 @@ const toggleBtn: React.CSSProperties = {
   color: '#525252',
   fontWeight: 500,
   cursor: 'pointer',
-};
-
-const noteCard: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'flex-start',
-  gap: 12,
-  background: '#f5f3ff',
-  border: '1px solid #e0e7ff',
-  borderRadius: 12,
-  padding: '16px 20px',
-};
-
-const noteIconWrap: React.CSSProperties = {
-  flexShrink: 0,
-  marginTop: 1,
-};
-
-const noteText: React.CSSProperties = {
-  fontSize: 13,
-  color: '#4c4c7f',
-  margin: 0,
-  lineHeight: 1.6,
 };
 
 export default StudentAccount;

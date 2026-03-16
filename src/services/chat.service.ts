@@ -27,6 +27,7 @@ export interface ChatChannel {
 export interface ChatMessageQuery {
   page: number;
   pageSize: number;
+  search?: string;
 }
 
 export interface ChatMessage {
@@ -62,9 +63,12 @@ export const getChatMessages = async (
   query: ChatMessageQuery = { page: 1, pageSize: 50 },
 ): Promise<ApiResponse<ChatMessage[]>> => {
   try {
+    const params: any = { page: query.page, pageSize: query.pageSize };
+    if (query.search) params.search = query.search;
+
     const response = await api.get(`/chat/channels/${channelId}/messages`, {
       headers: getAuthHeaders(),
-      params: query,
+      params,
     });
 
     console.log('✅ Chat messages fetched:', response.data);

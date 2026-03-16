@@ -36,7 +36,7 @@ const formatTime = (isoString: string): string => {
 const MessageBubble = ({ message, time, avatar, isSender = false }: MessageBubbleProps) => {
     return (
         <div className={`${styles.messageBubbleRow} ${isSender ? styles.messageBubbleRowSender : ''}`}>
-            {!isSender && avatar ? <img alt="" className={styles.messageBubbleAvatar} src={avatar} /> : null}
+            {!isSender && avatar && <img alt="" className={styles.messageBubbleAvatar} src={avatar} />}
             <div className={styles.messageBubbleContent}>
                 <div className={`${styles.messageBubble} ${isSender ? styles.messageBubbleSender : ''}`}>
                     {message}
