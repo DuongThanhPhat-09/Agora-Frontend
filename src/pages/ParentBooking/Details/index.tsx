@@ -95,7 +95,7 @@ const BookingDetailPage = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { pathname } = useLocation();
-    const basePath = pathname.startsWith('/student') ? '/student' : '/parent';
+    const basePath = pathname.startsWith('/student-portal') ? '/student-portal' : '/parent-portal';
     const [booking, setBooking] = useState<BookingResponseDTO | null>(null);
     const [loading, setLoading] = useState(true);
     const [canReview, setCanReview] = useState(false);
