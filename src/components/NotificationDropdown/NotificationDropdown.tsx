@@ -87,12 +87,17 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
     return (
         <div ref={dropdownRef} className={styles.dropdown}>
             <div className={styles.header}>
-                <h3 className={styles.title}>Notifications</h3>
-                {notifications.length > 0 && (
-                    <button className={styles.markAllBtn} onClick={handleMarkAllAsRead}>
-                        Mark all as read
+                <h3 className={styles.title}>Thông báo</h3>
+                <div className={styles.headerActions}>
+                    {notifications.length > 0 && (
+                        <button className={styles.markAllBtn} onClick={handleMarkAllAsRead}>
+                            Đọc tất cả
+                        </button>
+                    )}
+                    <button className={styles.closeBtn} onClick={onClose} aria-label="Đóng">
+                        ✕
                     </button>
-                )}
+                </div>
             </div>
 
             <div className={styles.content}>
