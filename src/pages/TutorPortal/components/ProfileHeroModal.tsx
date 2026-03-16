@@ -1,4 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import Cropper from 'react-easy-crop';
+import type { Area } from 'react-easy-crop';
+import getCroppedImg from '../utils/cropImage';
 import { toast } from 'react-toastify';
 import { AutoComplete } from 'antd';
 import EditModal from './EditModal';
@@ -106,6 +109,13 @@ const ProfileHeroModal: React.FC<ProfileHeroModalProps> = ({
     const [citySearch, setCitySearch] = useState<string>('');
     const [districtSearch, setDistrictSearch] = useState<string>('');
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Cropper state
+    const [showCropper, setShowCropper] = useState(false);
+    const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
     const { saveDraft, loadDraft, clearDraft } = useFormDraft<ProfileHeroData>('draft_hero');
 
     // Reset form when modal opens — prioritize draft over initialData
@@ -131,7 +141,7 @@ const ProfileHeroModal: React.FC<ProfileHeroModalProps> = ({
         }
     }, [formData, isOpen, saveDraft]);
 
-    // Handle avatar upload
+    // Handle avatar upload — opens cropper instead of directly setting preview
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -141,16 +151,56 @@ const ProfileHeroModal: React.FC<ProfileHeroModalProps> = ({
                 return;
             }
 
-            setFormData(prev => ({ ...prev, avatarFile: file }));
             setErrors(prev => ({ ...prev, avatar: '' }));
 
-            // Create preview
+            // Read file as base64 and open cropper
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setCropImageSrc(e.target?.result as string);
+                setCrop({ x: 0, y: 0 });
+                setZoom(1);
+                setShowCropper(true);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    // Cropper: track crop area
+    const onCropComplete = useCallback((_croppedArea: Area, croppedAreaPixels: Area) => {
+        setCroppedAreaPixels(croppedAreaPixels);
+    }, []);
+
+    // Cropper: confirm crop
+    const handleCropConfirm = async () => {
+        if (!cropImageSrc || !croppedAreaPixels) return;
+
+        try {
+            const croppedFile = await getCroppedImg(cropImageSrc, croppedAreaPixels, 'avatar.jpg');
+
+            // Create preview from cropped file
             const reader = new FileReader();
             reader.onload = (e) => {
                 setAvatarPreview(e.target?.result as string);
             };
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(croppedFile);
+
+            setFormData(prev => ({ ...prev, avatarFile: croppedFile }));
+            setShowCropper(false);
+            setCropImageSrc(null);
+
+            // Reset file input so same file can be re-selected
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        } catch (err) {
+            console.error('Crop failed:', err);
+            toast.error('Không thể cắt ảnh. Vui lòng thử lại.');
         }
+    };
+
+    // Cropper: cancel
+    const handleCropCancel = () => {
+        setShowCropper(false);
+        setCropImageSrc(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
     // Handle city change (reset district)
@@ -366,6 +416,66 @@ const ProfileHeroModal: React.FC<ProfileHeroModalProps> = ({
                     </div>
                     {errors.avatar && <span className={styles.error}>{errors.avatar}</span>}
                 </div>
+
+                {/* Cropper Overlay */}
+                {showCropper && cropImageSrc && (
+                    <div className={styles.cropperOverlay}>
+                        <div className={styles.cropperModal}>
+                            <div className={styles.cropperHeader}>
+                                <h3>Cắt ảnh đại diện</h3>
+                            </div>
+                            <div className={styles.cropperContainer}>
+                                <Cropper
+                                    image={cropImageSrc}
+                                    crop={crop}
+                                    zoom={zoom}
+                                    aspect={1}
+                                    cropShape="round"
+                                    showGrid={false}
+                                    onCropChange={setCrop}
+                                    onZoomChange={setZoom}
+                                    onCropComplete={onCropComplete}
+                                />
+                            </div>
+                            <div className={styles.cropperControls}>
+                                <label className={styles.zoomLabel}>
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                        <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" />
+                                        <path d="M11 11L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                        <path d="M5 7H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                        <path d="M7 5V9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                    </svg>
+                                    Thu phóng
+                                </label>
+                                <input
+                                    type="range"
+                                    min={1}
+                                    max={3}
+                                    step={0.05}
+                                    value={zoom}
+                                    onChange={(e) => setZoom(Number(e.target.value))}
+                                    className={styles.zoomSlider}
+                                />
+                            </div>
+                            <div className={styles.cropperActions}>
+                                <button
+                                    type="button"
+                                    className={styles.cropCancelBtn}
+                                    onClick={handleCropCancel}
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    type="button"
+                                    className={styles.cropConfirmBtn}
+                                    onClick={handleCropConfirm}
+                                >
+                                    Xác nhận
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Headline */}
                 <FormField
