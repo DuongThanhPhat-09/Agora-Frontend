@@ -772,6 +772,43 @@ const TutorCard = ({ tutor }: TutorCardProps) => {
 };
 
 // ============================================
+// Tutor Card Skeleton Component
+// ============================================
+const TutorCardSkeleton = () => (
+    <div className="tutor-card-skeleton">
+        <div className="tutor-card-body">
+            <div className="tutor-card-header">
+                <div className="tutor-profile" style={{ flex: 1, gap: '11px' }}>
+                    <div className="skeleton-avatar skeleton-pulse"></div>
+                    <div className="tutor-info" style={{ width: '100%', gap: '8px' }}>
+                        <div className="skeleton-title skeleton-pulse"></div>
+                        <div className="skeleton-subtitle skeleton-pulse"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div className="skeleton-row skeleton-pulse" style={{ marginTop: '12px' }}></div>
+            
+            <div className="skeleton-tags" style={{ marginTop: '8px' }}>
+                <div className="skeleton-tag skeleton-pulse"></div>
+                <div className="skeleton-tag skeleton-pulse"></div>
+                <div className="skeleton-tag skeleton-pulse" style={{ width: '80px' }}></div>
+            </div>
+            
+            <div className="skeleton-stats skeleton-pulse" style={{ marginTop: '12px' }}></div>
+        </div>
+        
+        <div className="tutor-card-footer">
+            <div className="skeleton-price skeleton-pulse"></div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="skeleton-button skeleton-pulse" style={{ width: '70px' }}></div>
+                <div className="skeleton-button skeleton-pulse"></div>
+            </div>
+        </div>
+    </div>
+);
+
+// ============================================
 // Results Section (Dumb Component — chỉ hiển thị)
 // ============================================
 interface ResultsSectionProps {
@@ -796,7 +833,19 @@ const ResultsSection = ({ tutors, loading, error, totalCount, hasNext, onLoadMor
                 <div className="results-header">
                     <div className="results-header-left">
                         <span className="results-label">TUTORA Selection</span>
-                        <h2 className="results-title">Đang tải...</h2>
+                        <h2 className="results-title">Đang tải danh sách gia sư...</h2>
+                    </div>
+                </div>
+                <div className="tutor-grid">
+                    <div className="tutor-row">
+                        <TutorCardSkeleton />
+                        <TutorCardSkeleton />
+                        <TutorCardSkeleton />
+                    </div>
+                    <div className="tutor-row">
+                        <TutorCardSkeleton />
+                        <TutorCardSkeleton />
+                        <TutorCardSkeleton />
                     </div>
                 </div>
             </section>
@@ -944,6 +993,9 @@ const TutorSearchPage = () => {
     useEffect(() => {
         const fetchTutors = async () => {
             try {
+                if (!isLoadMore.current) {
+                    setTutors([]);
+                }
                 setLoading(true);
                 setError(null);
                 const apiParams = buildApiParams(filters);

@@ -1044,9 +1044,123 @@
         max-width: var(--container-2xl);
     }
 
-    .tutor-card {
+    .tutor-card,
+    .tutor-card-skeleton {
         /* 4 cards per row */
         flex: 0 0 calc((100% - 72px) / 4);
         width: calc((100% - 72px) / 4);
     }
 }
+
+/* ===== SKELETON LOADER ===== */
+.tutor-card-skeleton {
+    flex: 0 0 calc((100% - 48px) / 3);
+    width: calc((100% - 48px) / 3);
+    min-width: 0;
+    background: #ffffff;
+    border-radius: 20px;
+    border: 1px solid rgba(62, 47, 40, 0.08);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+@media (max-width: 1100px) {
+    .tutor-card-skeleton {
+        flex: 0 0 calc((100% - 24px) / 2);
+        width: calc((100% - 24px) / 2);
+    }
+}
+
+@media (max-width: 768px) {
+    .tutor-card-skeleton {
+        flex: 0 0 100%;
+        width: 100%;
+        border-radius: 16px;
+    }
+}
+
+.skeleton-pulse {
+    animation: skeleton-loading 1.5s infinite ease-in-out;
+    background: linear-gradient(-90deg, #f0ece3 0%, #f8f6f2 50%, #f0ece3 100%);
+    background-size: 400% 400%;
+    border-radius: 4px;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 0% 0%; }
+    100% { background-position: -135% 0%; }
+}
+
+.tutor-card-skeleton .tutor-card-body {
+    padding: 20px 20px 16px;
+    gap: 14px;
+    flex: 1;
+}
+
+.tutor-card-skeleton .skeleton-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .tutor-card-skeleton .skeleton-avatar {
+        width: 44px;
+        height: 44px;
+    }
+}
+
+.tutor-card-skeleton .skeleton-title {
+    height: 16px;
+    width: 60%;
+    margin-bottom: 8px;
+}
+
+.tutor-card-skeleton .skeleton-subtitle {
+    height: 12px;
+    width: 40%;
+}
+
+.tutor-card-skeleton .skeleton-row {
+    height: 14px;
+    width: 80%;
+}
+
+.tutor-card-skeleton .skeleton-tags {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.tutor-card-skeleton .skeleton-tag {
+    height: 24px;
+    width: 60px;
+    border-radius: 100px;
+}
+
+.tutor-card-skeleton .skeleton-stats {
+    height: 40px;
+    width: 100%;
+    border-radius: 10px;
+    margin-top: 4px;
+}
+
+.tutor-card-skeleton .tutor-card-footer {
+    padding: 14px 20px;
+    border-top: 1px solid rgba(62, 47, 40, 0.06);
+    display: flex;
+    justify-content: space-between;
+}
+
+.tutor-card-skeleton .skeleton-price {
+    height: 24px;
+    width: 80px;
+}
+
+.tutor-card-skeleton .skeleton-button {
+    height: 32px;
+    width: 100px;
+    border-radius: 100px;
+}
