@@ -144,6 +144,26 @@ class SignalRService {
     }
   }
 
+  // Gửi trạng thái đang nhập
+  async typing(channelId: number): Promise<void> {
+    if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) return;
+    try {
+      await this.connection.invoke('Typing', channelId);
+    } catch (err) {
+      console.error('❌ Error sending typing:', err);
+    }
+  }
+
+  // Gửi trạng thái ngừng nhập
+  async stopTyping(channelId: number): Promise<void> {
+    if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) return;
+    try {
+      await this.connection.invoke('StopTyping', channelId);
+    } catch (err) {
+      console.error('❌ Error sending stopTyping:', err);
+    }
+  }
+
   // ==================== NOTIFICATION METHODS ====================
 
   /**
@@ -197,6 +217,23 @@ class SignalRService {
     this.removeHandler('userLeft');
   }
 
+  // Đăng ký typing indicator
+  onUserTyping(handler: (data: any) => void): void {
+    this.addOrUpdateHandler('userTyping', handler);
+  }
+
+  offUserTyping(): void {
+    this.removeHandler('userTyping');
+  }
+
+  onUserStoppedTyping(handler: (data: any) => void): void {
+    this.addOrUpdateHandler('userStoppedTyping', handler);
+  }
+
+  offUserStoppedTyping(): void {
+    this.removeHandler('userStoppedTyping');
+  }
+
   private addOrUpdateHandler(eventName: string, handler: (message: any) => void): void {
     this.messageHandlers.set(eventName, handler);
     if (this.connection) {
@@ -232,6 +269,16 @@ class SignalRService {
     this.connection.on('userLeft', (data: any) => {
       console.log('👋 SignalR userLeft:', data);
       const handler = this.messageHandlers.get('userLeft');
+      if (handler) handler(data);
+    });
+
+    this.connection.on('userTyping', (data: any) => {
+      const handler = this.messageHandlers.get('userTyping');
+      if (handler) handler(data);
+    });
+
+    this.connection.on('userStoppedTyping', (data: any) => {
+      const handler = this.messageHandlers.get('userStoppedTyping');
       if (handler) handler(data);
     });
 

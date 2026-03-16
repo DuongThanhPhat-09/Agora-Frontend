@@ -1222,3 +1222,164 @@
     font-size: 12px;
   }
 }
+
+/* ===== Typing Indicator ===== */
+.typingIndicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px;
+  color: #737373;
+  font-style: italic;
+}
+
+.typingDots {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.typingDots span {
+  width: 6px;
+  height: 6px;
+  background: #9ca3af;
+  border-radius: 50%;
+  animation: typingBounce 1.4s infinite ease-in-out;
+}
+
+.typingDots span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.typingDots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typingDots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingBounce {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ===== Emoji Picker ===== */
+.emojiWrapper {
+  position: relative;
+}
+
+.emojiPicker {
+  position: absolute;
+  bottom: 48px;
+  left: 0;
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 12px;
+  z-index: 100;
+  width: 280px;
+}
+
+.emojiGrid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+}
+
+.emojiItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.emojiItem:hover {
+  background: #f2f0e4;
+  transform: scale(1.2);
+}
+
+/* ===== Chat Search Bar ===== */
+.chatSearchBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 24px 12px;
+  border-top: 1px solid #f0f0f0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.chatSearchInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px;
+  line-height: 20px;
+  color: #1a2238;
+  outline: none;
+  padding: 4px 0;
+}
+
+.chatSearchInput::placeholder {
+  color: #9ca3af;
+}
+
+.chatSearchClear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: #f5f5f5;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0;
+  color: #737373;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.chatSearchClear:hover {
+  background: #e5e5e5;
+}
+
+@media (max-width: 768px) {
+  .emojiPicker {
+    width: 240px;
+    left: -40px;
+  }
+
+  .emojiGrid {
+    grid-template-columns: repeat(8, 1fr);
+  }
+
+  .emojiItem {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+
+  .chatSearchBar {
+    padding: 8px 16px 12px;
+  }
+}

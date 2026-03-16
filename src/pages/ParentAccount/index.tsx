@@ -205,7 +205,7 @@ const ParentAccount = () => {
                 </div>
                 <div style={profileMeta}>
                     <h2 style={profileName}>{displayName}</h2>
-                    <span style={roleBadge}>PARENT</span>
+                    <span style={roleBadge}>PHỤ HUYNH</span>
                     {profile?.createdat && (
                         <p style={memberSince}>
                             Thành viên từ {new Date(profile.createdat).toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' })}

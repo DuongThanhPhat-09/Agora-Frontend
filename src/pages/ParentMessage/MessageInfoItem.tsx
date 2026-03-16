@@ -34,7 +34,13 @@ const MessageInfoItem = ({
     return (
         <button className={`${styles.messageItem} ${active ? styles.messageItemActive : ''}`} type="button">
             <div className={styles.avatarContainer}>
-                <img alt="" className={styles.messageAvatar} src={avatar} />
+                {avatar ? (
+                    <img alt="" className={styles.messageAvatar} src={avatar} />
+                ) : (
+                    <div className={styles.messageAvatar} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e0d4c8', color: '#1a2238', fontWeight: 700, fontSize: '16px', fontFamily: "'Bricolage Grotesque', sans-serif" }}>
+                        {(name || '?').charAt(0).toUpperCase()}
+                    </div>
+                )}
                 {isBookingRequest && <div className={styles.requestIndicator} />}
             </div>
             <div className={styles.messageItemContent}>

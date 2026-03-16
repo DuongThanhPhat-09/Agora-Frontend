@@ -17,16 +17,16 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, studentName }: DeleteC
                 <div className={styles.deleteModalIcon}>
                     <Trash2 size={48} />
                 </div>
-                <h2 className={styles.deleteModalTitle}>Delete Student</h2>
+                <h2 className={styles.deleteModalTitle}>Xóa học sinh</h2>
                 <p className={styles.deleteModalText}>
-                    Are you sure you want to delete <strong>{studentName}</strong>? This action cannot be undone.
+                    Bạn có chắc chắn muốn xóa <strong>{studentName}</strong>? Hành động này không thể hoàn tác.
                 </p>
                 <div className={styles.deleteModalActions}>
                     <button type="button" className={styles.modalBtn} onClick={onClose}>
-                        Cancel
+                        Hủy
                     </button>
                     <button type="button" className={styles.modalBtnDanger} onClick={onConfirm}>
-                        Delete
+                        Xóa
                     </button>
                 </div>
             </div>

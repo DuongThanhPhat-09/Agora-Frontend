@@ -669,6 +669,9 @@
 @media (max-width: 768px) {
     .topBar {
         padding: 16px;
+        gap: 12px;
+        flex-direction: column;
+        align-items: stretch;
     }
 
     .content {
@@ -677,16 +680,22 @@
     }
 
     .topBarActions {
-        flex-wrap: wrap;
+        flex-direction: column;
         width: 100%;
+        gap: 8px;
     }
 
     .searchWrap {
-        flex: 1;
+        width: 100%;
     }
 
     .searchInput {
         width: 100%;
+    }
+
+    .addChildBtn {
+        width: 100%;
+        justify-content: center;
     }
 
     .quickStats {

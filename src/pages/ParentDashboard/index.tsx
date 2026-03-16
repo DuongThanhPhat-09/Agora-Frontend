@@ -158,7 +158,7 @@ const ParentDashboard = () => {
       try {
         const userInfo = getUserInfoFromToken();
         if (userInfo) {
-          setUserName(userInfo.fullname || userInfo.firstName || userInfo.email?.split('@')[0] || 'Parent');
+          setUserName(userInfo.fullname || userInfo.firstName || userInfo.email?.split('@')[0] || 'Phụ huynh');
         }
       } catch { /* ignore */ }
 
@@ -270,7 +270,7 @@ const ParentDashboard = () => {
           <div className={styles.statCard} onClick={() => navigate('/parent-portal/booking')} style={{ cursor: 'pointer' }}>
             <div className={styles.statHeader}>
               <div className={styles.statIconWrap}><BookingIcon /></div>
-              <span className={`${styles.statBadge} ${styles.badgeGreen}`}>{activeBookings} active</span>
+              <span className={`${styles.statBadge} ${styles.badgeGreen}`}>{activeBookings} đang hoạt động</span>
             </div>
             <div className={styles.statValue}>{totalBookings}</div>
             <div className={styles.statLabel}>Tổng Booking</div>
@@ -281,7 +281,7 @@ const ParentDashboard = () => {
           <div className={styles.statCard} onClick={() => navigate('/parent-portal/student')} style={{ cursor: 'pointer' }}>
             <div className={styles.statHeader}>
               <div className={styles.statIconWrap}><ChildrenIcon /></div>
-              <span className={`${styles.statBadge} ${styles.badgeBlue}`}>Linked</span>
+              <span className={`${styles.statBadge} ${styles.badgeBlue}`}>Đã liên kết</span>
             </div>
             <div className={styles.statValue}>{childrenCount}</div>
             <div className={styles.statLabel}>Học sinh</div>
