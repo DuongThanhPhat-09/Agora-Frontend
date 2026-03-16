@@ -1,20 +1,34 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useRef, type KeyboardEvent, type ClipboardEvent } from 'react';
+import { useState, useEffect, useRef, type KeyboardEvent, type ClipboardEvent } from 'react';
 import { message } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { linkWithCode, studentSelfLink } from '../../services/student.service';
+import { studentSelfLink, getMyLinkStatus, type LinkStatusResponse } from '../../services/student.service';
 
 const CODE_LENGTH = 6;
-
-type LinkMode = 'student-code' | 'parent-code';
 
 const StudentLinkAccount = () => {
   const [chars, setChars] = useState<string[]>(Array(CODE_LENGTH).fill(''));
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [mode, setMode] = useState<LinkMode>('student-code');
+  const [checking, setChecking] = useState(true);
+  const [linkStatus, setLinkStatus] = useState<LinkStatusResponse | null>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const navigate = useNavigate();
+
+  // Check link status on mount
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const res = await getMyLinkStatus();
+        setLinkStatus(res.content);
+      } catch {
+        // Not linked or error, show form
+        setLinkStatus({ linked: false, parentName: null, parentId: null, studentProfile: null });
+      } finally {
+        setChecking(false);
+      }
+    };
+    checkStatus();
+  }, []);
 
   const handleChange = (index: number, value: string) => {
     const char = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(-1);
@@ -43,12 +57,6 @@ const StudentLinkAccount = () => {
     inputRefs.current[focusIdx]?.focus();
   };
 
-  const handleModeSwitch = (newMode: LinkMode) => {
-    setMode(newMode);
-    setChars(Array(CODE_LENGTH).fill(''));
-    inputRefs.current[0]?.focus();
-  };
-
   const code = chars.join('');
   const isComplete = code.length === CODE_LENGTH;
 
@@ -56,55 +64,80 @@ const StudentLinkAccount = () => {
     if (!isComplete) return;
     setLoading(true);
     try {
-      if (mode === 'student-code') {
-        await linkWithCode(code);
-      } else {
-        await studentSelfLink(code);
-      }
-      setSuccess(true);
+      await studentSelfLink(code);
       message.success('Liên kết tài khoản thành công!');
+      // Refresh status
+      const res = await getMyLinkStatus();
+      setLinkStatus(res.content);
     } catch (err: any) {
       const errorCode = err?.response?.data?.message || '';
-      if (mode === 'student-code') {
-        if (errorCode.includes('LINK_CODE_NOT_FOUND')) {
-          message.error('Mã liên kết không hợp lệ');
-        } else if (errorCode.includes('LINK_CODE_EXPIRED')) {
-          message.error('Mã liên kết đã hết hạn. Yêu cầu phụ huynh tạo mã mới.');
-        } else if (errorCode.includes('STUDENT_ALREADY_LINKED')) {
-          message.error('Học sinh này đã được liên kết với một tài khoản khác');
-        } else {
-          message.error('Liên kết thất bại. Vui lòng thử lại.');
-        }
+      if (errorCode.includes('PARENT_CODE_NOT_FOUND')) {
+        message.error('Mã mời không hợp lệ');
+      } else if (errorCode.includes('PARENT_CODE_EXPIRED')) {
+        message.error('Mã mời đã hết hạn. Yêu cầu phụ huynh tạo mã mới.');
+      } else if (errorCode.includes('STUDENT_ALREADY_HAS_PARENT')) {
+        message.error('Bạn đã được liên kết với một phụ huynh.');
+      } else if (errorCode.includes('STUDENT_NOT_FOUND')) {
+        message.error('Không tìm thấy hồ sơ học sinh. Vui lòng đăng ký trước.');
       } else {
-        if (errorCode.includes('PARENT_CODE_NOT_FOUND')) {
-          message.error('Mã mời không hợp lệ');
-        } else if (errorCode.includes('PARENT_CODE_EXPIRED')) {
-          message.error('Mã mời đã hết hạn. Yêu cầu phụ huynh tạo mã mới.');
-        } else if (errorCode.includes('STUDENT_ALREADY_HAS_PARENT')) {
-          message.error('Bạn đã được liên kết với một phụ huynh.');
-        } else if (errorCode.includes('STUDENT_NOT_FOUND')) {
-          message.error('Không tìm thấy hồ sơ học sinh. Vui lòng đăng ký trước.');
-        } else {
-          message.error('Liên kết thất bại. Vui lòng thử lại.');
-        }
+        message.error('Liên kết thất bại. Vui lòng thử lại.');
       }
     } finally {
       setLoading(false);
     }
   };
 
-  if (success) {
+  // Loading state while checking
+  if (checking) {
     return (
       <div style={pageStyle}>
         <div style={cardStyle}>
-          <div style={successIconWrap}>
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-              <circle cx="20" cy="20" r="20" fill="#dcfce7" />
-              <path d="M12 20l6 6 10-12" stroke="#16a34a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          <div style={spinnerWrap}>
+            <div style={spinner} />
+          </div>
+          <p style={{ ...subheadingStyle, margin: 0 }}>Đang kiểm tra trạng thái liên kết...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Already linked — show status
+  if (linkStatus?.linked) {
+    return (
+      <div style={pageStyle}>
+        <div style={cardStyle}>
+          {/* Success Icon */}
+          <div style={linkedIconWrap}>
+            <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+              <circle cx="28" cy="28" r="28" fill="#dcfce7" />
+              <path d="M18 28l8 8 12-14" stroke="#16a34a" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <h2 style={successTitle}>Liên kết thành công!</h2>
-          <p style={successDesc}>Tài khoản của bạn đã được liên kết với hồ sơ học sinh. Bạn có thể xem lịch học và thông tin từ trang dashboard.</p>
+
+          <h2 style={linkedTitle}>Đã liên kết thành công</h2>
+          <p style={linkedDesc}>
+            Tài khoản của bạn đã được liên kết với phụ huynh.
+          </p>
+
+          {/* Parent info card */}
+          <div style={parentCard}>
+            <div style={parentAvatarWrap}>
+              <div style={parentAvatar}>
+                {linkStatus.parentName?.charAt(0)?.toUpperCase() || 'P'}
+              </div>
+            </div>
+            <div>
+              <p style={parentLabel}>Phụ huynh</p>
+              <h3 style={parentName}>{linkStatus.parentName || 'Phụ huynh'}</h3>
+            </div>
+            <div style={linkedBadge}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#16a34a" strokeWidth="2">
+                <path d="M3 7l3 3 5-5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span>Đã liên kết</span>
+            </div>
+          </div>
+
           <button style={primaryBtn} onClick={() => navigate('/student-portal/dashboard')} type="button">
             Về trang Dashboard
           </button>
@@ -113,6 +146,7 @@ const StudentLinkAccount = () => {
     );
   }
 
+  // Not linked — show code input form
   return (
     <div style={pageStyle}>
       <div style={cardStyle}>
@@ -125,33 +159,13 @@ const StudentLinkAccount = () => {
           </svg>
         </div>
 
-        <h1 style={headingStyle}>Liên kết tài khoản</h1>
+        <h1 style={headingStyle}>Liên kết với phụ huynh</h1>
         <p style={subheadingStyle}>
-          Nhập mã 6 ký tự để liên kết tài khoản học sinh của bạn với phụ huynh.
+          Nhập mã mời 6 ký tự từ phụ huynh để liên kết tài khoản.
         </p>
 
-        {/* Mode tabs */}
-        <div style={tabRow}>
-          <button
-            style={mode === 'student-code' ? tabActive : tabInactive}
-            onClick={() => handleModeSwitch('student-code')}
-            type="button"
-          >
-            Mã học sinh
-          </button>
-          <button
-            style={mode === 'parent-code' ? { ...tabActive, borderColor: '#3b82f6', color: '#3b82f6' } : tabInactive}
-            onClick={() => handleModeSwitch('parent-code')}
-            type="button"
-          >
-            Mã mời phụ huynh
-          </button>
-        </div>
-
         <p style={modeDesc}>
-          {mode === 'student-code'
-            ? 'Nhập mã liên kết mà phụ huynh tạo từ hồ sơ học sinh.'
-            : 'Nhập mã mời mà phụ huynh tạo từ trang quản lý.'}
+          Nhờ phụ huynh vào trang quản lý, nhấn nút <strong>Mã mời</strong> để tạo mã và gửi cho bạn.
         </p>
 
         {/* OTP inputs */}
@@ -163,7 +177,6 @@ const StudentLinkAccount = () => {
               style={{
                 ...otpInput,
                 ...(char ? otpInputFilled : {}),
-                ...(mode === 'parent-code' && char ? { borderColor: '#3b82f6' } : {}),
               }}
               type="text"
               inputMode="text"
@@ -180,7 +193,6 @@ const StudentLinkAccount = () => {
         <button
           style={{
             ...primaryBtn,
-            ...(mode === 'parent-code' ? { background: '#3b82f6' } : {}),
             ...((!isComplete || loading) ? disabledBtn : {}),
           }}
           onClick={handleSubmit}
@@ -191,10 +203,7 @@ const StudentLinkAccount = () => {
         </button>
 
         <p style={helpText}>
-          {mode === 'student-code'
-            ? <>Chưa có mã? Nhờ phụ huynh vào trang quản lý học sinh, chọn <strong>Mã liên kết</strong> ở menu của hồ sơ bạn.</>
-            : <>Chưa có mã mời? Nhờ phụ huynh vào trang quản lý, nhấn nút <strong>Invite Code</strong> để tạo mã.</>
-          }
+          Chưa có mã? Nhờ phụ huynh vào trang <strong>Quản lý con</strong>, nhấn nút <strong>Mã mời</strong> để tạo mã 6 ký tự.
         </p>
       </div>
     </div>
@@ -224,29 +233,11 @@ const headingStyle: React.CSSProperties = {
 };
 const subheadingStyle: React.CSSProperties = {
   fontSize: 14, color: '#737373', lineHeight: 1.6,
-  textAlign: 'center', margin: '0 0 20px',
-};
-const tabRow: React.CSSProperties = {
-  display: 'flex', gap: 0, marginBottom: 16,
-  border: '1px solid #e5e5e5', borderRadius: 10,
-  overflow: 'hidden', width: '100%',
-};
-const tabActive: React.CSSProperties = {
-  flex: 1, padding: '10px 0',
-  border: 'none', cursor: 'pointer',
-  fontSize: 13, fontWeight: 600,
-  background: '#1a2238', color: '#fff',
-  borderColor: '#1a2238',
-};
-const tabInactive: React.CSSProperties = {
-  flex: 1, padding: '10px 0',
-  border: 'none', cursor: 'pointer',
-  fontSize: 13, fontWeight: 500,
-  background: '#fff', color: '#737373',
+  textAlign: 'center', margin: '0 0 16px',
 };
 const modeDesc: React.CSSProperties = {
   fontSize: 12, color: '#9ca3af', textAlign: 'center',
-  margin: '0 0 20px', lineHeight: 1.5,
+  margin: '0 0 24px', lineHeight: 1.5,
 };
 const otpRow: React.CSSProperties = {
   display: 'flex', gap: 10, marginBottom: 28,
@@ -274,14 +265,54 @@ const disabledBtn: React.CSSProperties = { opacity: 0.45, cursor: 'not-allowed' 
 const helpText: React.CSSProperties = {
   fontSize: 12, color: '#9ca3af', textAlign: 'center', lineHeight: 1.7, margin: 0,
 };
-const successIconWrap: React.CSSProperties = { marginBottom: 20 };
-const successTitle: React.CSSProperties = {
+
+// Linked state styles
+const linkedIconWrap: React.CSSProperties = { marginBottom: 20 };
+const linkedTitle: React.CSSProperties = {
   fontSize: 22, fontWeight: 700, color: '#1a2238',
-  margin: '0 0 10px', textAlign: 'center',
+  margin: '0 0 8px', textAlign: 'center',
+  fontFamily: "'Bricolage Grotesque', 'IBM Plex Sans', sans-serif",
 };
-const successDesc: React.CSSProperties = {
+const linkedDesc: React.CSSProperties = {
   fontSize: 14, color: '#737373', textAlign: 'center',
-  lineHeight: 1.6, margin: '0 0 28px',
+  lineHeight: 1.6, margin: '0 0 24px',
+};
+const parentCard: React.CSSProperties = {
+  display: 'flex', alignItems: 'center', gap: 14,
+  padding: '16px 20px', width: '100%',
+  background: '#f0fdf4', border: '1px solid #bbf7d0',
+  borderRadius: 14, marginBottom: 28,
+  position: 'relative',
+};
+const parentAvatarWrap: React.CSSProperties = { flexShrink: 0 };
+const parentAvatar: React.CSSProperties = {
+  width: 44, height: 44, borderRadius: '50%',
+  background: '#1a2238', color: '#fff',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  fontSize: 18, fontWeight: 700,
+  fontFamily: "'Bricolage Grotesque', sans-serif",
+};
+const parentLabel: React.CSSProperties = {
+  margin: 0, fontSize: 11, color: '#6b7280',
+  textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600,
+};
+const parentName: React.CSSProperties = {
+  margin: '2px 0 0', fontSize: 16, fontWeight: 700, color: '#1a2238',
+};
+const linkedBadge: React.CSSProperties = {
+  position: 'absolute', top: 12, right: 14,
+  display: 'flex', alignItems: 'center', gap: 4,
+  fontSize: 11, fontWeight: 600, color: '#16a34a',
+};
+
+// Spinner styles
+const spinnerWrap: React.CSSProperties = { marginBottom: 16 };
+const spinner: React.CSSProperties = {
+  width: 32, height: 32,
+  border: '3px solid #e5e7eb',
+  borderTopColor: '#1a2238',
+  borderRadius: '50%',
+  animation: 'spin 0.8s linear infinite',
 };
 
 export default StudentLinkAccount;

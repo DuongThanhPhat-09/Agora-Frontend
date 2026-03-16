@@ -100,7 +100,9 @@ const EditModal: React.FC<EditModalProps> = ({
 
                 {/* Content */}
                 <div className={styles.content}>
-                    {children}
+                    <fieldset disabled={isLoading} className={`${styles.fieldset} ${isLoading ? styles.fieldsetDisabled : ''}`}>
+                        {children}
+                    </fieldset>
                 </div>
 
                 {/* Footer */}
