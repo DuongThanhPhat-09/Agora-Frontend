@@ -169,35 +169,50 @@ const ResetPasswordPage: React.FC = () => {
         try {
             setIsLoading(true);
 
-            // Update password on Supabase
+            // Step 1: Update password on Supabase
             const { error: supabaseError } = await supabase.auth.updateUser({
                 password: newPassword,
             });
-            if (supabaseError) throw supabaseError;
 
-            // Get the current session's access token to sync with backend
-            const { data: { session } } = await supabase.auth.getSession();
-            const currentToken = session?.access_token;
-
-            if (currentToken) {
-                await syncPassword(currentToken, newPassword);
-            } else {
-                console.warn("⚠️ No session token available for backend sync");
+            if (supabaseError) {
+                // Handle specific Supabase errors with Vietnamese messages
+                if (supabaseError.message?.includes("same") || supabaseError.message?.includes("different")) {
+                    toast.error("Mật khẩu mới không được trùng với mật khẩu cũ. Vui lòng chọn mật khẩu khác.");
+                } else if (supabaseError.message?.includes("weak")) {
+                    toast.error("Mật khẩu quá yếu. Vui lòng chọn mật khẩu mạnh hơn.");
+                } else {
+                    toast.error("Có lỗi xảy ra khi đặt lại mật khẩu. Vui lòng thử lại.");
+                }
+                console.error("Supabase password update error:", supabaseError);
+                return;
             }
 
+            // Step 2: Sync password with backend (best-effort)
+            // Even if sync fails, Supabase password is already changed successfully
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                const currentToken = session?.access_token;
+
+                if (currentToken) {
+                    await syncPassword(currentToken, newPassword);
+                    console.log("✅ Password synced with backend");
+                } else {
+                    console.warn("⚠️ No session token available for backend sync");
+                }
+            } catch (syncError) {
+                // Backend sync failed, but Supabase password was already changed.
+                // The backend will re-sync on next login attempt.
+                console.warn("⚠️ Backend password sync failed (will re-sync on login):", syncError);
+            }
+
+            // Step 3: Sign out and redirect to login
             await supabase.auth.signOut();
 
             toast.success("Đặt lại mật khẩu thành công! Vui lòng đăng nhập lại.");
             setTimeout(() => navigate("/login"), 1500);
         } catch (error: any) {
             console.error("Reset password error:", error);
-
-            if (error.response?.status === 400) {
-                toast.error("Token không hợp lệ hoặc đã hết hạn. Vui lòng thử lại.");
-                setTimeout(() => navigate("/login"), 2000);
-            } else {
-                toast.error(error.message || "Có lỗi xảy ra khi đặt lại mật khẩu. Vui lòng thử lại.");
-            }
+            toast.error("Có lỗi xảy ra khi đặt lại mật khẩu. Vui lòng thử lại.");
         } finally {
             setIsLoading(false);
         }

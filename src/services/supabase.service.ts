@@ -106,18 +106,10 @@ export const uploadIdCard = async (
 
         console.log('✅ Upload successful:', data);
 
-        // Get signed URL (secure, expires after 7 days)
-        const { data: signedUrlData, error: signedError } = await supabaseAdmin.storage
-            .from(ID_CARDS_BUCKET)
-            .createSignedUrl(filePath, 604800); // 604800 seconds = 7 days
-
-        if (signedError) {
-            console.warn('⚠️ Could not create signed URL:', signedError);
-        }
-
+        // Return the file path only - backend will generate fresh signed URLs on demand
         return {
             path: filePath,
-            publicUrl: signedUrlData?.signedUrl // This is now a signed URL with token
+            publicUrl: filePath
         };
 
     } catch (error: any) {
@@ -155,10 +147,10 @@ export const deleteIdCard = async (path: string): Promise<boolean> => {
 /**
  * Get download URL for an ID card image
  * @param path - File path in Supabase
- * @param expiresIn - URL expiration time in seconds (default: 7 days)
+ * @param expiresIn - URL expiration time in seconds (default: 1 year)
  * @returns Signed download URL with token
  */
-export const getIdCardUrl = async (path: string, expiresIn: number = 604800): Promise<string | null> => {
+export const getIdCardUrl = async (path: string, expiresIn: number = 31536000): Promise<string | null> => {
     try {
         const { data, error } = await supabaseAdmin.storage
             .from(ID_CARDS_BUCKET)
