@@ -6,16 +6,16 @@ import { Loader2, Video, CheckCircle, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import BookingRequestCard from '../../components/BookingRequestCard/BookingRequestCard';
 
-const tutorAvatarSmall = 'https://www.figma.com/api/mcp/asset/0ff4008a-fd18-4174-9e83-f377eb2a5123';
 
 interface ChatMessagesAreaProps {
   messages: Array<ChatMessage>;
   loading: boolean;
   currentUserId: string | null;
-  loadMessages: (query?: { page: number; pageSize: number }) => Promise<void>;
+  loadMessages: (query?: { page: number; pageSize: number; search?: string }) => Promise<void>;
   hasMore: boolean;
   isTutor?: boolean;
   onProceedToPayment?: (bookingId: number) => void;
+  isOtherTyping?: boolean;
 }
 
 /** Renders a meet_link message as a clickable card */
@@ -121,7 +121,8 @@ const ChatMessagesArea = ({
   hasMore,
   loadMessages,
   isTutor = false,
-  onProceedToPayment
+  onProceedToPayment,
+  isOtherTyping = false
 }: ChatMessagesAreaProps) => {
   const [page, setPage] = useState(1);
   if (loading) {
@@ -129,7 +130,7 @@ const ChatMessagesArea = ({
       <div className={styles.messagesArea}>
         <div className={styles.chatLoadingContainer}>
           <div className={styles.spinner} />
-          <p className={styles.chatLoadingText}>Loading messages...</p>
+          <p className={styles.chatLoadingText}>Đang tải tin nhắn...</p>
         </div>
       </div>
     );
@@ -139,7 +140,7 @@ const ChatMessagesArea = ({
     return (
       <div className={styles.messagesArea}>
         <div className={styles.chatEmptyState}>
-          <p className={styles.emptyStateText}>No messages yet</p>
+          <p className={styles.emptyStateText}>Chưa có tin nhắn nào</p>
         </div>
       </div>
     );
@@ -209,7 +210,6 @@ const ChatMessagesArea = ({
           return (
             <MessageBubble
               key={msg.messageId || index}
-              avatar={tutorAvatarSmall}
               message={msg.content}
               time={msg.createdAt}
               isSender={currentUserId ? msg.senderId === currentUserId : false}
@@ -217,6 +217,14 @@ const ChatMessagesArea = ({
           );
         })}
       </InfiniteScroll>
+      {isOtherTyping && (
+        <div className={styles.typingIndicator}>
+          <span className={styles.typingDots}>
+            <span /><span /><span />
+          </span>
+          <span>Đang nhập...</span>
+        </div>
+      )}
     </div>
   );
 };

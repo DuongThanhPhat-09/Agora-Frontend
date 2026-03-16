@@ -121,7 +121,7 @@ const ParentBooking = () => {
       {/* Header */}
       <header className={styles.header}>
         <div className={styles.headerLeft}>
-          <h1 className={styles.title}>My Bookings</h1>
+          <h1 className={styles.title}>Đặt lịch</h1>
           <p className={styles.subtitle}>Quản lý các lịch đặt gia sư của bạn</p>
         </div>
         <button className={styles.newBookingBtn} type="button" onClick={() => navigate('/tutor-search')}>

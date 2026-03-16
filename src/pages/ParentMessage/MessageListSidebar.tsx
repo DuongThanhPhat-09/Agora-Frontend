@@ -54,7 +54,7 @@ const MessageListSidebar = ({ onChannelSelect, onChannelObjectSelect, selectedCh
         }
       } catch (err) {
         console.error('Error fetching chat channels:', err);
-        setError('Failed to load messages');
+        setError('Không thể tải tin nhắn');
       } finally {
         setLoading(false);
       }
@@ -96,7 +96,7 @@ const MessageListSidebar = ({ onChannelSelect, onChannelObjectSelect, selectedCh
             <div key={channel.channelId} onClick={() => handleChannelClick(channel)}>
               <MessageInfoItem
                 active={selectedChannelId === channel.channelId}
-                avatar={channel.otherUserAvatarUrl || 'https://via.placeholder.com/48'}
+                avatar={channel.otherUserAvatarUrl || ''}
                 name={channel.otherUserName || 'Người dùng'}
                 preview={channel.lastMessagePreview || 'Chưa có tin nhắn'}
                 role={isTutor ? 'Phụ huynh / Học sinh' : 'Gia sư'}
