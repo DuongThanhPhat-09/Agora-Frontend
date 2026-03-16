@@ -201,6 +201,28 @@ export const studentSelfLink = async (parentCode: string): Promise<ApiResponse<S
   }
 };
 
+export interface LinkStatusResponse {
+  linked: boolean;
+  parentName: string | null;
+  parentId: string | null;
+  studentProfile: StudentType | null;
+}
+
+/**
+ * Student checks if they are linked to a parent
+ */
+export const getMyLinkStatus = async (): Promise<ApiResponse<LinkStatusResponse>> => {
+  try {
+    const response = await api.get(`/parent/students/my-link-status`, {
+      headers: getAuthHeaders(),
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ Error getting link status:', error.response?.data);
+    throw error;
+  }
+};
+
 /**
  * Parent resets student password — returns new credentials
  */

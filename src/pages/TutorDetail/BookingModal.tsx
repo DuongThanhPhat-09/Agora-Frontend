@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { getStudents } from '../../services/student.service';
 import { createBooking, validatePromotion } from '../../services/booking.service';
 import { getCurrentUserRole, getUserIdFromToken } from '../../services/auth.service';
@@ -998,8 +999,29 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
                         {step < 3 ? (
                             <button
                                 className="bm-btn-next"
-                                onClick={() => setStep((s) => s + 1)}
-                                disabled={!canNext()}
+                                onClick={() => {
+                                    if (!canNext()) {
+                                        // Show specific validation message per step
+                                        switch (step) {
+                                            case 0:
+                                                if (userRole === 'Student') {
+                                                    toast.warning('Vui lòng chọn môn học trước khi tiếp tục.');
+                                                } else {
+                                                    if (!formData.studentId) toast.warning('Vui lòng chọn học sinh trước khi tiếp tục.');
+                                                    else toast.warning('Vui lòng chọn môn học trước khi tiếp tục.');
+                                                }
+                                                break;
+                                            case 1:
+                                                toast.warning('Vui lòng nhập đầy đủ địa điểm học (Thành phố và Quận/Huyện).');
+                                                break;
+                                            case 2:
+                                                toast.warning('Vui lòng chọn ít nhất 1 slot lịch học trước khi tiếp tục.');
+                                                break;
+                                        }
+                                        return;
+                                    }
+                                    setStep((s) => s + 1);
+                                }}
                                 type="button"
                             >
                                 Tiếp theo →
