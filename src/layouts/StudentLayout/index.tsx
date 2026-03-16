@@ -11,7 +11,7 @@ import {
     LogoIcon, NotificationIcon,
     DashboardIcon, MessagesIcon, BookingIcon,
     AccountIcon, MenuIcon, CloseIcon, LogoutIcon,
-    LessonsIcon, CalendarIcon,
+    LessonsIcon, CalendarIcon, LinkIcon,
 } from '../shared/icons';
 import {
     useUserData, useNotifications, useSidebarState,
@@ -24,6 +24,7 @@ const studentNavItems = [
     { path: '/student-portal/lessons', label: 'Buổi học', icon: LessonsIcon },
     { path: '/student-portal/calendar', label: 'Thời khóa biểu', icon: CalendarIcon },
     { path: '/student-portal/messages', label: 'Tin nhắn', icon: MessagesIcon },
+    { path: '/student-portal/link-account', label: 'Liên kết tài khoản', icon: LinkIcon },
     { path: '/student-portal/account', label: 'Tài khoản', icon: AccountIcon },
 ];
 

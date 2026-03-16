@@ -390,8 +390,12 @@ const ParentStudent = () => {
                                 <span className={styles.metaDot}>•</span>
                               </>
                             )}
-                            <span className={styles.childGrade}>{student.gradeLevel || 'N/A'}</span>
-                            <span className={styles.metaDot}>•</span>
+                            {student.gradeLevel && (
+                              <>
+                                <span className={styles.childGrade}>{student.gradeLevel}</span>
+                                <span className={styles.metaDot}>•</span>
+                              </>
+                            )}
                             <span className={styles.childStatus}>Đang hoạt động</span>
                           </div>
                         </div>
@@ -455,7 +459,7 @@ const ParentStudent = () => {
                     <div className={styles.nextBar}>
                       <CalSmallIcon />
                       <span className={styles.nextBarText}>
-                        Trường: <strong>{student.school || 'N/A'}</strong>
+                        Trường: <strong>{student.school || 'Chưa cập nhật'}</strong>
                       </span>
                     </div>
 

@@ -105,3 +105,11 @@ export const CalendarIcon = () => (
         <path d="M2 7h14" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
 );
+
+export const LinkIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="M7.5 10.5L10.5 7.5" strokeLinecap="round" />
+        <path d="M5.5 12.5L3.5 14.5C2.67 15.33 2.67 16.67 3.5 17.5C4.33 18.33 5.67 18.33 6.5 17.5L8.5 15.5" strokeLinecap="round" />
+        <path d="M12.5 5.5L14.5 3.5C15.33 2.67 15.33 1.33 14.5 0.5C13.67 -0.33 12.33 -0.33 11.5 0.5L9.5 2.5" strokeLinecap="round" />
+    </svg>
+);
