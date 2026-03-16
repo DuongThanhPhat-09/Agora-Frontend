@@ -1,31 +1,58 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import styles from './styles.module.css';
 import ChatArea from './ChatArea';
 import MessageListSidebar from './MessageListSidebar';
-import HeaderTopBar from './HeaderTopBar';
 import type { ChatChannel } from '../../services/chat.service';
 import { getUserIdFromToken } from '../../services/auth.service';
+
+const MOBILE_BREAKPOINT = 768;
 
 const ParentMessage = () => {
   const userId = getUserIdFromToken();
   const [selectedChannel, setSelectedChannel] = useState<ChatChannel | null>(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= MOBILE_BREAKPOINT);
+
+  // Track viewport size
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Mobile: go back to chat list
+  const handleBackToList = useCallback(() => {
+    setSelectedChannel(null);
+  }, []);
+
+  // On mobile: show EITHER chat list or chat area
+  const showChatList = !isMobile || !selectedChannel;
+  const showChatArea = !isMobile || !!selectedChannel;
 
   return (
     <div className={styles.page}>
-      <HeaderTopBar />
+      <header className={`${styles.topBar} ${isMobile && selectedChannel ? styles.topBarHidden : ''}`}>
+        <div className={styles.topBarLeft}>
+          <h1 className={styles.pageTitle}>Tin nhắn</h1>
+        </div>
+      </header>
       <div className={styles.mainContent}>
-        <MessageListSidebar
-          onChannelSelect={() => {
-            // Channel selection is now handled by onChannelObjectSelect
-          }}
-          onChannelObjectSelect={setSelectedChannel}
-          selectedChannelId={selectedChannel?.channelId ?? null}
-        />
-        <ChatArea
-          selectedChannelId={selectedChannel?.channelId ?? null}
-          currentUserId={userId}
-          selectedChannel={selectedChannel}
-        />
+        {showChatList && (
+          <MessageListSidebar
+            onChannelSelect={() => {
+              // Channel selection is handled by onChannelObjectSelect
+            }}
+            onChannelObjectSelect={setSelectedChannel}
+            selectedChannelId={selectedChannel?.channelId ?? null}
+          />
+        )}
+        {showChatArea && (
+          <ChatArea
+            selectedChannelId={selectedChannel?.channelId ?? null}
+            currentUserId={userId}
+            selectedChannel={selectedChannel}
+            onBack={isMobile ? handleBackToList : undefined}
+          />
+        )}
       </div>
     </div>
   );

@@ -62,6 +62,9 @@ const ParentBooking = () => {
   const [loading, setLoading] = useState(true);
   const pageSize = 5;
 
+  // Server-side stat counts (fetched once on mount)
+  const [statCounts, setStatCounts] = useState({ total: 0, active: 0, pending: 0 });
+
   const fetchBookings = async () => {
     try {
       setLoading(true);
@@ -78,6 +81,28 @@ const ParentBooking = () => {
       setLoading(false);
     }
   };
+
+  // Fetch accurate stat counts from server (lightweight calls with pageSize=1)
+  const fetchStatCounts = async () => {
+    try {
+      const [allRes, activeRes, pendingRes] = await Promise.all([
+        getParentBookings({ page: 1, pageSize: 1 }),
+        getParentBookings({ page: 1, pageSize: 1, status: 'active' }),
+        getParentBookings({ page: 1, pageSize: 1, status: 'pending_tutor' }),
+      ]);
+      setStatCounts({
+        total: allRes.content.totalCount || 0,
+        active: activeRes.content.totalCount || 0,
+        pending: pendingRes.content.totalCount || 0,
+      });
+    } catch {
+      // Stats are non-critical, silently fail
+    }
+  };
+
+  useEffect(() => {
+    fetchStatCounts();
+  }, []);
 
   useEffect(() => {
     fetchBookings();
@@ -99,7 +124,7 @@ const ParentBooking = () => {
           <h1 className={styles.title}>My Bookings</h1>
           <p className={styles.subtitle}>Quản lý các lịch đặt gia sư của bạn</p>
         </div>
-        <button className={styles.newBookingBtn} type="button">
+        <button className={styles.newBookingBtn} type="button" onClick={() => navigate('/tutor-search')}>
           <Plus size={18} />
           <span>Đặt gia sư mới</span>
         </button>
@@ -112,7 +137,7 @@ const ParentBooking = () => {
             <BookOpen size={20} />
           </div>
           <div className={styles.statInfo}>
-            <span className={styles.statValue}>{totalItems}</span>
+            <span className={styles.statValue}>{statCounts.total}</span>
             <span className={styles.statLabel}>Tổng bookings</span>
           </div>
         </div>
@@ -121,7 +146,7 @@ const ParentBooking = () => {
             <Calendar size={20} />
           </div>
           <div className={styles.statInfo}>
-            <span className={styles.statValue}>{bookings.filter((b) => b.status === 'active').length}</span>
+            <span className={styles.statValue}>{statCounts.active}</span>
             <span className={styles.statLabel}>Đang học</span>
           </div>
         </div>
@@ -130,9 +155,7 @@ const ParentBooking = () => {
             <Clock size={20} />
           </div>
           <div className={styles.statInfo}>
-            <span className={styles.statValue}>
-              {bookings.filter((b) => b.status === 'pending_tutor' || b.status === 'pending_payment').length}
-            </span>
+            <span className={styles.statValue}>{statCounts.pending}</span>
             <span className={styles.statLabel}>Đang chờ</span>
           </div>
         </div>
@@ -173,7 +196,7 @@ const ParentBooking = () => {
             </div>
             <h3 className={styles.emptyTitle}>Chưa có booking nào</h3>
             <p className={styles.emptyText}>Hãy tìm gia sư phù hợp và đặt lịch học cho con bạn.</p>
-            <button className={styles.emptyBtn} type="button">
+            <button className={styles.emptyBtn} type="button" onClick={() => navigate('/tutor-search')}>
               <Plus size={18} />
               <span>Đặt gia sư ngay</span>
             </button>
