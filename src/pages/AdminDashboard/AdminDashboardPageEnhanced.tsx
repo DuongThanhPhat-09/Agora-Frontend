@@ -107,6 +107,24 @@ const AdminDashboardPageEnhanced = () => {
                             <p className="admin-greeting-text">Đây là những gì đang diễn ra tại TUTORA hôm nay.</p>
                         </div>
 
+                        {/* Development Notice */}
+                        <div style={{
+                            background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
+                            border: '1px solid #f59e0b',
+                            borderRadius: '12px',
+                            padding: '14px 20px',
+                            marginBottom: '24px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            fontSize: '14px',
+                            color: '#92400e',
+                            fontWeight: 500,
+                        }}>
+                            <span style={{ fontSize: '20px' }}>🚧</span>
+                            Tính năng đang được phát triển. Dữ liệu hiển thị là dữ liệu mẫu.
+                        </div>
+
                         {/* STATS GRID - Enhanced with new metrics */}
                         <div className="admin-stats-grid">
                             {/* Card 1: Active Bookings */}

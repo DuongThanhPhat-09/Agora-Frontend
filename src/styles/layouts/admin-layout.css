@@ -1,138 +1,114 @@
-/* ===== ADMIN LAYOUT ===== */
-/* Collapsible sidebar: 68px collapsed, 260px on hover */
+/* ===== ADMIN PORTAL LAYOUT ===== */
+/* Matches tutor-portal-layout.css pattern */
+/* Collapsible sidebar: 68px collapsed, 224px on hover */
 
-/* Main Layout Container */
-.admin-layout {
+/* Main Layout */
+.admin-portal-layout {
     width: 100%;
     min-height: 100vh;
+    position: relative;
     display: flex;
-    background-color: var(--color-cream);
-    font-family: var(--font-sans);
-    color: var(--color-navy);
-    overflow: hidden;
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    color: #1a2238;
+    background-color: #f2f0e4;
 }
 
 /* ===== SIDEBAR (Collapsible) ===== */
-.admin-sidebar {
-    width: 68px;
-    height: 100vh;
-    background-color: var(--color-navy);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 24px 10px;
+.admin-portal-sidebar {
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 20;
+    width: 68px;
+    height: 100vh;
+    background-color: #1a2238;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
     box-sizing: border-box;
     overflow: hidden;
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.admin-sidebar:hover {
-    width: 260px;
+.admin-portal-sidebar:hover {
+    width: 224px;
 }
 
-.admin-sidebar-header {
+/* Sidebar Logo */
+.admin-portal-sidebar-logo {
     display: flex;
     align-items: center;
     padding: 20px;
     gap: 10.5px;
     min-height: 68px;
     box-sizing: border-box;
-    margin-bottom: 0;
 }
 
-.admin-sidebar-header a {
-    display: flex;
-    align-items: center;
-    gap: 10.5px;
-    text-decoration: none;
-    color: inherit;
-}
-
-.admin-logo-icon {
+.admin-portal-logo-icon {
     width: 28px;
     height: 28px;
     color: #f2f0e4;
     flex-shrink: 0;
 }
 
-.admin-logo {
-    font-family: 'Bricolage Grotesque', var(--font-serif), sans-serif;
+.admin-portal-logo-text {
+    font-family: 'Bricolage Grotesque', sans-serif;
     font-size: 21px;
     font-weight: 700;
     line-height: 28px;
     letter-spacing: -0.52px;
     color: #f2f0e4;
-    margin: 0;
     opacity: 0;
     white-space: nowrap;
     transition: opacity 0.2s ease 0.05s;
 }
 
-.admin-sidebar:hover .admin-logo {
-    opacity: 1;
-}
-
-.admin-subtitle {
-    display: none;
-    opacity: 0;
-    white-space: nowrap;
-    transition: opacity 0.2s ease 0.05s;
-}
-
-.admin-sidebar:hover .admin-subtitle {
+.admin-portal-sidebar:hover .admin-portal-logo-text {
     opacity: 1;
 }
 
 /* Sidebar Navigation */
-.admin-nav {
+.admin-portal-sidebar-nav {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    padding: 8px;
+    gap: 3.5px;
+    flex: 1;
 }
 
-.admin-nav-item {
+.admin-portal-nav-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    border-radius: var(--radius-full);
+    gap: 10.5px;
+    padding: 10.5px 14px;
+    border-radius: 7px;
     cursor: pointer;
     transition: all 0.2s ease;
-    color: var(--color-white-70);
+    color: rgba(242, 240, 228, 0.7);
     font-size: 14px;
+    line-height: 21px;
     font-weight: 500;
-    position: relative;
-    text-decoration: none;
+    font-family: 'IBM Plex Sans', sans-serif;
     min-height: 40px;
     box-sizing: border-box;
 }
 
-.admin-nav-item:hover {
-    background-color: var(--color-white-10);
-    color: var(--color-white);
+.admin-portal-nav-item:hover {
+    background-color: rgba(242, 240, 228, 0.1);
+    color: rgba(242, 240, 228, 0.9);
 }
 
-.admin-nav-item-active {
-    background-color: var(--color-gold);
-    color: var(--color-navy);
-    font-weight: 600;
-    box-shadow: 0 4px 6px -1px rgba(212, 180, 131, 0.1);
+.admin-portal-nav-item.active {
+    background-color: #f2f0e4;
+    color: #1a2238;
 }
 
-.admin-nav-icon {
+.admin-portal-nav-icon-material {
     font-size: 20px;
     flex-shrink: 0;
 }
 
-.admin-nav-icon.icon-filled {
-    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}
-
-.admin-nav-text {
+.admin-portal-nav-text {
     flex: 1;
     opacity: 0;
     white-space: nowrap;
@@ -140,125 +116,361 @@
     overflow: hidden;
 }
 
-.admin-sidebar:hover .admin-nav-text {
+.admin-portal-sidebar:hover .admin-portal-nav-text {
     opacity: 1;
 }
 
-.admin-nav-badge {
+.admin-portal-nav-badge {
     background-color: rgba(212, 180, 131, 0.2);
-    color: var(--color-gold);
+    color: #d4b483;
     font-size: 10px;
     font-weight: 700;
     padding: 2px 8px;
-    border-radius: var(--radius-full);
+    border-radius: 9999px;
     margin-left: auto;
     opacity: 0;
     white-space: nowrap;
     transition: opacity 0.2s ease 0.05s;
 }
 
-.admin-sidebar:hover .admin-nav-badge {
+.admin-portal-sidebar:hover .admin-portal-nav-badge {
     opacity: 1;
 }
 
-.admin-nav-badge-alert {
-    background-color: rgba(99, 27, 27, 0.3);
-    color: #fca5a5;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: var(--radius-full);
-    margin-left: auto;
-    opacity: 0;
-    white-space: nowrap;
-    transition: opacity 0.2s ease 0.05s;
-}
-
-.admin-sidebar:hover .admin-nav-badge-alert {
-    opacity: 1;
-}
-
-/* Sidebar Footer */
-.admin-sidebar-footer {
-    padding: 0 6px;
-}
-
-.admin-signout-btn {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: var(--color-white-40);
-    background: none;
-    border: none;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: color 0.2s ease;
-    width: 100%;
-    padding: 0;
-    white-space: nowrap;
+/* Sidebar User Profile */
+.admin-portal-sidebar-user {
+    border-top: 1.2px solid rgba(255, 255, 255, 0.1);
+    padding: 12px 6px;
     overflow: hidden;
 }
 
-.admin-signout-btn:hover {
-    color: var(--color-white);
+.admin-portal-user-card {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10.5px;
+    padding: 8px;
+    border-radius: 10.5px;
+    background-color: transparent;
+    overflow: hidden;
+    transition: background-color 0.2s ease;
 }
 
-.admin-signout-btn .material-symbols-outlined {
-    font-size: 20px;
+.admin-portal-sidebar:hover .admin-portal-user-card {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.admin-portal-user-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 9999px;
+    background-color: #3d4a3e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
 }
 
-.admin-signout-text {
+.admin-portal-user-initials {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 14px;
+    line-height: 21px;
+    font-weight: 700;
+    color: #f2f0e4;
+}
+
+.admin-portal-user-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
     opacity: 0;
     white-space: nowrap;
     transition: opacity 0.2s ease 0.05s;
+    overflow: hidden;
 }
 
-.admin-sidebar:hover .admin-signout-text {
+.admin-portal-sidebar:hover .admin-portal-user-info {
     opacity: 1;
 }
 
+.admin-portal-user-name {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12.3px;
+    line-height: 17.5px;
+    font-weight: 700;
+    color: #f2f0e4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-portal-user-role {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 10.5px;
+    line-height: 14px;
+    color: rgba(242, 240, 228, 0.5);
+}
+
+/* ===== HEADER ===== */
+.admin-portal-header {
+    width: 100%;
+    height: 56px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background-color: rgba(255, 255, 255, 0.5);
+    border-bottom: 1.2px solid rgba(62, 47, 40, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    box-sizing: border-box;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    flex-shrink: 0;
+}
+
+.admin-portal-header-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+/* Header Right Section */
+.admin-portal-header-right {
+    display: flex;
+    align-items: center;
+    gap: 21px;
+}
+
+/* Header User Info */
+.admin-portal-header-user {
+    display: flex;
+    align-items: center;
+    gap: 10.5px;
+}
+
+.admin-portal-header-user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.admin-portal-header-user-name {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12.3px;
+    line-height: 12.25px;
+    font-weight: 700;
+    color: #1a2238;
+}
+
+.admin-portal-header-user-role {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 10px;
+    line-height: 15px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #3e2f28;
+    opacity: 0.6;
+}
+
+.admin-portal-header-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 9999px;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+/* Notification Button */
+.admin-portal-notification-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px;
+    border-radius: 9999px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.admin-portal-notification-btn:hover {
+    background-color: rgba(62, 47, 40, 0.05);
+}
+
+.admin-portal-notification-icon {
+    width: 17.5px;
+    height: 17.5px;
+    color: #1a2238;
+}
+
+/* Logout Button (Header) */
+.admin-portal-header-logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 8px;
+    background: none;
+    border: 1px solid rgba(26, 34, 56, 0.15);
+    cursor: pointer;
+    color: #1a2238;
+    transition: all 0.2s ease;
+}
+
+.admin-portal-header-logout-btn:hover {
+    background-color: rgba(99, 27, 27, 0.08);
+    border-color: rgba(99, 27, 27, 0.3);
+    color: #631b1b;
+}
+
 /* ===== MAIN CONTENT AREA ===== */
-.admin-main-wrapper {
+.admin-portal-main {
     margin-left: 68px;
     flex: 1;
     display: flex;
     flex-direction: column;
-    position: relative;
-    min-height: 100vh;
+    height: 100vh;
+    background-color: #f2f0e4;
     overflow: hidden;
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Push content when sidebar is hovered */
-.admin-sidebar:hover~.admin-main-wrapper {
-    margin-left: 260px;
+.admin-portal-sidebar:hover~.admin-portal-main {
+    margin-left: 224px;
 }
 
-/* Responsive adjustment for sidebar */
-@media (max-width: 768px) {
-    .admin-sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
+/* ===== MOBILE MENU ===== */
+.admin-portal-menu-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #1a2238;
+    transition: background-color 0.2s ease;
+}
+
+.admin-portal-menu-btn:hover {
+    background-color: rgba(26, 34, 56, 0.05);
+}
+
+.admin-portal-menu-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.admin-portal-sidebar-close {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    margin-left: auto;
+    border-radius: 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #f2f0e4;
+    transition: background-color 0.2s ease;
+}
+
+.admin-portal-sidebar-close:hover {
+    background-color: rgba(242, 240, 228, 0.1);
+}
+
+.admin-portal-close-icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* Sidebar Overlay for Mobile */
+.admin-portal-sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(26, 34, 56, 0.5);
+    z-index: 99;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+    .admin-portal-sidebar {
+        width: 224px;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
     }
 
-    .admin-sidebar:hover {
-        width: 100%;
+    .admin-portal-sidebar:hover {
+        width: 224px;
+    }
+
+    .admin-portal-sidebar.open {
+        transform: translateX(0);
     }
 
     /* Show all text on mobile */
-    .admin-sidebar .admin-subtitle,
-    .admin-sidebar .admin-nav-text,
-    .admin-sidebar .admin-nav-badge,
-    .admin-sidebar .admin-nav-badge-alert,
-    .admin-sidebar .admin-signout-text {
+    .admin-portal-sidebar .admin-portal-logo-text,
+    .admin-portal-sidebar .admin-portal-nav-text,
+    .admin-portal-sidebar .admin-portal-nav-badge,
+    .admin-portal-sidebar .admin-portal-user-info {
         opacity: 1;
     }
 
-    .admin-main-wrapper {
+    .admin-portal-main {
         margin-left: 0;
         transition: none;
+    }
+
+    .admin-portal-sidebar:hover~.admin-portal-main {
+        margin-left: 0;
+    }
+
+    .admin-portal-menu-btn {
+        display: flex;
+    }
+
+    .admin-portal-sidebar-close {
+        display: flex;
+    }
+
+    .admin-portal-sidebar-overlay {
+        display: block;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-portal-header {
+        padding: 0 16px;
+    }
+
+    .admin-portal-header-user-info {
+        display: none;
+    }
+}
+
+/* ===== LARGE SCREEN ENHANCEMENTS ===== */
+@media (min-width: 1920px) {
+    .admin-portal-sidebar:hover {
+        width: 280px;
+    }
+
+    .admin-portal-sidebar:hover~.admin-portal-main {
+        margin-left: 280px;
+    }
+
+    .admin-portal-header {
+        padding: 0 35px;
     }
 }
