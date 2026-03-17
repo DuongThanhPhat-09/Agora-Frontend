@@ -2,7 +2,10 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import { supabase } from "../lib/supabase";
+import axios from "axios";
 import styles from "../styles/components/forgot-password-modal.module.css";
+
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5166') + '/api';
 
 interface ForgotPasswordModalProps {
     isOpen: boolean;
@@ -66,6 +69,18 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
         try {
             setIsLoading(true);
 
+            // Step 1: Check if email exists in the system
+            try {
+                await axios.get(`${API_BASE_URL}/users/by-email/${encodeURIComponent(email)}`);
+            } catch (checkError: any) {
+                if (checkError?.response?.status === 404 || checkError?.response?.status === 500) {
+                    toast.error("Email này chưa được đăng ký trong hệ thống. Vui lòng kiểm tra lại.");
+                    return;
+                }
+                // For other errors (network, etc.), proceed anyway to avoid blocking user
+            }
+
+            // Step 2: Send reset password email via Supabase
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
                 redirectTo: `${window.location.origin}/reset-password`,
             });
