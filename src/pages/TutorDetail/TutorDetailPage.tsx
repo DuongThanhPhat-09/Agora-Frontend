@@ -787,7 +787,7 @@ const BookingSidebar = ({
                     <span className="booking-label">Bắt đầu lộ trình học thuật</span>
                     <div className="price-display">
                         <b className="price-amount">{formatCurrency(hourlyRate ? Math.round(hourlyRate * 1.05) : null)}</b>
-                        <b className="price-unit">/ BUỔI HỌC</b>
+                        <b className="price-unit">/ GIỜ HỌC</b>
                     </div>
                 </div>
 
