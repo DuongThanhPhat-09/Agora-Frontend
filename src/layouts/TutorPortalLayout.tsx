@@ -5,7 +5,7 @@ import '../styles/layouts/tutor-portal-layout.css';
 import { getUnreadCount } from '../services/notification.service';
 import { signalRService } from '../services/signalr.service';
 import NotificationDropdown from '../components/NotificationDropdown/NotificationDropdown';
-import { getUserInfoFromToken, getUserProfile, clearUserFromStorage } from '../services/auth.service';
+import { getUserInfoFromToken, getUserProfile, clearUserFromStorage, getTourStatus, completeTour } from '../services/auth.service';
 import { toast } from 'react-toastify';
 import TutorTour, { type TourStep } from '../components/TutorTour/TutorTour';
 
@@ -225,19 +225,40 @@ const TutorPortalLayout: React.FC = () => {
         },
     ];
 
-    // Show tour prompt only on first visit to dashboard
+    // Show tour prompt only on first visit to dashboard (check localStorage first, then API)
     useEffect(() => {
-        if (
-            location.pathname === '/tutor-portal/dashboard' &&
-            !localStorage.getItem('tutorTourCompleted')
-        ) {
-            const timer = setTimeout(() => setShowTourPrompt(true), 800);
-            return () => clearTimeout(timer);
-        }
+        if (location.pathname !== '/tutor-portal/dashboard') return;
+        // Fast check: localStorage cache
+        if (localStorage.getItem('tutorTourCompleted')) return;
+        // Slower check: verify with backend API
+        let cancelled = false;
+        getTourStatus().then(completed => {
+            if (cancelled) return;
+            if (completed) {
+                localStorage.setItem('tutorTourCompleted', 'true');
+            } else {
+                const timer = setTimeout(() => setShowTourPrompt(true), 800);
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                cancelled = true; // prevent cleanup issues
+                return () => clearTimeout(timer);
+            }
+        });
+        return () => { cancelled = true; };
     }, [location.pathname]);
 
     const handleAcceptTour = () => {
         setShowTourPrompt(false);
+        setShowTour(true);
+    };
+
+    const handleSkipTour = () => {
+        setShowTourPrompt(false);
+        localStorage.setItem('tutorTourCompleted', 'true');
+        completeTour();
+    };
+
+    const handleReplayTour = () => {
+        setSidebarOpen(false);
         setShowTour(true);
     };
 
@@ -393,6 +414,19 @@ const TutorPortalLayout: React.FC = () => {
                             <span className="tutor-portal-nav-text">{item.label}</span>
                         </div>
                     ))}
+                    {/* Replay Tour Button */}
+                    <div
+                        className="tutor-portal-nav-item"
+                        title="Hướng dẫn sử dụng"
+                        onClick={handleReplayTour}
+                        style={{ marginTop: 8, opacity: 0.7 }}
+                    >
+                        <svg className="tutor-portal-nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+                            <circle cx="9" cy="9" r="7" />
+                            <path d="M9 6v0.01M9 8.5v4" strokeLinecap="round" />
+                        </svg>
+                        <span className="tutor-portal-nav-text">Hướng dẫn</span>
+                    </div>
                 </nav>
 
                 {/* User Profile Card at Bottom */}
@@ -537,6 +571,16 @@ const TutorPortalLayout: React.FC = () => {
                                 fontFamily: "'IBM Plex Sans', sans-serif",
                             }}
                         >Bắt đầu khám phá ✨</button>
+                        <button
+                            onClick={handleSkipTour}
+                            style={{
+                                display: 'block', width: '100%', padding: '12px 20px',
+                                border: 'none', borderRadius: 12, background: 'transparent',
+                                color: 'rgba(62,47,40,0.5)', fontSize: 14, fontWeight: 500,
+                                cursor: 'pointer',
+                                fontFamily: "'IBM Plex Sans', sans-serif",
+                            }}
+                        >Bỏ qua</button>
                     </div>
                 </div>
             )}
@@ -549,6 +593,7 @@ const TutorPortalLayout: React.FC = () => {
                         setShowTour(false);
                         setSidebarOpen(false);
                         localStorage.setItem('tutorTourCompleted', 'true');
+                        completeTour(); // Persist to backend DB
                     }}
                     onSidebarOpen={() => setSidebarOpen(true)}
                     onSidebarClose={() => setSidebarOpen(false)}
