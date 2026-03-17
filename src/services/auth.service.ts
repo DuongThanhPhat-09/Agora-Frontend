@@ -358,3 +358,28 @@ export const simpleLogin = async (emailOrPhone: string, password: string) => {
     throw error;
   }
 };
+
+// --- ONBOARDING TOUR ---
+
+export const getTourStatus = async (): Promise<boolean> => {
+  try {
+    const user = getCurrentUser();
+    const response = await api.get("/users/tour-status", {
+      headers: { Authorization: `Bearer ${user?.accessToken}` }
+    });
+    return response.data?.content?.hasCompletedTour ?? false;
+  } catch {
+    return false;
+  }
+};
+
+export const completeTour = async (): Promise<void> => {
+  try {
+    const user = getCurrentUser();
+    await api.put("/users/complete-tour", {}, {
+      headers: { Authorization: `Bearer ${user?.accessToken}` }
+    });
+  } catch (error) {
+    console.error("Failed to save tour completion:", error);
+  }
+};
