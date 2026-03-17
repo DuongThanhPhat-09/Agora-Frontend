@@ -1,0 +1,92 @@
+/* ===== UNDER DEVELOPMENT OVERLAY ===== */
+/* Matches parent portal "Chức năng đang phát triển" modal */
+
+.under-dev-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.under-dev-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 48px 40px 40px;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    animation: underDevFadeIn 0.3s ease;
+}
+
+@keyframes underDevFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.under-dev-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #1a2238;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 28px;
+}
+
+.under-dev-title {
+    font-family: 'Bricolage Grotesque', 'IBM Plex Sans', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a2238;
+    margin: 0 0 12px;
+    line-height: 1.3;
+}
+
+.under-dev-description {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    color: rgba(62, 47, 40, 0.65);
+    line-height: 1.6;
+    margin: 0 0 24px;
+}
+
+.under-dev-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    border-radius: 9999px;
+    background: rgba(26, 34, 56, 0.06);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #1a2238;
+}
+
+.under-dev-badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #d4b483;
+    animation: underDevPulse 2s ease-in-out infinite;
+}
+
+@keyframes underDevPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
