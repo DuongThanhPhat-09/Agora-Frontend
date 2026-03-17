@@ -2,8 +2,9 @@ import styles from './styles.module.css';
 import MessageBubble from './MessageBubble';
 import type { ChatMessage } from '../../services/chat.service';
 import InfiniteScroll from 'react-infinite-scroll-component';
-import { Loader2, Video, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, Video, CheckCircle, XCircle, BookOpen } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import BookingRequestCard from '../../components/BookingRequestCard/BookingRequestCard';
 
 
@@ -67,16 +68,13 @@ const MeetLinkCard = ({ message }: { message: ChatMessage }) => {
 const BookingStatusCard = ({
   message,
   isParent,
-  onProceedToPayment
 }: {
   message: ChatMessage;
   isParent: boolean;
-  onProceedToPayment?: (bookingId: number) => void;
 }) => {
   const isAccepted = message.messageType === 'booking_accepted';
   const color = isAccepted ? '#2e7d32' : '#c62828';
   const Icon = isAccepted ? CheckCircle : XCircle;
-  const bookingId = message.metadata?.bookingId || message.metadata?.BookingId;
 
   return (
     <div className={styles.systemMessageContainer}>
@@ -89,24 +87,10 @@ const BookingStatusCard = ({
             </span>
           </div>
 
-          {isAccepted && isParent && bookingId && (
-            <button
-              onClick={() => onProceedToPayment?.(bookingId)}
-              style={{
-                background: '#059669',
-                color: 'white',
-                border: 'none',
-                padding: '6px 12px',
-                borderRadius: '6px',
-                fontSize: '12px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                marginTop: '4px',
-                alignSelf: 'flex-start'
-              }}
-            >
-              Tiến hành thanh toán
-            </button>
+          {isAccepted && isParent && (
+            <span style={{ fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
+              Xem chi tiết và thanh toán tại trang Đặt lịch
+            </span>
           )}
         </div>
       </div>
@@ -125,6 +109,7 @@ const ChatMessagesArea = ({
   isOtherTyping = false
 }: ChatMessagesAreaProps) => {
   const [page, setPage] = useState(1);
+  const navigate = useNavigate();
   if (loading) {
     return (
       <div className={styles.messagesArea}>
@@ -176,15 +161,45 @@ const ChatMessagesArea = ({
         scrollableTarget="top-chat-div"
       >
         {messages.map((msg, index) => {
-          // Booking request card
+          // Booking request card — tutor sees full card with actions, parent sees simple text
           if (msg.messageType === 'booking_request') {
+            if (isTutor) {
+              return (
+                <div key={msg.messageId || index} className={styles.systemMessageContainer}>
+                  <BookingRequestCard
+                    message={msg}
+                    isTutor={isTutor}
+                    onProceedToPayment={onProceedToPayment}
+                  />
+                </div>
+              );
+            }
+            // Parent view: simple system message
             return (
               <div key={msg.messageId || index} className={styles.systemMessageContainer}>
-                <BookingRequestCard
-                  message={msg}
-                  isTutor={isTutor}
-                  onProceedToPayment={onProceedToPayment}
-                />
+                <div className={styles.systemCard} style={{ borderLeft: '3px solid #7c6f5b' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                    <BookOpen size={16} style={{ color: '#7c6f5b' }} />
+                    <span style={{ fontWeight: 600, fontSize: '13px', color: '#7c6f5b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Yêu cầu đặt lịch đã được gửi
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => navigate('/parent-portal/booking')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      fontSize: '12px',
+                      color: '#1a73e8',
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                      fontStyle: 'italic',
+                    }}
+                  >
+                    Xem chi tiết tại trang Đặt lịch →
+                  </button>
+                </div>
               </div>
             );
           }
@@ -201,7 +216,6 @@ const ChatMessagesArea = ({
                 key={msg.messageId || index}
                 message={msg}
                 isParent={!isTutor}
-                onProceedToPayment={onProceedToPayment}
               />
             );
           }

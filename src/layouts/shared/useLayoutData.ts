@@ -69,15 +69,30 @@ export function useNotifications() {
 
         fetchNotificationCount();
 
+        // Listen for explicit count updates from backend
         const handleNotificationCountUpdate = (count: number) => {
             console.log('📬 Notification count updated via SignalR:', count);
             setNotificationCount(count);
         };
 
+        // Listen for new real-time notifications and auto-increment badge
+        const handleNewNotification = (notification: any) => {
+            console.log('🔔 New notification received via SignalR:', notification);
+            // Check if notification is for current user (backend may broadcast to all)
+            const user = getUserInfoFromToken();
+            const currentUserId = user?.userId || user?.sub;
+            if (notification.userid && currentUserId && notification.userid !== currentUserId) {
+                return; // Not for this user, skip
+            }
+            setNotificationCount(prev => prev + 1);
+        };
+
         signalRService.onNotificationCountUpdated(handleNotificationCountUpdate);
+        signalRService.onNotificationReceived(handleNewNotification);
 
         return () => {
             signalRService.offNotificationCountUpdated();
+            signalRService.offNotificationReceived();
         };
     }, []);
 
