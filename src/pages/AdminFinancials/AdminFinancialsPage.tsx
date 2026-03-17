@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import UnderDevelopment from '../../components/UnderDevelopment/UnderDevelopment';
 import type { FinancialMetrics, WithdrawalRequest } from '../../types/admin.types';
 import { formatCurrency, formatCompactNumber, formatDateTime } from '../../utils/formatters';
 import {
@@ -102,6 +103,9 @@ const AdminFinancialsPage = () => {
                 {/* SCROLLABLE AREA */}
                 <div className="admin-content">
                     <div className="admin-content-inner">
+
+                        {/* Under Development Modal */}
+                        <UnderDevelopment featureName="tài chính" />
 
                         {/* KPI CARDS */}
                         <section className="admin-stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>

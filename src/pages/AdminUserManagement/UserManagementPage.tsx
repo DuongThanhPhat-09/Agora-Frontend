@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import UnderDevelopment from '../../components/UnderDevelopment/UnderDevelopment';
 // import { formatDateTime } from '../../utils/formatters';
 import {
     mockGetAllUsers,
@@ -153,6 +154,9 @@ const UserManagementPage = () => {
                             </p>
                         </div>
                     </div>
+
+                    {/* Under Development Modal */}
+                    <UnderDevelopment featureName="quản lý người dùng" />
                 </header>
 
                 {/* FILTER & TOOLBAR */}

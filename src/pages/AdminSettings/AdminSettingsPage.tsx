@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SubjectsManagement } from './components';
+import UnderDevelopment from '../../components/UnderDevelopment/UnderDevelopment';
 
 import '../../styles/pages/admin-settings.css';
 
@@ -135,6 +136,9 @@ export const AdminSettingsPage = () => {
 
                         {/* Right Configuration Panel (75%) */}
                         <div className="settings-panel">
+                            {/* Under Development Modal */}
+                            <UnderDevelopment featureName="cài đặt hệ thống" />
+
                             {/* Subjects Tab - Full Width Layout */}
                             {activeTab === 'subjects' && (
                                 <div className="settings-panel-full">

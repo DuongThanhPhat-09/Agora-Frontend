@@ -147,27 +147,6 @@ const AdminVettingPage = () => {
                                 placeholder="Tìm kiếm yêu cầu..."
                             />
                         </div>
-
-                        {/* User Section */}
-                        <div className="vetting-header-user-section">
-                            <button className="vetting-notification-btn">
-                                <span className="material-symbols-outlined">notifications</span>
-                                <span className="vetting-notification-badge"></span>
-                            </button>
-
-                            <div className="vetting-user-info-section">
-                                <div className="vetting-user-text">
-                                    <p className="vetting-user-name">Người quản trị</p>
-                                    <p className="vetting-user-role">Quản trị viên cấp cao</p>
-                                </div>
-                                <div
-                                    className="vetting-user-avatar"
-                                    style={{
-                                        backgroundImage: 'url(https://lh3.googleusercontent.com/aida-public/AB6AXuC-1RYfhalme733ZIn0tVRsiVY1817QURk7Tim5L85zB5bjBlGJ21emi8NFsm-9l5Z6hqh3440-iC35rtBZWIzcZk7DTLRCaKUCWi7ViBxoyoF8_YRUuYEjxWKsiO4PADl1W2NYdGrvOD3oenvyOVGW-TwbGB_PMvjYXpY09T7qT8OjD7ho64QWEwK79AphbmemPpZ9u6L_TTz0MZC2il-73WMLGSYRA0L6hyWJSFgdBpSNEfKEaMX1GqP4fUC4IDs1RvA88u462hw)'
-                                    }}
-                                ></div>
-                            </div>
-                        </div>
                     </div>
                 </header>
 
