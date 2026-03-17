@@ -5,7 +5,7 @@ import '../styles/layouts/tutor-portal-layout.css';
 import { getUnreadCount } from '../services/notification.service';
 import { signalRService } from '../services/signalr.service';
 import NotificationDropdown from '../components/NotificationDropdown/NotificationDropdown';
-import { getUserInfoFromToken, clearUserFromStorage } from '../services/auth.service';
+import { getUserInfoFromToken, getUserProfile, clearUserFromStorage } from '../services/auth.service';
 import { toast } from 'react-toastify';
 import TutorTour, { type TourStep } from '../components/TutorTour/TutorTour';
 
@@ -282,30 +282,33 @@ const TutorPortalLayout: React.FC = () => {
         return name.substring(0, 2).toUpperCase();
     };
 
-    // Load user data from auth service
+    // Load user data from auth service + fetch real avatar from profile API
     useEffect(() => {
         const user = getUserInfoFromToken();
-
-        console.log('🔍 TutorPortalLayout - Loading user data from token:', user);
 
         if (user) {
             const displayName = user.fullname ||
                 (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : null) ||
                 user.email?.split('@')[0] ||
                 'User';
-            const avatarUrl = generateAvatarFromName(displayName);
             const initials = getInitials(displayName);
-
-            console.log('✅ TutorPortalLayout - Setting user data:', { displayName, initials, role: user.role, avatarUrl });
 
             setUserData({
                 name: displayName,
                 initials: initials,
                 role: user.role || 'TUTOR',
-                avatar: avatarUrl
+                avatar: generateAvatarFromName(displayName)
             });
-        } else {
-            console.warn('⚠️ TutorPortalLayout - No user data found in localStorage');
+
+            // Fetch real avatar from user profile API
+            if (user.userId) {
+                getUserProfile(user.userId).then((profile) => {
+                    const avatar = profile?.content?.avatarUrl || profile?.content?.avatarurl;
+                    if (avatar) {
+                        setUserData(prev => ({ ...prev, avatar }));
+                    }
+                }).catch(() => { /* keep fallback avatar */ });
+            }
         }
     }, []);
 
@@ -396,7 +399,17 @@ const TutorPortalLayout: React.FC = () => {
                 <div className="tutor-portal-sidebar-user">
                     <div className="tutor-portal-user-card">
                         <div className="tutor-portal-user-avatar">
-                            <span className="tutor-portal-user-initials">{userData.initials}</span>
+                            <img
+                                src={userData.avatar}
+                                alt={userData.name}
+                                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                                onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    const span = e.currentTarget.parentElement?.querySelector('span');
+                                    if (span) (span as HTMLElement).style.display = 'flex';
+                                }}
+                            />
+                            <span className="tutor-portal-user-initials" style={{ display: 'none' }}>{userData.initials}</span>
                         </div>
                         <div className="tutor-portal-user-info">
                             <span className="tutor-portal-user-name">{userData.name}</span>
