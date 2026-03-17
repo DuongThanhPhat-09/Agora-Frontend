@@ -688,7 +688,7 @@ const BookingSidebar: React.FC<{ data: TutorProfileFormData }> = ({ data }) => {
                                 ? formatPrice(Math.round(data.hourlyRate * 1.05))
                                 : 'Liên hệ'}
                         </b>
-                        <b className="price-unit">/ BUỔI HỌC</b>
+                        <b className="price-unit">/ GIỜ HỌC</b>
                     </div>
                 </div>
 
