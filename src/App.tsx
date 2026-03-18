@@ -81,6 +81,7 @@ const StudentAccount = lazy(() => import('./pages/StudentAccount'));
 
 // Payment callback
 const PaymentCallback = lazy(() => import('./pages/PaymentCallback/PaymentCallback'));
+const NotificationsPage = lazy(() => import('./pages/Notifications/NotificationsPage'));
 
 // ---------------------
 
@@ -185,6 +186,7 @@ function App() {
             <Route path="finance/withdrawals" element={<WithdrawalListPage />} />
             <Route path="finance/withdrawals/:id" element={<WithdrawalDetailPage />} />
             <Route path="account" element={<TutorAccount />} />
+            <Route path="notifications" element={<NotificationsPage />} />
           </Route>
 
           {/* Parent Layout - PROTECTED */}
@@ -208,6 +210,7 @@ function App() {
             <Route path="lessons" element={<ParentLessons />} />
             <Route path="lessons/:lessonId" element={<ParentLessonDetail />} />
             <Route path="account" element={<ParentAccount />} />
+            <Route path="notifications" element={<NotificationsPage />} />
             {/* <Route path="disputes" element={<ParentDisputes />} /> */}
           </Route>
 
@@ -231,6 +234,7 @@ function App() {
             <Route path="messages" element={<ParentMessage />} />
             <Route path="link-account" element={<StudentLinkAccount />} />
             <Route path="account" element={<StudentAccount />} />
+            <Route path="notifications" element={<NotificationsPage />} />
           </Route>
 
           {/* PayOS callback - loaded inside iframe after payment */}
