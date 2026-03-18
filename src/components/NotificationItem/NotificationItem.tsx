@@ -4,11 +4,10 @@ import { BookOpen, MessageSquare, CreditCard, Calendar } from 'lucide-react';
 
 interface NotificationItemProps {
     notification: NotificationDTO;
-    onMarkAsRead?: (id: number) => void;
-    onDelete?: (id: number) => void;
+    onClick?: (notification: NotificationDTO) => void;
 }
 
-const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onMarkAsRead, onDelete }) => {
+const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onClick }) => {
     const getNotificationIcon = () => {
         const title = notification.title.toLowerCase();
         if (title.includes('booking') || title.includes('request')) {
@@ -29,7 +28,8 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onMar
     const getTimeAgo = () => {
         if (!notification.createdat) return '';
         const now = new Date();
-        const created = new Date(notification.createdat);
+        const utc7Offset = 7 * 60 * 60 * 1000;
+        const created = new Date(new Date(notification.createdat).getTime() + utc7Offset);
         const diffMs = now.getTime() - created.getTime();
         const diffMins = Math.floor(diffMs / 60000);
         const diffHours = Math.floor(diffMs / 3600000);
@@ -43,7 +43,10 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onMar
     };
 
     return (
-        <div className={`${styles.notificationItem} ${!notification.isread ? styles.unread : ''}`}>
+        <div
+            className={`${styles.notificationItem} ${!notification.isread ? styles.unread : ''}`}
+            onClick={() => onClick?.(notification)}
+        >
             <div className={styles.iconWrapper}>
                 {getNotificationIcon()}
             </div>
@@ -51,26 +54,6 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onMar
                 <h4 className={styles.title}>{notification.title}</h4>
                 <p className={styles.message}>{notification.message}</p>
                 <span className={styles.time}>{getTimeAgo()}</span>
-            </div>
-            <div className={styles.actions}>
-                {!notification.isread && onMarkAsRead && (
-                    <button
-                        className={styles.markReadBtn}
-                        onClick={() => onMarkAsRead(notification.notificationid)}
-                        title="Mark as read"
-                    >
-                        <span className="material-symbols-outlined">check</span>
-                    </button>
-                )}
-                {onDelete && (
-                    <button
-                        className={styles.deleteBtn}
-                        onClick={() => onDelete(notification.notificationid)}
-                        title="Delete"
-                    >
-                        <span className="material-symbols-outlined">close</span>
-                    </button>
-                )}
             </div>
         </div>
     );

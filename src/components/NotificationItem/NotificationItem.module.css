@@ -61,43 +61,6 @@
     color: #999;
 }
 
-.actions {
-    display: flex;
-    gap: 4px;
-    flex-shrink: 0;
-}
-
-.markReadBtn,
-.deleteBtn {
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    background: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.markReadBtn:hover {
-    background-color: #e3f2fd;
-}
-
-.deleteBtn:hover {
-    background-color: #ffebee;
-}
-
-.markReadBtn .material-symbols-outlined,
-.deleteBtn .material-symbols-outlined {
-    font-size: 18px;
-    color: #666;
-}
-
-.deleteBtn .material-symbols-outlined {
-    color: #d32f2f;
-}
 
 /* ===== RESPONSIVE — MOBILE ===== */
 @media (max-width: 768px) {
@@ -131,17 +94,6 @@
         overflow: hidden;
     }
 
-    /* Bigger touch targets for action buttons */
-    .markReadBtn,
-    .deleteBtn {
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
-    }
-
-    .actions {
-        gap: 6px;
-    }
 }
 
 /* ===== SMALL MOBILE ===== */

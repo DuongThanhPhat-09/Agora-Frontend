@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { NotificationDTO } from '../../services/notification.service';
-import { getUnreadNotifications, markAsRead, markAllAsRead, deleteNotification } from '../../services/notification.service';
+import { getUnreadNotifications, markAsRead, markAllAsRead } from '../../services/notification.service';
+import { getPortalPrefix, getNotificationTargetPath } from '../../utils/notificationNavigation';
 import NotificationItem from '../NotificationItem/NotificationItem';
 import styles from './NotificationDropdown.module.css';
 
@@ -14,6 +16,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
     const [notifications, setNotifications] = useState<NotificationDTO[]>([]);
     const [loading, setLoading] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const navigate = useNavigate();
 
     // Fetch notifications when dropdown opens
     useEffect(() => {
@@ -51,14 +54,17 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
         }
     };
 
-    const handleMarkAsRead = async (id: number) => {
+    const handleNotificationClick = async (notification: NotificationDTO) => {
         try {
-            await markAsRead(id);
-            setNotifications(prev => prev.filter(n => n.notificationid !== id));
-            onCountUpdate?.();
+            if (!notification.isread) {
+                await markAsRead(notification.notificationid);
+                onCountUpdate?.();
+            }
         } catch (error) {
             console.error('Failed to mark notification as read:', error);
         }
+        onClose();
+        navigate(getNotificationTargetPath(notification));
     };
 
     const handleMarkAllAsRead = async () => {
@@ -72,14 +78,9 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
         }
     };
 
-    const handleDelete = async (id: number) => {
-        try {
-            await deleteNotification(id);
-            setNotifications(prev => prev.filter(n => n.notificationid !== id));
-            onCountUpdate?.();
-        } catch (error) {
-            console.error('Failed to delete notification:', error);
-        }
+    const handleViewAll = () => {
+        onClose();
+        navigate(`${getPortalPrefix()}/notifications`);
     };
 
     if (!isOpen) return null;
@@ -117,21 +118,18 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
                             <NotificationItem
                                 key={notification.notificationid}
                                 notification={notification}
-                                onMarkAsRead={handleMarkAsRead}
-                                onDelete={handleDelete}
+                                onClick={handleNotificationClick}
                             />
                         ))}
                     </div>
                 )}
             </div>
 
-            {notifications.length > 0 && (
-                <div className={styles.footer}>
-                    <button className={styles.viewAllBtn} onClick={onClose}>
-                        View all notifications
-                    </button>
-                </div>
-            )}
+            <div className={styles.footer}>
+                <button className={styles.viewAllBtn} onClick={handleViewAll}>
+                    Xem tất cả thông báo
+                </button>
+            </div>
         </div>
     );
 };
