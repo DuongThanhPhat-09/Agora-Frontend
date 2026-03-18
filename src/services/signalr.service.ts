@@ -4,24 +4,26 @@ import { getCurrentUser } from './auth.service';
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5166';
 const HUB_URL = `${API_BASE_URL}/hubs/chat`;
+const NOTIFICATION_HUB_URL = `${API_BASE_URL}/notificationHub`;
 
 console.log('🔌 SignalR Config:');
 console.log('  - API_BASE_URL:', API_BASE_URL);
-console.log('  - HUB_URL:', HUB_URL);
-
-// interface SendMessageParams {
-//   channelId: number;
-//   content: string;
-// }
-
-// interface JoinChannelParams {
-//   channelId: number;
-// }
+console.log('  - Chat HUB_URL:', HUB_URL);
+console.log('  - Notification HUB_URL:', NOTIFICATION_HUB_URL);
 
 class SignalRService {
+  // Chat hub connection
   private connection: signalR.HubConnection | null = null;
-  private messageHandlers: Map<string, (message: any) => void> = new Map();
   private startPromise: Promise<void> | null = null;
+
+  // Notification hub connection (riêng biệt)
+  private notificationConnection: signalR.HubConnection | null = null;
+  private notificationStartPromise: Promise<void> | null = null;
+
+  private messageHandlers: Map<string, (message: any) => void> = new Map();
+  private notificationHandlers: Map<string, (data: any) => void> = new Map();
+
+  // ==================== CONNECT / DISCONNECT ====================
 
   async connect(): Promise<void> {
     const user = getCurrentUser();
@@ -32,22 +34,26 @@ class SignalRService {
       throw new Error('No access token available');
     }
 
-    // Trả về promise đang chạy nếu có
-    if (this.startPromise) {
-      return this.startPromise;
-    }
+    // Connect cả 2 hub song song
+    await Promise.allSettled([
+      this.connectChat(),
+      this.connectNotification(),
+    ]);
+  }
 
-    // Nếu đã có kết nối hoặc đang kết nối, không làm gì
+  private async connectChat(): Promise<void> {
+    if (this.startPromise) return this.startPromise;
+
     if (this.connection && (
       this.connection.state === signalR.HubConnectionState.Connected ||
       this.connection.state === signalR.HubConnectionState.Connecting ||
       this.connection.state === signalR.HubConnectionState.Reconnecting
     )) {
-      console.log('✅ SignalR: Already connected or connecting, state:', this.connection.state);
+      console.log('✅ Chat SignalR: Already connected, state:', this.connection.state);
       return Promise.resolve();
     }
 
-    console.log('🔗 SignalR: Starting connection...');
+    console.log('🔗 Chat SignalR: Starting connection...');
 
     if (!this.connection) {
       this.connection = new signalR.HubConnectionBuilder()
@@ -58,24 +64,23 @@ class SignalRService {
           },
         })
         .withAutomaticReconnect()
-        .configureLogging(signalR.LogLevel.Information)
+        .configureLogging(signalR.LogLevel.Warning)
         .build();
 
-      // Đăng ký các handler mặc định
-      this.setupDefaultHandlers();
+      this.setupChatHandlers();
     }
 
     this.startPromise = this.connection.start()
       .then(() => {
-        console.log('✅ SignalR Connected', this.connection?.connectionId);
+        console.log('✅ Chat SignalR Connected', this.connection?.connectionId);
         this.startPromise = null;
       })
       .catch((err: any) => {
         this.startPromise = null;
         if (err.name === 'AbortError') {
-          console.warn('⚠️ SignalR connection aborted during negotiation (common in React StrictMode)');
+          console.warn('⚠️ Chat SignalR aborted (common in React StrictMode)');
         } else {
-          console.error('❌ SignalR Connection failed:', err);
+          console.error('❌ Chat SignalR Connection failed:', err);
         }
         throw err;
       });
@@ -83,11 +88,68 @@ class SignalRService {
     return this.startPromise;
   }
 
+  private async connectNotification(): Promise<void> {
+    if (this.notificationStartPromise) return this.notificationStartPromise;
+
+    if (this.notificationConnection && (
+      this.notificationConnection.state === signalR.HubConnectionState.Connected ||
+      this.notificationConnection.state === signalR.HubConnectionState.Connecting ||
+      this.notificationConnection.state === signalR.HubConnectionState.Reconnecting
+    )) {
+      console.log('✅ Notification SignalR: Already connected');
+      return Promise.resolve();
+    }
+
+    console.log('🔗 Notification SignalR: Starting connection...');
+
+    if (!this.notificationConnection) {
+      this.notificationConnection = new signalR.HubConnectionBuilder()
+        .withUrl(NOTIFICATION_HUB_URL, {
+          accessTokenFactory: () => {
+            const currentUser = getCurrentUser();
+            return currentUser?.accessToken || import.meta.env.VITE_TOKEN || '';
+          },
+        })
+        .withAutomaticReconnect()
+        .configureLogging(signalR.LogLevel.Warning)
+        .build();
+
+      this.setupNotificationHandlers();
+    }
+
+    this.notificationStartPromise = this.notificationConnection.start()
+      .then(() => {
+        console.log('✅ Notification SignalR Connected', this.notificationConnection?.connectionId);
+        this.notificationStartPromise = null;
+        // Re-register pending handlers after connect
+        this.notificationHandlers.forEach((handler, eventName) => {
+          this.notificationConnection?.off(eventName);
+          this.notificationConnection?.on(eventName, handler);
+        });
+      })
+      .catch((err: any) => {
+        this.notificationStartPromise = null;
+        if (err.name === 'AbortError') {
+          console.warn('⚠️ Notification SignalR aborted (common in React StrictMode)');
+        } else {
+          console.error('❌ Notification SignalR Connection failed:', err);
+        }
+        // Don't rethrow - notification hub failure shouldn't break chat
+      });
+
+    return this.notificationStartPromise;
+  }
+
   disconnect(): void {
     if (this.connection) {
       this.connection.stop();
-      console.log('🔌 SignalR Disconnected');
+      console.log('🔌 Chat SignalR Disconnected');
       this.connection = null;
+    }
+    if (this.notificationConnection) {
+      this.notificationConnection.stop();
+      console.log('🔌 Notification SignalR Disconnected');
+      this.notificationConnection = null;
     }
   }
 
@@ -99,7 +161,8 @@ class SignalRService {
     return this.connection?.state ?? signalR.HubConnectionState.Disconnected;
   }
 
-  // Tham gia channel
+  // ==================== CHAT METHODS ====================
+
   async joinChannel(channelId: number): Promise<void> {
     if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
       console.error('❌ SignalR: Cannot join channel - connection not ready');
@@ -114,7 +177,6 @@ class SignalRService {
     }
   }
 
-  // Rời channel
   async leaveChannel(channelId: number): Promise<void> {
     if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
       console.error('❌ SignalR: Cannot leave channel - connection not ready');
@@ -129,7 +191,6 @@ class SignalRService {
     }
   }
 
-  // Gửi tin nhắn
   async sendMessage(channelId: number, content: string): Promise<void> {
     if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
       console.error('❌ SignalR: Cannot send message - connection not ready');
@@ -144,7 +205,6 @@ class SignalRService {
     }
   }
 
-  // Gửi trạng thái đang nhập
   async typing(channelId: number): Promise<void> {
     if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) return;
     try {
@@ -154,7 +214,6 @@ class SignalRService {
     }
   }
 
-  // Gửi trạng thái ngừng nhập
   async stopTyping(channelId: number): Promise<void> {
     if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) return;
     try {
@@ -166,75 +225,86 @@ class SignalRService {
 
   // ==================== NOTIFICATION METHODS ====================
 
-  /**
-   * Listen for real-time notification events from backend
-   */
   onNotificationReceived(handler: (notification: any) => void): void {
-    this.addOrUpdateHandler('ReceiveNotification', handler);
+    this.notificationHandlers.set('ReceiveNotification', handler);
+    if (this.notificationConnection) {
+      this.notificationConnection.off('ReceiveNotification');
+      this.notificationConnection.on('ReceiveNotification', handler);
+    }
   }
 
   offNotificationReceived(): void {
-    this.removeHandler('ReceiveNotification');
+    this.notificationHandlers.delete('ReceiveNotification');
+    this.notificationConnection?.off('ReceiveNotification');
   }
 
-  /**
-   * Listen for notification count updates
-   */
   onNotificationCountUpdated(handler: (count: number) => void): void {
-    this.addOrUpdateHandler('NotificationCountUpdated', handler);
+    this.notificationHandlers.set('NotificationCountUpdated', handler);
+    if (this.notificationConnection) {
+      this.notificationConnection.off('NotificationCountUpdated');
+      this.notificationConnection.on('NotificationCountUpdated', handler);
+    }
   }
 
   offNotificationCountUpdated(): void {
-    this.removeHandler('NotificationCountUpdated');
+    this.notificationHandlers.delete('NotificationCountUpdated');
+    this.notificationConnection?.off('NotificationCountUpdated');
   }
 
-  // ==================== CHAT METHODS ====================
+  async markNotificationAsRead(notificationId: number): Promise<void> {
+    if (!this.notificationConnection || this.notificationConnection.state !== signalR.HubConnectionState.Connected) return;
+    try {
+      await this.notificationConnection.invoke('MarkNotificationAsRead', notificationId);
+    } catch (err) {
+      console.error('❌ Error marking notification as read via hub:', err);
+    }
+  }
 
-  // Đăng ký nhận tin nhắn thực thời
+  // ==================== CHAT EVENT LISTENERS ====================
+
   onMessageReceived(handler: (message: any) => void): void {
-    this.addOrUpdateHandler('messageReceived', handler);
+    this.addOrUpdateChatHandler('messageReceived', handler);
   }
 
-  // Xóa handler tin nhắn
   offMessageReceived(): void {
-    this.removeHandler('messageReceived');
+    this.removeChatHandler('messageReceived');
   }
 
-  // Đăng ký user tham gia/roi
   onUserJoined(handler: (data: any) => void): void {
-    this.addOrUpdateHandler('userJoined', handler);
+    this.addOrUpdateChatHandler('userJoined', handler);
   }
 
   offUserJoined(): void {
-    this.removeHandler('userJoined');
+    this.removeChatHandler('userJoined');
   }
 
   onUserLeft(handler: (data: any) => void): void {
-    this.addOrUpdateHandler('userLeft', handler);
+    this.addOrUpdateChatHandler('userLeft', handler);
   }
 
   offUserLeft(): void {
-    this.removeHandler('userLeft');
+    this.removeChatHandler('userLeft');
   }
 
-  // Đăng ký typing indicator
   onUserTyping(handler: (data: any) => void): void {
-    this.addOrUpdateHandler('userTyping', handler);
+    this.addOrUpdateChatHandler('userTyping', handler);
   }
 
   offUserTyping(): void {
-    this.removeHandler('userTyping');
+    this.removeChatHandler('userTyping');
   }
 
   onUserStoppedTyping(handler: (data: any) => void): void {
-    this.addOrUpdateHandler('userStoppedTyping', handler);
+    this.addOrUpdateChatHandler('userStoppedTyping', handler);
   }
 
   offUserStoppedTyping(): void {
-    this.removeHandler('userStoppedTyping');
+    this.removeChatHandler('userStoppedTyping');
   }
 
-  private addOrUpdateHandler(eventName: string, handler: (message: any) => void): void {
+  // ==================== PRIVATE HELPERS ====================
+
+  private addOrUpdateChatHandler(eventName: string, handler: (message: any) => void): void {
     this.messageHandlers.set(eventName, handler);
     if (this.connection) {
       this.connection.off(eventName);
@@ -242,32 +312,30 @@ class SignalRService {
     }
   }
 
-  private removeHandler(eventName: string): void {
+  private removeChatHandler(eventName: string): void {
     this.messageHandlers.delete(eventName);
     if (this.connection) {
       this.connection.off(eventName);
     }
   }
 
-  private setupDefaultHandlers(): void {
+  private setupChatHandlers(): void {
     if (!this.connection) return;
 
-    // Handler mặc định để log các sự kiện
     this.connection.on('messageReceived', (message: any) => {
-      console.log('📩 SignalR messageReceived:', message);
-      // Kích hoạt handler custom nếu có
+      console.log('📩 Chat messageReceived:', message);
       const handler = this.messageHandlers.get('messageReceived');
       if (handler) handler(message);
     });
 
     this.connection.on('userJoined', (data: any) => {
-      console.log('👤 SignalR userJoined:', data);
+      console.log('👤 Chat userJoined:', data);
       const handler = this.messageHandlers.get('userJoined');
       if (handler) handler(data);
     });
 
     this.connection.on('userLeft', (data: any) => {
-      console.log('👋 SignalR userLeft:', data);
+      console.log('👋 Chat userLeft:', data);
       const handler = this.messageHandlers.get('userLeft');
       if (handler) handler(data);
     });
@@ -283,15 +351,52 @@ class SignalRService {
     });
 
     this.connection.onreconnecting((error?: Error) => {
-      console.log('🔄 SignalR Reconnecting...', error);
+      console.log('🔄 Chat SignalR Reconnecting...', error);
     });
 
     this.connection.onreconnected((connectionId?: string) => {
-      console.log('✅ SignalR Reconnected', connectionId);
+      console.log('✅ Chat SignalR Reconnected', connectionId);
     });
 
     this.connection.onclose((error?: Error) => {
-      console.log('❌ SignalR Closed', error);
+      console.log('❌ Chat SignalR Closed', error);
+    });
+  }
+
+  private setupNotificationHandlers(): void {
+    if (!this.notificationConnection) return;
+
+    this.notificationConnection.on('ReceiveNotification', (notification: any) => {
+      console.log('🔔 Notification received:', notification);
+      const handler = this.notificationHandlers.get('ReceiveNotification');
+      if (handler) handler(notification);
+    });
+
+    this.notificationConnection.on('NotificationCountUpdated', (count: number) => {
+      console.log('📬 Notification count updated:', count);
+      const handler = this.notificationHandlers.get('NotificationCountUpdated');
+      if (handler) handler(count);
+    });
+
+    this.notificationConnection.on('NotificationMarkedAsRead', (notificationId: number) => {
+      console.log('✅ Notification marked as read:', notificationId);
+    });
+
+    this.notificationConnection.onreconnecting((error?: Error) => {
+      console.log('🔄 Notification SignalR Reconnecting...', error);
+    });
+
+    this.notificationConnection.onreconnected((connectionId?: string) => {
+      console.log('✅ Notification SignalR Reconnected', connectionId);
+      // Re-register handlers after reconnect
+      this.notificationHandlers.forEach((handler, eventName) => {
+        this.notificationConnection?.off(eventName);
+        this.notificationConnection?.on(eventName, handler);
+      });
+    });
+
+    this.notificationConnection.onclose((error?: Error) => {
+      console.log('❌ Notification SignalR Closed', error);
     });
   }
 }

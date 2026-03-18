@@ -1,15 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import UnderDevelopment from '../../components/UnderDevelopment/UnderDevelopment';
-// import { formatDateTime } from '../../utils/formatters';
-import {
-    mockGetAllUsers,
-    mockBlockUser,
-    mockUnblockUser,
-    mockIssueWarning,
-    mockSuspendUser,
-    mockResetPassword,
-} from './mockData';
+import { getAllUsers, deactivateUser, updateUser } from '../../services/admin.service';
 import type { FlatUserDetail } from './mockData';
 import UserDetailModal from './components/UserDetailModal';
 import BlockUserModal from './components/BlockUserModal';
@@ -46,16 +37,38 @@ const UserManagementPage = () => {
     const fetchUsers = async () => {
         try {
             setLoading(true);
-            const offset = (page - 1) * limit;
-            const { users: data, total: totalCount } = await mockGetAllUsers(
-                roleFilter,
-                statusFilter,
-                searchQuery,
-                limit,
-                offset
-            );
+            const params: {
+                searchTerm?: string;
+                role?: string;
+                status?: number;
+                pageNumber: number;
+                pageSize: number;
+            } = { pageNumber: page, pageSize: limit };
 
-            setUsers(data);
+            if (searchQuery) params.searchTerm = searchQuery;
+            if (roleFilter !== 'all') params.role = roleFilter;
+            if (statusFilter === 'active') params.status = 1;
+            else if (statusFilter === 'inactive' || statusFilter === 'blocked') params.status = 0;
+
+            const { users: data, total: totalCount } = await getAllUsers(params);
+
+            // Map UserListItem → FlatUserDetail
+            const mapped: FlatUserDetail[] = data.map((u: any) => ({
+                userid: u.userid,
+                fullname: u.fullname,
+                email: u.email,
+                phone: u.phone || '',
+                avatarurl: u.avatarurl || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullname)}&background=random`,
+                primaryrole: u.primaryrole || 'student',
+                accountstatus: u.status === 'active' ? 'active' : u.status === 'inactive' ? 'blocked' : u.status,
+                isidentityverified: u.isidentityverified ?? false,
+                createdat: u.createdat || new Date().toISOString(),
+                lastloginat: u.lastloginat || '',
+                warningcount: u.warningsCount ?? 0,
+                suspensioncount: u.suspensionsCount ?? 0,
+            }));
+
+            setUsers(mapped);
             setTotal(totalCount);
         } catch (err) {
             console.error('Error fetching users:', err);
@@ -71,38 +84,44 @@ const UserManagementPage = () => {
         setIsDetailModalOpen(true);
     };
 
-    const handleBlockUser = async (userId: string, reason: string) => {
-        await mockBlockUser(userId, reason);
-        setIsBlockModalOpen(false);
-        setIsDetailModalOpen(false);
-        await fetchUsers();
+    const handleBlockUser = async (userId: string, _reason: string) => {
+        try {
+            await deactivateUser(userId);
+            toast.success('Đã vô hiệu hóa tài khoản người dùng');
+            setIsBlockModalOpen(false);
+            setIsDetailModalOpen(false);
+            await fetchUsers();
+        } catch {
+            toast.error('Không thể vô hiệu hóa tài khoản');
+        }
     };
 
     const handleUnblockUser = async () => {
         if (!selectedUser) return;
-        await mockUnblockUser(selectedUser.userid);
-        toast.success(`Đã mở khóa tài khoản ${selectedUser.fullname}`);
-        setIsDetailModalOpen(false);
-        await fetchUsers();
+        try {
+            await updateUser(selectedUser.userid, { status: 1 });
+            toast.success(`Đã mở khóa tài khoản ${selectedUser.fullname}`);
+            setIsDetailModalOpen(false);
+            await fetchUsers();
+        } catch {
+            toast.error('Không thể mở khóa tài khoản');
+        }
     };
 
-    const handleIssueWarning = async (userId: string, reason: string, severity: string, relatedBookingId?: string) => {
-        await mockIssueWarning(userId, reason, severity, relatedBookingId);
+    const handleIssueWarning = async (_userId: string, _reason: string, _severity: string, _relatedBookingId?: string) => {
+        toast.info('Chức năng cảnh cáo sẽ được hỗ trợ trong phiên bản tới');
         setIsWarningModalOpen(false);
-        await fetchUsers();
     };
 
-    const handleSuspendUser = async (userId: string, reason: string, durationDays: number) => {
-        await mockSuspendUser(userId, reason, durationDays);
+    const handleSuspendUser = async (_userId: string, _reason: string, _durationDays: number) => {
+        toast.info('Chức năng tạm ngưng sẽ được hỗ trợ trong phiên bản tới');
         setIsSuspendModalOpen(false);
         setIsDetailModalOpen(false);
-        await fetchUsers();
     };
 
     const handleResetPassword = async () => {
         if (!selectedUser) return;
-        await mockResetPassword(selectedUser.userid);
-        toast.success(`Email đặt lại mật khẩu đã được gửi đến ${selectedUser.email}`);
+        toast.info(`Chức năng đặt lại mật khẩu sẽ được hỗ trợ trong phiên bản tới`);
     };
 
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -155,8 +174,6 @@ const UserManagementPage = () => {
                         </div>
                     </div>
 
-                    {/* Under Development Modal */}
-                    <UnderDevelopment featureName="quản lý người dùng" />
                 </header>
 
                 {/* FILTER & TOOLBAR */}
