@@ -147,6 +147,14 @@ const ChatMessagesArea = ({
         flexDirection: 'column-reverse',
       }}
     >
+      {isOtherTyping && (
+        <div className={styles.typingIndicator}>
+          <span className={styles.typingDots}>
+            <span /><span /><span />
+          </span>
+          <span>Đang nhập...</span>
+        </div>
+      )}
       <InfiniteScroll
         dataLength={messages.length}
         next={getMessages}
@@ -231,14 +239,6 @@ const ChatMessagesArea = ({
           );
         })}
       </InfiniteScroll>
-      {isOtherTyping && (
-        <div className={styles.typingIndicator}>
-          <span className={styles.typingDots}>
-            <span /><span /><span />
-          </span>
-          <span>Đang nhập...</span>
-        </div>
-      )}
     </div>
   );
 };
