@@ -355,14 +355,17 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 21px;
-    gap: 20px;
+    padding: 14px 21px;
+    gap: 12px;
+    margin-top: auto;
 }
 
 /* Pricing */
 .tutor-search-page .tutor-pricing {
     display: flex;
     flex-direction: column;
+    flex-shrink: 1;
+    min-width: 0;
 }
 
 .tutor-search-page .pricing-label {
@@ -405,7 +408,7 @@
 
 .tutor-search-page .btn-details {
     height: 37px;
-    width: 65px;
+    padding: 0 12px;
     border-radius: 10.5px;
     border: 1px solid rgba(26, 34, 56, 0.1);
     display: flex;
@@ -420,6 +423,8 @@
     background: transparent;
     cursor: pointer;
     transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .tutor-search-page .btn-details:hover {
@@ -433,11 +438,13 @@
     overflow: hidden;
     display: flex;
     align-items: center;
-    padding: 10.5px 21px;
+    padding: 10.5px 16px;
     gap: 7px;
     border: none;
     cursor: pointer;
     transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .tutor-search-page .btn-start-plan:hover {
