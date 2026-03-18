@@ -347,17 +347,28 @@ const TutorPortalLayout: React.FC = () => {
 
         fetchNotificationCount();
 
-        // Setup SignalR listener for real-time notification updates
         const handleNotificationCountUpdate = (count: number) => {
-            console.log('📬 Notification count updated via SignalR:', count);
             setNotificationCount(count);
         };
 
-        signalRService.onNotificationCountUpdated(handleNotificationCountUpdate);
+        const handleNewNotification = (notification: any) => {
+            const user = getUserInfoFromToken();
+            const currentUserId = user?.userId || user?.sub;
+            if (notification.userid && currentUserId && notification.userid !== currentUserId) {
+                return;
+            }
+            setNotificationCount((prev: number) => prev + 1);
+        };
 
-        // Cleanup
+        signalRService.onNotificationCountUpdated(handleNotificationCountUpdate);
+        signalRService.onNotificationReceived(handleNewNotification);
+
+        // Ensure notification hub is connected regardless of whether chat page has been visited
+        signalRService.connect().catch(() => {/* handled internally */});
+
         return () => {
             signalRService.offNotificationCountUpdated();
+            signalRService.offNotificationReceived();
         };
     }, []);
 

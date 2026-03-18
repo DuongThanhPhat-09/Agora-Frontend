@@ -71,24 +71,25 @@ export function useNotifications() {
 
         // Listen for explicit count updates from backend
         const handleNotificationCountUpdate = (count: number) => {
-            console.log('📬 Notification count updated via SignalR:', count);
             setNotificationCount(count);
         };
 
         // Listen for new real-time notifications and auto-increment badge
         const handleNewNotification = (notification: any) => {
-            console.log('🔔 New notification received via SignalR:', notification);
             // Check if notification is for current user (backend may broadcast to all)
             const user = getUserInfoFromToken();
             const currentUserId = user?.userId || user?.sub;
             if (notification.userid && currentUserId && notification.userid !== currentUserId) {
-                return; // Not for this user, skip
+                return;
             }
             setNotificationCount(prev => prev + 1);
         };
 
         signalRService.onNotificationCountUpdated(handleNotificationCountUpdate);
         signalRService.onNotificationReceived(handleNewNotification);
+
+        // Ensure notification hub is connected regardless of whether chat page has been visited
+        signalRService.connect().catch(() => {/* handled internally */});
 
         return () => {
             signalRService.offNotificationCountUpdated();
