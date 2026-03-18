@@ -714,6 +714,11 @@
         transition: none;
     }
 
+    /* Override desktop hover rule — sidebar is overlay on mobile, should not push content */
+    .sidebar:hover~.main {
+        margin-left: 0;
+    }
+
     .headerSearch {
         max-width: 300px;
     }
