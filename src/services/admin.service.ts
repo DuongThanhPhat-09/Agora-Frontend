@@ -517,16 +517,73 @@ export const getTransactions = async (
 
 /**
  * Get list of all users with filtering
- * @param filters - Role, status, search filters
+ * Backend: GET /api/admin/users with AdminUserFilterParameters
+ * Returns APIResponse<PagedList<UserResponse>> with X-Pagination header
  */
-export const getAllUsers = async (
-  filters?: FilterParams & PaginationParams
-): Promise<{ users: UserListItem[]; total: number }> => {
+export const getAllUsers = async (params?: {
+  searchTerm?: string;
+  role?: string;
+  status?: number;
+  pageNumber?: number;
+  pageSize?: number;
+}): Promise<{ users: UserListItem[]; total: number }> => {
   try {
-    const { data } = await api.get('/admin/users', { params: filters });
-    return data;
+    const response = await api.get('/admin/users', { params });
+    const data = response.data;
+    // Backend: APIResponse<PagedList<UserResponse>> - content is array, total from X-Pagination header
+    const paginationHeader = response.headers['x-pagination'];
+    let total = data.content?.length ?? 0;
+    if (paginationHeader) {
+      try {
+        const pagination = JSON.parse(paginationHeader);
+        total = pagination.TotalCount ?? total;
+      } catch { /* ignore */ }
+    }
+    const users: UserListItem[] = (data.content || []).map((u: any) => ({
+      userid: u.userid,
+      fullname: u.fullname || u.username || '',
+      email: u.email,
+      phone: u.phone || '',
+      primaryrole: (u.role || 'student').toLowerCase() as any,
+      status: u.status === 1 ? 'active' : u.status === 0 ? 'inactive' : 'blocked',
+      createdat: u.createdat || '',
+      lastloginat: null,
+      avatarurl: u.avatarurl || null,
+      warningsCount: 0,
+      suspensionsCount: 0,
+    }));
+    return { users, total };
   } catch (error) {
     console.error('getAllUsers error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update user fields (admin)
+ * Backend: PUT /api/admin/users/{id}
+ */
+export const updateUser = async (
+  userId: string,
+  request: { fullname?: string; email?: string; phone?: string; primaryrole?: string; status?: number; address?: string; gender?: string; avatarurl?: string }
+): Promise<void> => {
+  try {
+    await api.put(`/admin/users/${userId}`, request);
+  } catch (error) {
+    console.error('updateUser error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Deactivate user (set status = 0)
+ * Backend: PUT /api/admin/users/{id}/deactivate
+ */
+export const deactivateUser = async (userId: string): Promise<void> => {
+  try {
+    await api.put(`/admin/users/${userId}/deactivate`);
+  } catch (error) {
+    console.error('deactivateUser error:', error);
     throw error;
   }
 };
