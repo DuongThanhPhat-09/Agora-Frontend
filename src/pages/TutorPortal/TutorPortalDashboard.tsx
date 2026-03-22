@@ -647,10 +647,10 @@ const TutorPortalDashboard: React.FC = () => {
                     </div>
 
                     {/* Recent Feedbacks */}
-                    {recentFeedbacks.length > 0 && (
-                        <div className={styles.sectionCard}>
-                            <div style={{ padding: '20px' }}>
-                                <h2 className={styles.sectionTitle} style={{ marginBottom: '16px' }}>Đánh giá gần đây</h2>
+                    <div className={styles.sectionCard}>
+                        <div style={{ padding: '20px' }}>
+                            <h2 className={styles.sectionTitle} style={{ marginBottom: '16px' }}>Đánh giá gần đây</h2>
+                            {recentFeedbacks.length > 0 ? (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                     {recentFeedbacks.map((fb) => (
                                         <div key={fb.feedbackId} style={{
@@ -706,9 +706,16 @@ const TutorPortalDashboard: React.FC = () => {
                                         </div>
                                     ))}
                                 </div>
-                            </div>
+                            ) : (
+                                <div style={{ padding: '2rem', textAlign: 'center', color: '#999' }}>
+                                    <svg width="32" height="32" viewBox="0 0 18 18" fill="#e8e8e8" style={{ marginBottom: '8px' }}>
+                                        <path d="M9 1L11.09 6.26L17 6.97L12.82 10.72L14.18 16.5L9 13.27L3.82 16.5L5.18 10.72L1 6.97L6.91 6.26L9 1Z" />
+                                    </svg>
+                                    <p style={{ margin: 0, fontSize: '13px' }}>Chưa có đánh giá nào</p>
+                                </div>
+                            )}
                         </div>
-                    )}
+                    </div>
 
                     {/* Reply Feedback Modal */}
                     <ReplyFeedbackModal
