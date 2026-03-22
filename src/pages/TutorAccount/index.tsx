@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { getUserIdFromToken, changePassword } from '../../services/auth.service';
 import { getUserProfile, updateUserProfile } from '../../services/user.service';
+import './TutorAccount.css';
 
 interface UserProfileData {
     userid: string;
@@ -186,15 +187,15 @@ const TutorAccount = () => {
     const initials = displayName ? getInitials(displayName) : 'GS';
 
     return (
-        <div style={pageStyle}>
+        <div style={pageStyle} className="tutor-account-page">
             {/* Page Header */}
             <div style={pageHeader}>
-                <h1 style={pageTitle}>Tài khoản của tôi</h1>
+                <h1 style={pageTitle} className="page-title">Tài khoản của tôi</h1>
                 <p style={pageSubtitle}>Quản lý thông tin cá nhân và cài đặt tài khoản</p>
             </div>
 
             {/* Profile Header Card */}
-            <div style={profileCard}>
+            <div style={profileCard} className="profile-card">
                 <div style={avatarCircle}>
                     {profile?.avatarurl ? (
                         <img src={profile.avatarurl} alt={displayName} style={avatarImg} />
@@ -202,7 +203,7 @@ const TutorAccount = () => {
                         <span style={avatarInitials}>{initials}</span>
                     )}
                 </div>
-                <div style={profileMeta}>
+                <div style={profileMeta} className="profile-meta">
                     <h2 style={profileName}>{displayName}</h2>
                     <span style={roleBadge}>GIA SƯ</span>
                     {profile?.createdat && (
@@ -212,29 +213,29 @@ const TutorAccount = () => {
                     )}
                 </div>
                 {!editing && (
-                    <button style={editBtn} onClick={() => setEditing(true)} type="button">
+                    <button style={editBtn} className="edit-btn" onClick={() => setEditing(true)} type="button">
                         Chỉnh sửa
                     </button>
                 )}
             </div>
 
             {/* Personal Info Section */}
-            <div style={sectionCard}>
+            <div style={sectionCard} className="section-card">
                 <div style={sectionHeader}>
                     <h3 style={sectionTitle}>Thông tin cá nhân</h3>
                 </div>
 
-                <div style={fieldGrid}>
+                <div style={fieldGrid} className="field-grid">
                     <div style={fieldGroup}>
                         <label style={fieldLabel}>Số điện thoại</label>
-                        <p style={{ ...fieldValue, color: profile?.phone ? '#1a2238' : '#9ca3af' }}>
+                        <p style={{ ...fieldValue, color: profile?.phone ? '#1a2238' : '#9ca3af' }} className="field-value">
                             {profile?.phone || 'Chưa cập nhật'}
                         </p>
                     </div>
 
                     <div style={fieldGroup}>
                         <label style={fieldLabel}>Email</label>
-                        <p style={{ ...fieldValue, color: '#525252' }}>{profile?.email || '—'}</p>
+                        <p style={{ ...fieldValue, color: '#525252' }} className="field-value">{profile?.email || '—'}</p>
                         <span style={readOnlyHint}>Không thể thay đổi</span>
                     </div>
 
@@ -249,7 +250,7 @@ const TutorAccount = () => {
                                 placeholder="Nhập họ và tên"
                             />
                         ) : (
-                            <p style={fieldValue}>{profile?.fullname || '—'}</p>
+                            <p style={fieldValue} className="field-value">{profile?.fullname || '—'}</p>
                         )}
                     </div>
 
@@ -263,7 +264,7 @@ const TutorAccount = () => {
                                 onChange={e => setForm(f => ({ ...f, birthdate: e.target.value }))}
                             />
                         ) : (
-                            <p style={fieldValue}>{formatDate(profile?.birthdate)}</p>
+                            <p style={fieldValue} className="field-value">{formatDate(profile?.birthdate)}</p>
                         )}
                     </div>
 
@@ -281,7 +282,7 @@ const TutorAccount = () => {
                                 <option value="Other">Khác</option>
                             </select>
                         ) : (
-                            <p style={fieldValue}>{genderDisplay(profile?.gender)}</p>
+                            <p style={fieldValue} className="field-value">{genderDisplay(profile?.gender)}</p>
                         )}
                     </div>
 
@@ -296,13 +297,13 @@ const TutorAccount = () => {
                                 placeholder="Nhập địa chỉ"
                             />
                         ) : (
-                            <p style={fieldValue}>{profile?.address || '—'}</p>
+                            <p style={fieldValue} className="field-value">{profile?.address || '—'}</p>
                         )}
                     </div>
                 </div>
 
                 {editing && (
-                    <div style={actionRow}>
+                    <div style={actionRow} className="action-row">
                         <button style={cancelBtn} onClick={handleCancel} type="button">Hủy</button>
                         <button
                             style={{ ...saveBtn, ...(saving ? disabledStyle : {}) }}
@@ -317,8 +318,8 @@ const TutorAccount = () => {
             </div>
 
             {/* Change Password Section */}
-            <div style={sectionCard}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', ...(showPasswordSection ? { marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid #f5f5f5' } : {}) }}>
+            <div style={sectionCard} className="section-card">
+                <div className="security-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', ...(showPasswordSection ? { marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid #f5f5f5' } : {}) }}>
                     <h3 style={sectionTitle}>Bảo mật</h3>
                     <button
                         style={toggleBtn}
@@ -345,7 +346,7 @@ const TutorAccount = () => {
                                 autoComplete="current-password"
                             />
                         </div>
-                        <div style={fieldGrid}>
+                        <div style={fieldGrid} className="field-grid">
                             <div style={fieldGroup}>
                                 <label style={fieldLabel}>Mật khẩu mới</label>
                                 <input
