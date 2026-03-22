@@ -1,6 +1,6 @@
 import type { NotificationDTO } from '../../services/notification.service';
 import styles from './NotificationItem.module.css';
-import { BookOpen, MessageSquare, CreditCard, Calendar } from 'lucide-react';
+import { ReadOutlined, MessageOutlined, CreditCardOutlined, CalendarOutlined } from '@ant-design/icons';
 
 interface NotificationItemProps {
     notification: NotificationDTO;
@@ -11,18 +11,18 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onCli
     const getNotificationIcon = () => {
         const title = notification.title.toLowerCase();
         if (title.includes('booking') || title.includes('request')) {
-            return <BookOpen className={styles.icon} />;
+            return <ReadOutlined className={styles.icon} />;
         }
         if (title.includes('message')) {
-            return <MessageSquare className={styles.icon} />;
+            return <MessageOutlined className={styles.icon} />;
         }
         if (title.includes('payment') || title.includes('paid')) {
-            return <CreditCard className={styles.icon} />;
+            return <CreditCardOutlined className={styles.icon} />;
         }
         if (title.includes('schedule') || title.includes('session')) {
-            return <Calendar className={styles.icon} />;
+            return <CalendarOutlined className={styles.icon} />;
         }
-        return <MessageSquare className={styles.icon} />;
+        return <MessageOutlined className={styles.icon} />;
     };
 
     const getTimeAgo = () => {

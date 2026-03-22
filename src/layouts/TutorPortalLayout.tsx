@@ -15,11 +15,11 @@ const LogoIcon = () => (
 );
 
 
-// Notification Bell Icon
+// Notification Bell Icon (outline style to match other header icons)
 const NotificationIcon = () => (
-    <svg className="tutor-portal-notification-icon" viewBox="0 0 18 20" fill="currentColor">
-        <path d="M9 0C5.68629 0 3 2.68629 3 6V11L1 14V15H17V14L15 11V6C15 2.68629 12.3137 0 9 0Z" />
-        <path d="M9 20C10.6569 20 12 18.6569 12 17H6C6 18.6569 7.34315 20 9 20Z" />
+    <svg className="tutor-portal-notification-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M13.73 21a2 2 0 0 1-3.46 0" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
 );
 

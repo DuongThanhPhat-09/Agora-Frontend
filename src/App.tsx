@@ -156,6 +156,7 @@ function App() {
             <Route path="financials" element={<AdminFinancialsPage />} />
             <Route path="warnings" element={<AdminWarningsPage />} />
             <Route path="settings" element={<AdminSettingsPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
             <Route path="payouts" element={<PayoutOverviewPage />} />
             <Route path="payouts/history" element={<AllPayoutRequestsPage />} />
             <Route path="payouts/:id" element={<PayoutDetailPage />} />
