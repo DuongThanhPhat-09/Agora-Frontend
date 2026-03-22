@@ -39,10 +39,10 @@ export const getMyNotifications = async (): Promise<NotificationDTO[]> => {
         const response = await api.get('/notifications/my-notifications', {
             headers: getAuthHeaders(),
         });
-        return response.data;
+        return Array.isArray(response.data) ? response.data : (response.data?.content || []);
     } catch (error: any) {
         console.error('Error fetching notifications:', error);
-        throw error;
+        return [];
     }
 };
 
