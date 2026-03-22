@@ -36,7 +36,7 @@ const CreateWithdrawalPage: React.FC = () => {
                 setBankInfo(info);
 
                 if (!info || !info.isVerified) {
-                    toast.warn('Bạn cần xác thực tài khoản ngân hàng trước khi rút tiền');
+                    toast.warn('Bạn cần xác thực tài khoản ngân hàng trước khi rút tiền', { toastId: 'bank-verify-required' });
                     navigate('/tutor-portal/finance/bank-info');
                 }
             } catch (error) {

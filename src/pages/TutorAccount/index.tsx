@@ -48,6 +48,9 @@ const TutorAccount = () => {
         confirmPassword: '',
     });
     const [changingPassword, setChangingPassword] = useState(false);
+    const [showOldPw, setShowOldPw] = useState(false);
+    const [showNewPw, setShowNewPw] = useState(false);
+    const [showConfirmPw, setShowConfirmPw] = useState(false);
 
     useEffect(() => {
         const loadProfile = async () => {
@@ -320,7 +323,7 @@ const TutorAccount = () => {
             {/* Change Password Section */}
             <div style={sectionCard} className="section-card">
                 <div className="security-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', ...(showPasswordSection ? { marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid #f5f5f5' } : {}) }}>
-                    <h3 style={sectionTitle}>Bảo mật</h3>
+                    <h3 style={sectionTitle}>Đổi mật khẩu</h3>
                     <button
                         style={toggleBtn}
                         onClick={() => {
@@ -337,26 +340,36 @@ const TutorAccount = () => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                         <div style={fieldGroup}>
                             <label style={fieldLabel}>Mật khẩu hiện tại</label>
-                            <input
-                                style={fieldInput}
-                                type="password"
-                                value={passwordForm.oldPassword}
-                                onChange={e => setPasswordForm(f => ({ ...f, oldPassword: e.target.value }))}
-                                placeholder="Nhập mật khẩu hiện tại"
-                                autoComplete="current-password"
-                            />
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    style={{ ...fieldInput, paddingRight: 40 }}
+                                    type={showOldPw ? 'text' : 'password'}
+                                    value={passwordForm.oldPassword}
+                                    onChange={e => setPasswordForm(f => ({ ...f, oldPassword: e.target.value }))}
+                                    placeholder="Nhập mật khẩu hiện tại"
+                                    autoComplete="current-password"
+                                />
+                                <button type="button" onClick={() => setShowOldPw(v => !v)} style={eyeBtn} aria-label="Toggle password">
+                                    {showOldPw ? <EyeOffIcon /> : <EyeIcon />}
+                                </button>
+                            </div>
                         </div>
                         <div style={fieldGrid} className="field-grid">
                             <div style={fieldGroup}>
                                 <label style={fieldLabel}>Mật khẩu mới</label>
-                                <input
-                                    style={fieldInput}
-                                    type="password"
-                                    value={passwordForm.newPassword}
-                                    onChange={e => setPasswordForm(f => ({ ...f, newPassword: e.target.value }))}
-                                    placeholder="Ít nhất 8 ký tự"
-                                    autoComplete="new-password"
-                                />
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        style={{ ...fieldInput, paddingRight: 40 }}
+                                        type={showNewPw ? 'text' : 'password'}
+                                        value={passwordForm.newPassword}
+                                        onChange={e => setPasswordForm(f => ({ ...f, newPassword: e.target.value }))}
+                                        placeholder="Ít nhất 8 ký tự"
+                                        autoComplete="new-password"
+                                    />
+                                    <button type="button" onClick={() => setShowNewPw(v => !v)} style={eyeBtn} aria-label="Toggle password">
+                                        {showNewPw ? <EyeOffIcon /> : <EyeIcon />}
+                                    </button>
+                                </div>
                                 {passwordForm.newPassword && (
                                     <div style={{ marginTop: 4 }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
@@ -371,14 +384,19 @@ const TutorAccount = () => {
                             </div>
                             <div style={fieldGroup}>
                                 <label style={fieldLabel}>Xác nhận mật khẩu mới</label>
-                                <input
-                                    style={fieldInput}
-                                    type="password"
-                                    value={passwordForm.confirmPassword}
-                                    onChange={e => setPasswordForm(f => ({ ...f, confirmPassword: e.target.value }))}
-                                    placeholder="Nhập lại mật khẩu mới"
-                                    autoComplete="new-password"
-                                />
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        style={{ ...fieldInput, paddingRight: 40 }}
+                                        type={showConfirmPw ? 'text' : 'password'}
+                                        value={passwordForm.confirmPassword}
+                                        onChange={e => setPasswordForm(f => ({ ...f, confirmPassword: e.target.value }))}
+                                        placeholder="Nhập lại mật khẩu mới"
+                                        autoComplete="new-password"
+                                    />
+                                    <button type="button" onClick={() => setShowConfirmPw(v => !v)} style={eyeBtn} aria-label="Toggle password">
+                                        {showConfirmPw ? <EyeOffIcon /> : <EyeIcon />}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 4 }}>
@@ -620,5 +638,33 @@ const toggleBtn: React.CSSProperties = {
     fontWeight: 500,
     cursor: 'pointer',
 };
+
+const eyeBtn: React.CSSProperties = {
+    position: 'absolute',
+    right: 8,
+    top: '50%',
+    transform: 'translateY(-50%)',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: 4,
+    display: 'flex',
+    alignItems: 'center',
+    color: '#9ca3af',
+};
+
+const EyeIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+        <circle cx="12" cy="12" r="3" />
+    </svg>
+);
+
+const EyeOffIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+        <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+);
 
 export default TutorAccount;
