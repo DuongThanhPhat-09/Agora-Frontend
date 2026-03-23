@@ -199,9 +199,11 @@ const ParentStudent = () => {
       if (result.content) {
         setNewCredentials(result.content);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error adding student:', err);
-      toast.error('Thêm học sinh thất bại');
+      const detail = err.response?.data?.message || err.response?.data?.title;
+      toast.error(detail || 'Thêm học sinh thất bại');
+      throw err;
     }
   };
 
@@ -245,9 +247,14 @@ const ParentStudent = () => {
       toast.success('Xoá học sinh thành công!');
       setStudents((prev) => prev.filter((s) => s.studentId !== student.studentId));
       setOpenMenuId(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error deleting student:', err);
-      toast.error('Xoá học sinh thất bại');
+      const msg = err.response?.data?.message || '';
+      if (msg.includes('ACTIVE_BOOKING')) {
+        toast.error('Không thể xóa học sinh vì đang có lịch học. Vui lòng hủy lịch học trước.');
+      } else {
+        toast.error('Xoá học sinh thất bại');
+      }
     }
   };
 

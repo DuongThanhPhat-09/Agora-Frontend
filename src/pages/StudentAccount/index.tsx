@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { getUserIdFromToken, changePassword } from '../../services/auth.service';
-import { getUserProfile, updateUserProfile } from '../../services/user.service';
+import { getUserProfile, updateUserProfile, updateUserAvatar } from '../../services/user.service';
 import styles from './styles.module.css';
 
 interface UserProfileData {
@@ -35,6 +35,8 @@ const StudentAccount = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<EditForm>({
     fullname: '',
     birthdate: '',
@@ -113,6 +115,23 @@ const StudentAccount = () => {
       });
     }
     setEditing(false);
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !profile) return;
+    setUploadingAvatar(true);
+    try {
+      const res = await updateUserAvatar(profile.userid, file);
+      const newUrl = res.content?.avatarUrl;
+      if (newUrl) setProfile(prev => prev ? { ...prev, avatarurl: newUrl } : null);
+      toast.success('Cập nhật ảnh đại diện thành công!');
+    } catch {
+      toast.error('Không thể cập nhật ảnh đại diện. Vui lòng thử lại.');
+    } finally {
+      setUploadingAvatar(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
+    }
   };
 
   const handleChangePassword = async () => {
@@ -199,13 +218,21 @@ const StudentAccount = () => {
 
       {/* Profile Header Card */}
       <div className={styles.profileCard}>
-        <div style={avatarCircle}>
+        <div
+          style={{ ...avatarCircle, position: 'relative', cursor: 'pointer' }}
+          onClick={() => avatarInputRef.current?.click()}
+          title="Nhấn để đổi ảnh đại diện"
+        >
           {profile?.avatarurl ? (
             <img src={profile.avatarurl} alt={displayName} style={avatarImg} />
           ) : (
             <span style={avatarInitials}>{initials}</span>
           )}
+          <div style={{ position: 'absolute', bottom: 0, right: 0, background: '#4F46E5', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid white' }}>
+            {uploadingAvatar ? <span style={{ color: 'white', fontSize: 12 }}>...</span> : <span style={{ color: 'white', fontSize: 14 }}>✎</span>}
+          </div>
         </div>
+        <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleAvatarChange} />
         <div style={profileMeta}>
           <h2 style={profileName}>{displayName}</h2>
           <span style={roleBadge}>STUDENT</span>
