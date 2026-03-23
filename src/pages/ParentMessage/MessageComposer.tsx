@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import styles from './styles.module.css';
 import { Loader2, SendHorizontal, Paperclip } from 'lucide-react';
 import { signalRService } from '../../services/signalr.service';
+import { toast } from 'react-toastify';
 
 interface MessageComposerProps {
   onSend: (content: string) => void;
@@ -80,7 +81,7 @@ const MessageComposer = ({ onSend, disabled = false, channelId }: MessageCompose
 
   return (
     <div className={styles.composer}>
-      <button className={styles.iconButton} type="button" title="Đính kèm tệp" disabled={disabled}>
+      <button className={styles.iconButton} type="button" title="Đính kèm tệp" disabled={disabled} onClick={() => toast.info('Tính năng đính kèm tệp đang được phát triển')}>
         <Paperclip size={18} />
       </button>
       <textarea

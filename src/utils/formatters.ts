@@ -243,7 +243,9 @@ export const formatTransactionType = (type: string): string => {
   const typeMap: Record<string, string> = {
     Deposit: 'Nạp tiền',
     Escrow: 'Giữ tiền',
+    EscrowCredit: 'Giữ tiền',
     Release: 'Giải phóng',
+    EscrowRelease: 'Giải phóng',
     Refund: 'Hoàn tiền',
     Withdrawal: 'Rút tiền',
     Fee: 'Phí',

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, DatePicker, Select, Space, Button, Typography, Breadcrumb } from 'antd';
+import { Card, DatePicker, Select, Space, Button, Typography } from 'antd';
 import { DownloadOutlined, FilterOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
+import { toast } from 'react-toastify';
 import { getTransactions } from '../../../services/tutorFinance.service';
 import type { TutorTransaction } from '../../../types/finance.types';
 import TransactionTable from './components/TransactionTable';
@@ -67,19 +68,22 @@ const TransactionHistoryPage: React.FC = () => {
     return (
         <div className="tutor-finance-container">
             <div className="finance-header">
-                <Breadcrumb
-                    items={[
-                        { title: <a onClick={() => navigate('/tutor-portal/finance')}>Tài chính</a> },
-                        { title: 'Lịch sử giao dịch' },
-                    ]}
-                    style={{ marginBottom: '16px' }}
-                />
+                <div style={{ marginBottom: '16px' }}>
+                    <Button 
+                        type="text" 
+                        icon={<ArrowLeftOutlined />} 
+                        onClick={() => navigate('/tutor-portal/finance')}
+                        style={{ padding: '4px 8px', marginLeft: '-8px', fontSize: '15px', color: '#4b5563', display: 'inline-flex', alignItems: 'center', fontWeight: 500 }}
+                    >
+                        Quay lại
+                    </Button>
+                </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                         <Title level={2}>Lịch sử giao dịch</Title>
                         <Text type="secondary">Danh sách tất cả các biến động số dư trong tài khoản của bạn</Text>
                     </div>
-                    <Button icon={<DownloadOutlined />}>Xuất CSV</Button>
+                    <Button icon={<DownloadOutlined />} onClick={() => toast.info('Chức năng xuất CSV đang được phát triển')}>Xuất CSV</Button>
                 </div>
             </div>
 
@@ -95,8 +99,8 @@ const TransactionHistoryPage: React.FC = () => {
                             options={[
                                 { label: 'Nạp tiền', value: 'Deposit' },
                                 { label: 'Rút tiền', value: 'Withdrawal' },
-                                { label: 'Giữ tiền (Escrow)', value: 'Escrow' },
-                                { label: 'Giải phóng (Release)', value: 'Release' },
+                                { label: 'Giữ tiền', value: 'EscrowCredit' },
+                                { label: 'Giải phóng', value: 'EscrowRelease' },
                                 { label: 'Hoàn tiền', value: 'Refund' },
                             ]}
                         />
@@ -123,14 +127,6 @@ const TransactionHistoryPage: React.FC = () => {
                 />
             </Card>
 
-            <Button
-                type="link"
-                icon={<ArrowLeftOutlined />}
-                onClick={() => navigate('/tutor-portal/finance')}
-                style={{ marginTop: '24px' }}
-            >
-                Quay lại Tổng quan
-            </Button>
         </div>
     );
 };

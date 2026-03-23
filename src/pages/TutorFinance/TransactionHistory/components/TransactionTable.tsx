@@ -46,7 +46,8 @@ const TransactionTable: React.FC<Props> = ({
                 if (type === 'Deposit') color = 'green';
                 if (type === 'Withdrawal') color = 'volcano';
                 if (type === 'Refund') color = 'blue';
-                if (type === 'Escrow') color = 'orange';
+                if (type === 'Escrow' || type === 'EscrowCredit') color = 'orange';
+                if (type === 'Release' || type === 'EscrowRelease') color = 'cyan';
 
                 return <Tag color={color}>{formatTransactionType(type)}</Tag>;
             },
@@ -90,6 +91,7 @@ const TransactionTable: React.FC<Props> = ({
             dataSource={transactions}
             rowKey="transactionId"
             loading={loading}
+            scroll={{ x: 'max-content' }}
             pagination={{
                 total,
                 pageSize,

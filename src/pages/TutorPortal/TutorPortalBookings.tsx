@@ -3,13 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import styles from '../../styles/pages/tutor-portal-bookings.module.css';
 import { getTutorBookings, acceptBooking, declineBooking, type BookingResponseDTO } from '../../services/booking.service';
 import { Calendar, Clock, User, BookOpen, ChevronRight, Check, X, Search } from 'lucide-react';
-import { Tabs, Modal, Input } from 'antd';
+import { Tabs, Modal, Input, Pagination } from 'antd';
 import { toast } from 'react-toastify';
 
 const TutorPortalBookings = () => {
     const [bookings, setBookings] = useState<BookingResponseDTO[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('pending_tutor');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+    const [totalCount, setTotalCount] = useState(0);
     const [declineModalVisible, setDeclineModalVisible] = useState(false);
     const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
     const [declineReason, setDeclineReason] = useState('');
@@ -18,21 +21,26 @@ const TutorPortalBookings = () => {
     const fetchBookings = async () => {
         try {
             setLoading(true);
-            const response = await getTutorBookings({ status: activeTab });
+            const response = await getTutorBookings({ status: activeTab, page: currentPage, pageSize });
 
             // API trả về payload dạng { items: [...], totalCount: ... }
             const payload = response.content;
             let items: BookingResponseDTO[] = [];
+            let total = 0;
 
             if (Array.isArray(payload)) {
                 items = payload;
+                total = payload.length;
             } else if (payload && Array.isArray((payload as any).items)) {
                 items = (payload as any).items;
+                total = (payload as any).totalCount || items.length;
             } else if (payload && Array.isArray((payload as any).content)) {
                 items = (payload as any).content;
+                total = (payload as any).totalElements || (payload as any).totalCount || items.length;
             }
 
             setBookings(items);
+            setTotalCount(total);
         } catch (error: any) {
             console.error('Fetch bookings error:', error);
             if (error.response?.status === 403) {
@@ -46,8 +54,13 @@ const TutorPortalBookings = () => {
     };
 
     useEffect(() => {
-        fetchBookings();
+        setCurrentPage(1);
     }, [activeTab]);
+
+    useEffect(() => {
+        fetchBookings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTab, currentPage, pageSize]);
 
     const handleAccept = async (id: number) => {
         try {
@@ -100,7 +113,7 @@ const TutorPortalBookings = () => {
                         { key: 'pending_tutor', label: 'Chờ xác nhận' },
                         { key: 'accepted', label: 'Đã chấp nhận' },
                         { key: 'paid', label: 'Đã thanh toán' },
-                        { key: 'cancelled', label: 'Đã hủy/từ chối' },
+                        { key: 'cancelled', label: 'Đã huỷ' },
                     ]}
                 />
 
@@ -186,6 +199,20 @@ const TutorPortalBookings = () => {
                                 </div>
                             </div>
                         ))}
+                        {totalCount > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', width: '100%' }}>
+                                <Pagination
+                                    current={currentPage}
+                                    pageSize={pageSize}
+                                    total={totalCount}
+                                    onChange={(page, size) => {
+                                        setCurrentPage(page);
+                                        setPageSize(size || 10);
+                                    }}
+                                    showSizeChanger
+                                />
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
