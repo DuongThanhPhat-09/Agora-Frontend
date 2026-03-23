@@ -34,10 +34,14 @@ export interface ChatMessage {
   messageId: number;
   channelId: number;
   senderId: string;
+  senderName?: string;
+  senderAvatarUrl?: string;
   content: string;
   messageType: string;
   createdAt: string;
   metadata?: any;
+  isRead?: boolean;
+  readAt?: string;
 }
 
 export const getChats = async (): Promise<ApiResponse<ChatChannel[]>> => {
@@ -106,6 +110,15 @@ export const sendMessageREST = async (
       message: error.message,
     });
     throw error;
+  }
+};
+
+/** PUT /api/chat/channels/:id/read — Mark all unread messages in channel as read */
+export const markMessagesAsRead = async (channelId: number): Promise<void> => {
+  try {
+    await api.put(`/chat/channels/${channelId}/read`, {}, { headers: getAuthHeaders() });
+  } catch (error: any) {
+    console.error('❌ Error marking messages as read:', error.message);
   }
 };
 

@@ -35,8 +35,18 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }: AddStudentModalProps) =>
 
         // Validate
         const newErrors: Record<string, string> = {};
-        if (!formData.fullName.trim()) newErrors.fullName = 'Họ tên là bắt buộc';
-        if (!formData.birthDate) newErrors.birthDate = 'Ngày sinh là bắt buộc';
+        if (!formData.fullName.trim()) {
+            newErrors.fullName = 'Họ tên là bắt buộc';
+        } else if (formData.fullName.trim().length < 2) {
+            newErrors.fullName = 'Họ tên phải có ít nhất 2 ký tự';
+        } else if (formData.fullName.trim().length > 100) {
+            newErrors.fullName = 'Họ tên không được vượt quá 100 ký tự';
+        }
+        if (!formData.birthDate) {
+            newErrors.birthDate = 'Ngày sinh là bắt buộc';
+        } else if (new Date(formData.birthDate) > new Date()) {
+            newErrors.birthDate = 'Ngày sinh không được là ngày trong tương lai';
+        }
         if (!formData.school.trim()) newErrors.school = 'Trường là bắt buộc';
 
         if (Object.keys(newErrors).length > 0) {
@@ -62,9 +72,19 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }: AddStudentModalProps) =>
                 learningGoals: '',
             });
             setErrors({});
-        } catch (err) {
-            // Error handling is done in parent component
+        } catch (err: any) {
             console.error('Error in modal submit:', err);
+            const backendErrors = err.response?.data?.errors;
+            if (backendErrors && typeof backendErrors === 'object') {
+                const mapped: Record<string, string> = {};
+                for (const [key, msgs] of Object.entries(backendErrors)) {
+                    const fieldKey = key.charAt(0).toLowerCase() + key.slice(1);
+                    mapped[fieldKey] = Array.isArray(msgs) ? (msgs as string[])[0] : String(msgs);
+                }
+                setErrors(mapped);
+            } else if (err.response?.data?.message) {
+                setErrors({ general: err.response.data.message });
+            }
         } finally {
             setSubmitting(false);
         }
@@ -83,6 +103,7 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }: AddStudentModalProps) =>
                 </div>
 
                 <form className={styles.addStudentForm} onSubmit={handleSubmit}>
+                    {errors.general && <div className={styles.errorMessage} style={{ marginBottom: 8 }}>{errors.general}</div>}
                     <div className={styles.formRow}>
                         <label className={styles.formLabel}>
                             Họ và tên <span className={styles.required}>*</span>

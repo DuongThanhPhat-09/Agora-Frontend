@@ -32,6 +32,10 @@ const PaymentCallback = () => {
         // Auto-close this tab after a short delay
         setTimeout(() => {
             window.close();
+            // Fallback nếu window.close() thất bại (tab không phải popup)
+            setTimeout(() => {
+                window.location.href = '/parent-portal/booking';
+            }, 500);
         }, 1500);
     }, [searchParams]);
 

@@ -205,9 +205,10 @@ const UserManagementPage = () => {
                                     style={{ cursor: 'pointer' }}
                                 >
                                     <option value="all">Vai trò: Tất cả</option>
-                                    <option value="student">Học viên</option>
-                                    <option value="tutor">Gia sư</option>
-                                    <option value="admin">Quản trị viên</option>
+                                    <option value="Student">Học viên</option>
+                                    <option value="Tutor">Gia sư</option>
+                                    <option value="Parent">Phụ huynh</option>
+                                    <option value="Admin">Quản trị viên</option>
                                 </select>
                             </div>
 
