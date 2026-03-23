@@ -123,20 +123,7 @@ const CredentialsModal = ({ credentials, onClose, title }: Props) => {
                         style={copyAllBtn}
                         onClick={async () => {
                             const text = `Tên đăng nhập: ${credentials.username}\nMật khẩu: ${credentials.temporaryPassword}`;
-                            try {
-                                await navigator.clipboard.writeText(text);
-                            } catch {
-                                const textarea = document.createElement('textarea');
-                                textarea.value = text;
-                                textarea.style.position = 'fixed';
-                                textarea.style.opacity = '0';
-                                document.body.appendChild(textarea);
-                                textarea.select();
-                                document.execCommand('copy');
-                                document.body.removeChild(textarea);
-                            }
-                            setCopiedField('all');
-                            setTimeout(() => setCopiedField(null), 2000);
+                            await handleCopy(text, 'all');
                         }}
                         type="button"
                     >
