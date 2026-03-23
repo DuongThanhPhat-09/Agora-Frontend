@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Table, Card, Breadcrumb, Typography, Button } from 'antd';
+import { Table, Card, Typography, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { EyeOutlined, SyncOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { getWithdrawals } from '../../../services/tutorFinance.service';
@@ -80,13 +80,16 @@ const WithdrawalListPage: React.FC = () => {
     return (
         <div className="tutor-finance-container">
             <div className="finance-header">
-                <Breadcrumb
-                    items={[
-                        { title: <a onClick={(e) => { e.preventDefault(); navigate('/tutor-portal/finance'); }} href="/tutor-portal/finance">Tài chính</a> },
-                        { title: 'Lịch sử rút tiền' },
-                    ]}
-                    style={{ marginBottom: '16px' }}
-                />
+                <div style={{ marginBottom: '16px' }}>
+                    <Button 
+                        type="text" 
+                        icon={<ArrowLeftOutlined />} 
+                        onClick={() => navigate('/tutor-portal/finance')}
+                        style={{ padding: '4px 8px', marginLeft: '-8px', fontSize: '15px', color: '#4b5563', display: 'inline-flex', alignItems: 'center', fontWeight: 500 }}
+                    >
+                        Quay lại
+                    </Button>
+                </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                         <Title level={2}>Lịch sử rút tiền</Title>
@@ -104,6 +107,7 @@ const WithdrawalListPage: React.FC = () => {
                     dataSource={data}
                     rowKey="withdrawalId"
                     loading={loading}
+                    scroll={{ x: 'max-content' }}
                     pagination={{
                         current: currentPage,
                         pageSize: pageSize,
@@ -117,14 +121,6 @@ const WithdrawalListPage: React.FC = () => {
                 />
             </Card>
 
-            <Button
-                type="link"
-                icon={<ArrowLeftOutlined />}
-                onClick={() => navigate('/tutor-portal/finance')}
-                style={{ marginTop: '24px' }}
-            >
-                Quay lại Tổng quan
-            </Button>
         </div>
     );
 };

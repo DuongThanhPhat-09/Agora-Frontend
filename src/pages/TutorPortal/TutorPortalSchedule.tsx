@@ -345,6 +345,7 @@ const TutorPortalSchedule: React.FC = () => {
         };
 
         const handleTouchMove = (e: TouchEvent) => {
+            e.preventDefault();
             const touch = e.touches[0];
             if (!touch) return;
             const minutes = snapToGrid(pixelToMinutesRef.current(touch.clientY));
@@ -395,7 +396,7 @@ const TutorPortalSchedule: React.FC = () => {
     // Keep ref in sync for stale closure fix
     resizeStateRef.current = resizeState;
 
-    const handleResizeStart = useCallback((e: React.MouseEvent, slot: LocalAvailabilitySlot, edge: 'top' | 'bottom') => {
+    const handleResizeStart = useCallback((e: React.MouseEvent | React.TouchEvent, slot: LocalAvailabilitySlot, edge: 'top' | 'bottom') => {
         e.preventDefault();
         e.stopPropagation();
         const startMin = parseTimeToMinutes(slot.startTime);
@@ -457,6 +458,7 @@ const TutorPortalSchedule: React.FC = () => {
         };
 
         const handleTouchMove = (e: TouchEvent) => {
+            e.preventDefault();
             const touch = e.touches[0];
             if (!touch) return;
             const minutes = snapToGrid(pixelToMinutesRef.current(touch.clientY));
@@ -495,8 +497,8 @@ const TutorPortalSchedule: React.FC = () => {
         endMin = Math.min(24 * 60, endMin);
 
         return {
-            topPx: startMin * pxPerMinute + 3,
-            heightPx: (endMin - startMin) * pxPerMinute - 6,
+            topPx: startMin * pxPerMinute,
+            heightPx: (endMin - startMin) * pxPerMinute,
             startTime: minutesToTimeStr(startMin),
             endTime: minutesToTimeStr(endMin),
         };
@@ -834,7 +836,7 @@ const TutorPortalSchedule: React.FC = () => {
                             {activeTab === 'settings' && viewMode !== 'month' && (
                                 <div className={styles.legendItem}>
                                     <span className={styles.dragHintDesktop} style={{ color: 'rgba(79, 140, 255, 0.6)', fontSize: '9px', fontStyle: 'italic', letterSpacing: '0' }}>✦ Kéo trên lưới để tạo lịch rảnh</span>
-                                    <span className={styles.dragHintMobile} style={{ color: 'rgba(79, 140, 255, 0.6)', fontSize: '9px', fontStyle: 'italic', letterSpacing: '0' }}>✦ Nhấn giữ trên lưới để tạo lịch rảnh</span>
+                                    <span className={styles.dragHintMobile} style={{ color: 'rgba(79, 140, 255, 0.6)', fontSize: '9px', fontStyle: 'italic', letterSpacing: '0' }}>✦ Nhấn giữ trên lưới hoặc nút (+) góc dưới để tạo lịch rảnh</span>
                                 </div>
                             )}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
@@ -854,7 +856,7 @@ const TutorPortalSchedule: React.FC = () => {
                         {/* Mobile drag hint (hidden on desktop via CSS) */}
                         {activeTab === 'settings' && viewMode !== 'month' && (
                             <div className={styles.mobileDragHint}>
-                                ✦ Nhấn giữ trên lưới để tạo lịch rảnh
+                                ✦ Nhấn giữ trên lưới hoặc nút (+) góc dưới để tạo lịch rảnh
                             </div>
                         )}
 
@@ -1007,8 +1009,9 @@ const TutorPortalSchedule: React.FC = () => {
                                                                 {/* Top resize handle */}
                                                                 <div
                                                                     className={styles.resizeHandle}
-                                                                    style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '6px', cursor: 'n-resize', zIndex: 10 }}
+                                                                    style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '6px', cursor: 'n-resize', zIndex: 10, touchAction: 'none' }}
                                                                     onMouseDown={(e) => handleResizeStart(e, slot, 'top')}
+                                                                    onTouchStart={(e) => handleResizeStart(e, slot, 'top')}
                                                                 />
                                                                 <div className={styles.availableContent}>
                                                                     <span className={styles.availableLabel}>Rảnh</span>
@@ -1092,8 +1095,9 @@ const TutorPortalSchedule: React.FC = () => {
                                                                 {/* Bottom resize handle */}
                                                                 <div
                                                                     className={styles.resizeHandle}
-                                                                    style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '6px', cursor: 's-resize', zIndex: 10 }}
+                                                                    style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '6px', cursor: 's-resize', zIndex: 10, touchAction: 'none' }}
                                                                     onMouseDown={(e) => handleResizeStart(e, slot, 'bottom')}
+                                                                    onTouchStart={(e) => handleResizeStart(e, slot, 'bottom')}
                                                                 />
                                                             </div>
                                                         )}
