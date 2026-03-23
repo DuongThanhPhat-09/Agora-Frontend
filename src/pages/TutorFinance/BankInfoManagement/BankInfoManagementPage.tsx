@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Breadcrumb, Card, Modal, Space } from 'antd';
+import { Typography, Card, Modal, Space, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { InfoCircleOutlined } from '@ant-design/icons';
+import { InfoCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { getBankInfo } from '../../../services/tutorFinance.service';
 import { getVerificationStatus } from '../../../services/bankVerification.service';
 import type { BankInfo, BankVerificationStatus } from '../../../types/finance.types';
@@ -46,13 +46,16 @@ const BankInfoManagementPage: React.FC = () => {
     return (
         <div className="tutor-finance-container">
             <div className="finance-header">
-                <Breadcrumb
-                    items={[
-                        { title: <a onClick={() => navigate('/tutor-portal/finance')}>Tài chính</a> },
-                        { title: 'Quản lý tài khoản ngân hàng' },
-                    ]}
-                    style={{ marginBottom: '16px' }}
-                />
+                <div style={{ marginBottom: '16px' }}>
+                    <Button 
+                        type="text" 
+                        icon={<ArrowLeftOutlined />} 
+                        onClick={() => navigate('/tutor-portal/finance')}
+                        style={{ padding: '4px 8px', marginLeft: '-8px', fontSize: '15px', color: '#4b5563', display: 'inline-flex', alignItems: 'center', fontWeight: 500 }}
+                    >
+                        Quay lại
+                    </Button>
+                </div>
                 <Title level={2}>Tài khoản ngân hàng</Title>
                 <Text type="secondary">Cài đặt tài khoản ngân hàng để nhận thu nhập từ TUTORA</Text>
             </div>

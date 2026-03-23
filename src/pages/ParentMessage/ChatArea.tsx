@@ -129,22 +129,26 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
     };
   }, []);
 
-  // Join channel khi selectedChannelId thay đổi
+  // Join channel khi selectedChannelId thay đổi hoặc khi kết nối thành công
   useEffect(() => {
     const joinChannel = async () => {
       if (selectedChannelId && signalRService.isConnected()) {
         try {
-          await signalRService.joinChannel(selectedChannelId);
+          await signalRService.joinChannel(Number(selectedChannelId));
           console.log(`✅ Joined channel ${selectedChannelId}`);
-        } catch (err) {
+        } catch (err: any) {
           console.error('Error joining channel:', err);
-          toast.error('Không thể tham gia kênh chat');
+          // Chỉ hiện toast nếu lỗi thực sự nghiêm trọng, tránh spam
+          const errorMsg = err.message || 'Lỗi không xác định';
+          if (!errorMsg.includes('Connection is not active')) {
+             toast.error(`Không thể tham gia kênh chat: ${errorMsg}`);
+          }
         }
       }
     };
 
     joinChannel();
-  }, [selectedChannelId]);
+  }, [selectedChannelId, connectionState]);
 
   const loadMessages = useCallback(
     async (query: { page: number; pageSize: number; search?: string } = { page: 1, pageSize: 50 }) => {

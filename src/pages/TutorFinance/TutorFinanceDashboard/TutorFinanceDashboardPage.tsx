@@ -127,6 +127,7 @@ const TutorFinanceDashboardPage: React.FC = () => {
                         loading={loading}
                         rowKey="transactionId"
                         size="small"
+                        scroll={{ x: 'max-content' }}
                     />
                 </div>
             </div>
