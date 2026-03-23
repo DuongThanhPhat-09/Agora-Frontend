@@ -289,73 +289,27 @@ const AdminDashboardPageEnhanced = () => {
                         </div>
 
                         {/* CHARTS SECTION */}
-                        <div
-                            style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
-                                gap: '24px',
-                                marginTop: '32px',
-                            }}
-                        >
+                        <div className="admin-charts-grid">
                             {/* Revenue Chart */}
-                            <div
-                                style={{
-                                    background: '#ffffff',
-                                    padding: '24px',
-                                    borderRadius: '16px',
-                                    border: '1px solid #e2e8f0',
-                                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                                }}
-                            >
+                            <div className="admin-chart-card">
                                 <RevenueChart data={revenueData} loading={loading} />
                             </div>
 
                             {/* User Growth Chart */}
-                            <div
-                                style={{
-                                    background: '#ffffff',
-                                    padding: '24px',
-                                    borderRadius: '16px',
-                                    border: '1px solid #e2e8f0',
-                                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                                }}
-                            >
+                            <div className="admin-chart-card">
                                 <UserGrowthChart data={userGrowthData} loading={loading} />
                             </div>
                         </div>
 
                         {/* RECENT ACTIVITIES + PRIORITY ACTIONS */}
-                        <div
-                            style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))',
-                                gap: '24px',
-                                marginTop: '32px',
-                            }}
-                        >
+                        <div className="admin-bottom-grid">
                             {/* Recent Activities */}
-                            <div
-                                style={{
-                                    background: '#ffffff',
-                                    padding: '24px',
-                                    borderRadius: '16px',
-                                    border: '1px solid #e2e8f0',
-                                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                                }}
-                            >
+                            <div className="admin-chart-card">
                                 <RecentActivitiesFeed activities={activities} loading={loading} autoRefresh={true} />
                             </div>
 
                             {/* Quick Actions */}
-                            <div
-                                style={{
-                                    background: '#ffffff',
-                                    padding: '24px',
-                                    borderRadius: '16px',
-                                    border: '1px solid #e2e8f0',
-                                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                                }}
-                            >
+                            <div className="admin-chart-card">
                                 <h3
                                     style={{
                                         margin: '0 0 20px',

@@ -409,6 +409,31 @@
     background-color: #7f1d1d;
 }
 
+/* ===== CHARTS & BOTTOM GRID ===== */
+.admin-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-top: 32px;
+}
+
+.admin-bottom-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-top: 32px;
+}
+
+.admin-chart-card {
+    background: #ffffff;
+    padding: 24px;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    min-width: 0; /* prevent grid blowout */
+}
+
 /* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 1200px) {
     .admin-stats-grid {
@@ -419,16 +444,24 @@
 @media (max-width: 768px) {
     /* Sidebar and Main layout responsiveness handled in admin-layout.css */
 
+    .admin-content {
+        padding: 16px;
+    }
 
-    .admin-stats-grid {
-        grid-template-columns: 1fr;
+    /* Hide in-page header on mobile — layout header already has these controls */
+    .admin-header-container {
+        display: none;
+    }
+
+    .admin-content-inner {
+        max-width: 100%;
     }
 
     .admin-header-glass {
         flex-direction: column;
         height: auto;
-        padding: 16px;
-        gap: 16px;
+        padding: 12px 16px;
+        gap: 8px;
     }
 
     .admin-search-wrapper {
@@ -436,16 +469,77 @@
         margin-left: 0;
     }
 
-    .admin-content {
-        padding-top: 200px;
+    .admin-greeting {
+        margin-bottom: 20px;
     }
 
     .admin-greeting-title {
-        font-size: 32px;
+        font-size: 24px;
+        line-height: 1.2;
+    }
+
+    .admin-greeting-text {
+        font-size: 14px;
     }
 
     .admin-user-info {
         display: none;
+    }
+
+    /* Stats: single column on mobile */
+    .admin-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .admin-stat-card {
+        height: auto;
+        min-height: 120px;
+        padding: 16px;
+    }
+
+    .admin-stat-value {
+        font-size: 28px;
+    }
+
+    .admin-stat-label {
+        font-size: 12px;
+    }
+
+    /* Charts & bottom: single column on mobile */
+    .admin-charts-grid,
+    .admin-bottom-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-top: 20px;
+    }
+
+    .admin-chart-card {
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    /* Tables: horizontal scroll */
+    .admin-table-container {
+        padding: 16px;
+    }
+
+    .admin-table-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+
+    .admin-table-title {
+        font-size: 16px;
+    }
+
+    /* Quick actions: stack full width */
+    .admin-action-btn {
+        font-size: 13px;
+        padding: 10px 14px;
     }
 }
 
