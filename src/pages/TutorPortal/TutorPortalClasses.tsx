@@ -62,7 +62,33 @@ interface ClassData {
     schedule: string; // e.g., "T2, T4 10:00"
     hasHomework: boolean;
     hasNotes: boolean;
+    status: string;
 }
+
+// Helper to compute class status from lessons
+const getClassStatus = (lessons: LessonResponse[]): string => {
+    if (lessons.length === 0) return 'unknown';
+    const allCompleted = lessons.every(l => l.status === 'completed');
+    if (allCompleted) return 'completed';
+    const hasCancelled = lessons.some(l => l.status === 'cancelled');
+    if (hasCancelled && lessons.every(l => l.status === 'cancelled' || l.status === 'completed')) return 'cancelled';
+    const hasInProgress = lessons.some(l => l.status === 'in_progress');
+    if (hasInProgress) return 'in_progress';
+    const hasPending = lessons.some(l => l.status === 'pending_report' || l.status === 'pending_parent_confirmation');
+    if (hasPending) return 'pending';
+    return 'scheduled';
+};
+
+const getStatusDisplay = (status: string): { label: string; className: string } => {
+    switch (status) {
+        case 'completed': return { label: 'Hoàn thành', className: 'statusCompleted' };
+        case 'cancelled': return { label: 'Đã hủy', className: 'statusCancelled' };
+        case 'in_progress': return { label: 'Đang học', className: 'statusInProgress' };
+        case 'pending': return { label: 'Chờ xử lý', className: 'statusPending' };
+        case 'scheduled': return { label: 'Đã lên lịch', className: 'statusScheduled' };
+        default: return { label: 'Không rõ', className: 'statusScheduled' };
+    }
+};
 
 const TutorPortalClasses: React.FC = () => {
     const navigate = useNavigate();
@@ -173,7 +199,8 @@ const TutorPortalClasses: React.FC = () => {
                 nextLesson,
                 schedule,
                 hasHomework,
-                hasNotes
+                hasNotes,
+                status: getClassStatus(sortedLessons)
             };
         });
     }, [lessons]);
@@ -287,7 +314,7 @@ const TutorPortalClasses: React.FC = () => {
                             <>
                                 {console.log('⚠️ Showing empty state')}
                                 <div style={{ textAlign: 'center', padding: '40px' }}>
-                                    <p>Không tìm thấy lớp học nào</p>
+                                    <p>Chưa có lớp học nào</p>
                                 </div>
                             </>
                         ) : (
@@ -301,6 +328,7 @@ const TutorPortalClasses: React.FC = () => {
                                             <th>HỌC SINH</th>
                                             <th>BUỔI<br />TIẾP THEO</th>
                                             <th>TIẾN ĐỘ</th>
+                                            <th>TRẠNG THÁI</th>
                                             <th className={styles.alignRight}>HÀNH ĐỘNG</th>
                                         </tr>
                                     </thead>
@@ -356,6 +384,11 @@ const TutorPortalClasses: React.FC = () => {
                                                             {classData.hasHomework ? '✓' : '-'}<br />BTVN
                                                         </span>
                                                     </div>
+                                                </td>
+                                                <td>
+                                                    <span className={`${styles.statusBadge} ${styles[getStatusDisplay(classData.status).className]}`}>
+                                                        {getStatusDisplay(classData.status).label}
+                                                    </span>
                                                 </td>
                                                 <td>
                                                     <div className={styles.actions}>
