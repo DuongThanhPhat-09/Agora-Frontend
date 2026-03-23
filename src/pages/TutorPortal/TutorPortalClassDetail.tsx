@@ -338,11 +338,11 @@ const TutorPortalClassDetail: React.FC = () => {
                             </div>
                         </div>
                         <div className={styles.headerActions}>
-                            <button className={styles.actionBtn}>
+                            <button className={styles.actionBtn} onClick={() => toast.info('Tính năng đang phát triển')}>
                                 <MessageIcon />
                                 <span>Nhắn tin lớp</span>
                             </button>
-                            <button className={styles.actionBtn}>
+                            <button className={styles.actionBtn} onClick={() => toast.info('Tính năng đang phát triển')}>
                                 <PlusIcon />
                                 <span>Thêm học sinh</span>
                             </button>
@@ -425,18 +425,19 @@ const TutorPortalClassDetail: React.FC = () => {
                                                 >
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                                         <div style={{
-                                                            width: '48px', height: '48px',
+                                                            width: '52px', height: '52px',
                                                             borderRadius: '10px',
                                                             background: '#f2f0e4',
                                                             display: 'flex', flexDirection: 'column',
                                                             alignItems: 'center', justifyContent: 'center',
-                                                            fontSize: '11px', fontWeight: 600, color: '#1a2238',
+                                                            fontWeight: 600, color: '#1a2238',
+                                                            flexShrink: 0,
                                                         }}>
-                                                            <span style={{ fontSize: '16px', lineHeight: 1 }}>
+                                                            <span style={{ fontSize: '18px', lineHeight: 1 }}>
                                                                 {startTime.getDate()}
                                                             </span>
-                                                            <span style={{ fontSize: '10px', textTransform: 'uppercase' }}>
-                                                                {startTime.toLocaleDateString('vi-VN', { month: 'short' })}
+                                                            <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#666' }}>
+                                                                Th{startTime.getMonth() + 1}
                                                             </span>
                                                         </div>
                                                         <div>
@@ -634,11 +635,11 @@ const TutorPortalClassDetail: React.FC = () => {
                                         />
                                     </div>
                                     <div className={styles.toolbarActions}>
-                                        <button className={styles.toolbarBtn}>
+                                        <button className={styles.toolbarBtn} onClick={() => toast.info('Tính năng đang phát triển')}>
                                             <MessageIcon />
                                             <span>Nhắn tin đã chọn</span>
                                         </button>
-                                        <button className={styles.toolbarBtn}>
+                                        <button className={styles.toolbarBtn} onClick={() => toast.info('Tính năng đang phát triển')}>
                                             <ExportIcon />
                                             <span>Xuất danh sách</span>
                                         </button>
@@ -773,15 +774,15 @@ const TutorPortalClassDetail: React.FC = () => {
                     <div className={styles.sidebarContent}>
                         {/* Quick Actions */}
                         <div className={styles.quickActions}>
-                            <button className={styles.quickActionBtn}>
+                            <button className={styles.quickActionBtn} onClick={() => toast.info('Tính năng đang phát triển')}>
                                 <MessageIcon />
                                 <span>Nhắn tin</span>
                             </button>
-                            <button className={styles.quickActionBtn}>
+                            <button className={styles.quickActionBtn} onClick={() => toast.info('Tính năng đang phát triển')}>
                                 <NoteIcon />
                                 <span>Thêm ghi chú</span>
                             </button>
-                            <button className={styles.quickActionBtn}>
+                            <button className={styles.quickActionBtn} onClick={() => toast.info('Tính năng đang phát triển')}>
                                 <BookIcon />
                                 <span>Giao BTVN</span>
                             </button>
