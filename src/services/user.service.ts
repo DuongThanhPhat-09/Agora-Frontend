@@ -56,6 +56,19 @@ export const updateUserProfile = async (userId: string, payload: IUpdateUserProf
     }
 };
 
+export const updateUserAvatar = async (userId: string, avatarFile: File) => {
+    const user = getCurrentUser();
+    const formData = new FormData();
+    formData.append('AvatarFile', avatarFile);
+    const response = await api.put(`/users/${userId}/avatar`, formData, {
+        headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return response.data;
+};
+
 /**
  * Parse ekycRawData JSON string into EKYCContent object
  * @param ekycRawData - JSON string from backend

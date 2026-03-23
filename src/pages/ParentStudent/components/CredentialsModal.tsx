@@ -19,8 +19,20 @@ const CredentialsModal = ({ credentials, onClose, title }: Props) => {
 
     if (!credentials) return null;
 
-    const handleCopy = (text: string, field: string) => {
-        navigator.clipboard.writeText(text);
+    const handleCopy = async (text: string, field: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch {
+            // Fallback cho môi trường không hỗ trợ Clipboard API (non-HTTPS)
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        }
         setCopiedField(field);
         setTimeout(() => setCopiedField(null), 2000);
     };
@@ -109,11 +121,9 @@ const CredentialsModal = ({ credentials, onClose, title }: Props) => {
                 <div style={footer}>
                     <button
                         style={copyAllBtn}
-                        onClick={() => {
+                        onClick={async () => {
                             const text = `Tên đăng nhập: ${credentials.username}\nMật khẩu: ${credentials.temporaryPassword}`;
-                            navigator.clipboard.writeText(text);
-                            setCopiedField('all');
-                            setTimeout(() => setCopiedField(null), 2000);
+                            await handleCopy(text, 'all');
                         }}
                         type="button"
                     >

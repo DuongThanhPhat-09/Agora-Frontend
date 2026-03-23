@@ -50,9 +50,10 @@ const PaymentPage = () => {
                 setBooking(bookingRes.content);
                 setPaymentInfo(paymentRes.content);
 
-                // If already paid, show success
+                // Nếu đã thanh toán, redirect ngay để tránh tạo lại booking khi nhấn Back
                 if (bookingRes.content.paymentStatus === 'paid') {
-                    setPaymentSuccess(true);
+                    navigate(`/parent-portal/booking/${bookingId}`, { replace: true });
+                    return;
                 }
             } catch (error) {
                 antMessage.error('Không thể tải thông tin thanh toán.');
@@ -64,6 +65,13 @@ const PaymentPage = () => {
 
         if (bookingId) fetchData();
     }, [bookingId, navigate]);
+
+    // Dọn localStorage khi rời khỏi trang thanh toán
+    useEffect(() => {
+        return () => {
+            localStorage.removeItem('payos_payment_result');
+        };
+    }, []);
 
     // Listen for localStorage changes from PaymentCallback page (in new tab)
     useEffect(() => {
@@ -182,10 +190,10 @@ const PaymentPage = () => {
                         <h1>Thanh toán hoàn tất!</h1>
                         <p>Cảm ơn bạn đã tin tưởng TUTORA. Buổi học của bạn đã được lên lịch.</p>
                         <div className={styles.successActions}>
-                            <Button type="primary" size="large" onClick={() => navigate(`/parent-portal/booking/${bookingId}`)}>
+                            <Button type="primary" size="large" onClick={() => navigate(`/parent-portal/booking/${bookingId}`, { replace: true })}>
                                 Xem chi tiết lịch học
                             </Button>
-                            <Button size="large" onClick={() => navigate('/parent-portal/booking')}>
+                            <Button size="large" onClick={() => navigate('/parent-portal/booking', { replace: true })}>
                                 Quản lý lớp học
                             </Button>
                         </div>
@@ -198,7 +206,7 @@ const PaymentPage = () => {
     return (
         <div className={styles.container}>
             <div className={styles.topNav}>
-                <button onClick={() => navigate(-1)} className={styles.backBtn}>
+                <button onClick={() => navigate('/parent-portal/booking', { replace: true })} className={styles.backBtn}>
                     <ChevronLeft size={20} /> Quay lại
                 </button>
                 <h1>Thanh toán khóa học</h1>

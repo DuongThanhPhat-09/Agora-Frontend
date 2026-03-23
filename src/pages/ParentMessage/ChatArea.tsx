@@ -4,7 +4,7 @@ import ChatHeader from './ChatHeader';
 import ChatMessagesArea from './ChatMessagesArea';
 import MessageComposer from './MessageComposer';
 import SessionContextCard from './SessionContextCard';
-import { getChatMessages, type ChatMessage, type ChatChannel } from '../../services/chat.service';
+import { getChatMessages, markMessagesAsRead, type ChatMessage, type ChatChannel } from '../../services/chat.service';
 import { getBookingById, type BookingResponseDTO } from '../../services/booking.service';
 import { signalRService } from '../../services/signalr.service';
 import { toast } from 'react-toastify';
@@ -179,6 +179,10 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
         setLoading(true);
         setHasMore(true);
         await loadMessages({ page: 1, pageSize: 50 });
+        // Mark messages as read when channel is opened
+        if (currentUserId) {
+          markMessagesAsRead(selectedChannelId);
+        }
       } catch (err) {
         console.error('Error fetching messages:', err);
         toast.error('Không thể tải tin nhắn');

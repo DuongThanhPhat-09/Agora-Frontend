@@ -235,6 +235,7 @@ const ChatMessagesArea = ({
               message={msg.content}
               time={msg.createdAt}
               isSender={currentUserId ? msg.senderId === currentUserId : false}
+              isRead={msg.isRead}
             />
           );
         })}
