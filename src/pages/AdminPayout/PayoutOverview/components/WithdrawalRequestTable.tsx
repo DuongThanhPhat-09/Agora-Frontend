@@ -91,12 +91,15 @@ const WithdrawalRequestTable: React.FC<Props> = ({
             dataSource={data}
             rowKey="withdrawalId"
             loading={loading}
+            size="small"
+            scroll={{ x: 700 }}
             pagination={{
                 current: currentPage,
                 pageSize: pageSize,
                 total: total,
                 onChange: onPageChange,
-                showTotal: (total) => `Tổng cộng ${total} yêu cầu`,
+                showTotal: (total) => `Tổng ${total} yêu cầu`,
+                size: 'small',
             }}
         />
     );

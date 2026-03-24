@@ -1504,4 +1504,120 @@
         width: 100%;
         justify-content: center;
     }
-}
+
+    /* === Settings page mobile fixes === */
+    .settings-scroll-area {
+        padding: 12px;
+    }
+
+    .settings-card {
+        min-height: auto;
+        border-radius: 16px;
+    }
+
+    .settings-menu {
+        padding: 16px;
+        border-right: none;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .settings-menu-title {
+        margin-bottom: 16px;
+        font-size: 11px;
+    }
+
+    .settings-nav {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+    }
+
+    .settings-nav-btn {
+        padding: 10px 8px;
+        flex-direction: column;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .settings-nav-content {
+        flex-direction: column;
+        gap: 4px;
+        align-items: center;
+    }
+
+    .settings-nav-text {
+        font-size: 11px;
+        line-height: 1.2;
+    }
+
+    .settings-nav-chevron {
+        display: none;
+    }
+
+    .settings-nav-active-indicator {
+        display: none;
+    }
+
+    .settings-nav-btn.active .settings-nav-content {
+        padding-left: 0;
+    }
+
+    .settings-panel-header {
+        padding: 16px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .settings-page-title {
+        font-size: 22px;
+    }
+
+    .settings-form-content {
+        padding: 16px;
+        padding-bottom: 80px;
+    }
+
+    .settings-section-container {
+        gap: 24px;
+    }
+
+    .settings-section-card {
+        padding: 16px;
+    }
+
+    .settings-section-title {
+        font-size: 15px;
+    }
+
+    /* Stack 2-column form grids on mobile */
+    .settings-form-content div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    .settings-footer {
+        padding: 12px 16px;
+    }
+
+    .btn-save {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+
+    .settings-panel-full {
+        padding: 12px;
+    }
+
+    /* Danger zone */
+    .danger-zone {
+        padding: 16px;
+    }
+
+    .danger-title {
+        font-size: 15px;
+    }
+
+    .slider-info-box {
+        font-size: 11px;
+    }
+}
