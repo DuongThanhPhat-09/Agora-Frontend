@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { SearchOutlined, SecurityScanOutlined } from '@ant-design/icons';
 import PayoutStatsCards from './components/PayoutStatsCards';
 import WithdrawalRequestTable from './components/WithdrawalRequestTable';
+import '../../../styles/pages/admin-payout.css';
 
 const { Title, Text } = Typography;
 
@@ -60,7 +61,7 @@ const PayoutOverviewPage: React.FC = () => {
     ];
 
     return (
-        <div style={{ padding: '24px' }}>
+        <div className="admin-payout-container">
             <div style={{ marginBottom: '24px' }}>
                 <Breadcrumb
                     items={[
@@ -69,17 +70,18 @@ const PayoutOverviewPage: React.FC = () => {
                     ]}
                     style={{ marginBottom: '16px' }}
                 />
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                        <Title level={2}>Quản lý thanh toán</Title>
+                <div className="payout-page-header">
+                    <div style={{ minWidth: 0 }}>
+                        <Title level={2} style={{ margin: 0 }}>Quản lý thanh toán</Title>
                         <Text type="secondary">Xét duyệt và xử lý các yêu cầu rút tiền từ gia sư</Text>
                     </div>
-                    <div style={{ display: 'flex', gap: '12px' }}>
+                    <div className="payout-page-header-actions">
                         <Button
                             icon={<SearchOutlined />}
                             onClick={() => navigate('/admin-portal/payouts/history')}
+                            block
                         >
-                            Lịch sử rút tiền
+                            Lịch sử
                         </Button>
                         <Button
                             type="primary"
@@ -87,8 +89,9 @@ const PayoutOverviewPage: React.FC = () => {
                             icon={<SecurityScanOutlined />}
                             onClick={() => navigate('/admin-portal/payout/fraud-logs')}
                             danger
+                            block
                         >
-                            Nhật ký an toàn (Fraud Logs)
+                            Fraud Logs
                         </Button>
                     </div>
                 </div>
@@ -96,7 +99,7 @@ const PayoutOverviewPage: React.FC = () => {
 
             <PayoutStatsCards overview={overview} loading={loading} />
 
-            <Card variant="borderless" styles={{ body: { padding: '0 24px 24px' } }}>
+            <Card variant="borderless" styles={{ body: { padding: '0 16px 16px' } }} className="payout-table-card">
                 <Tabs
                     activeKey={activeTab}
                     onChange={handleTabChange}

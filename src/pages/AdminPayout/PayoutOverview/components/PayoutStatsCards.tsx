@@ -25,8 +25,8 @@ const PayoutStatsCards: React.FC<Props> = ({ overview, loading }) => {
         <div style={{ marginBottom: '24px' }}>
             {/* Row 1: Thống kê hôm nay */}
             <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
-                <Col xs={24} sm={12} lg={6}>
-                    <Card loading={loading} hoverable>
+                <Col xs={12} sm={12} lg={6}>
+                    <Card loading={loading} hoverable size="small">
                         <Statistic
                             title="Yêu cầu tháng này"
                             value={todayStats?.totalRequests || 0}
@@ -35,8 +35,8 @@ const PayoutStatsCards: React.FC<Props> = ({ overview, loading }) => {
                         />
                     </Card>
                 </Col>
-                <Col xs={24} sm={12} lg={6}>
-                    <Card loading={loading} hoverable>
+                <Col xs={12} sm={12} lg={6}>
+                    <Card loading={loading} hoverable size="small">
                         <Statistic
                             title="Tự động duyệt"
                             value={todayStats?.autoApproved || 0}
@@ -45,8 +45,8 @@ const PayoutStatsCards: React.FC<Props> = ({ overview, loading }) => {
                         />
                     </Card>
                 </Col>
-                <Col xs={24} sm={12} lg={6}>
-                    <Card loading={loading} hoverable>
+                <Col xs={12} sm={12} lg={6}>
+                    <Card loading={loading} hoverable size="small">
                         <Statistic
                             title="Đang tạm giữ"
                             value={todayStats?.delayed || 0}
@@ -55,8 +55,8 @@ const PayoutStatsCards: React.FC<Props> = ({ overview, loading }) => {
                         />
                     </Card>
                 </Col>
-                <Col xs={24} sm={12} lg={6}>
-                    <Card loading={loading} hoverable>
+                <Col xs={12} sm={12} lg={6}>
+                    <Card loading={loading} hoverable size="small">
                         <Statistic
                             title="Chờ xét duyệt thủ công"
                             value={todayStats?.manualReview || 0}
@@ -69,8 +69,8 @@ const PayoutStatsCards: React.FC<Props> = ({ overview, loading }) => {
 
             {/* Row 2: Tài chính & xử lý */}
             <Row gutter={[16, 16]}>
-                <Col xs={24} sm={12} lg={6}>
-                    <Card loading={loading} hoverable>
+                <Col xs={12} sm={12} lg={6}>
+                    <Card loading={loading} hoverable size="small">
                         <Statistic
                             title="Chờ xử lý"
                             value={processingStats?.pendingCount || 0}
@@ -79,8 +79,8 @@ const PayoutStatsCards: React.FC<Props> = ({ overview, loading }) => {
                         />
                     </Card>
                 </Col>
-                <Col xs={24} sm={12} lg={6}>
-                    <Card loading={loading} hoverable>
+                <Col xs={12} sm={12} lg={6}>
+                    <Card loading={loading} hoverable size="small">
                         <Statistic
                             title="Tỷ lệ thành công"
                             value={processingStats?.successRate?.toFixed(1) || '0'}
@@ -89,8 +89,8 @@ const PayoutStatsCards: React.FC<Props> = ({ overview, loading }) => {
                         />
                     </Card>
                 </Col>
-                <Col xs={24} sm={12} lg={6}>
-                    <Card loading={loading} hoverable>
+                <Col xs={12} sm={12} lg={6}>
+                    <Card loading={loading} hoverable size="small">
                         <Statistic
                             title="Tổng chi tháng này"
                             value={formatCurrency(financialStats?.totalPayoutToday || 0)}
@@ -98,8 +98,8 @@ const PayoutStatsCards: React.FC<Props> = ({ overview, loading }) => {
                         />
                     </Card>
                 </Col>
-                <Col xs={24} sm={12} lg={6}>
-                    <Card loading={loading} hoverable>
+                <Col xs={12} sm={12} lg={6}>
+                    <Card loading={loading} hoverable size="small">
                         <Statistic
                             title="Tổng chi tháng này"
                             value={formatCurrency(financialStats?.totalPayoutThisMonth || 0)}

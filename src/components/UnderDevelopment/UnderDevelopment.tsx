@@ -8,22 +8,15 @@ interface UnderDevelopmentProps {
 
 const UnderDevelopment: React.FC<UnderDevelopmentProps> = ({ featureName = 'này' }) => {
     return (
-        <div className="under-dev-overlay">
-            <div className="under-dev-card">
-                <div className="under-dev-icon">
-                    🚀
-                </div>
-                <h2 className="under-dev-title">
-                    Chức năng đang được phát triển
-                </h2>
-                <p className="under-dev-description">
-                    Tính năng {featureName} đang được hoàn thiện và sẽ sớm được cập nhật. Cảm ơn bạn đã kiên nhẫn chờ đợi!
-                </p>
-                <div className="under-dev-badge">
-                    <span className="under-dev-badge-dot"></span>
-                    ĐANG PHÁT TRIỂN
-                </div>
-            </div>
+        <div className="under-dev-banner">
+            <span className="under-dev-banner-icon">🚧</span>
+            <span className="under-dev-banner-text">
+                Tính năng {featureName} đang được phát triển. Dữ liệu hiển thị có thể là dữ liệu mẫu.
+            </span>
+            <span className="under-dev-banner-badge">
+                <span className="under-dev-badge-dot"></span>
+                ĐANG PHÁT TRIỂN
+            </span>
         </div>
     );
 };
