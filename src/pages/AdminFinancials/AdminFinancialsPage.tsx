@@ -108,7 +108,7 @@ const AdminFinancialsPage = () => {
                         <UnderDevelopment featureName="tài chính" />
 
                         {/* KPI CARDS */}
-                        <section className="admin-stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+                        <section className="admin-stats-grid">
                             {/* Card 1: Revenue */}
                             <div className="admin-stat-card">
                                 <div className="admin-stat-header">

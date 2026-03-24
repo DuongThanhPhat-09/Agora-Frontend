@@ -28,7 +28,7 @@ const UnauthorizedPage = lazy(() => import('./pages/Error/UnauthorizedPage'));
 const ForbiddenPage = lazy(() => import('./pages/Error/ForbiddenPage'));
 
 // Admin pages
-const AdminDashboardPage = lazy(() => import('./pages/AdminDashboard/AdminDashboardPage'));
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboard/AdminDashboardPageEnhanced'));
 const UserManagementPage = lazy(() => import('./pages/AdminUserManagement/UserManagementPage'));
 const AdminVettingPage = lazy(() => import('./pages/AdminVetting/AdminVettingPage'));
 const AdminFinancialsPage = lazy(() => import('./pages/AdminFinancials/AdminFinancialsPage'));

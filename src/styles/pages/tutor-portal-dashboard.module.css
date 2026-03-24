@@ -1073,17 +1073,42 @@
         gap: 4px;
     }
 
+    .title {
+        font-size: 24px;
+        line-height: 30px;
+    }
+
+    .date {
+        font-size: 13px;
+    }
+
+    /* Stats: 2 columns on mobile */
     .statsGrid {
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
     }
 
     .statCard {
-        min-width: 100%;
+        min-width: 0;
+        padding: 14px;
     }
 
+    .statValue {
+        font-size: 20px;
+        line-height: 26px;
+    }
+
+    .statLabel {
+        font-size: 9.5px;
+        line-height: 13px;
+    }
+
+    /* Banner */
     .reviewBanner {
         flex-direction: column;
         align-items: flex-start;
+        padding: 14px;
     }
 
     .viewDetailsBtn {
@@ -1091,19 +1116,47 @@
         justify-content: center;
     }
 
+    /* Quick actions: 2x2 grid */
     .quickActions {
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
     }
 
     .actionBtn {
         width: 100%;
         justify-content: center;
+        font-size: 11px;
+        padding: 8px 10px;
     }
 
+    /* Content grid: stack vertically, full width */
+    .contentGrid {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .leftColumn,
+    .middleColumn,
+    .rightColumn {
+        flex: 1 1 auto;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    /* Right column: display as row on mobile (calendar + reviews side by side) if wide enough, else stack */
+    .rightColumn {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    /* Lessons */
     .lessonItem {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
+        padding: 16px;
     }
 
     .lessonInfo {
@@ -1126,9 +1179,42 @@
     .sectionHeader {
         flex-direction: column;
         align-items: flex-start;
-        gap: 12px;
+        gap: 10px;
+        padding: 16px;
     }
 
+    .sectionTitle {
+        font-size: 16px;
+    }
+
+    /* Calendar */
+    .calendarHeader {
+        padding: 16px;
+    }
+
+    .calendarWeekDays {
+        padding: 0 16px;
+    }
+
+    .calendarGrid {
+        padding: 0 16px 16px;
+    }
+
+    .calendarDay {
+        font-size: 13px;
+        height: 36px;
+    }
+
+    .calendarMonth {
+        font-size: 15px;
+    }
+
+    /* Calendar legend */
+    .calendarLegend {
+        padding: 12px 16px;
+    }
+
+    /* Action queue */
     .actionQueueItem {
         flex-direction: column;
         align-items: flex-start;
@@ -1140,3 +1226,40 @@
         justify-content: center;
     }
 }
+
+/* Extra small screens */
+@media (max-width: 400px) {
+    .dashboard {
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .statsGrid {
+        gap: 8px;
+    }
+
+    .statCard {
+        padding: 10px;
+    }
+
+    .statValue {
+        font-size: 18px;
+        line-height: 22px;
+    }
+
+    .quickActions {
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+    }
+
+    .actionBtn {
+        font-size: 10px;
+        padding: 7px 6px;
+        gap: 4px;
+    }
+
+    .calendarDay {
+        font-size: 12px;
+        height: 32px;
+    }
+}
