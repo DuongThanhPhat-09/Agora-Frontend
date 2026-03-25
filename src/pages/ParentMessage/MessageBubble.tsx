@@ -6,6 +6,7 @@ type MessageBubbleProps = {
     avatar?: string;
     isSender?: boolean;
     isRead?: boolean;
+    messageType?: string;
 };
 
 /** Format ISO timestamp to readable time */
@@ -34,13 +35,22 @@ const formatTime = (isoString: string): string => {
     }
 };
 
-const MessageBubble = ({ message, time, avatar, isSender = false, isRead = false }: MessageBubbleProps) => {
+const MessageBubble = ({ message, time, avatar, isSender = false, isRead = false, messageType }: MessageBubbleProps) => {
     return (
         <div className={`${styles.messageBubbleRow} ${isSender ? styles.messageBubbleRowSender : ''}`}>
             {!isSender && avatar && <img alt="" className={styles.messageBubbleAvatar} src={avatar} />}
             <div className={styles.messageBubbleContent}>
-                <div className={`${styles.messageBubble} ${isSender ? styles.messageBubbleSender : ''}`}>
-                    {message}
+                <div className={`${styles.messageBubble} ${isSender ? styles.messageBubbleSender : ''}`} style={messageType === 'image' ? { padding: 4, background: 'transparent' } : undefined}>
+                    {messageType === 'image' ? (
+                        <img
+                            src={message}
+                            alt="Hình ảnh"
+                            style={{ maxWidth: 300, maxHeight: 300, borderRadius: 8, display: 'block', cursor: 'pointer' }}
+                            onClick={() => window.open(message, '_blank')}
+                        />
+                    ) : (
+                        message
+                    )}
                 </div>
                 <span className={`${styles.messageBubbleTime} ${isSender ? styles.messageBubbleTimeSender : ''}`}>
                     {formatTime(time)}

@@ -6,16 +6,19 @@ import { toast } from 'react-toastify';
 
 interface MessageComposerProps {
   onSend: (content: string) => void;
+  onSendImage?: (file: File) => Promise<void>;
   disabled?: boolean;
   channelId?: number | null;
 }
 
-const MessageComposer = ({ onSend, disabled = false, channelId }: MessageComposerProps) => {
+const MessageComposer = ({ onSend, onSendImage, disabled = false, channelId }: MessageComposerProps) => {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTypingRef = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const emitTyping = useCallback(() => {
     if (!channelId) return;
@@ -79,10 +82,51 @@ const MessageComposer = ({ onSend, disabled = false, channelId }: MessageCompose
     }
   };
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Chỉ chấp nhận file hình ảnh');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Kích thước file vượt quá 5MB');
+      return;
+    }
+
+    if (onSendImage) {
+      setUploadingImage(true);
+      try {
+        await onSendImage(file);
+      } catch {
+        toast.error('Không thể gửi hình ảnh. Vui lòng thử lại.');
+      } finally {
+        setUploadingImage(false);
+        // Reset input để có thể chọn lại cùng file
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
     <div className={styles.composer}>
-      <button className={styles.iconButton} type="button" title="Đính kèm tệp" disabled={disabled} onClick={() => toast.info('Tính năng đính kèm tệp đang được phát triển')}>
-        <Paperclip size={18} />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleFileSelect}
+      />
+      <button
+        className={styles.iconButton}
+        type="button"
+        title="Gửi hình ảnh"
+        disabled={disabled || uploadingImage}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        {uploadingImage ? <Loader2 size={18} className={styles.sendingSpinner} /> : <Paperclip size={18} />}
       </button>
       <textarea
         ref={textareaRef}
