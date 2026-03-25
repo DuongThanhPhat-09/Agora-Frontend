@@ -68,13 +68,14 @@ const LoginForm: React.FC = () => {
 
       const data = response.data;
       const token = data.content?.token;
+      const refreshToken = data.content?.refreshToken;
 
       if (!token) {
         throw new Error("Không nhận được token từ server");
       }
 
-      // Save user data with accessToken
-      saveUserToStorage({ accessToken: token });
+      // Save user data with accessToken and refreshToken
+      saveUserToStorage({ accessToken: token, refreshToken });
 
       // Get portal path from role in token
       const portalPath = getPortalPathFromToken(token);

@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { clearUserFromStorage } from "../services/auth.service";
+import { logout } from "../services/auth.service";
 import styles from "../styles/components/session-expired-modal.module.css";
 
 interface SessionExpiredModalProps {
@@ -16,8 +16,7 @@ const SessionExpiredModal: React.FC<SessionExpiredModalProps> = ({
     const navigate = useNavigate();
 
     const handleLoginRedirect = useCallback(async () => {
-        // Clear all auth data
-        clearUserFromStorage();
+        await logout();
         await supabase.auth.signOut();
         onClose();
         navigate("/login");
