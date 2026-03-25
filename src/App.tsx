@@ -9,7 +9,10 @@ import StudentLayout from './layouts/StudentLayout';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import SessionExpiredModal from './components/SessionExpiredModal';
 import PageLoader from './components/PageLoader/PageLoader';
-import { getCurrentUser, isTokenExpired } from './services/auth.service';
+import axios from 'axios';
+import { getCurrentUser, isTokenExpired, updateTokens, clearUserFromStorage } from './services/auth.service';
+
+const BACKEND_API = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5166') + '/api';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -102,12 +105,26 @@ function App() {
     }
   }, [location.pathname]);
 
-  const checkTokenExpiry = useCallback(() => {
+  const checkTokenExpiry = useCallback(async () => {
     const user = getCurrentUser();
-    // Chỉ check khi user đã đăng nhập (có data trong localStorage)
-    if (user?.accessToken && isTokenExpired()) {
-      setShowSessionExpired(true);
+    if (!user?.accessToken || !isTokenExpired()) return;
+
+    // Thử silent refresh trước khi show modal
+    if (user.refreshToken) {
+      try {
+        const response = await axios.post(`${BACKEND_API}/token/refresh`, {
+          accessToken: user.accessToken,
+          refreshToken: user.refreshToken,
+        });
+        const { token, refreshToken } = response.data.content;
+        updateTokens(token, refreshToken);
+        return; // refresh thành công, không show modal
+      } catch {
+        clearUserFromStorage();
+      }
     }
+
+    setShowSessionExpired(true);
   }, []);
 
   // Check token expiry khi route thay đổi
