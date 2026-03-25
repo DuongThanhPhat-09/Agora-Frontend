@@ -955,6 +955,49 @@
   border-color: #d4d4d4;
 }
 
+.composerWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.imagePreviewWrapper {
+  position: relative;
+  align-self: flex-start;
+  display: inline-flex;
+}
+
+.imagePreview {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #e5e5e5;
+  display: block;
+}
+
+.imagePreviewRemove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #1a2238;
+  border: none;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s ease;
+}
+
+.imagePreviewRemove:hover {
+  background: #631b1b;
+}
+
 .composer {
   display: flex;
   align-items: flex-end;
