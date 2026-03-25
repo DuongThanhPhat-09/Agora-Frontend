@@ -267,10 +267,8 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
   const handleSendImage = useCallback(
     async (file: File) => {
       if (!selectedChannelId) return;
-      const response = await uploadChatImage(selectedChannelId, file);
-      if (response?.content) {
-        setMessages((prev) => [response.content, ...prev]);
-      }
+      await uploadChatImage(selectedChannelId, file);
+      // Không cần setMessages ở đây vì SignalR sẽ broadcast message về và tự thêm vào state
     },
     [selectedChannelId],
   );
