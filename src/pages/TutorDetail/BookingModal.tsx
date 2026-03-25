@@ -583,7 +583,7 @@ const StepReview = ({ formData, setFormData, hourlyRate, students, availableSubj
             const result = response.content;
             setPromoResult(result);
             if (result.valid) {
-                if (result.discountType === 'percentage' && result.discountValue) {
+                if ((result.discountType === 'percentage' || result.discountType === 'percent') && result.discountValue) {
                     let calcDiscount = estimatedPrice * (result.discountValue / 100);
                     if (result.maxDiscountAmount && calcDiscount > result.maxDiscountAmount) {
                         calcDiscount = result.maxDiscountAmount;
