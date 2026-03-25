@@ -228,7 +228,7 @@ const ChatMessagesArea = ({
             );
           }
 
-          // Regular text message
+          // Regular text or image message
           return (
             <MessageBubble
               key={msg.messageId || index}
@@ -236,6 +236,7 @@ const ChatMessagesArea = ({
               time={msg.createdAt}
               isSender={currentUserId ? msg.senderId === currentUserId : false}
               isRead={msg.isRead}
+              messageType={msg.messageType}
             />
           );
         })}
