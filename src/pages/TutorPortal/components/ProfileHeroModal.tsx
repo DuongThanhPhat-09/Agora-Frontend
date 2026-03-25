@@ -25,11 +25,11 @@ import styles from './ProfileHeroModal.module.css';
 
 const SUBJECTS = [
     { id: 1, name: 'Toán' },
-    { id: 2, name: 'Vật Lý' },
-    { id: 3, name: 'Hóa Học' },
-    { id: 4, name: 'Sinh Học' },
-    { id: 5, name: 'Tiếng Anh' },
-    { id: 6, name: 'Ngữ Văn' },
+    { id: 2, name: 'Tiếng Anh' },
+    { id: 3, name: 'Vật Lý' },
+    { id: 4, name: 'Hóa Học' },
+    { id: 5, name: 'Ngữ Văn' },
+    { id: 6, name: 'Sinh Học' },
     { id: 7, name: 'Lịch Sử' },
     { id: 8, name: 'Địa Lý' },
     { id: 9, name: 'Tin Học' },

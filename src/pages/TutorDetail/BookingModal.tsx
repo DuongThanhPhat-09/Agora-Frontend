@@ -37,14 +37,15 @@ interface BookingFormData {
 // ===== CONSTANTS =====
 const SUBJECT_MAPPING: Subject[] = [
     { id: 1, name: 'Toán' },
-    { id: 2, name: 'Vật Lý' },
-    { id: 3, name: 'Hóa Học' },
-    { id: 4, name: 'Sinh học' },
-    { id: 5, name: 'Tiếng Anh' },
-    { id: 6, name: 'Ngữ Văn' },
+    { id: 2, name: 'Tiếng Anh' },
+    { id: 3, name: 'Vật Lý' },
+    { id: 4, name: 'Hóa Học' },
+    { id: 5, name: 'Ngữ Văn' },
+    { id: 6, name: 'Sinh Học' },
     { id: 7, name: 'Lịch Sử' },
     { id: 8, name: 'Địa Lý' },
     { id: 9, name: 'Tin Học' },
+    { id: 10, name: 'IELTS' },
 ];
 
 const TEACHING_MODES = [
