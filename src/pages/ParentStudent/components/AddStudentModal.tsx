@@ -1,7 +1,6 @@
-import { useState } from 'react';
-// message import removed
+import { useState, useRef } from 'react';
 import styles from './AddStudentModal.module.css';
-import { Trash2 } from 'lucide-react';
+import { Trash2, AlertCircle } from 'lucide-react';
 import type { ICreateParentStudent } from '../../../services/student.service';
 
 interface AddStudentModalProps {
@@ -9,6 +8,15 @@ interface AddStudentModalProps {
     onClose: () => void;
     onSubmit: (payload: ICreateParentStudent) => Promise<void>;
 }
+
+const FIELD_LABELS: Record<string, string> = {
+    fullName: 'Họ và tên',
+    birthDate: 'Ngày sinh',
+    school: 'Trường',
+    gradeLevel: 'Khối lớp',
+    learningGoals: 'Mục tiêu học tập',
+    general: 'Lỗi',
+};
 
 const AddStudentModal = ({ isOpen, onClose, onSubmit }: AddStudentModalProps) => {
     const [formData, setFormData] = useState({
@@ -20,6 +28,7 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }: AddStudentModalProps) =>
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [submitting, setSubmitting] = useState(false);
+    const formRef = useRef<HTMLFormElement>(null);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -51,6 +60,12 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }: AddStudentModalProps) =>
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
+            // Scroll to first error field
+            setTimeout(() => {
+                const firstErrorField = formRef.current?.querySelector('[data-error="true"]') as HTMLElement;
+                firstErrorField?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                (firstErrorField as HTMLInputElement)?.focus();
+            }, 50);
             return;
         }
 
@@ -102,8 +117,24 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }: AddStudentModalProps) =>
                     </button>
                 </div>
 
-                <form className={styles.addStudentForm} onSubmit={handleSubmit}>
-                    {errors.general && <div className={styles.errorMessage} style={{ marginBottom: 8 }}>{errors.general}</div>}
+                <form className={styles.addStudentForm} onSubmit={handleSubmit} ref={formRef}>
+                    {/* Error summary banner */}
+                    {Object.keys(errors).length > 0 && (
+                        <div className={styles.errorSummary}>
+                            <AlertCircle size={16} className={styles.errorSummaryIcon} />
+                            <div>
+                                <p className={styles.errorSummaryTitle}>Vui lòng kiểm tra lại thông tin:</p>
+                                <ul className={styles.errorSummaryList}>
+                                    {Object.entries(errors).map(([field, msg]) => msg && (
+                                        <li key={field}>
+                                            <strong>{FIELD_LABELS[field] ?? field}:</strong> {msg}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    )}
+
                     <div className={styles.formRow}>
                         <label className={styles.formLabel}>
                             Họ và tên <span className={styles.required}>*</span>
@@ -116,8 +147,14 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }: AddStudentModalProps) =>
                             className={`${styles.formInput} ${errors.fullName ? styles.formInputError : ''}`}
                             placeholder="Nhập họ tên học sinh"
                             disabled={submitting}
+                            data-error={!!errors.fullName}
                         />
-                        {errors.fullName && <span className={styles.errorMessage}>{errors.fullName}</span>}
+                        {errors.fullName && (
+                            <span className={styles.errorMessage}>
+                                <AlertCircle size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+                                {errors.fullName}
+                            </span>
+                        )}
                     </div>
 
                     <div className={styles.formRow}>
@@ -131,8 +168,14 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }: AddStudentModalProps) =>
                             onChange={handleChange}
                             className={`${styles.formInput} ${errors.birthDate ? styles.formInputError : ''}`}
                             disabled={submitting}
+                            data-error={!!errors.birthDate}
                         />
-                        {errors.birthDate && <span className={styles.errorMessage}>{errors.birthDate}</span>}
+                        {errors.birthDate && (
+                            <span className={styles.errorMessage}>
+                                <AlertCircle size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+                                {errors.birthDate}
+                            </span>
+                        )}
                     </div>
 
                     <div className={styles.formRow}>
@@ -147,8 +190,14 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }: AddStudentModalProps) =>
                             className={`${styles.formInput} ${errors.school ? styles.formInputError : ''}`}
                             placeholder="Nhập tên trường"
                             disabled={submitting}
+                            data-error={!!errors.school}
                         />
-                        {errors.school && <span className={styles.errorMessage}>{errors.school}</span>}
+                        {errors.school && (
+                            <span className={styles.errorMessage}>
+                                <AlertCircle size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+                                {errors.school}
+                            </span>
+                        )}
                     </div>
 
                     <div className={styles.formRow}>

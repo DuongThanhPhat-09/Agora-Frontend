@@ -125,11 +125,50 @@
 }
 
 .errorMessage {
-    display: block;
-    font-size: 12px;
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 500;
     color: var(--color-danger);
     margin-top: 6px;
     animation: slideDown var(--transition-fast);
+}
+
+/* Error summary banner */
+.errorSummary {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    background: #fff5f5;
+    border: 1px solid #fca5a5;
+    border-left: 4px solid var(--color-danger);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 20px;
+    animation: slideDown 0.2s ease;
+}
+
+.errorSummaryIcon {
+    color: var(--color-danger);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.errorSummaryTitle {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-danger);
+    margin: 0 0 6px 0;
+}
+
+.errorSummaryList {
+    margin: 0;
+    padding-left: 16px;
+    font-size: 13px;
+    color: #b91c1c;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .formTextarea {
