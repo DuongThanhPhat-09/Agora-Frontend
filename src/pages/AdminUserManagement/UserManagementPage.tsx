@@ -6,7 +6,7 @@ import UserDetailModal from './components/UserDetailModal';
 import BlockUserModal from './components/BlockUserModal';
 import IssueWarningModal from './components/IssueWarningModal';
 import SuspendUserModal from './components/SuspendUserModal';
-import UnderDevelopment from '../../components/UnderDevelopment/UnderDevelopment';
+
 import '../../styles/pages/admin-user-management.css';
 import '../../styles/pages/admin-vetting-modal.css';
 
@@ -152,7 +152,7 @@ const UserManagementPage = () => {
             <main className="user-mgmt-main">
                 {/* HEADER AREA */}
                 <header className="user-mgmt-header">
-                    <UnderDevelopment featureName="quản lý người dùng" />
+
                     {/* Breadcrumbs */}
                     <div className="user-mgmt-breadcrumbs">
                         <a href="#" className="breadcrumb-link">
