@@ -113,6 +113,7 @@ export interface TutorDashboardStats {
   totalReviews: number;
   nextLessons: UpcomingLesson[];
   profileStatus: string | null;
+  hasVerifiedCertificates: boolean;
 }
 
 export interface CalendarLesson {
