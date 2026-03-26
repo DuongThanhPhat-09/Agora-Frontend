@@ -1,7 +1,8 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Popconfirm, Spin, Tooltip } from 'antd';
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, CloseOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import weekday from 'dayjs/plugin/weekday';
 import isoWeek from 'dayjs/plugin/isoWeek';
@@ -11,8 +12,8 @@ import { AddAvailabilityModal, EditAvailabilityModal } from './components';
 import { getAvailability, deleteAvailability, createAvailability, updateAvailability, DAY_OF_WEEK_MAP } from '../../services/availability.service';
 import type { AvailabilitySlot } from '../../services/availability.service';
 import { getUserIdFromToken } from '../../services/auth.service';
-import { getTutorCalendar } from '../../services/lesson.service';
-import type { CalendarDay, CalendarLesson } from '../../services/lesson.service';
+import { getTutorCalendar, getTutorLessonDetail } from '../../services/lesson.service';
+import type { CalendarDay, CalendarLesson, LessonDetailDto } from '../../services/lesson.service';
 
 // Translate common English API messages to Vietnamese
 const translateScheduleMsg = (msg: string, fallback: string): string => {
@@ -133,6 +134,7 @@ const calculateDurationMinutes = (startTime: string, endTime: string): number =>
 };
 
 const TutorPortalSchedule: React.FC = () => {
+    const navigate = useNavigate();
     // FROM MILESTONE_3: 2 tabs - settings (lịch rảnh) + lessons (lịch dạy)
     const [activeTab, setActiveTab] = useState<'settings' | 'lessons'>('settings');
     const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('week');
@@ -150,6 +152,13 @@ const TutorPortalSchedule: React.FC = () => {
     // FROM MILESTONE_3: State cho lessons tab
     const [calendarData, setCalendarData] = useState<CalendarDay[]>([]);
     const [isLoadingLessons, setIsLoadingLessons] = useState(false);
+
+    // Lesson detail popup state
+    const [selectedLessonDetail, setSelectedLessonDetail] = useState<LessonDetailDto | null>(null);
+    const [isLoadingLessonDetail, setIsLoadingLessonDetail] = useState(false);
+    const [lessonPopupPosition, setLessonPopupPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+    const [showLessonPopup, setShowLessonPopup] = useState(false);
+    const lessonPopupRef = useRef<HTMLDivElement>(null);
 
     // Flatten calendar data into lessons array for the lessons tab grid
     const lessons: CalendarLesson[] = useMemo(() => {
@@ -689,6 +698,79 @@ const TutorPortalSchedule: React.FC = () => {
 
     const handleCloseAddAvailabilityModal = () => {
         setIsAddAvailabilityModalOpen(false);
+    };
+
+    // Handle lesson block click — fetch detail and show popup
+    const handleLessonClick = useCallback(async (e: React.MouseEvent, lesson: CalendarLesson) => {
+        e.stopPropagation();
+        // Position popup near click, but keep in viewport
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const popupWidth = 340;
+        const popupHeight = 320;
+        let x = rect.right + 8;
+        let y = rect.top;
+        // Keep within viewport
+        if (x + popupWidth > window.innerWidth) x = rect.left - popupWidth - 8;
+        if (x < 8) x = 8;
+        if (y + popupHeight > window.innerHeight) y = window.innerHeight - popupHeight - 8;
+        if (y < 8) y = 8;
+        setLessonPopupPosition({ x, y });
+        setShowLessonPopup(true);
+        setIsLoadingLessonDetail(true);
+        setSelectedLessonDetail(null);
+
+        try {
+            const response = await getTutorLessonDetail(lesson.lessonId);
+            setSelectedLessonDetail(response.content);
+        } catch (error: any) {
+            console.error('Error fetching lesson detail:', error);
+            toast.error('Không thể tải chi tiết buổi học');
+            setShowLessonPopup(false);
+        } finally {
+            setIsLoadingLessonDetail(false);
+        }
+    }, []);
+
+    const handleCloseLessonPopup = useCallback(() => {
+        setShowLessonPopup(false);
+        setSelectedLessonDetail(null);
+    }, []);
+
+    const handleNavigateToClassDetail = useCallback(() => {
+        if (selectedLessonDetail?.bookingId) {
+            navigate(`/tutor-portal/classes/${selectedLessonDetail.bookingId}`);
+        }
+    }, [selectedLessonDetail, navigate]);
+
+    // Close popup when clicking outside
+    useEffect(() => {
+        if (!showLessonPopup) return;
+        const handleClickOutside = (e: MouseEvent) => {
+            if (lessonPopupRef.current && !lessonPopupRef.current.contains(e.target as Node)) {
+                handleCloseLessonPopup();
+            }
+        };
+        // Delay to avoid closing immediately from the same click
+        const timer = setTimeout(() => {
+            document.addEventListener('mousedown', handleClickOutside);
+        }, 100);
+        return () => {
+            clearTimeout(timer);
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showLessonPopup, handleCloseLessonPopup]);
+
+    // Helper: get status label for lesson popup
+    const getLessonStatusInfo = (status: string | null): { label: string; color: string } => {
+        switch (status) {
+            case 'scheduled': return { label: 'Đã lên lịch', color: '#1890ff' };
+            case 'in_progress': return { label: 'Đang học', color: '#52c41a' };
+            case 'pending_confirmation': return { label: 'Chờ xác nhận', color: '#722ed1' };
+            case 'completed': return { label: 'Hoàn thành', color: '#52c41a' };
+            case 'cancelled': return { label: 'Đã hủy', color: '#999' };
+            case 'no_show': return { label: 'Vắng mặt', color: '#ff4d4f' };
+            default: return { label: status || 'N/A', color: '#999' };
+        }
     };
 
     // FROM DEVELOP: Tìm slot rảnh bắt đầu trong giờ cụ thể
@@ -1289,7 +1371,8 @@ const TutorPortalSchedule: React.FC = () => {
                                                                 <div
                                                                     key={lesson.lessonId}
                                                                     className={styles.lessonBlock}
-                                                                    style={{ height: `${heightPx}px` }}
+                                                                    style={{ height: `${heightPx}px`, cursor: 'pointer' }}
+                                                                    onClick={(e) => handleLessonClick(e, lesson)}
                                                                 >
                                                                     <div className={styles.lessonContent}>
                                                                         <span className={styles.lessonLabel}>
@@ -1316,6 +1399,83 @@ const TutorPortalSchedule: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* Lesson Detail Popup */}
+            {showLessonPopup && (
+                <div
+                    ref={lessonPopupRef}
+                    className={styles.lessonPopup}
+                    style={{ left: lessonPopupPosition.x, top: lessonPopupPosition.y }}
+                >
+                    <div className={styles.lessonPopupHeader}>
+                        <span className={styles.lessonPopupTitle}>Chi tiết buổi học</span>
+                        <button className={styles.lessonPopupClose} onClick={handleCloseLessonPopup}>
+                            <CloseOutlined />
+                        </button>
+                    </div>
+                    {isLoadingLessonDetail ? (
+                        <div className={styles.lessonPopupLoading}>
+                            <Spin size="small" />
+                            <span>Đang tải...</span>
+                        </div>
+                    ) : selectedLessonDetail ? (
+                        <div className={styles.lessonPopupBody}>
+                            <div className={styles.lessonPopupRow}>
+                                <span className={styles.lessonPopupLabel}>Môn học</span>
+                                <span className={styles.lessonPopupValue}>{selectedLessonDetail.subject?.subjectName || 'N/A'}</span>
+                            </div>
+                            <div className={styles.lessonPopupRow}>
+                                <span className={styles.lessonPopupLabel}>Học sinh</span>
+                                <span className={styles.lessonPopupValue}>{selectedLessonDetail.student?.fullName || 'N/A'}</span>
+                            </div>
+                            <div className={styles.lessonPopupRow}>
+                                <span className={styles.lessonPopupLabel}>Thời gian</span>
+                                <span className={styles.lessonPopupValue}>
+                                    {dayjs(selectedLessonDetail.scheduledStart).format('HH:mm')} - {dayjs(selectedLessonDetail.scheduledEnd).format('HH:mm')}
+                                    {' · '}
+                                    {dayjs(selectedLessonDetail.scheduledStart).format('DD/MM/YYYY')}
+                                </span>
+                            </div>
+                            <div className={styles.lessonPopupRow}>
+                                <span className={styles.lessonPopupLabel}>Trạng thái</span>
+                                <span className={styles.lessonPopupStatus} style={{ color: getLessonStatusInfo(selectedLessonDetail.status || null).color }}>
+                                    {getLessonStatusInfo(selectedLessonDetail.status || null).label}
+                                </span>
+                            </div>
+                            {selectedLessonDetail.lessonPrice != null && (
+                                <div className={styles.lessonPopupRow}>
+                                    <span className={styles.lessonPopupLabel}>Giá buổi học</span>
+                                    <span className={styles.lessonPopupValue} style={{ fontWeight: 600 }}>
+                                        {selectedLessonDetail.lessonPrice.toLocaleString('vi-VN')}đ
+                                    </span>
+                                </div>
+                            )}
+                            {selectedLessonDetail.meetingLink && (
+                                <div className={styles.lessonPopupRow}>
+                                    <span className={styles.lessonPopupLabel}>Link học</span>
+                                    <a
+                                        href={selectedLessonDetail.meetingLink}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={styles.lessonPopupLink}
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        Tham gia Meet ↗
+                                    </a>
+                                </div>
+                            )}
+                            {selectedLessonDetail.bookingId && (
+                                <button
+                                    className={styles.lessonPopupDetailBtn}
+                                    onClick={handleNavigateToClassDetail}
+                                >
+                                    Xem chi tiết lớp học →
+                                </button>
+                            )}
+                        </div>
+                    ) : null}
+                </div>
+            )}
 
             {/* FAB — Mobile only (hidden on desktop via CSS) */}
             <button className={styles.fab} onClick={handleAddAvailabilityClick}>

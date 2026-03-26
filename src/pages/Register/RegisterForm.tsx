@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import InputGroup from "../../components/InputGroup";
 import axios from "axios";
 import { saveUserToStorage, getRoleFromToken } from "../../services/auth.service";
+import { supabaseAdmin } from "../../lib/supabase";
 
 const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5166') + '/api';
 
@@ -68,7 +69,22 @@ const RegisterForm: React.FC = () => {
         try {
             setIsSubmitting(true);
 
-            // Call SimpleAuth register API directly (no Supabase, no OTP)
+            // Step 1: Create user in Supabase Auth (for password reset support)
+            // This is non-blocking — if it fails, SimpleAuth registration still proceeds
+            try {
+                const { error: supabaseError } = await supabaseAdmin.auth.admin.createUser({
+                    email: formData.email,
+                    password: formData.password,
+                    email_confirm: true,
+                });
+                if (supabaseError) {
+                    console.warn('Supabase sync (non-blocking):', supabaseError.message);
+                }
+            } catch (syncError: any) {
+                console.warn('Supabase sync failed (non-blocking):', syncError?.message);
+            }
+
+            // Step 2: Call SimpleAuth register API (primary registration)
             const response = await axios.post(`${API_BASE_URL}/SimpleAuth/register`, {
                 email: formData.email,
                 phone: formData.phone || undefined,
