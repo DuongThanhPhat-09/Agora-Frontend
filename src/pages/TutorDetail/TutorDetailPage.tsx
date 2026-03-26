@@ -819,7 +819,7 @@ const BookingSidebar = ({
                     )}
 
                     {/* Trial Lesson Price */}
-                    {trialLessonPrice && trialLessonPrice > 0 && (
+                    {trialLessonPrice != null && trialLessonPrice > 0 && (
                         <div className="trial-price-label">
                             Buổi học thử: {formatCurrency(trialLessonPrice)}
                         </div>
