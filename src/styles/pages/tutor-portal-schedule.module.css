@@ -2017,3 +2017,156 @@
 .mobileOnly {
     display: none;
 }
+
+/* ===== LESSON DETAIL POPUP ===== */
+.lessonPopup {
+    position: fixed;
+    width: 340px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    z-index: 1000;
+    overflow: hidden;
+    animation: lessonPopupIn 0.2s ease-out;
+}
+
+@keyframes lessonPopupIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.lessonPopupHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px 12px;
+    border-bottom: 1px solid rgba(26, 34, 56, 0.08);
+    background: linear-gradient(135deg, #3d4a3e 0%, #4a5a4e 100%);
+}
+
+.lessonPopupTitle {
+    font-family: 'Bricolage Grotesque', serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #f2f0e4;
+}
+
+.lessonPopupClose {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(255, 255, 255, 0.15);
+    color: #f2f0e4;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.15s ease;
+}
+
+.lessonPopupClose:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.lessonPopupLoading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 36px 18px;
+    color: #999;
+    font-size: 13px;
+}
+
+.lessonPopupBody {
+    padding: 14px 18px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.lessonPopupRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.lessonPopupLabel {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(26, 34, 56, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    line-height: 1.5;
+}
+
+.lessonPopupValue {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1a2238;
+    text-align: right;
+    line-height: 1.5;
+}
+
+.lessonPopupStatus {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.lessonPopupLink {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1890ff;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.lessonPopupLink:hover {
+    color: #40a9ff;
+    text-decoration: underline;
+}
+
+.lessonPopupDetailBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 6px;
+    padding: 11px 0;
+    border-radius: 10px;
+    background: #1a2238;
+    border: none;
+    font-family: 'Bricolage Grotesque', serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lessonPopupDetailBtn:hover {
+    background: #2a3248;
+    box-shadow: 0 4px 12px rgba(26, 34, 56, 0.2);
+}
+
+/* Mobile: lesson popup takes more width */
+@media (max-width: 768px) {
+    .lessonPopup {
+        width: calc(100vw - 32px);
+        max-width: 360px;
+        left: 50% !important;
+        transform: translateX(-50%);
+    }
+}
