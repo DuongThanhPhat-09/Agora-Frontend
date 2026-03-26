@@ -4,7 +4,7 @@ import ChatHeader from './ChatHeader';
 import ChatMessagesArea from './ChatMessagesArea';
 import MessageComposer from './MessageComposer';
 import SessionContextCard from './SessionContextCard';
-import { getChatMessages, markMessagesAsRead, type ChatMessage, type ChatChannel } from '../../services/chat.service';
+import { getChatMessages, markMessagesAsRead, uploadChatImage, type ChatMessage, type ChatChannel } from '../../services/chat.service';
 import { getBookingById, type BookingResponseDTO } from '../../services/booking.service';
 import { signalRService } from '../../services/signalr.service';
 import { toast } from 'react-toastify';
@@ -263,6 +263,16 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
     [selectedChannelId, currentUserId],
   );
 
+  // Handler gửi hình ảnh qua chat
+  const handleSendImage = useCallback(
+    async (file: File) => {
+      if (!selectedChannelId) return;
+      await uploadChatImage(selectedChannelId, file);
+      // Không cần setMessages ở đây vì SignalR sẽ broadcast message về và tự thêm vào state
+    },
+    [selectedChannelId],
+  );
+
   // Handler rời channel
   const handleLeaveChannel = useCallback(async () => {
     if (!selectedChannelId) return;
@@ -339,6 +349,7 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
       <div className={styles.chatFooter}>
         <MessageComposer
           onSend={handleSendMessage}
+          onSendImage={handleSendImage}
           disabled={!signalRService.isConnected()}
           channelId={selectedChannelId}
         />

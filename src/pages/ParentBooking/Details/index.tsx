@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import {
     ArrowLeft,
     Calendar,
@@ -107,6 +107,11 @@ const BookingDetailPage = () => {
     const [cancelLoading, setCancelLoading] = useState(false);
 
     const bookingId = Number(id);
+
+    // Redirect to 404 if bookingId is not a valid positive integer
+    if (!id || isNaN(bookingId) || bookingId <= 0 || !Number.isInteger(bookingId)) {
+        return <Navigate to="/404" replace />;
+    }
 
     useEffect(() => {
         const fetchBooking = async () => {

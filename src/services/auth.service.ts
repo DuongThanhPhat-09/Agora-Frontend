@@ -65,6 +65,38 @@ export const clearUserFromStorage = () => {
   localStorage.removeItem(USER_LOCAL_STORAGE_KEY);
 };
 
+/**
+ * Lấy refresh token từ localStorage
+ */
+export const getRefreshToken = (): string | null => {
+  return getCurrentUser()?.refreshToken || null;
+};
+
+/**
+ * Cập nhật access token và refresh token mới sau khi silent refresh
+ */
+export const updateTokens = (accessToken: string, refreshToken: string) => {
+  const user = getCurrentUser() || {};
+  saveUserToStorage({ ...user, accessToken, refreshToken });
+};
+
+/**
+ * Logout: revoke refresh token trên server rồi xóa localStorage
+ */
+export const logout = async () => {
+  const user = getCurrentUser();
+  const refreshToken = user?.refreshToken;
+  if (refreshToken) {
+    try {
+      const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5166') + '/api';
+      await api.post(`${API_BASE_URL}/token/revoke`, { refreshToken }, {
+        headers: { Authorization: `Bearer ${user?.accessToken}` }
+      });
+    } catch { /* best effort - vẫn logout dù server lỗi */ }
+  }
+  clearUserFromStorage();
+};
+
 // --- ROLE MANAGEMENT FUNCTIONS ---
 
 /**

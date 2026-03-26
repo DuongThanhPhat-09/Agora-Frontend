@@ -113,6 +113,32 @@ export const sendMessageREST = async (
   }
 };
 
+/** POST /api/chat/channels/:id/upload-image — Upload image and send as chat message */
+export const uploadChatImage = async (channelId: number, file: File): Promise<ApiResponse<ChatMessage>> => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const authHeaders = getAuthHeaders();
+    const response = await api.post(`/chat/channels/${channelId}/upload-image`, formData, {
+      headers: {
+        ...authHeaders,
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    console.log('✅ Image sent via chat:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ Error uploading chat image:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+    throw error;
+  }
+};
+
 /** PUT /api/chat/channels/:id/read — Mark all unread messages in channel as read */
 export const markMessagesAsRead = async (channelId: number): Promise<void> => {
   try {

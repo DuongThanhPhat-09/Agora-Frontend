@@ -79,8 +79,16 @@ const TutorPortalBookings = () => {
 
     const confirmDecline = async () => {
         if (!selectedBookingId) return;
+        if (!declineReason.trim()) {
+            toast.warning('Vui lòng nhập lý do từ chối trước khi xác nhận.');
+            return;
+        }
+        if (declineReason.trim().length < 10) {
+            toast.warning('Lý do từ chối phải có ít nhất 10 ký tự.');
+            return;
+        }
         try {
-            await declineBooking(selectedBookingId, declineReason);
+            await declineBooking(selectedBookingId, declineReason.trim());
             toast.success('Đã từ chối yêu cầu.');
             setDeclineModalVisible(false);
             setDeclineReason('');
@@ -227,13 +235,21 @@ const TutorPortalBookings = () => {
                 okButtonProps={{ danger: true }}
             >
                 <div style={{ padding: '16px 0' }}>
-                    <p style={{ marginBottom: 8 }}>Vui lòng nhập lý do từ chối (tùy chọn):</p>
+                    <p style={{ marginBottom: 8 }}>
+                        Vui lòng nhập lý do từ chối <span style={{ color: '#ff4d4f' }}>*</span>:
+                    </p>
                     <Input.TextArea
                         rows={4}
-                        placeholder="Ví dụ: Tôi hiện không còn lịch trống vào khung giờ này..."
+                        placeholder="Ví dụ: Tôi hiện không còn lịch trống vào khung giờ này... (tối thiểu 10 ký tự)"
                         value={declineReason}
                         onChange={(e) => setDeclineReason(e.target.value)}
+                        status={declineReason.trim().length > 0 && declineReason.trim().length < 10 ? 'error' : undefined}
                     />
+                    {declineReason.trim().length > 0 && declineReason.trim().length < 10 && (
+                        <p style={{ color: '#ff4d4f', fontSize: 12, marginTop: 4 }}>
+                            Lý do phải có ít nhất 10 ký tự ({declineReason.trim().length}/10)
+                        </p>
+                    )}
                 </div>
             </Modal>
         </div>
