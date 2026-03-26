@@ -228,8 +228,17 @@ const ParentAccount = () => {
                     ) : (
                         <span style={avatarInitials}>{initials}</span>
                     )}
-                    <div style={{ position: 'absolute', bottom: 0, right: 0, background: '#4F46E5', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid white' }}>
-                        {uploadingAvatar ? <span style={{ color: 'white', fontSize: 12 }}>...</span> : <span style={{ color: 'white', fontSize: 14 }}>✎</span>}
+                    <div style={{ position: 'absolute', bottom: -1, right: -1, background: '#4F46E5', borderRadius: '50%', width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2.5px solid white', boxShadow: '0 2px 6px rgba(79,70,229,0.35)', transition: 'background 0.2s' }}>
+                        {uploadingAvatar ? (
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ animation: 'spin 1s linear infinite' }}>
+                                <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" strokeDasharray="31.4 31.4" strokeLinecap="round" />
+                            </svg>
+                        ) : (
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                                <circle cx="12" cy="13" r="4" />
+                            </svg>
+                        )}
                     </div>
                 </div>
                 <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleAvatarChange} />
