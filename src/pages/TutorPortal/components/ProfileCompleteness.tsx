@@ -22,6 +22,7 @@ interface ProfileData {
     teachingAreaDistrict: string;
     videoIntroUrl: string | null;
     bio: string;
+    hourlyRate: number;
     credentials: Array<{ id: string | number }>;
     availability: Array<{ dayOfWeek: number }>;
     identityVerification: {
@@ -69,7 +70,7 @@ const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
             key: 'identity',
             label: 'Xác minh danh tính',
             completed: hasIdentity,
-            percentage: 25
+            percentage: 20
         });
 
         // Introduction video: 10%
@@ -78,7 +79,7 @@ const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
             key: 'video',
             label: 'Video giới thiệu',
             completed: hasVideo,
-            percentage: 15
+            percentage: 10
         });
 
         // About Me (bio >= 100 chars): 15%
@@ -97,6 +98,15 @@ const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
             label: 'Bằng cấp, chứng chỉ',
             completed: hasCredentials,
             percentage: 15
+        });
+
+        // Pricing (hourlyRate > 0): 10%
+        const hasPricing = profileData.hourlyRate != null && profileData.hourlyRate > 0;
+        items.push({
+            key: 'pricing',
+            label: 'Thiết lập giá',
+            completed: hasPricing,
+            percentage: 10
         });
 
         // Teaching Schedule (>= 3 slots): 15%

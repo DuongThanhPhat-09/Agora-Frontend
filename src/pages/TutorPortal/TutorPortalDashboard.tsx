@@ -317,31 +317,73 @@ const TutorPortalDashboard: React.FC = () => {
                         <div className={styles.bannerText}>
                             <div className={styles.bannerTitleRow}>
                                 <span className={styles.bannerTitle}>
-                                    {stats.profileStatus === 'draft' && stats.hasVerifiedCertificates && 'Admin \u0111\u00e3 duy\u1ec7t ch\u1ee9ng ch\u1ec9 \u2014 vui l\u00f2ng ho\u00e0n t\u1ea5t h\u1ed3 s\u01a1'}
-                                    {stats.profileStatus === 'draft' && !stats.hasVerifiedCertificates && 'H\u1ed3 s\u01a1 c\u1ee7a b\u1ea1n ch\u01b0a ho\u00e0n t\u1ea5t'}
-                                    {stats.profileStatus === 'pending_approval' && 'H\u1ed3 s\u01a1 c\u1ee7a b\u1ea1n \u0111ang \u0111\u01b0\u1ee3c xem x\u00e9t'}
-                                    {stats.profileStatus === 'rejected' && 'H\u1ed3 s\u01a1 c\u1ee7a b\u1ea1n \u0111\u00e3 b\u1ecb t\u1eeb ch\u1ed1i'}
+                                    {stats.profileStatus === 'draft' && stats.hasVerifiedCertificates && 'Admin đã duyệt chứng chỉ — vui lòng hoàn tất hồ sơ'}
+                                    {stats.profileStatus === 'draft' && !stats.hasVerifiedCertificates && 'Hồ sơ của bạn chưa hoàn tất'}
+                                    {stats.profileStatus === 'pending_approval' && 'Hồ sơ của bạn đang được xem xét'}
+                                    {stats.profileStatus === 'rejected' && 'Hồ sơ của bạn đã bị từ chối'}
                                 </span>
                                 <span className={styles.pendingBadge} style={{
                                     backgroundColor: stats.profileStatus === 'rejected' ? 'rgba(220, 38, 38, 0.1)' : undefined,
                                     color: stats.profileStatus === 'rejected' ? '#dc2626' : undefined,
                                 }}>
-                                    {stats.profileStatus === 'draft' && stats.hasVerifiedCertificates && 'C\u1ea7n ho\u00e0n t\u1ea5t'}
-                                    {stats.profileStatus === 'draft' && !stats.hasVerifiedCertificates && 'Nh\u00e1p'}
-                                    {stats.profileStatus === 'pending_approval' && '\u0110ang ch\u1edd'}
-                                    {stats.profileStatus === 'rejected' && 'T\u1eeb ch\u1ed1i'}
+                                    {stats.profileStatus === 'draft' && stats.hasVerifiedCertificates && 'Cần hoàn tất'}
+                                    {stats.profileStatus === 'draft' && !stats.hasVerifiedCertificates && 'Nháp'}
+                                    {stats.profileStatus === 'pending_approval' && 'Đang chờ'}
+                                    {stats.profileStatus === 'rejected' && 'Từ chối'}
                                 </span>
                             </div>
                             <p className={styles.bannerDescription}>
-                                {stats.profileStatus === 'draft' && stats.hasVerifiedCertificates && 'Ch\u1ee9ng ch\u1ec9 c\u1ee7a b\u1ea1n \u0111\u00e3 \u0111\u01b0\u1ee3c admin ph\u00ea duy\u1ec7t. Vui l\u00f2ng c\u1eadp nh\u1eadt \u0111\u1ea7y \u0111\u1ee7 th\u00f4ng tin c\u00f2n thi\u1ebfu (gi\u00e1, gi\u1edbi thi\u1ec7u, v.v.) \u0111\u1ec3 xu\u1ea5t hi\u1ec7n tr\u00ean marketplace.'}
-                                {stats.profileStatus === 'draft' && !stats.hasVerifiedCertificates && 'Vui l\u00f2ng ho\u00e0n t\u1ea5t h\u1ed3 s\u01a1 gia s\u01b0 \u0111\u1ec3 \u0111\u01b0\u1ee3c xu\u1ea5t hi\u1ec7n tr\u00ean marketplace v\u00e0 nh\u1eadn h\u1ecdc sinh.'}
-                                {stats.profileStatus === 'pending_approval' && 'Admin \u0111ang x\u00e1c minh th\u00f4ng tin c\u1ee7a b\u1ea1n. B\u1ea1n s\u1ebd xu\u1ea5t hi\u1ec7n tr\u00ean marketplace sau khi \u0111\u01b0\u1ee3c ph\u00ea duy\u1ec7t.'}
-                                {stats.profileStatus === 'rejected' && 'H\u1ed3 s\u01a1 c\u1ee7a b\u1ea1n ch\u01b0a \u0111\u1ea1t y\u00eau c\u1ea7u. Vui l\u00f2ng c\u1eadp nh\u1eadt l\u1ea1i th\u00f4ng tin v\u00e0 g\u1eedi l\u1ea1i \u0111\u1ec3 \u0111\u01b0\u1ee3c xem x\u00e9t.'}
+                                {stats.profileStatus === 'draft' && stats.hasVerifiedCertificates && 'Chứng chỉ của bạn đã được admin phê duyệt. Vui lòng cập nhật đầy đủ thông tin còn thiếu để xuất hiện trên marketplace.'}
+                                {stats.profileStatus === 'draft' && !stats.hasVerifiedCertificates && 'Vui lòng hoàn tất hồ sơ gia sư để được xuất hiện trên marketplace và nhận học sinh.'}
+                                {stats.profileStatus === 'pending_approval' && 'Admin đang xác minh thông tin của bạn. Bạn sẽ xuất hiện trên marketplace sau khi được phê duyệt.'}
+                                {stats.profileStatus === 'rejected' && 'Hồ sơ của bạn chưa đạt yêu cầu. Vui lòng cập nhật lại thông tin và gửi lại để được xem xét.'}
                             </p>
+
+                            {/* Missing fields checklist for draft profiles */}
+                            {stats.profileStatus === 'draft' && stats.missingFields && stats.missingFields.length > 0 && (
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+                                    gap: '6px 16px',
+                                    marginTop: '10px',
+                                    padding: '10px 12px',
+                                    background: 'rgba(26, 34, 56, 0.03)',
+                                    borderRadius: '8px',
+                                    fontSize: '12px',
+                                }}>
+                                    {[
+                                        { key: 'hourlyRate', label: 'Giá theo giờ' },
+                                        { key: 'bio', label: 'Giới thiệu bản thân' },
+                                        { key: 'video', label: 'Video giới thiệu' },
+                                        { key: 'avatar', label: 'Ảnh đại diện' },
+                                        { key: 'education', label: 'Học vấn' },
+                                        { key: 'headline', label: 'Tiêu đề hồ sơ' },
+                                        { key: 'subjects', label: 'Môn học' },
+                                        { key: 'teachingArea', label: 'Khu vực dạy' },
+                                        { key: 'teachingMode', label: 'Hình thức dạy' },
+                                        { key: 'certificates', label: 'Chứng chỉ' },
+                                        { key: 'identity', label: 'Xác minh danh tính' },
+                                    ].map(item => {
+                                        const isMissing = stats.missingFields!.includes(item.key);
+                                        return (
+                                            <div key={item.key} style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '6px',
+                                                color: isMissing ? '#b45309' : '#16a34a',
+                                                fontWeight: isMissing ? 500 : 400,
+                                            }}>
+                                                <span style={{ fontSize: '13px' }}>{isMissing ? '❌' : '✅'}</span>
+                                                <span>{item.label}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
                     </div>
                     <button className={styles.viewDetailsBtn} onClick={() => navigate('/tutor-portal/onboarding')}>
-                        {stats.profileStatus === 'draft' ? 'Ho\u00e0n t\u1ea5t h\u1ed3 s\u01a1' : stats.profileStatus === 'rejected' ? 'C\u1eadp nh\u1eadt h\u1ed3 s\u01a1' : 'Xem chi ti\u1ebft'}
+                        {stats.profileStatus === 'draft' ? 'Hoàn tất hồ sơ' : stats.profileStatus === 'rejected' ? 'Cập nhật hồ sơ' : 'Xem chi tiết'}
                         <ArrowRightIcon />
                     </button>
                 </div>

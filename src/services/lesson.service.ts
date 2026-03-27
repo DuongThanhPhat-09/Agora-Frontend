@@ -114,6 +114,7 @@ export interface TutorDashboardStats {
   nextLessons: UpcomingLesson[];
   profileStatus: string | null;
   hasVerifiedCertificates: boolean;
+  missingFields: string[] | null;
 }
 
 export interface CalendarLesson {
