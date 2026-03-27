@@ -141,7 +141,7 @@ const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
         <div className={styles.card}>
             {/* Header */}
             <div className={styles.header}>
-                <span className={styles.label}>Mức độ hoàn thiện</span>
+                <span className={styles.label}>Tiến trình hồ sơ (bắt buộc)</span>
                 <span className={styles.percent}>{totalPercentage}%</span>
             </div>
 
@@ -156,11 +156,11 @@ const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
             {/* Status Message */}
             <div className={styles.statusMessage}>
                 {totalPercentage === 100 ? (
-                    <span className={styles.complete}>Hồ sơ của bạn đã hoàn thiện!</span>
+                    <span className={styles.complete}>✅ Hồ sơ đủ điều kiện hiển thị trên marketplace!</span>
                 ) : totalPercentage >= 70 ? (
-                    <span className={styles.good}>Sắp hoàn thiện! Còn {100 - totalPercentage}% nữa.</span>
+                    <span className={styles.good}>Sắp hoàn thiện! Hoàn thành để xuất hiện trên marketplace.</span>
                 ) : (
-                    <span className={styles.needsWork}>Hoàn thiện thêm để thu hút học sinh</span>
+                    <span className={styles.needsWork}>⚠️ Bắt buộc hoàn thành để hiển thị trên marketplace</span>
                 )}
             </div>
 
@@ -185,7 +185,7 @@ const ProfileCompleteness: React.FC<ProfileCompletenessProps> = ({
                     className={styles.actionBtn}
                     onClick={() => handleItemClick(incompleteItems[0].key)}
                 >
-                    Hoàn thiện: {incompleteItems[0].label}
+                    ⚡ Cần hoàn thành: {incompleteItems[0].label}
                 </button>
             )}
         </div>
