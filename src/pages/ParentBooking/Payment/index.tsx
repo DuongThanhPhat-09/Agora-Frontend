@@ -247,8 +247,25 @@ const PaymentPage = () => {
                                     <span className={styles.discount}>-{formatPrice(booking.discountApplied)}</span>
                                 </div>
                             ) : null}
+                            {(() => {
+                                const parentFee = (booking?.finalPrice || 0) - ((booking?.price || 0) - (booking?.discountApplied || 0));
+                                return parentFee > 0 ? (
+                                    <div className={styles.priceRow}>
+                                        <span>Phí dịch vụ (5%):</span>
+                                        <span>+{formatPrice(parentFee)}</span>
+                                    </div>
+                                ) : null;
+                            })()}
+                            <div className={styles.priceRow}>
+                                <span>Tổng:</span>
+                                <span>{formatPrice(booking?.finalPrice || 0)}</span>
+                            </div>
                             <div className={`${styles.priceRow} ${styles.totalRow}`}>
-                                <span>Tổng cộng:</span>
+                                <span>
+                                    {paymentInfo?.paymentPhase === 'remaining'
+                                        ? 'Thanh toán lần này (50% còn lại):'
+                                        : 'Đặt cọc lần này (50%):'}
+                                </span>
                                 <span className={styles.totalPrice}>{formatPrice(paymentInfo?.amount || 0)}</span>
                             </div>
                         </div>
