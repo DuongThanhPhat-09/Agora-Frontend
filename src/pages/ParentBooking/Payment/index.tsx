@@ -133,7 +133,8 @@ const PaymentPage = () => {
             interval = setInterval(async () => {
                 try {
                     const res = await getPaymentStatus(bookingId);
-                    if ((res?.content as any)?.paymentStatus === 'paid') {
+                    const data = res?.content;
+                    if (data?.isPaid || data?.isDepositPaid) {
                         setPaymentSuccess(true);
                         antMessage.success('Thanh toán thành công!');
                         clearInterval(interval);
