@@ -407,6 +407,7 @@
     line-height: 21px;
     color: rgba(62, 47, 40, 0.6);
     margin: 0;
+    white-space: pre-wrap;
 }
 
 /* Credentials Card */
