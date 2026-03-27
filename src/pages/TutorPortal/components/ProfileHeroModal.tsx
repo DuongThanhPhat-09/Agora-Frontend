@@ -49,7 +49,6 @@ const GRADE_LEVELS = [
     { value: 'grade_10', label: 'Lớp 10' },
     { value: 'grade_11', label: 'Lớp 11' },
     { value: 'grade_12', label: 'Lớp 12' },
-    { value: 'grade_university', label: 'Đại học' },
 ];
 
 const TEACHING_MODES = [
