@@ -156,6 +156,7 @@ interface Tutor {
     resultType: "success" | "primary" | "muted" | "warning";
     highlights: string[];
     price: number;
+    trialLessonPrice: number | null;
 }
 
 // ============================================
@@ -270,6 +271,7 @@ const mapApiTutorToUi = (apiTutor: TutorSearchResultResponse): Tutor => {
         resultType: getResultType(type),
         highlights: apiTutor.highlights || [],
         price: apiTutor.hourlyRate ? Math.round(Number(apiTutor.hourlyRate) * 1.05) : 0,
+        trialLessonPrice: apiTutor.trialLessonPrice ?? null,
     };
 };
 
@@ -758,6 +760,11 @@ const TutorCard = ({ tutor }: TutorCardProps) => {
                         <span className="price-amount">{tutor.price.toLocaleString('vi-VN')}đ</span>
                         <span className="price-unit">/h</span>
                     </div>
+                    {tutor.trialLessonPrice != null && tutor.trialLessonPrice > 0 && (
+                        <div className="trial-price-badge" title="Học phí ưu đãi cho buổi học đầu tiên">
+                            ✨ Học thử: {tutor.trialLessonPrice.toLocaleString('vi-VN')}đ
+                        </div>
+                    )}
                 </div>
                 <div className="tutor-actions">
                     <button className="btn-details" onClick={handleButtonClick}>Chi tiết</button>

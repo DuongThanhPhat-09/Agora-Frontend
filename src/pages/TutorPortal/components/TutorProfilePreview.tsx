@@ -690,6 +690,11 @@ const BookingSidebar: React.FC<{ data: TutorProfileFormData }> = ({ data }) => {
                         </b>
                         <b className="price-unit">/ GIỜ HỌC</b>
                     </div>
+                    {data.trialLessonPrice && data.trialLessonPrice > 0 && (
+                        <div className="trial-price-label" title="Học phí ưu đãi cho buổi học đầu tiên">
+                            ✨ Buổi học thử: {formatPrice(data.trialLessonPrice)}
+                        </div>
+                    )}
                 </div>
 
                 {/* Scrollable Body */}
@@ -719,12 +724,6 @@ const BookingSidebar: React.FC<{ data: TutorProfileFormData }> = ({ data }) => {
                         </div>
                     )}
 
-                    {/* Trial Lesson Price */}
-                    {data.trialLessonPrice && data.trialLessonPrice > 0 && (
-                        <div className="trial-price-label">
-                            Buổi học thử: {formatPrice(data.trialLessonPrice)}
-                        </div>
-                    )}
                 </div>
 
                 {/* Fixed Footer — Action Buttons */}
