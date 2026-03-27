@@ -134,7 +134,10 @@ const PaymentPage = () => {
                 try {
                     const res = await getPaymentStatus(bookingId);
                     const data = res?.content;
-                    if (data?.isPaid || data?.isDepositPaid) {
+                    const phaseComplete = paymentInfo?.paymentPhase === 'remaining'
+                        ? data?.isRemainingPaid
+                        : data?.isDepositPaid;
+                    if (data?.isPaid || phaseComplete) {
                         setPaymentSuccess(true);
                         antMessage.success('Thanh toán thành công!');
                         clearInterval(interval);
@@ -145,7 +148,7 @@ const PaymentPage = () => {
             }, 5000);
         }
         return () => clearInterval(interval);
-    }, [bookingId, paymentMethod, paymentSuccess, loading]);
+    }, [bookingId, paymentMethod, paymentSuccess, loading, paymentInfo?.paymentPhase]);
 
     const handleWalletPay = async () => {
         if (!paymentInfo || paymentInfo.walletBalance < paymentInfo.amount) {
