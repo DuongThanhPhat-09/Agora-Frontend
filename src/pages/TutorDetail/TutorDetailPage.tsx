@@ -789,6 +789,11 @@ const BookingSidebar = ({
                         <b className="price-amount">{formatCurrency(hourlyRate ? Math.round(hourlyRate * 1.05) : null)}</b>
                         <b className="price-unit">/ GIỜ HỌC</b>
                     </div>
+                    {trialLessonPrice != null && trialLessonPrice > 0 && (
+                        <div className="trial-price-label" title="Học phí ưu đãi cho buổi học đầu tiên">
+                            ✨ Buổi học thử: {formatCurrency(trialLessonPrice)}
+                        </div>
+                    )}
                 </div>
 
                 {/* Scrollable Body */}
@@ -818,12 +823,6 @@ const BookingSidebar = ({
                         </div>
                     )}
 
-                    {/* Trial Lesson Price */}
-                    {trialLessonPrice != null && trialLessonPrice > 0 && (
-                        <div className="trial-price-label">
-                            Buổi học thử: {formatCurrency(trialLessonPrice)}
-                        </div>
-                    )}
                 </div>
 
                 {/* Fixed Footer — always visible */}

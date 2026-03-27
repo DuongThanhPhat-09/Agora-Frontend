@@ -382,7 +382,7 @@ const TutorPortalDashboard: React.FC = () => {
                             )}
                         </div>
                     </div>
-                    <button className={styles.viewDetailsBtn} onClick={() => navigate('/tutor-portal/onboarding')}>
+                    <button className={styles.viewDetailsBtn} onClick={() => navigate('/tutor-portal/profile')}>
                         {stats.profileStatus === 'draft' ? 'Hoàn tất hồ sơ' : stats.profileStatus === 'rejected' ? 'Cập nhật hồ sơ' : 'Xem chi tiết'}
                         <ArrowRightIcon />
                     </button>
