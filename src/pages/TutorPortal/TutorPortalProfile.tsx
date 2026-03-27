@@ -214,6 +214,9 @@ const TutorPortalProfile: React.FC = () => {
                 setEditingCredential(null);
                 setIsCredentialModalOpen(true);
                 break;
+            case 'pricing':
+                setIsPricingModalOpen(true);
+                break;
             case 'schedule':
                 // Navigate to schedule page
                 window.location.href = '/tutor-portal/schedule';

@@ -1156,13 +1156,20 @@
 
 /* Video */
 .detail-video-wrapper {
-    max-width: 560px;
+    max-width: 480px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    aspect-ratio: 16 / 9;
+    background-color: #000;
 }
 
 .detail-video {
     width: 100%;
-    border-radius: 12px;
-    background-color: #000;
+    height: 100%;
+    display: block;
+    object-fit: contain;
 }
 
 /* Modal Footer */
