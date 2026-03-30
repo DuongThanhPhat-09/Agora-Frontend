@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import UnderDevelopment from '../../components/UnderDevelopment/UnderDevelopment';
+import { StatCard, FilterTabs, DataTable } from '../../components/shared';
+import type { DataTableColumn } from '../../components/shared';
 import type { FinancialMetrics, WithdrawalRequest } from '../../types/admin.types';
 import { formatCurrency, formatCompactNumber, formatDateTime } from '../../utils/formatters';
 import {
@@ -73,21 +75,89 @@ const AdminFinancialsPage = () => {
         await fetchFinancialData();
     };
 
+    // Withdrawal table columns
+    const withdrawalColumns: DataTableColumn<WithdrawalRequest>[] = [
+        {
+            key: 'id',
+            title: 'Mã yêu cầu',
+            render: (row) => (
+                <span className="admin-status-badge bg-slate-50 text-slate-800 font-mono">
+                    #{row.withdrawalid}
+                </span>
+            ),
+            hideOnMobile: true,
+        },
+        {
+            key: 'tutor',
+            title: 'Thông tin gia sư',
+            render: (row) => (
+                <div className="admin-table-user">
+                    <div className="admin-user-thumbnail" style={{ backgroundImage: `url('${row.tutoravatar}')` }} />
+                    <div className="admin-user-details">
+                        <p className="admin-user-name-text">{row.tutorname}</p>
+                        <p className="admin-user-subtitle">{row.tutorsubject}</p>
+                    </div>
+                </div>
+            ),
+        },
+        {
+            key: 'bank',
+            title: 'Thông tin ngân hàng',
+            render: (row) => (
+                <div className="bank-details">
+                    <span className="material-symbols-outlined" style={{ color: 'var(--color-navy)' }}>account_balance</span>
+                    <div className="bank-info">
+                        <span className="bank-name">{row.bankname}</span>
+                        <span className="bank-account">{row.bankaccountmasked}</span>
+                    </div>
+                </div>
+            ),
+            hideOnMobile: true,
+        },
+        {
+            key: 'amount',
+            title: 'Số tiền',
+            render: (row) => <span className="amount-text">{formatCurrency(row.amount)}</span>,
+        },
+        {
+            key: 'date',
+            title: 'Ngày yêu cầu',
+            render: (row) => (
+                <span className="text-slate-600 font-medium text-sm">{formatDateTime(row.requestedat)}</span>
+            ),
+            hideOnMobile: true,
+        },
+        {
+            key: 'actions',
+            title: 'Hành động',
+            align: 'right',
+            render: (row) => (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                    <button className="btn-reject" onClick={() => handleRejectClick(row)}>Từ chối</button>
+                    <button className="btn-process" onClick={() => handleApproveClick(row)}>
+                        <span className="material-symbols-outlined">check</span>
+                        Xử lý thanh toán
+                    </button>
+                </div>
+            ),
+        },
+    ];
+
+    const pendingWithdrawals = withdrawalRequests.filter((w) => w.status === 'pending');
+
     return (
         <>
-            {/* MAIN CONTENT */}
+            {/* PAGE CONTENT */}
+            <div className="admin-content">
+                <div className="admin-content-inner">
 
-            {/* MAIN CONTENT */}
-            <main className="admin-main">
-                {/* FLOATING HEADER */}
-                <header className="admin-header-container">
-                    <div className="admin-header-glass">
-                        <div className="flex flex-col gap-1">
-                            <p className="admin-subtitle" style={{ color: 'var(--color-navy-60)', marginTop: 0 }}>Tổng quan</p>
+                    {/* Page Header */}
+                    <div className="admin-greeting" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+                        <div>
+                            <p style={{ color: 'var(--color-navy-60)', margin: '0 0 4px', fontSize: '14px', fontWeight: 500 }}>Tổng quan</p>
                             <h1 className="admin-greeting-title" style={{ fontSize: '32px' }}>Tổng quan Tài chính</h1>
                         </div>
-
-                        <div className="admin-header-actions">
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                             <button className="admin-action-btn admin-action-btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'white' }}>
                                 <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>calendar_today</span>
                                 <span>Th10 2023</span>
@@ -98,210 +168,89 @@ const AdminFinancialsPage = () => {
                             </button>
                         </div>
                     </div>
-                </header>
 
-                {/* SCROLLABLE AREA */}
-                <div className="admin-content">
-                    <div className="admin-content-inner">
+                    {/* Under Development Modal */}
+                    <UnderDevelopment featureName="tài chính" />
 
-                        {/* Under Development Modal */}
-                        <UnderDevelopment featureName="tài chính" />
+                    {/* KPI CARDS */}
+                    <section className="admin-stats-grid">
+                        <StatCard
+                            icon={<span className="material-symbols-outlined">payments</span>}
+                            value={loading ? '...' : formatCompactNumber(metrics?.monthlyrevenue || 0)}
+                            label="Doanh thu nền tảng (30 ngày)"
+                            badge={`+${metrics?.revenuegrowth || 0}%`}
+                            badgeVariant="green"
+                            className="admin-stat-card"
+                        />
+                        <StatCard
+                            icon={<span className="material-symbols-outlined">lock_clock</span>}
+                            value={loading ? '...' : formatCompactNumber(metrics?.escrowbalance || 0)}
+                            label="Tiền đang giữ"
+                            className="admin-stat-card"
+                        />
+                        <StatCard
+                            icon={<span className="material-symbols-outlined">undo</span>}
+                            value={loading ? '...' : formatCompactNumber(metrics?.totalrefunds || 0)}
+                            label="Tổng hoàn tiền (30 ngày)"
+                            badgeVariant="red"
+                            className="admin-stat-card"
+                        />
+                        <StatCard
+                            icon={<span className="material-symbols-outlined">priority_high</span>}
+                            value={loading ? '...' : formatCompactNumber(metrics?.pendingwithdrawalamount || 0)}
+                            label="Yêu cầu rút tiền"
+                            badge={`${metrics?.pendingwithdrawals || 0} chờ xử lý`}
+                            badgeVariant="orange"
+                            className="admin-stat-card"
+                        />
+                    </section>
 
-                        {/* KPI CARDS */}
-                        <section className="admin-stats-grid">
-                            {/* Card 1: Revenue */}
-                            <div className="admin-stat-card">
-                                <div className="admin-stat-header">
-                                    <div className="admin-stat-icon admin-stat-icon-green">
-                                        <span className="material-symbols-outlined">payments</span>
-                                    </div>
-                                    <span className="admin-stat-badge bg-TUTORA-green-5 text-TUTORA-green">
-                                        +{metrics?.revenuegrowth || 0}%
+                    {/* MAIN TABLE SECTION */}
+                    <section className="admin-financial-table-section">
+                        {/* Tabs */}
+                        <FilterTabs
+                            tabs={[
+                                { key: 'withdrawals', label: 'Yêu cầu rút tiền' },
+                                { key: 'ledger', label: 'Sổ cái giao dịch' },
+                                { key: 'commission', label: 'Cài đặt hoa hồng' },
+                            ]}
+                            activeKey={activeTab}
+                            onChange={(key) => setActiveTab(key as typeof activeTab)}
+                        />
+
+                        {/* Tab Content */}
+                        {activeTab === 'withdrawals' && (
+                            <DataTable
+                                columns={withdrawalColumns}
+                                data={pendingWithdrawals}
+                                rowKey="withdrawalid"
+                                loading={loading}
+                                loadingText="Đang tải yêu cầu rút tiền..."
+                                emptyText="Không có yêu cầu rút tiền nào đang chờ xử lý"
+                                emptyIcon={
+                                    <span className="material-symbols-outlined" style={{ fontSize: '48px', color: '#94a3b8' }}>
+                                        check_circle
                                     </span>
-                                </div>
-                                <div className="admin-stat-content">
-                                    <p className="admin-stat-label">Doanh thu nền tảng (30 ngày)</p>
-                                    <p className="admin-stat-value text-TUTORA-green" style={{ marginTop: '4px' }}>
-                                        {loading ? '...' : formatCompactNumber(metrics?.monthlyrevenue || 0)}
-                                    </p>
-                                </div>
+                                }
+                                minWidth={800}
+                            />
+                        )}
+
+                        {activeTab === 'ledger' && <TransactionLedger />}
+
+                        {activeTab === 'commission' && (
+                            <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: '48px', marginBottom: '12px', display: 'block' }}>
+                                    settings
+                                </span>
+                                <p>Cài đặt hoa hồng sẽ được triển khai trong Phase 3</p>
                             </div>
+                        )}
+                    </section>
 
-                            {/* Card 2: Escrow */}
-                            <div className="admin-stat-card">
-                                <div className="admin-stat-header">
-                                    <div className="admin-stat-icon admin-stat-icon-primary" style={{ backgroundColor: 'rgba(27, 34, 56, 0.1)', color: 'var(--color-navy)' }}>
-                                        <span className="material-symbols-outlined">lock_clock</span>
-                                    </div>
-                                </div>
-                                <div className="admin-stat-content">
-                                    <p className="admin-stat-label">Tiền đang giữ</p>
-                                    <p className="admin-stat-value" style={{ marginTop: '4px' }}>
-                                        {loading ? '...' : formatCompactNumber(metrics?.escrowbalance || 0)}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Card 3: Total Refunds */}
-                            <div className="admin-stat-card">
-                                <div className="admin-stat-header">
-                                    <div className="admin-stat-icon" style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', color: '#dc2626' }}>
-                                        <span className="material-symbols-outlined">undo</span>
-                                    </div>
-                                </div>
-                                <div className="admin-stat-content">
-                                    <p className="admin-stat-label">Tổng hoàn tiền (30 ngày)</p>
-                                    <p className="admin-stat-value" style={{ marginTop: '4px' }}>
-                                        {loading ? '...' : formatCompactNumber(metrics?.totalrefunds || 0)}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Card 4: Withdrawal Requests */}
-                            <div className="admin-stat-card" style={{ borderColor: 'rgba(212, 180, 131, 0.4)' }}>
-                                <div className="withdrawal-card-decoration"></div>
-                                <div className="admin-stat-header" style={{ position: 'relative', zIndex: 10 }}>
-                                    <div className="admin-stat-icon bg-TUTORA-gold-20 text-amber-700">
-                                        <span className="material-symbols-outlined">priority_high</span>
-                                    </div>
-                                    <span className="admin-stat-badge bg-amber-50 text-amber-700">
-                                        {metrics?.pendingwithdrawals || 0} chờ xử lý
-                                    </span>
-                                </div>
-                                <div className="admin-stat-content" style={{ position: 'relative', zIndex: 10 }}>
-                                    <p className="admin-stat-label">Yêu cầu rút tiền</p>
-                                    <p className="admin-stat-value" style={{ color: 'var(--color-gold)', marginTop: '4px' }}>
-                                        {loading ? '...' : formatCompactNumber(metrics?.pendingwithdrawalamount || 0)}
-                                    </p>
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* MAIN TABLE SECTION */}
-                        <section className="admin-financial-table-section">
-                            {/* Tabs */}
-                            <div className="admin-tabs-container">
-                                <button
-                                    className={`admin-tab-btn ${activeTab === 'withdrawals' ? 'active' : ''}`}
-                                    onClick={() => setActiveTab('withdrawals')}
-                                >
-                                    <span className="admin-tab-text">Yêu cầu rút tiền</span>
-                                </button>
-                                <button
-                                    className={`admin-tab-btn ${activeTab === 'ledger' ? 'active' : ''}`}
-                                    onClick={() => setActiveTab('ledger')}
-                                >
-                                    <span className="admin-tab-text">Sổ cái giao dịch</span>
-                                </button>
-                                <button
-                                    className={`admin-tab-btn ${activeTab === 'commission' ? 'active' : ''}`}
-                                    onClick={() => setActiveTab('commission')}
-                                >
-                                    <span className="admin-tab-text">Cài đặt hoa hồng</span>
-                                </button>
-                            </div>
-
-                            {/* Tab Content */}
-                            {activeTab === 'withdrawals' && (
-                                <div className="admin-table-wrapper" style={{ padding: '16px' }}>
-                                    {loading ? (
-                                        <div style={{ textAlign: 'center', padding: '60px', color: '#64748b' }}>
-                                            <p>Đang tải yêu cầu rút tiền...</p>
-                                        </div>
-                                    ) : withdrawalRequests.filter((w) => w.status === 'pending').length === 0 ? (
-                                        <div style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>
-                                            <span className="material-symbols-outlined" style={{ fontSize: '48px', marginBottom: '12px', display: 'block' }}>
-                                                check_circle
-                                            </span>
-                                            <p>Không có yêu cầu rút tiền nào đang chờ xử lý</p>
-                                        </div>
-                                    ) : (
-                                        <table className="admin-table">
-                                            <thead>
-                                                <tr>
-                                                    <th className="admin-table-th">Mã yêu cầu</th>
-                                                    <th className="admin-table-th">Thông tin gia sư</th>
-                                                    <th className="admin-table-th">Thông tin ngân hàng</th>
-                                                    <th className="admin-table-th">Số tiền</th>
-                                                    <th className="admin-table-th">Ngày yêu cầu</th>
-                                                    <th className="admin-table-th admin-table-th-right">Hành động</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {withdrawalRequests
-                                                    .filter((w) => w.status === 'pending')
-                                                    .map((withdrawal) => (
-                                                        <tr key={withdrawal.withdrawalid} className="admin-table-row">
-                                                            <td className="admin-table-td">
-                                                                <span className="admin-status-badge bg-slate-50 text-slate-800 font-mono">
-                                                                    #{withdrawal.withdrawalid}
-                                                                </span>
-                                                            </td>
-                                                            <td className="admin-table-td">
-                                                                <div className="admin-table-user">
-                                                                    <div
-                                                                        className="admin-user-thumbnail"
-                                                                        style={{ backgroundImage: `url('${withdrawal.tutoravatar}')` }}
-                                                                    ></div>
-                                                                    <div className="admin-user-details">
-                                                                        <p className="admin-user-name-text">{withdrawal.tutorname}</p>
-                                                                        <p className="admin-user-subtitle">{withdrawal.tutorsubject}</p>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td className="admin-table-td">
-                                                                <div className="bank-details">
-                                                                    <span className="material-symbols-outlined" style={{ color: 'var(--color-navy)' }}>
-                                                                        account_balance
-                                                                    </span>
-                                                                    <div className="bank-info">
-                                                                        <span className="bank-name">{withdrawal.bankname}</span>
-                                                                        <span className="bank-account">{withdrawal.bankaccountmasked}</span>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td className="admin-table-td">
-                                                                <span className="amount-text">{formatCurrency(withdrawal.amount)}</span>
-                                                            </td>
-                                                            <td className="admin-table-td">
-                                                                <span className="text-slate-600 font-medium text-sm">
-                                                                    {formatDateTime(withdrawal.requestedat)}
-                                                                </span>
-                                                            </td>
-                                                            <td className="admin-table-td admin-table-td-right">
-                                                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                                                                    <button className="btn-reject" onClick={() => handleRejectClick(withdrawal)}>
-                                                                        Từ chối
-                                                                    </button>
-                                                                    <button className="btn-process" onClick={() => handleApproveClick(withdrawal)}>
-                                                                        <span className="material-symbols-outlined">check</span>
-                                                                        Xử lý thanh toán
-                                                                    </button>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                            </tbody>
-                                        </table>
-                                    )}
-                                </div>
-                            )}
-
-                            {activeTab === 'ledger' && <TransactionLedger />}
-
-                            {activeTab === 'commission' && (
-                                <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
-                                    <span className="material-symbols-outlined" style={{ fontSize: '48px', marginBottom: '12px', display: 'block' }}>
-                                        settings
-                                    </span>
-                                    <p>Cài đặt hoa hồng sẽ được triển khai trong Phase 3</p>
-                                </div>
-                            )}
-                        </section>
-
-                    </div>
                 </div>
-            </main>
+            </div>
+
 
             {/* Modals */}
             <ApproveWithdrawalModal

@@ -1,0 +1,31 @@
+/**
+ * Shared Components — Barrel Export
+ *
+ * Reusable UI components based on TutorPortal design system.
+ * Import from here for consistent styling across all portals:
+ *
+ * ```tsx
+ * import { StatCard, StatusBadge, SectionCard, FilterTabs, PageContainer } from '@/components/shared';
+ * ```
+ */
+
+export { StatCard } from './StatCard';
+export type { StatCardProps } from './StatCard';
+
+export { StatusBadge } from './StatusBadge';
+export type { StatusBadgeProps, StatusVariant } from './StatusBadge';
+
+export { SectionCard } from './SectionCard';
+export type { SectionCardProps } from './SectionCard';
+
+export { FilterTabs } from './FilterTabs';
+export type { FilterTabsProps, TabItem } from './FilterTabs';
+
+export { PageContainer } from './PageContainer';
+export type { PageContainerProps } from './PageContainer';
+
+export { DataTable } from './DataTable';
+export type { DataTableProps, DataTableColumn, PaginationConfig } from './DataTable';
+
+export { PortalLayout } from './PortalLayout';
+export type { PortalLayoutProps, NavItem } from './PortalLayout';
