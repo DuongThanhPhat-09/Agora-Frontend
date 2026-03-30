@@ -13,7 +13,8 @@ type MessageBubbleProps = {
 const formatTime = (isoString: string): string => {
     if (!isoString) return '';
     try {
-        const date = new Date(isoString);
+        const safeIsoString = isoString.includes('Z') || isoString.includes('+') ? isoString : `${isoString}Z`;
+        const date = new Date(safeIsoString);
         const now = new Date();
         const isToday =
             date.getDate() === now.getDate() &&

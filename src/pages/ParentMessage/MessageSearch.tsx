@@ -17,14 +17,6 @@ const MessageSearch = ({ onSearch }: MessageSearchProps) => {
                     onChange={(e) => onSearch(e.target.value)}
                 />
             </div>
-            <div className={styles.tabGroup}>
-                <button className={`${styles.tabButton} ${styles.tabButtonActive}`} type="button">
-                    Trò chuyện
-                </button>
-                <button className={styles.tabButton} type="button">
-                    Báo cáo tự động
-                </button>
-            </div>
         </div>
     );
 };
