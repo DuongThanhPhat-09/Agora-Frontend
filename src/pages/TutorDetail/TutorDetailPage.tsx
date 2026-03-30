@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { createChannel } from '../../services/chat.service';
 import { getCurrentUser, getCurrentUserRole } from '../../services/auth.service';
 import { toast } from 'react-toastify';
 import Header from "../../components/Header";
@@ -729,14 +728,12 @@ const BookingSidebar = ({
     hourlyRate,
     trialLessonPrice,
     availabilities,
-    onBooking,
-    onChat
+    onBooking
 }: {
     hourlyRate: number | null,
     trialLessonPrice: number | null,
     availabilities: AvailabilitySlot[] | null,
-    onBooking: () => void,
-    onChat: () => void
+    onBooking: () => void
 }) => {
     // Group availability by day
     const dayLabelsMap: Record<number, string> = {
@@ -808,9 +805,6 @@ const BookingSidebar = ({
                 <div className="booking-actions">
                     <button className="btn-start" onClick={onBooking}>
                         <b>ĐẶT LỊCH NGAY</b>
-                    </button>
-                    <button className="btn-chat" onClick={onChat}>
-                        <b>CHAT TƯ VẤN</b>
                     </button>
                 </div>
             </div>
@@ -944,7 +938,6 @@ const TutorDetailPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showBooking, setShowBooking] = useState(false);
-    const [chatLoading, setChatLoading] = useState(false);
 
     // Login guard: check if user is logged in before actions
     const requireLogin = (): boolean => {
@@ -955,28 +948,6 @@ const TutorDetailPage = () => {
             return false;
         }
         return true;
-    };
-
-    // Handle "CHAT TƯ VẤN" button
-    const handleChatTuVan = async () => {
-        if (!id || chatLoading) return;
-        if (!requireLogin()) return;
-        setChatLoading(true);
-        try {
-            const res = await createChannel(id);
-            const channelId = res?.content?.channelId;
-            // Navigate to messages page based on role
-            const role = getCurrentUserRole();
-            const basePath = role === 'Student' ? '/student-portal/messages' : '/parent-portal/messages';
-            navigate(channelId ? `${basePath}?channel=${channelId}` : basePath);
-        } catch (err) {
-            console.error('❌ Failed to create chat channel:', err);
-            // Fallback: navigate to messages page anyway
-            const role = getCurrentUserRole();
-            navigate(role === 'Student' ? '/student-portal/messages' : '/parent-portal/messages');
-        } finally {
-            setChatLoading(false);
-        }
     };
 
     useEffect(() => {
@@ -1080,7 +1051,6 @@ const TutorDetailPage = () => {
                         trialLessonPrice={profile.trialLessonPrice}
                         availabilities={profile.availabilities}
                         onBooking={() => { if (requireLogin()) setShowBooking(true); }}
-                        onChat={handleChatTuVan}
                     />
                 </div>
             </main>
@@ -1094,9 +1064,6 @@ const TutorDetailPage = () => {
                 </div>
                 <button className="mobile-cta-book" onClick={() => { if (requireLogin()) setShowBooking(true); }}>
                     <b>ĐẶT LỊCH</b>
-                </button>
-                <button className="mobile-cta-chat" onClick={() => { if (requireLogin()) handleChatTuVan(); }}>
-                    <b>CHAT</b>
                 </button>
             </div>
 
