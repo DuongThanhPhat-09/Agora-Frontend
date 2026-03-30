@@ -1,13 +1,20 @@
 /* ===== PARENT STUDENT / CHILDREN PAGE ===== */
-/* Matches Figma "parent 1" frame */
+/* Uses global design system: cream bg, navy text, gold accents */
 
 .page {
-    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: var(--font-primary);
     min-height: 100%;
     display: flex;
     flex-direction: column;
     width: 100%;
-    color: #1a2238;
+    color: var(--color-navy);
+    background: var(--color-cream);
+    animation: fadeIn 0.35s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* ===== TOP BAR ===== */
@@ -26,12 +33,12 @@
 }
 
 .pageTitle {
-    font-family: 'Bricolage Grotesque', 'IBM Plex Sans', sans-serif;
-    font-size: 31.5px;
+    font-family: var(--font-serif);
+    font-size: 32px;
     line-height: 1.11em;
     font-weight: 700;
     letter-spacing: -0.025em;
-    color: #1a2238;
+    color: var(--color-navy);
     margin: 0;
     flex: 1;
 }
@@ -61,49 +68,63 @@
 
 .searchInput {
     padding: 11px 16px 11px 44px;
-    border: 1px solid rgba(62, 47, 40, 0.1);
+    border: 1px solid rgba(26, 34, 56, 0.1);
     border-radius: 12px;
-    background: rgba(242, 240, 228, 0.6);
-    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--color-white);
+    font-family: var(--font-primary);
     font-size: 14px;
     line-height: 1.3em;
-    color: #1a2238;
+    color: var(--color-navy);
     outline: none;
     width: 256px;
-    transition: border-color 0.2s ease;
+    transition: all 0.2s ease;
     box-sizing: border-box;
 }
 
 .searchInput::placeholder {
-    color: rgba(62, 47, 40, 0.4);
+    color: var(--color-navy-40);
 }
 
 .searchInput:focus {
-    border-color: rgba(62, 47, 40, 0.2);
+    border-color: var(--color-navy);
+    box-shadow: 0 0 0 3px rgba(26, 34, 56, 0.05);
 }
 
-/* Add Child button - matches Figma exactly */
+/* Add Child button */
 .addChildBtn {
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 10px 20px;
-    background: #631b1b;
-    color: #ffffff;
     border: none;
-    border-radius: 12px;
-    font-family: 'IBM Plex Sans', sans-serif;
+    border-radius: 10px;
+    font-family: var(--font-primary);
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     line-height: 1.43em;
     cursor: pointer;
-    transition: opacity 0.2s ease;
+    transition: all 0.2s ease;
     white-space: nowrap;
-    box-shadow: 0px 4px 6px -4px rgba(0, 0, 0, 0.1), 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
-.addChildBtn:hover {
-    opacity: 0.9;
+.btnNavy {
+    background: var(--color-navy);
+    color: var(--color-cream);
+}
+.btnNavy:hover {
+    background: #2a3452;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(26, 34, 56, 0.15);
+}
+
+.btnGold {
+    background: var(--color-gold);
+    color: var(--color-navy);
+}
+.btnGold:hover {
+    background: #e5c38e;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 180, 131, 0.3);
 }
 
 /* ===== CONTENT ===== */
@@ -126,63 +147,6 @@
     gap: 16px;
 }
 
-.statCard {
-    background: #ffffff;
-    border: 1px solid #e5e5e5;
-    border-radius: 16px;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-/* Stat icon circle (top-left of card) */
-.statIcon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.statIcon svg {
-    width: 20px;
-    height: 20px;
-}
-
-.statIconGreen {
-    background: #dcfce7;
-    color: #16a34a;
-}
-
-.statIconNavy {
-    background: #1a2238;
-    color: #ffffff;
-}
-
-.statIconRed {
-    background: #631b1b;
-    color: #ffffff;
-}
-
-.statValue {
-    font-family: 'Bricolage Grotesque', 'IBM Plex Sans', sans-serif;
-    font-size: 32px;
-    line-height: 38px;
-    font-weight: 700;
-    color: #1a2238;
-}
-
-.statLabel {
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 13px;
-    line-height: 18px;
-    color: #737373;
-}
-
 /* ===== EMPTY STATE ===== */
 .emptyState {
     display: flex;
@@ -191,52 +155,42 @@
     justify-content: center;
     padding: 80px 24px;
     text-align: center;
+    background: var(--color-white);
+    border-radius: 16px;
+    border: 1px solid rgba(26, 34, 56, 0.06);
 }
 
 .emptyIcon {
-    width: 64px;
-    height: 64px;
+    width: 72px;
+    height: 72px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f2f0e4;
-    border-radius: 16px;
-    margin-bottom: 20px;
-    color: #1a2238;
+    background: linear-gradient(135deg, var(--color-navy) 0%, #3d4a3e 100%);
+    border-radius: 50%;
+    margin-bottom: 24px;
+    color: var(--color-cream);
+}
+
+.emptyIcon svg {
+    width: 32px;
+    height: 32px;
 }
 
 .emptyTitle {
-    font-family: 'Bricolage Grotesque', sans-serif;
-    font-size: 20px;
-    font-weight: 700;
-    color: #1a2238;
-    margin: 0 0 8px 0;
+    font-family: var(--font-serif);
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--color-navy);
+    margin: 0 0 12px 0;
 }
 
 .emptyText {
-    font-size: 14px;
-    color: #737373;
+    font-size: 15px;
+    color: var(--color-navy-40);
     line-height: 1.6;
-    max-width: 360px;
-    margin: 0 0 24px 0;
-}
-
-.emptyBtn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    background: #631b1b;
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.emptyBtn:hover {
-    background: #7a2424;
+    max-width: 400px;
+    margin: 0 0 32px 0;
 }
 
 /* ===== MAIN GRID (2 columns) ===== */
@@ -256,14 +210,19 @@
 
 /* ===== CHILD CARD ===== */
 .childCard {
-    background: #ffffff;
-    border: 1px solid #e5e5e5;
+    background: var(--color-white);
+    border: 1px solid rgba(26, 34, 56, 0.06);
     border-radius: 16px;
     padding: 24px;
     display: flex;
     flex-direction: column;
     gap: 16px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease;
+}
+.childCard:hover {
+    border-color: var(--color-gold);
+    box-shadow: 0 6px 20px rgba(26, 34, 56, 0.08);
+    transform: translateY(-2px);
 }
 
 /* Card Header */
@@ -292,11 +251,11 @@
     height: 56px;
     border-radius: 14px;
     overflow: hidden;
-    background: #e0d4c8;
+    background: var(--color-gold-20);
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid #f2f0e4;
+    border: 2px solid var(--color-cream);
     position: relative;
 }
 
@@ -313,7 +272,7 @@
     font-family: 'Bricolage Grotesque', sans-serif;
     font-size: 18px;
     font-weight: 700;
-    color: #1a2238;
+    color: var(--color-navy);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -328,7 +287,7 @@
     width: 18px;
     height: 18px;
     border-radius: 9999px;
-    background: #fff;
+    background: var(--color-white);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -352,7 +311,7 @@
     font-size: 17px;
     line-height: 24px;
     font-weight: 600;
-    color: #1a2238;
+    color: var(--color-navy);
     margin: 0;
 }
 
@@ -366,7 +325,7 @@
 }
 
 .childGrade {
-    color: #737373;
+    color: var(--color-navy-40);
 }
 
 .metaDot {
@@ -400,7 +359,7 @@
 
 .moreBtn:hover {
     background: #f5f5f5;
-    color: #1a2238;
+    color: var(--color-navy);
 }
 
 .dropdownMenu {
@@ -408,8 +367,8 @@
     top: 100%;
     right: 0;
     margin-top: 4px;
-    background: #ffffff;
-    border: 1px solid #e5e5e5;
+    background: var(--color-white);
+    border: 1px solid rgba(26, 34, 56, 0.1);
     border-radius: 10px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     z-index: 20;
@@ -434,8 +393,8 @@
 }
 
 .dropdownItem:hover {
-    background: #f5f5f5;
-    color: #1a2238;
+    background: var(--color-cream);
+    color: var(--color-navy);
 }
 
 .dropdownItemDanger {
@@ -518,8 +477,8 @@
 .viewDetailsBtn {
     flex: 1;
     padding: 11px 16px;
-    background: #1a2238;
-    color: #ffffff;
+    background: var(--color-navy);
+    color: var(--color-cream);
     border: none;
     border-radius: 12px;
     font-family: 'IBM Plex Sans', sans-serif;
@@ -531,7 +490,7 @@
 }
 
 .viewDetailsBtn:hover {
-    background: #253050;
+    background: #2a3452;
 }
 
 .chatBtn {
@@ -562,8 +521,8 @@
 }
 
 .tipsCard {
-    background: #ffffff;
-    border: 1px solid #e5e5e5;
+    background: var(--color-white);
+    border: 1px solid rgba(26, 34, 56, 0.1);
     border-radius: 16px;
     padding: 24px;
     display: flex;
@@ -583,7 +542,7 @@
     width: 32px;
     height: 32px;
     border-radius: 8px;
-    background: #1a2238;
+    background: var(--color-navy);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -595,7 +554,7 @@
     font-size: 16px;
     line-height: 22px;
     font-weight: 600;
-    color: #1a2238;
+    color: var(--color-navy);
     margin: 0;
 }
 

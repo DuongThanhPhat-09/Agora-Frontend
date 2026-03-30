@@ -9,7 +9,8 @@ interface SessionContextCardProps {
 }
 
 const SessionContextCard = ({ booking }: SessionContextCardProps) => {
-    const formattedDate = new Date(booking.createdAt).toLocaleDateString('en-US', {
+    const safeDateString = booking.createdAt.includes('Z') || booking.createdAt.includes('+') ? booking.createdAt : `${booking.createdAt}Z`;
+    const formattedDate = new Date(safeDateString).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric'
