@@ -61,43 +61,6 @@ const AdminDashboardPageEnhanced = () => {
         <>
             {/* MAIN CONTENT */}
             <main className="admin-main">
-                {/* FLOATING HEADER */}
-                <header className="admin-header-container">
-                    <div className="admin-header-glass">
-                        {/* Search */}
-                        <div className="admin-search-wrapper">
-                            <span className="material-symbols-outlined admin-search-icon">search</span>
-                            <input
-                                className="admin-search-input"
-                                placeholder="Tìm kiếm học viên, gia sư, ID..."
-                                type="text"
-                            />
-                        </div>
-
-                        {/* Right Actions */}
-                        <div className="admin-header-actions">
-                            <button className="admin-notification-btn">
-                                <span className="material-symbols-outlined">notifications</span>
-                                <span className="admin-notification-dot"></span>
-                            </button>
-
-                            <div className="admin-user-section">
-                                <div className="admin-user-info">
-                                    <p className="admin-user-name">Người quản trị</p>
-                                    <p className="admin-user-role">Quản trị viên cấp cao</p>
-                                </div>
-                                <div
-                                    className="admin-user-avatar"
-                                    style={{
-                                        backgroundImage:
-                                            "url('https://lh3.googleusercontent.com/aida-public/AB6AXuB-RgLEJMH5nbo-3tyQEnt7kaT8CyGOKT_-4vo8liFbcLUymnBOjDN3JlZ4DQ6YL4lvxytFsp0iIkLkXH7eVa2R3yYNWhb_SC1QA4lKYCSyY5emWbHIfFGZFfW_9R65CYBcbKwa82DV7zGTokos2f35OxJcNvRpDrB6kSMXB3EjC1dIaWasOfVzfQgmtMCEtNzx49MyGh5zObnmitst_kYueiU4bnr-I2wpMBYKHYY4JPQ_mZsUv6jY8AKsFnSYOefyynEYeV6Q8gw')",
-                                    }}
-                                ></div>
-                            </div>
-                        </div>
-                    </div>
-                </header>
-
                 {/* SCROLLABLE AREA */}
                 <div className="admin-content">
                     <div className="admin-content-inner">

@@ -125,4 +125,22 @@
     .title {
         font-size: 18px;
     }
+
+    .markAllBtn {
+        padding: 10px 18px;
+        min-height: 44px;
+        font-size: 13.5px;
+        border-radius: 8px;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+
+    .markAllBtn:hover {
+        background-color: #e3f2fd;
+    }
+
+    .markAllBtn:active {
+        background-color: #bbdefb;
+        transform: scale(0.97);
+    }
 }

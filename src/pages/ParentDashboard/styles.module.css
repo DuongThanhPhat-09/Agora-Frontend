@@ -16,35 +16,173 @@
 }
 
 /* ===== WELCOME BANNER ===== */
+
+@keyframes bannerGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes floatOrb {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-12px) scale(1.08); }
+}
+
+@keyframes floatOrbAlt {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(8px) scale(0.95); }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+}
+
+@keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 .welcomeBanner {
-    background: linear-gradient(135deg, #1a2238 0%, #631b1b 100%);
-    border-radius: 12px;
-    padding: 32px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(-45deg, #0f172a, #1e293b, #312e5c, #4a1942, #1a2238);
+    background-size: 400% 400%;
+    animation: bannerGradient 12s ease infinite;
+    border-radius: 16px;
+    padding: 40px 36px;
     width: 100%;
     box-sizing: border-box;
+    box-shadow:
+        0 4px 24px rgba(15, 23, 42, 0.25),
+        0 1px 3px rgba(15, 23, 42, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Decorative floating orbs */
+.welcomeBanner::before {
+    content: '';
+    position: absolute;
+    top: -30px;
+    right: -20px;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.25) 0%, transparent 70%);
+    animation: floatOrb 6s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.welcomeBanner::after {
+    content: '';
+    position: absolute;
+    bottom: -40px;
+    right: 30%;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+    animation: floatOrbAlt 8s ease-in-out infinite;
+    pointer-events: none;
+}
+
+/* Glass inner decorative strip */
+.bannerDecorStrip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 30%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.15) 70%, transparent 100%);
+}
+
+/* Small secondary orb */
+.bannerOrbSmall {
+    position: absolute;
+    top: 20px;
+    right: 35%;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(251, 191, 36, 0.12) 0%, transparent 70%);
+    animation: floatOrb 5s ease-in-out 1s infinite;
+    pointer-events: none;
 }
 
 .welcomeContent {
+    position: relative;
+    z-index: 2;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
+    animation: fadeSlideUp 0.6s ease-out;
+}
+
+.welcomeGreeting {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0 0 4px 0;
 }
 
 .welcomeTitle {
     font-family: 'Bricolage Grotesque', 'IBM Plex Sans', sans-serif;
-    font-size: 24px;
-    line-height: 32px;
-    font-weight: 700;
+    font-size: 28px;
+    line-height: 36px;
+    font-weight: 800;
     color: #ffffff;
     margin: 0;
+    background: linear-gradient(
+        90deg,
+        #ffffff 0%,
+        #e2e8f0 25%,
+        #c4b5fd 50%,
+        #e2e8f0 75%,
+        #ffffff 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 4s linear infinite;
 }
 
 .welcomeSubtitle {
     font-family: 'IBM Plex Sans', sans-serif;
     font-size: 14px;
-    line-height: 20px;
-    color: rgba(255, 255, 255, 0.8);
+    line-height: 22px;
+    color: rgba(255, 255, 255, 0.7);
     margin: 0;
+    font-weight: 400;
+}
+
+.welcomeDatePill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    padding: 5px 14px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: fit-content;
+    transition: background 0.3s ease;
+}
+
+.welcomeDatePill:hover {
+    background: rgba(255, 255, 255, 0.13);
+}
+
+.welcomeDateIcon {
+    display: flex;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .welcomeDate {
@@ -52,7 +190,8 @@
     font-size: 12px;
     line-height: 16px;
     color: rgba(255, 255, 255, 0.6);
-    margin-top: 8px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
 }
 
 /* ===== STATS GRID ===== */
@@ -527,11 +666,16 @@
     }
 
     .welcomeBanner {
-        padding: 24px 20px;
+        padding: 28px 20px;
+        border-radius: 14px;
+    }
+
+    .welcomeGreeting {
+        font-size: 11px;
     }
 
     .welcomeTitle {
-        font-size: 20px;
+        font-size: 22px;
         line-height: 28px;
     }
 

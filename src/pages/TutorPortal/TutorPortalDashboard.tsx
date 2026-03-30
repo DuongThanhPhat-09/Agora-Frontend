@@ -4,6 +4,7 @@ import styles from '../../styles/pages/tutor-portal-dashboard.module.css';
 import { getTutorDashboardStats, getTutorCalendar, type TutorDashboardStats, type CalendarDay, type CalendarLesson } from '../../services/lesson.service';
 import { getTutorFeedbacks, type FeedbackDto } from '../../services/feedback.service';
 import { getCurrentUser } from '../../services/auth.service';
+import { StatCard } from '../../components/shared';
 import ReplyFeedbackModal from './components/ReplyFeedbackModal';
 
 // Icons
@@ -396,66 +397,48 @@ const TutorPortalDashboard: React.FC = () => {
                 </div>
             ) : stats ? (
                 <div className={styles.statsGrid} data-tour="stats-grid">
-                    <div className={styles.statCard}>
-                        <div className={styles.statHeader}>
-                            <div className={styles.statIcon}>
-                                <CalendarIcon />
-                            </div>
-                        </div>
-                        <div className={styles.statValue}>{stats.upcomingLessons}</div>
-                        <div className={styles.statLabel}>Buổi học sắp tới</div>
-                    </div>
-                    <div className={styles.statCard}>
-                        <div className={styles.statHeader}>
-                            <div className={styles.statIcon}>
-                                <SessionsIcon />
-                            </div>
-                        </div>
-                        <div className={styles.statValue}>{stats.completedThisMonth} <span style={{ fontSize: '12px', fontWeight: 400, color: 'rgba(62,47,40,0.5)' }}>/ {stats.totalCompleted} tổng</span></div>
-                        <div className={styles.statLabel}>Hoàn thành tháng này</div>
-                    </div>
-                    <div className={styles.statCard}>
-                        <div className={styles.statHeader}>
-                            <div className={styles.statIcon}>
-                                <StarIcon />
-                            </div>
-                        </div>
-                        <div className={styles.statValue}>{(stats.averageRating || 0).toFixed(1)}</div>
-                        <div className={styles.statLabel}>Đánh giá trung bình ({stats.totalReviews} đánh giá)</div>
-                    </div>
-                    <div className={styles.statCard}>
-                        <div className={styles.statHeader}>
-                            <div className={styles.statIcon}>
-                                <WalletIcon />
-                            </div>
-                        </div>
-                        <div className={styles.statValue}>
-                            {new Intl.NumberFormat('vi-VN').format(stats.walletBalance)}đ
-                        </div>
-                        <div className={styles.statLabel}>Số dư ví {stats.pendingConfirmation > 0 && <span style={{ color: '#d97706' }}>({stats.pendingConfirmation} chờ xác nhận)</span>}</div>
-                    </div>
-                    <div className={styles.statCard}>
-                        <div className={styles.statHeader}>
-                            <div className={styles.statIcon}>
-                                <FrozenIcon />
-                            </div>
-                        </div>
-                        <div className={styles.statValue}>
-                            {new Intl.NumberFormat('vi-VN').format(stats.frozenBalance)}đ
-                        </div>
-                        <div className={styles.statLabel}>Số dư đóng băng {stats.activeDisputes > 0 && <span style={{ color: '#dc2626' }}>({stats.activeDisputes} khiếu nại)</span>}</div>
-                    </div>
-                    <div className={styles.statCard}>
-                        <div className={styles.statHeader}>
-                            <div className={styles.statIcon}>
-                                <DollarIcon />
-                            </div>
-                        </div>
-                        <div className={styles.statValue}>
-                            {new Intl.NumberFormat('vi-VN').format(stats.earningsThisMonth)}đ
-                        </div>
-                        <div className={styles.statLabel}>Doanh thu tháng <span style={{ fontSize: '10px', color: 'rgba(62,47,40,0.5)' }}>/ {new Intl.NumberFormat('vi-VN').format(stats.totalEarnings)}đ tổng</span></div>
-                    </div>
+                    <StatCard
+                        icon={<CalendarIcon />}
+                        value={stats.upcomingLessons}
+                        label="Buổi học sắp tới"
+                        className={styles.statCard}
+                    />
+                    <StatCard
+                        icon={<SessionsIcon />}
+                        value={<>{stats.completedThisMonth} <span style={{ fontSize: '12px', fontWeight: 400, color: 'rgba(62,47,40,0.5)' }}>/ {stats.totalCompleted} tổng</span></>}
+                        label="Hoàn thành tháng này"
+                        className={styles.statCard}
+                    />
+                    <StatCard
+                        icon={<StarIcon />}
+                        value={(stats.averageRating || 0).toFixed(1)}
+                        label="Đánh giá trung bình"
+                        subLabel={`${stats.totalReviews} đánh giá`}
+                        className={styles.statCard}
+                    />
+                    <StatCard
+                        icon={<WalletIcon />}
+                        value={`${new Intl.NumberFormat('vi-VN').format(stats.walletBalance)}đ`}
+                        label="Số dư ví"
+                        badge={stats.pendingConfirmation > 0 ? `${stats.pendingConfirmation} chờ xác nhận` : undefined}
+                        badgeVariant="orange"
+                        className={styles.statCard}
+                    />
+                    <StatCard
+                        icon={<FrozenIcon />}
+                        value={`${new Intl.NumberFormat('vi-VN').format(stats.frozenBalance)}đ`}
+                        label="Số dư đóng băng"
+                        badge={stats.activeDisputes > 0 ? `${stats.activeDisputes} khiếu nại` : undefined}
+                        badgeVariant="red"
+                        className={styles.statCard}
+                    />
+                    <StatCard
+                        icon={<DollarIcon />}
+                        value={`${new Intl.NumberFormat('vi-VN').format(stats.earningsThisMonth)}đ`}
+                        label="Doanh thu tháng"
+                        subLabel={`/ ${new Intl.NumberFormat('vi-VN').format(stats.totalEarnings)}đ tổng`}
+                        className={styles.statCard}
+                    />
                 </div>
             ) : null}
 

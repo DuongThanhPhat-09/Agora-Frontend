@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { getAllUsers, deactivateUser, updateUser } from '../../services/admin.service';
+import { DataTable, StatusBadge } from '../../components/shared';
+import type { DataTableColumn } from '../../components/shared';
 import type { FlatUserDetail } from './mockData';
 import UserDetailModal from './components/UserDetailModal';
 import BlockUserModal from './components/BlockUserModal';
@@ -130,21 +132,110 @@ const UserManagementPage = () => {
         setPage(1); // Reset to first page when searching
     };
 
-    // Get status badge color
-    const getStatusClass = (status: string) => {
+    const getStatusVariant = (status: string): 'success' | 'warning' | 'error' | 'neutral' => {
         switch (status) {
-            case 'active':
-                return 'user-mgmt-status-active';
-            case 'suspended':
-                return 'user-mgmt-status-suspended';
-            case 'blocked':
-                return 'user-mgmt-status-blocked';
-            default:
-                return 'user-mgmt-status-pending';
+            case 'active': return 'success';
+            case 'suspended': return 'warning';
+            case 'blocked': return 'error';
+            default: return 'neutral';
         }
     };
 
-    const totalPages = Math.ceil(total / limit);
+    const getStatusLabel = (status: string) => {
+        switch (status) {
+            case 'active': return 'Hoạt động';
+            case 'suspended': return 'Tạm ngưng';
+            case 'blocked': return 'Bị chặn';
+            default: return status;
+        }
+    };
+
+    const getRoleBadge = (role: string) => {
+        const map: Record<string, { label: string; variant: 'info' | 'dark' | 'neutral' }> = {
+            tutor: { label: 'Gia sư', variant: 'info' },
+            admin: { label: 'Quản trị', variant: 'dark' },
+        };
+        const entry = map[role] || { label: 'Học viên', variant: 'neutral' };
+        return <StatusBadge variant={entry.variant} shape="tag">{entry.label}</StatusBadge>;
+    };
+
+    const userColumns: DataTableColumn<FlatUserDetail>[] = [
+        {
+            key: 'identity',
+            title: 'Thông tin người dùng',
+            render: (user) => (
+                <div className="user-mgmt-user-identity">
+                    <img className="user-mgmt-avatar" src={user.avatarurl} alt={user.fullname} />
+                    <div className="user-mgmt-user-info">
+                        <span className="user-mgmt-user-name">{user.fullname}</span>
+                        <span className="user-mgmt-user-email">{user.email}</span>
+                    </div>
+                </div>
+            ),
+        },
+        {
+            key: 'role',
+            title: 'Vai trò',
+            render: (user) => getRoleBadge(user.primaryrole),
+            hideOnMobile: true,
+        },
+        {
+            key: 'joinDate',
+            title: 'Ngày tham gia',
+            render: (user) => new Date(user.createdat).toLocaleDateString('vi-VN'),
+            hideOnMobile: true,
+        },
+        {
+            key: 'history',
+            title: 'Lịch sử',
+            render: (user) => {
+                if (user.warningcount > 0) {
+                    return (
+                        <div className="user-mgmt-performance">
+                            <span className="material-symbols-outlined user-mgmt-warning icon-filled">warning</span>
+                            <span className="user-mgmt-warning-text">{user.warningcount} Cảnh cáo</span>
+                        </div>
+                    );
+                }
+                if (user.suspensioncount > 0) {
+                    return (
+                        <div className="user-mgmt-performance">
+                            <span className="material-symbols-outlined user-mgmt-flag icon-filled">flag</span>
+                            <span className="user-mgmt-flags">{user.suspensioncount} lần tạm ngưng</span>
+                        </div>
+                    );
+                }
+                return <span className="user-mgmt-no-data">Tốt</span>;
+            },
+            hideOnMobile: true,
+        },
+        {
+            key: 'status',
+            title: 'Trạng thái',
+            render: (user) => (
+                <StatusBadge variant={getStatusVariant(user.accountstatus)}>
+                    {getStatusLabel(user.accountstatus)}
+                </StatusBadge>
+            ),
+        },
+        {
+            key: 'actions',
+            title: 'Hành động',
+            align: 'center',
+            render: (user) => (
+                <button
+                    className="user-mgmt-action-btn"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleUserClick(user);
+                    }}
+                >
+                    <span className="material-symbols-outlined">visibility</span>
+                </button>
+            ),
+            width: 80,
+        },
+    ];
 
     return (
         <>
@@ -244,155 +335,27 @@ const UserManagementPage = () => {
                     </div>
                 </div>
 
-                {/* TABLE CONTAINER */}
+                {/* TABLE */}
                 <div className="user-mgmt-table-container">
-                    <div className="user-mgmt-table-wrapper">
-                        {/* Table Header */}
-                        <div className="user-mgmt-table-header">
-                            <div className="user-mgmt-col-identity">Thông tin người dùng</div>
-                            <div className="user-mgmt-col-role">Vai trò</div>
-                            <div className="user-mgmt-col-date">Ngày tham gia</div>
-                            <div className="user-mgmt-col-performance">Lịch sử</div>
-                            <div className="user-mgmt-col-status">Trạng thái</div>
-                            <div className="user-mgmt-col-actions">Hành động</div>
-                        </div>
-
-                        {/* Table Body */}
-                        {loading ? (
-                            <div style={{ padding: '60px', textAlign: 'center', color: '#64748b' }}>
-                                <p>Đang tải người dùng...</p>
-                            </div>
-                        ) : users.length === 0 ? (
-                            <div style={{ padding: '60px', textAlign: 'center', color: '#94a3b8' }}>
-                                <span className="material-symbols-outlined" style={{ fontSize: '48px', marginBottom: '12px', display: 'block' }}>
-                                    search_off
-                                </span>
-                                <p>Không tìm thấy người dùng nào</p>
-                            </div>
-                        ) : (
-                            <div className="user-mgmt-table-body">
-                                {users.map((user) => (
-                                    <div key={user.userid} className="user-mgmt-row" onClick={() => handleUserClick(user)} style={{ cursor: 'pointer' }}>
-                                        <div className="user-mgmt-col-identity">
-                                            <div className="user-mgmt-user-identity">
-                                                <img
-                                                    className="user-mgmt-avatar"
-                                                    src={user.avatarurl}
-                                                    alt={user.fullname}
-                                                />
-                                                <div className="user-mgmt-user-info">
-                                                    <span className="user-mgmt-user-name">{user.fullname}</span>
-                                                    <span className="user-mgmt-user-email">{user.email}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="user-mgmt-col-role">
-                                            <span
-                                                className={`user-mgmt-badge ${user.primaryrole === 'tutor'
-                                                    ? 'user-mgmt-badge-tutor'
-                                                    : user.primaryrole === 'admin'
-                                                        ? 'user-mgmt-badge-admin'
-                                                        : 'user-mgmt-badge-student'
-                                                    }`}
-                                            >
-                                                {user.primaryrole === 'tutor' ? 'Gia sư' : user.primaryrole === 'admin' ? 'Quản trị' : 'Học viên'}
-                                            </span>
-                                        </div>
-                                        <div className="user-mgmt-col-date">
-                                            {new Date(user.createdat).toLocaleDateString('vi-VN')}
-                                        </div>
-                                        <div className="user-mgmt-col-performance">
-                                            {user.warningcount > 0 ? (
-                                                <div className="user-mgmt-performance">
-                                                    <span className="material-symbols-outlined user-mgmt-warning icon-filled">warning</span>
-                                                    <span className="user-mgmt-warning-text">{user.warningcount} Cảnh cáo</span>
-                                                </div>
-                                            ) : user.suspensioncount > 0 ? (
-                                                <div className="user-mgmt-performance">
-                                                    <span className="material-symbols-outlined user-mgmt-flag icon-filled">flag</span>
-                                                    <span className="user-mgmt-flags">{user.suspensioncount} lần tạm ngưng</span>
-                                                </div>
-                                            ) : (
-                                                <span className="user-mgmt-no-data">Tốt</span>
-                                            )}
-                                        </div>
-                                        <div className="user-mgmt-col-status">
-                                            <span className={`user-mgmt-status ${getStatusClass(user.accountstatus)}`}>
-                                                {user.accountstatus === 'active'
-                                                    ? 'Hoạt động'
-                                                    : user.accountstatus === 'suspended'
-                                                        ? 'Tạm ngưng'
-                                                        : 'Bị chặn'}
-                                            </span>
-                                        </div>
-                                        <div className="user-mgmt-col-actions">
-                                            <button
-                                                className="user-mgmt-action-btn"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleUserClick(user);
-                                                }}
-                                            >
-                                                <span className="material-symbols-outlined">visibility</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Pagination */}
-                        {!loading && users.length > 0 && (
-                            <div className="user-mgmt-pagination">
-                                <span className="user-mgmt-pagination-info">
-                                    Hiển thị {(page - 1) * limit + 1}-{Math.min(page * limit, total)} trong số{' '}
-                                    {total} người dùng
-                                </span>
-                                <div className="user-mgmt-pagination-controls">
-                                    <button
-                                        className="user-mgmt-page-btn"
-                                        onClick={() => setPage(page - 1)}
-                                        disabled={page === 1}
-                                        style={{ opacity: page === 1 ? 0.5 : 1 }}
-                                    >
-                                        <span className="material-symbols-outlined">chevron_left</span>
-                                    </button>
-
-                                    {/* Page numbers */}
-                                    {[...Array(Math.min(totalPages, 5))].map((_, i) => {
-                                        const pageNum = i + 1;
-                                        return (
-                                            <button
-                                                key={pageNum}
-                                                className={`user-mgmt-page-number ${page === pageNum ? 'user-mgmt-page-active' : ''}`}
-                                                onClick={() => setPage(pageNum)}
-                                            >
-                                                {pageNum}
-                                            </button>
-                                        );
-                                    })}
-
-                                    {totalPages > 5 && (
-                                        <>
-                                            <span className="user-mgmt-pagination-ellipsis">...</span>
-                                            <button className="user-mgmt-page-number" onClick={() => setPage(totalPages)}>
-                                                {totalPages}
-                                            </button>
-                                        </>
-                                    )}
-
-                                    <button
-                                        className="user-mgmt-page-btn"
-                                        onClick={() => setPage(page + 1)}
-                                        disabled={page === totalPages}
-                                        style={{ opacity: page === totalPages ? 0.5 : 1 }}
-                                    >
-                                        <span className="material-symbols-outlined">chevron_right</span>
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    <DataTable<FlatUserDetail>
+                        columns={userColumns}
+                        data={users}
+                        rowKey="userid"
+                        loading={loading}
+                        loadingText="Đang tải người dùng..."
+                        emptyText="Không tìm thấy người dùng nào"
+                        emptyIcon={
+                            <span className="material-symbols-outlined" style={{ fontSize: 48, color: '#94a3b8' }}>search_off</span>
+                        }
+                        onRowClick={handleUserClick}
+                        pagination={{
+                            current: page,
+                            pageSize: limit,
+                            total,
+                            onChange: setPage,
+                        }}
+                        minWidth={700}
+                    />
                 </div>
             </main>
 
