@@ -1,6 +1,6 @@
 /* eslint-disable no-useless-catch */
 import axios from 'axios';
-import { getCurrentUser } from './auth.service';
+import { setupAuthInterceptor } from './apiClient';
 import type {
     FinanceSummary,
     EarningsResponse,
@@ -12,7 +12,7 @@ import type {
     CreateWithdrawalRequest
 } from '../types/finance.types';
 
-const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5166') + '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 // Create axios instance
 const api = axios.create({
@@ -21,29 +21,31 @@ const api = axios.create({
         'Content-Type': 'application/json',
     },
 });
+setupAuthInterceptor(api);
 
-// Request interceptor - Add auth token to all requests
-api.interceptors.request.use(
-    (config) => {
-        const user = getCurrentUser();
-        if (user?.accessToken) {
-            config.headers.Authorization = `Bearer ${user.accessToken}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
+/** Check if error is a 404 (wallet/resource not found) */
+const is404 = (error: unknown): boolean =>
+    axios.isAxiosError(error) && error.response?.status === 404;
+
+/** Default empty summary for tutors without a wallet */
+const EMPTY_SUMMARY: FinanceSummary = {
+    balance: 0,
+    frozenBalance: 0,
+    totalEarned: 0,
+    pendingSettlement: 0,
+    lastWithdrawalAt: null,
+};
 
 /**
  * Get financial summary (balances, total earned)
+ * Returns empty summary if tutor wallet doesn't exist yet
  */
 export const getFinanceSummary = async (): Promise<FinanceSummary> => {
     try {
         const { data } = await api.get('/tutor/finance/summary');
         return data.content;
     } catch (error) {
+        if (is404(error)) return EMPTY_SUMMARY;
         throw error;
     }
 };
@@ -63,6 +65,7 @@ export const getEarnings = async (
         });
         return data.content;
     } catch (error) {
+        if (is404(error)) return { items: [] };
         throw error;
     }
 };
@@ -81,6 +84,7 @@ export const getTransactions = async (params: {
         const { data } = await api.get('/tutor/finance/transactions', { params });
         return data.content;
     } catch (error) {
+        if (is404(error)) return { transactions: [], totalCount: 0, page: params.page ?? 1, pageSize: params.pageSize ?? 20 };
         throw error;
     }
 };
@@ -135,6 +139,7 @@ export const getWithdrawals = async (page: number = 1, pageSize: number = 20): P
         });
         return data.content;
     } catch (error) {
+        if (is404(error)) return { items: [], total: 0, page, pageSize };
         throw error;
     }
 };

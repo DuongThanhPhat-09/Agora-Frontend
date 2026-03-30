@@ -15,6 +15,7 @@ type MessageInfoItemProps = {
     preview: string;
     active?: boolean;
     unread?: boolean;
+    isOnline?: boolean;
 };
 
 const MessageInfoItem = ({
@@ -28,6 +29,7 @@ const MessageInfoItem = ({
     preview,
     active = false,
     unread = false,
+    isOnline = false,
 }: MessageInfoItemProps) => {
     const isBookingRequest = status === 'pending_tutor';
 
@@ -40,6 +42,9 @@ const MessageInfoItem = ({
                     <div className={styles.messageAvatar} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e0d4c8', color: '#1a2238', fontWeight: 700, fontSize: '16px', fontFamily: "'Bricolage Grotesque', sans-serif" }}>
                         {(name || '?').charAt(0).toUpperCase()}
                     </div>
+                )}
+                {isOnline && (
+                    <div className={styles.statusDot} style={{ backgroundColor: '#10b981' }} title="Trực tuyến" />
                 )}
                 {isBookingRequest && <div className={styles.requestIndicator} />}
             </div>

@@ -48,10 +48,34 @@ const SUBJECT_MAPPING: Subject[] = [
     { id: 10, name: 'IELTS' },
 ];
 
+const OnlineIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-navy)" strokeWidth="1.75">
+        <rect x="2" y="3" width="20" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M8 21h8" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M12 17v4" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M2 13h20" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
+const OfflineIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-navy)" strokeWidth="1.75">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M9 22V12h6v10" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
+const HybridIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-navy)" strokeWidth="1.75">
+        <path d="M17 1l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M21 13v2a4 4 0 0 1-4 4H3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
 const TEACHING_MODES = [
-    { key: 'online' as const, label: 'Online', icon: '💻', desc: 'Học qua video call' },
-    { key: 'offline' as const, label: 'Tại nhà', icon: '🏠', desc: 'Gia sư đến tận nơi' },
-    { key: 'hybrid' as const, label: 'Linh hoạt', icon: '🔄', desc: 'Kết hợp online & offline' },
+    { key: 'online' as const, label: 'Online', icon: <OnlineIcon />, desc: 'Học qua video call' },
+    { key: 'offline' as const, label: 'Tại nhà', icon: <OfflineIcon />, desc: 'Gia sư đến tận nơi' },
+    { key: 'hybrid' as const, label: 'Linh hoạt', icon: <HybridIcon />, desc: 'Kết hợp online & offline' },
 ];
 
 const DURATION_OPTIONS = [
@@ -134,6 +158,11 @@ const isSlotWithinAvailability = (
     return true;
 };
 
+const formatGrade = (grade?: string): string => {
+    if (!grade) return '';
+    return grade.toLowerCase().includes('lớp') ? grade : `Lớp ${grade}`;
+};
+
 
 // ===== STEP COMPONENTS =====
 
@@ -183,7 +212,7 @@ const StepStudentSubject = ({ formData, setFormData, students, loadingStudents, 
                                 </div>
                                 <div className="bm-student-info">
                                     <span className="bm-student-name">{s.fullName}</span>
-                                    <span className="bm-student-grade">{s.gradeLevel || s.school}</span>
+                                    <span className="bm-student-grade">{s.gradeLevel ? formatGrade(s.gradeLevel) : s.school}</span>
                                 </div>
                                 {formData.studentId === s.studentId && <div className="bm-check">✓</div>}
                             </div>
@@ -420,7 +449,7 @@ const StepSchedule = ({ formData, setFormData, slotDuration, setSlotDuration, av
 
             <div className="bm-step-title">Chọn lịch học hàng tuần</div>
             <p className="bm-step-desc">
-                Chọn các khoảng thời gian học và ngày bắt đầu mong muốn. Học phí được tính tạm tính theo <strong>{slotsPerWeek} slot/tuần × 4 tuần = {sessionCount} buổi/tháng</strong>.
+                Chọn các khoảng thời gian học và ngày bắt đầu mong muốn. Học phí được tạm tính theo <br /> <strong>{slotsPerWeek} buổi/tuần × 4 tuần = {sessionCount} buổi/tháng</strong>.
             </p>
 
             {/* Start Date selector */}
@@ -617,7 +646,7 @@ const StepReview = ({ formData, setFormData, hourlyRate, students, availableSubj
             <div className="bm-review-card">
                 <div className="bm-review-row">
                     <span className="bm-review-label">Học sinh</span>
-                    <span className="bm-review-value">{student?.fullName} ({student?.gradeLevel || student?.school})</span>
+                    <span className="bm-review-value">{student?.fullName} {student?.gradeLevel ? `(${formatGrade(student.gradeLevel)})` : (student?.school ? `(${student.school})` : '')}</span>
                 </div>
                 <div className="bm-review-row">
                     <span className="bm-review-label">Môn học</span>

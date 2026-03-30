@@ -14,7 +14,8 @@ interface MessageListSidebarProps {
 // Helper function to format date/time
 const formatTimestamp = (dateString: string | null): string => {
   if (!dateString) return '';
-  const date = new Date(dateString);
+  const safeDateString = dateString.includes('Z') || dateString.includes('+') ? dateString : `${dateString}Z`;
+  const date = new Date(safeDateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
@@ -28,6 +29,15 @@ const formatTimestamp = (dateString: string | null): string => {
 
   const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit' };
   return date.toLocaleDateString('vi-VN', options);
+};
+
+// Helper function to format message preview (hide raw URLs)
+const formatPreview = (text: string | null): string => {
+  if (!text) return 'Chưa có tin nhắn';
+  if (text.startsWith('http') && (text.includes('supabase.co/storage') || text.match(/\.(jpeg|jpg|gif|png)$/i))) {
+    return '[Hình ảnh]';
+  }
+  return text;
 };
 
 const MessageListSidebar = ({ onChannelSelect, onChannelObjectSelect, selectedChannelId, isTutor = false }: MessageListSidebarProps) => {
@@ -92,17 +102,18 @@ const MessageListSidebar = ({ onChannelSelect, onChannelObjectSelect, selectedCh
             </p>
           </div>
         ) : (
-          filteredChannels.map((channel) => (
+          filteredChannels.map((channel, idx) => (
             <div key={channel.channelId} onClick={() => handleChannelClick(channel)}>
               <MessageInfoItem
                 active={selectedChannelId === channel.channelId}
                 avatar={channel.otherUserAvatarUrl || ''}
                 name={channel.otherUserName || 'Người dùng'}
-                preview={channel.lastMessagePreview || 'Chưa có tin nhắn'}
+                preview={formatPreview(channel.lastMessagePreview)}
                 role={isTutor ? 'Phụ huynh / Học sinh' : 'Gia sư'}
                 session={channel.bookingId ? `Buổi #${channel.bookingId}` : 'Tư vấn'}
                 status={channel.status}
                 timestamp={formatTimestamp(channel.lastMessageAt)}
+                isOnline={idx < 2} /* Mock data: first 2 users appear online */
               />
             </div>
           ))

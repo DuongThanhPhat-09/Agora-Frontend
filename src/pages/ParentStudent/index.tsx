@@ -13,6 +13,7 @@ import {
   type ICreateParentStudent,
   type StudentCredentials,
 } from '../../services/student.service';
+import StatCard from '../../components/shared/StatCard/StatCard';
 import AddStudentModal from './components/AddStudentModal';
 import EditStudentModal from './components/EditStudentModal';
 import LinkCodeModal from './components/LinkCodeModal';
@@ -50,11 +51,11 @@ const ChatIcon = () => (
   </svg>
 );
 
-// Verified checkmark badge (small circle overlay)
+// Verified checkmark badge
 const VerifiedBadge = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-    <circle cx="9" cy="9" r="8" fill="#3b82f6" />
-    <path d="M5.5 9l2.5 2.5L12.5 7" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="9" cy="9" r="8" fill="var(--color-navy)" />
+    <path d="M5.5 9l2.5 2.5L12.5 7" stroke="var(--color-gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -104,17 +105,17 @@ const CalSmallIcon = () => (
   </svg>
 );
 
-// Tips lightbulb icon (dark bg)
+// Tips lightbulb icon
 const LightbulbIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#f2f0e4" strokeWidth="1.4">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
     <path d="M8 1.5a4.5 4.5 0 012.5 8.2V12a1 1 0 01-1 1H6.5a1 1 0 01-1-1V9.7A4.5 4.5 0 018 1.5z" />
     <path d="M6 14h4" strokeLinecap="round" />
   </svg>
 );
 
-// Tip checkmark (dark navy)
+// Tip checkmark
 const CheckIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#1a2238" strokeWidth="2">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M3 8.5l3 3 7-7" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
@@ -299,15 +300,14 @@ const ParentStudent = () => {
             />
           </div>
           <button
-            className={styles.addChildBtn}
+            className={`${styles.addChildBtn} ${styles.btnNavy}`}
             onClick={() => setIsParentCodeOpen(true)}
             type="button"
-            style={{ background: '#3b82f6' }}
           >
             <LinkIcon />
             <span>Mã mời</span>
           </button>
-          <button className={styles.addChildBtn} onClick={handleAddClick} type="button">
+          <button className={`${styles.addChildBtn} ${styles.btnGold}`} onClick={handleAddClick} type="button">
             <PlusIcon />
             <span>Thêm con</span>
           </button>
@@ -323,36 +323,40 @@ const ParentStudent = () => {
         <div className={styles.content}>
           {/* ── Quick Stats ── */}
           <div className={styles.quickStats}>
-            <div className={styles.statCard}>
-              <div className={`${styles.statIcon} ${styles.statIconGreen}`}><PeopleIcon /></div>
-              <div className={styles.statValue}>{activeCount}</div>
-              <div className={styles.statLabel}>Số con</div>
-            </div>
-            <div className={styles.statCard}>
-              <div className={`${styles.statIcon} ${styles.statIconNavy}`}><SessionsStatIcon /></div>
-              <div className={styles.statValue}>—</div>
-              <div className={styles.statLabel}>Tổng buổi học</div>
-            </div>
-            <div className={styles.statCard}>
-              <div className={`${styles.statIcon} ${styles.statIconGreen}`}><ChartIcon /></div>
-              <div className={styles.statValue}>—</div>
-              <div className={styles.statLabel}>Tiến độ TB</div>
-            </div>
-            <div className={styles.statCard}>
-              <div className={`${styles.statIcon} ${styles.statIconRed}`}><PendingClockIcon /></div>
-              <div className={styles.statValue}>0</div>
-              <div className={styles.statLabel}>Lời mời chờ</div>
-            </div>
+            <StatCard
+              icon={<PeopleIcon />}
+              value={activeCount}
+              label="Số con"
+              badgeVariant="green"
+            />
+            <StatCard
+              icon={<SessionsStatIcon />}
+              value="—"
+              label="Tổng buổi học"
+              badgeVariant="blue"
+            />
+            <StatCard
+              icon={<ChartIcon />}
+              value="—"
+              label="Tiến độ TB"
+              badgeVariant="blue"
+            />
+            <StatCard
+              icon={<PendingClockIcon />}
+              value="0"
+              label="Lời mời chờ"
+              badgeVariant="red"
+            />
           </div>
 
           {students.length === 0 ? (
             <div className={styles.emptyState}>
               <div className={styles.emptyIcon}><PlusIcon /></div>
-              <h3 className={styles.emptyTitle}>Chưa có học sinh nào</h3>
+              <h3 className={styles.emptyTitle}>Chưa có hồ sơ học sinh nào</h3>
               <p className={styles.emptyText}>
-                Bắt đầu bằng cách thêm con để theo dõi hành trình học tập.
+                Bắt đầu bằng cách thêm thông tin con của bạn để theo dõi hành trình học tập.
               </p>
-              <button className={styles.emptyBtn} onClick={handleAddClick} type="button">
+              <button className={`${styles.addChildBtn} ${styles.btnNavy}`} onClick={handleAddClick} type="button">
                 <PlusIcon />
                 <span>Thêm con đầu tiên</span>
               </button>

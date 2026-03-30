@@ -249,17 +249,7 @@ const HeroSection: React.FC<{ data: TutorProfileFormData; onPlayVideo: () => voi
                             {data.avatarUrl ? (
                                 <img src={data.avatarUrl} alt={data.fullName} />
                             ) : (
-                                <div style={{
-                                    width: '82.1px',
-                                    height: '103.6px',
-                                    background: 'linear-gradient(135deg, #3d4a3e, #1a2238)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: '#fff',
-                                    fontSize: '32px',
-                                    fontWeight: 700
-                                }}>
+                                <div className="tutor-mini-avatar-placeholder">
                                     {data.fullName ? data.fullName.charAt(0).toUpperCase() : '?'}
                                 </div>
                             )}

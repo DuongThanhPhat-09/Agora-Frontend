@@ -1022,7 +1022,40 @@
     text-align: center;
     font-size: 14px;
     color: rgba(62, 47, 40, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.bm-empty-msg p {
+    margin: 0;
     font-style: italic;
+}
+
+.bm-btn-add-student {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    background: var(--color-navy);
+    color: var(--color-cream);
+    border-radius: 10px;
+    font-family: var(--font-primary);
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    font-style: normal;
+    transition: all 0.2s ease;
+    border: 1px solid var(--color-navy);
+}
+
+.bm-btn-add-student:hover {
+    background: #2a3452;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(26, 34, 56, 0.15);
+    color: var(--color-cream);
 }
 
 .bm-schedule-corner {

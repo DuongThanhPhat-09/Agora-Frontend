@@ -6,6 +6,11 @@ import { Calendar, Clock, User, BookOpen, ChevronRight, Check, X, Search } from 
 import { Tabs, Modal, Input, Pagination } from 'antd';
 import { toast } from 'react-toastify';
 
+const formatGrade = (grade?: string): string => {
+    if (!grade) return '';
+    return grade.toLowerCase().includes('lớp') ? grade : `Lớp ${grade}`;
+};
+
 const TutorPortalBookings = () => {
     const [bookings, setBookings] = useState<BookingResponseDTO[]>([]);
     const [loading, setLoading] = useState(true);
@@ -147,7 +152,7 @@ const TutorPortalBookings = () => {
                                         </div>
                                         <div>
                                             <h4>{booking.student?.fullName || 'N/A'}</h4>
-                                            <span>{booking.student?.gradeLevel || ''}</span>
+                                            <span>{booking.student?.gradeLevel ? formatGrade(booking.student.gradeLevel) : ''}</span>
                                         </div>
                                     </div>
 

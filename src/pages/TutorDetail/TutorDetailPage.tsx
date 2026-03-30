@@ -428,25 +428,6 @@ const AcademicPortfolioSection = ({ certificates }: { certificates: CertificateI
 const ActiveClassesSection = ({ classes, totalActive }: { classes: ActiveClassSummary[] | null, totalActive: number }) => {
     if (!classes || classes.length === 0) return null;
 
-    const getStatusLabel = (status: string | null) => {
-        switch (status) {
-            case 'paid': return 'Đã thanh toán';
-            case 'deposit_paid': return 'Đã cọc';
-            case 'ongoing': return 'Đang học';
-            case 'pending_remaining_payment': return 'Chờ thanh toán';
-            default: return 'Đang hoạt động';
-        }
-    };
-
-    const getStatusClass = (status: string | null) => {
-        switch (status) {
-            case 'ongoing': return 'status-ongoing';
-            case 'paid': return 'status-paid';
-            case 'deposit_paid': return 'status-deposit';
-            default: return 'status-default';
-        }
-    };
-
     return (
         <section className="active-classes-section">
             <div className="active-classes-header">
@@ -467,9 +448,6 @@ const ActiveClassesSection = ({ classes, totalActive }: { classes: ActiveClassSu
                                 <div className="active-class-subject">
                                     <b>{cls.subjectName || 'Chưa rõ môn học'}</b>
                                 </div>
-                                <span className={`active-class-status ${getStatusClass(cls.status)}`}>
-                                    {getStatusLabel(cls.status)}
-                                </span>
                             </div>
                             <div className="active-class-student">
                                 <span className="student-label">Học sinh:</span>

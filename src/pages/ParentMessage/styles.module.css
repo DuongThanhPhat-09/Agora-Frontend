@@ -142,7 +142,7 @@
   background: transparent;
   min-height: 0;
   width: 100%;
-  padding: 0 40px 40px;
+  padding: 0 40px 0;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -290,7 +290,8 @@
 .messageItem {
   width: 100%;
   display: flex;
-  gap: 14px;
+  align-items: center;
+  gap: 16px;
   padding: 16px 20px;
   border: none;
   background: #ffffff;
@@ -310,12 +311,13 @@
 }
 
 .messageAvatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
-  border: 2px solid #f2f0e4;
+  border: 1px solid #e0ddd0;
+  display: block;
 }
 
 .messageItemContent {
@@ -323,6 +325,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .messageItemTop {
@@ -523,11 +526,17 @@
 
 .chatHeader {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   padding: 20px 24px;
   border-bottom: 1px solid #f0f0f0;
   background: #ffffff;
+}
+
+.chatHeaderTopRow {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 16px;
 }
 
 .backButton {
@@ -554,17 +563,6 @@
   display: none;
 }
 
-/* Mobile nav row: hidden on desktop */
-.chatHeaderNav {
-  display: none;
-}
-
-.chatHeaderNavActions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
 .chatHeaderInfo {
   display: flex;
   align-items: center;
@@ -573,27 +571,37 @@
   min-width: 0;
 }
 
+.chatAvatarWrapper {
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
 .chatAvatar {
   width: 48px;
   height: 48px;
-  border-radius: 12px;
+  border-radius: 50%;
   object-fit: cover;
   border: 2px solid #f2f0e4;
-  flex-shrink: 0;
+  display: block;
+}
+
+.statusDot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  z-index: 2;
 }
 
 .chatHeaderText {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   min-width: 0;
-}
-
-.chatHeaderTitleRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 
 .chatName {
@@ -604,19 +612,11 @@
   color: #1a2238;
 }
 
-.chatSession,
 .chatRole {
   font-family: 'IBM Plex Sans', sans-serif;
   font-size: 13px;
   line-height: 18px;
   color: #737373;
-}
-
-.chatHeaderMetaRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 
 .chatHeaderActions {
@@ -1004,6 +1004,12 @@
   gap: 12px;
 }
 
+.composer .iconButton {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+
 .composerInput {
   flex: 1;
   border: 1px solid rgba(62, 47, 40, 0.1);
@@ -1129,38 +1135,31 @@
   }
 
   .chatHeader {
-    padding: 0 0 0 0;
+    padding: 12px 16px;
     flex-direction: column;
     gap: 0;
     border-bottom: 2px solid #e0ddd0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   }
 
-  .chatHeaderNav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 10px 16px;
-    border-bottom: 1px solid #f0ede3;
-    box-sizing: border-box;
-  }
-
   .chatHeaderInfo {
     gap: 10px;
-    padding: 10px 16px;
     min-width: 0;
   }
 
   .chatAvatar {
     width: 36px;
     height: 36px;
-    border-radius: 10px;
+    border-radius: 50%;
     border-width: 1px;
   }
 
-  .chatHeaderTitleRow {
-    flex-wrap: nowrap;
+  .statusDot {
+    width: 12px;
+    height: 12px;
+    bottom: -1px;
+    right: -1px;
+    border-width: 2px;
   }
 
   .chatName {
@@ -1170,28 +1169,11 @@
     text-overflow: ellipsis;
   }
 
-  .chatSession {
-    font-size: 12px;
-  }
-
-  .chatHeaderMetaRow {
-    display: flex;
-    gap: 6px;
-  }
-
   .chatRole {
     font-size: 11px;
   }
 
-  .messageBadge {
-    font-size: 10px;
-    padding: 2px 6px;
-  }
 
-  /* Hide the desktop actions row — nav row handles it */
-  .chatHeaderActions {
-    display: none;
-  }
 
   .iconButton {
     width: 34px;
@@ -1200,8 +1182,14 @@
     background: transparent;
   }
 
+  .composer .iconButton {
+    width: 44px;
+    height: 44px;
+    border: 1px solid #e5e5e5;
+  }
+
   .messagesArea {
-    padding: 16px;
+    padding: 24px 16px 16px;
   }
 
   .chatFooter {
@@ -1223,7 +1211,7 @@
   }
 
   .mainContent {
-    padding: 0 16px 20px;
+    padding: 0;
   }
 
   .searchBlock {
@@ -1235,8 +1223,8 @@
   }
 
   .messageAvatar {
-    width: 40px;
-    height: 40px;
+    width: 50px;
+    height: 50px;
   }
 
   .chatAvatar {
@@ -1250,10 +1238,7 @@
     padding: 8px 16px;
   }
 
-  .chatHeaderActions {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
+
 
   .iconButton {
     width: 36px;
@@ -1364,9 +1349,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 24px 12px;
+  padding: 12px 24px 16px;
   border-top: 1px solid #f0f0f0;
-  width: 100%;
+  width: calc(100% + 48px);
+  margin: 16px -24px -20px -24px;
   box-sizing: border-box;
 }
 
@@ -1407,6 +1393,13 @@
 }
 
 @media (max-width: 768px) {
+  .chatSearchBar {
+    width: calc(100% + 32px);
+    margin: 12px -16px -12px -16px;
+    padding: 10px 16px;
+    border-top: 1px solid #f0ede3;
+    background: #fafaf8;
+  }
   .emojiPicker {
     width: 240px;
     left: -40px;

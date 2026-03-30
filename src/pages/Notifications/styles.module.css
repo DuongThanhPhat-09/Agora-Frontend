@@ -28,46 +28,44 @@
 
 .title {
     margin: 0;
-    font-size: 20px;
+    font-size: 24px;
     font-weight: 700;
-    color: #1a1a1a;
+    color: var(--color-navy);
+    font-family: var(--font-serif);
 }
 
 .badge {
-    background-color: #1976d2;
-    color: #fff;
-    font-size: 12px;
+    background-color: var(--color-navy);
+    color: var(--color-cream);
+    font-size: 13px;
     font-weight: 600;
-    padding: 2px 8px;
+    padding: 4px 10px;
     border-radius: 12px;
 }
 
 .markAllBtn {
     background: none;
-    border: 1px solid #1976d2;
-    color: #1976d2;
-    font-size: 13px;
-    font-weight: 500;
-    padding: 6px 14px;
-    border-radius: 6px;
+    border: 1px solid var(--color-navy);
+    color: var(--color-navy);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.2s;
+    font-family: var(--font-primary);
 }
 
 .markAllBtn:hover {
-    background-color: #e3f2fd;
+    background-color: var(--color-navy);
+    color: var(--color-cream);
 }
 
 .list {
-    padding: 8px 0;
-}
-
-.list > * {
-    border-bottom: 1px solid #f5f5f5;
-}
-
-.list > *:last-child {
-    border-bottom: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 24px;
 }
 
 .loading {
@@ -115,32 +113,38 @@
 
 @media (max-width: 768px) {
     .page {
-        padding: 12px;
+        padding: 16px 12px;
     }
 
     .header {
-        padding: 16px;
+        padding: 20px 16px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .headerLeft {
+        width: 100%;
+        justify-content: space-between;
     }
 
     .title {
-        font-size: 18px;
+        font-size: 22px;
     }
 
     .markAllBtn {
-        padding: 10px 18px;
-        min-height: 44px;
-        font-size: 13.5px;
-        border-radius: 8px;
-        -webkit-tap-highlight-color: transparent;
-        touch-action: manipulation;
+        width: 100%;
+        padding: 12px 18px;
+        font-size: 14px;
+        border-radius: 10px;
     }
 
     .markAllBtn:hover {
-        background-color: #e3f2fd;
+        background-color: var(--color-navy);
     }
 
-    .markAllBtn:active {
-        background-color: #bbdefb;
-        transform: scale(0.97);
+    .list {
+        padding: 16px 16px;
+        gap: 10px;
     }
 }
