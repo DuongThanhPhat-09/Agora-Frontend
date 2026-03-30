@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getCurrentUser, getCurrentUserRole } from '../../services/auth.service';
+import { getCurrentUser } from '../../services/auth.service';
 import { toast } from 'react-toastify';
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
