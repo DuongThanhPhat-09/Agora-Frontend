@@ -29,3 +29,6 @@ export type { DataTableProps, DataTableColumn, PaginationConfig } from './DataTa
 
 export { PortalLayout } from './PortalLayout';
 export type { PortalLayoutProps, NavItem } from './PortalLayout';
+
+export { Breadcrumb } from './Breadcrumb';
+export type { BreadcrumbItem } from './Breadcrumb';
