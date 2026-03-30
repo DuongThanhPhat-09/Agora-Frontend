@@ -7,6 +7,7 @@ import type {
 import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import { Breadcrumb } from "../../components/shared";
 import CustomDropdown from "../../components/CustomDropdown/CustomDropdown";
 import "../../styles/pages/tutor-search.css";
 
@@ -52,15 +53,15 @@ const FilterIcon = () => (
 
 // Subject SVG Icons
 const SubjectIcons = {
-    all: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>,
-    math: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="5" y1="5" x2="19" y2="19"/></svg>,
-    physics: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/></svg>,
-    chemistry: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 3h6v7l5 8H4l5-8V3z"/><line x1="9" y1="3" x2="15" y2="3"/></svg>,
-    english: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
-    science: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15 15 0 014 10 15 15 0 01-4 10 15 15 0 01-4-10 15 15 0 014-10z"/><line x1="2" y1="12" x2="22" y2="12"/></svg>,
-    language: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 8l6 6"/><path d="M4 14l6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="M22 22l-5-10-5 10"/><path d="M14 18h6"/></svg>,
-    art: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.7-.8 1.7-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.8-1.7 1.7-1.7H16c3.3 0 6-2.7 6-6 0-5.5-4.5-9.6-10-9.6z"/></svg>,
-    it_tech: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="14" y1="4" x2="10" y2="20"/></svg>,
+    all: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" /></svg>,
+    math: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="2" x2="12" y2="22" /><line x1="2" y1="12" x2="22" y2="12" /><line x1="5" y1="5" x2="19" y2="19" /></svg>,
+    physics: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><ellipse cx="12" cy="12" rx="10" ry="4" /><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)" /><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)" /></svg>,
+    chemistry: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 3h6v7l5 8H4l5-8V3z" /><line x1="9" y1="3" x2="15" y2="3" /></svg>,
+    english: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>,
+    science: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 2a15 15 0 014 10 15 15 0 01-4 10 15 15 0 01-4-10 15 15 0 014-10z" /><line x1="2" y1="12" x2="22" y2="12" /></svg>,
+    language: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 8l6 6" /><path d="M4 14l6-6 2-3" /><path d="M2 5h12" /><path d="M7 2h1" /><path d="M22 22l-5-10-5 10" /><path d="M14 18h6" /></svg>,
+    art: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor" /><circle cx="17.5" cy="10.5" r=".5" fill="currentColor" /><circle cx="8.5" cy="7.5" r=".5" fill="currentColor" /><circle cx="6.5" cy="12.5" r=".5" fill="currentColor" /><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.7-.8 1.7-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.8-1.7 1.7-1.7H16c3.3 0 6-2.7 6-6 0-5.5-4.5-9.6-10-9.6z" /></svg>,
+    it_tech: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /><line x1="14" y1="4" x2="10" y2="20" /></svg>,
 };
 
 const categories: { id: string; name: string; icon: React.ReactNode }[] = [
@@ -193,20 +194,20 @@ const formatGradeLevel = (grade: string): string => {
 // Helper: Convert sorted grade numbers into compact ranges (e.g. [1,2,3,6,7,8,9,10] → "Lớp 1-3, 6-10")
 const formatGradeLevelRanges = (grades: string[]): string => {
     if (grades.length === 0) return "";
-    
+
     // Extract numbers
     const nums = grades.map(g => {
         const m = g.match(/\d+/);
         return m ? parseInt(m[0]) : 0;
     }).filter(n => n > 0).sort((a, b) => a - b);
-    
+
     if (nums.length === 0) return "";
-    
+
     // Build ranges
     const ranges: string[] = [];
     let start = nums[0];
     let end = nums[0];
-    
+
     for (let i = 1; i < nums.length; i++) {
         if (nums[i] === end + 1) {
             end = nums[i];
@@ -217,7 +218,7 @@ const formatGradeLevelRanges = (grades: string[]): string => {
         }
     }
     ranges.push(start === end ? `${start}` : `${start}-${end}`);
-    
+
     return `Lớp ${ranges.join(", ")}`;
 };
 
@@ -341,7 +342,7 @@ const SearchHero = ({ searchTerm, onSearchTermChange, onSearch, onTrendingClick 
             <div className="search-hero-content">
                 <div className="search-hero-text">
                     <h1 className="search-hero-title">
-                        Hôm nay bạn muốn<br />
+                        Hôm nay bạn muốn <br />
                         <span className="highlight">khai phá tri thức</span> gì?
                     </h1>
                     <p className="search-hero-subtitle">
@@ -420,7 +421,7 @@ const CategoryTabs = ({ activeCategories, onCategoryToggle }: CategoryTabsProps)
                         Môn học: <strong>{getLabel()}</strong>
                     </span>
                     <svg className="category-toggle-arrow" width="12" height="7" viewBox="0 0 12 7" fill="none" style={{ transform: showSubjects ? 'rotate(180deg)' : 'none', transition: 'transform 0.25s ease' }}>
-                        <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                 </button>
             </div>
@@ -507,7 +508,7 @@ const FilterBar = ({
                             >
                                 <span>{getGradeLabel()}</span>
                                 <svg width="10" height="6" viewBox="0 0 10 6" fill="none" style={{ transform: showGrades ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
-                                    <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
                             </button>
                         </div>
@@ -620,7 +621,7 @@ const ActiveFilters = ({ categories, gradeLevels, onRemoveCategory, onRemoveGrad
                                 {catDef?.name || catId}
                                 <button className="chip-remove" onClick={() => onRemoveCategory(catId)} aria-label="Remove">
                                     <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                                        <path d="M9 3L3 9M3 3l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                                        <path d="M9 3L3 9M3 3l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                                     </svg>
                                 </button>
                             </span>
@@ -633,7 +634,7 @@ const ActiveFilters = ({ categories, gradeLevels, onRemoveCategory, onRemoveGrad
                                 {chip?.label || gl}
                                 <button className="chip-remove" onClick={() => onRemoveGradeLevel(gl)} aria-label="Xóa">
                                     <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                                        <path d="M9 3L3 9M3 3l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                                        <path d="M9 3L3 9M3 3l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                                     </svg>
                                 </button>
                             </span>
@@ -717,9 +718,9 @@ const TutorCard = ({ tutor }: TutorCardProps) => {
                 {/* Grade Levels — compact range display */}
                 {tutor.gradeLevels.length > 0 && (
                     <div className="tutor-grade-levels">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0, color: '#2563eb'}}>
-                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: '#2563eb' }}>
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
                         </svg>
                         <span className="grade-level-range">
                             {formatGradeLevelRanges(tutor.gradeLevels)}
@@ -741,14 +742,14 @@ const TutorCard = ({ tutor }: TutorCardProps) => {
 
                 {/* Highlights — max 2 */}
                 {tutor.highlights.length > 0 && (
-                <div className="tutor-highlights">
-                    {tutor.highlights.slice(0, 2).map((highlight, index) => (
-                        <div key={index} className="highlight-item">
-                            <span className="highlight-icon"><CheckIcon /></span>
-                            <span className="highlight-text">{highlight}</span>
-                        </div>
-                    ))}
-                </div>
+                    <div className="tutor-highlights">
+                        {tutor.highlights.slice(0, 2).map((highlight, index) => (
+                            <div key={index} className="highlight-item">
+                                <span className="highlight-icon"><CheckIcon /></span>
+                                <span className="highlight-text">{highlight}</span>
+                            </div>
+                        ))}
+                    </div>
                 )}
             </div>
 
@@ -1075,6 +1076,19 @@ const TutorSearchPage = () => {
     return (
         <div className="tutor-search-page">
             <Header />
+            
+            {/* DEDICATED BREADCRUMB STRIP */}
+            <div style={{ width: '100%', backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb', paddingTop: 'var(--header-height, 80px)' }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto', width: '100%', padding: '0 24px', boxSizing: 'border-box' }}>
+                    <Breadcrumb
+                        items={[
+                            { label: 'Trang chủ', href: '/' },
+                            { label: 'Tìm kiếm Gia sư' }
+                        ]}
+                    />
+                </div>
+            </div>
+
             <main>
                 <SearchHero
                     searchTerm={inputSearchTerm}

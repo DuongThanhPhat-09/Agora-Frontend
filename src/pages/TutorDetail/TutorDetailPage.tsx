@@ -5,6 +5,7 @@ import { getCurrentUser, getCurrentUserRole } from '../../services/auth.service'
 import { toast } from 'react-toastify';
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import { Breadcrumb } from "../../components/shared";
 import BookingModal from './BookingModal';
 import { getTutorFullProfile } from '../../services/tutorDetail.service';
 import type { TutorFullProfile, FeedbackItem, AvailabilitySlot, CertificateInfo, ActiveClassSummary } from '../../services/tutorDetail.service';
@@ -1036,7 +1037,21 @@ const TutorDetailPage = () => {
     return (
         <div className="tutor-detail-page">
             <Header />
-            <main className="tutor-detail-main">
+
+            {/* DEDICATED BREADCRUMB STRIP */}
+            <div style={{ width: '100%', backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb', paddingTop: 'var(--header-height, 80px)' }}>
+                <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%', padding: '0 35px', boxSizing: 'border-box' }}>
+                    <Breadcrumb 
+                        items={[
+                            { label: 'Trang chủ', href: '/' },
+                            { label: 'Tìm kiếm Gia sư', href: '/tutor-search' },
+                            { label: `Hồ sơ ${profile?.fullName || 'Gia sư'}` }
+                        ]} 
+                    />
+                </div>
+            </div>
+
+            <main className="tutor-detail-main" style={{ paddingTop: '24px' }}>
                 <div className="tutor-detail-container">
                     <div className="tutor-detail-content">
                         <HeroSection profile={profile} />
