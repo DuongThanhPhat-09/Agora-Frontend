@@ -74,6 +74,14 @@
     padding: 8px;
     gap: 3.5px;
     flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+}
+
+.admin-portal-sidebar-nav::-webkit-scrollbar {
+    display: none;
 }
 
 .admin-portal-nav-item {
@@ -142,6 +150,7 @@
     border-top: 1.2px solid rgba(255, 255, 255, 0.1);
     padding: 12px 6px;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 .admin-portal-user-card {
