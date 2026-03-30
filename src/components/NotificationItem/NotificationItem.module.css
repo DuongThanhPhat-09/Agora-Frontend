@@ -1,105 +1,136 @@
+/* ===== NOTIFICATION ITEM ===== */
 .notificationItem {
     display: flex;
     align-items: flex-start;
     gap: 12px;
-    padding: 12px;
-    border-radius: 8px;
-    transition: background-color 0.2s;
+    padding: 11px 12px;
+    border-radius: 12px;
+    transition: background-color 0.15s ease, transform 0.1s ease;
     cursor: pointer;
+    position: relative;
 }
 
 .notificationItem:hover {
-    background-color: #f8f9fa;
+    background-color: #f8faff;
+    transform: translateX(2px);
 }
 
+/* ===== UNREAD STATE ===== */
 .notificationItem.unread {
-    background-color: #f0f7ff;
+    background-color: #f0f4ff;
 }
 
 .notificationItem.unread:hover {
-    background-color: #e6f2ff;
+    background-color: #e8efff;
 }
 
+.notificationItem.unread::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 60%;
+    background: linear-gradient(180deg, #6366f1, #4f46e5);
+    border-radius: 0 3px 3px 0;
+}
+
+/* ===== ICON WRAPPER ===== */
 .iconWrapper {
     flex-shrink: 0;
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #e8f4f8;
-    border-radius: 50%;
+    background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+    border-radius: 12px;
+    position: relative;
+}
+
+.notificationItem.unread .iconWrapper {
+    background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
 }
 
 .icon {
-    width: 20px;
-    height: 20px;
-    color: #1976d2;
+    font-size: 18px !important;
+    color: #6366f1 !important;
 }
 
+/* Unread dot on icon */
+.notificationItem.unread .iconWrapper::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 9px;
+    height: 9px;
+    background: #6366f1;
+    border-radius: 50%;
+    border: 2px solid #f0f4ff;
+}
+
+/* ===== CONTENT ===== */
 .content {
     flex: 1;
     min-width: 0;
 }
 
 .title {
-    margin: 0 0 4px 0;
-    font-size: 14px;
+    margin: 0 0 3px 0;
+    font-size: 13.5px;
     font-weight: 600;
-    color: #1a1a1a;
-}
-
-.message {
-    margin: 0 0 6px 0;
-    font-size: 13px;
-    color: #666;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     line-height: 1.4;
 }
 
-.time {
-    font-size: 12px;
-    color: #999;
+.message {
+    margin: 0 0 5px 0;
+    font-size: 12.5px;
+    color: #64748b;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
+.time {
+    font-size: 11.5px;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.notificationItem.unread .time {
+    color: #818cf8;
+}
 
 /* ===== RESPONSIVE — MOBILE ===== */
 @media (max-width: 768px) {
     .notificationItem {
-        padding: 14px 12px;
-        gap: 10px;
+        padding: 12px 14px;
+        gap: 11px;
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
+        border-radius: 10px;
+    }
+
+    .notificationItem:hover {
+        transform: none;
     }
 
     .iconWrapper {
-        width: 36px;
-        height: 36px;
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
     }
 
     .icon {
-        width: 18px;
-        height: 18px;
-    }
-
-    .title {
-        font-size: 14px;
-    }
-
-    .message {
-        font-size: 13px;
-        /* Allow wrapping on mobile */
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-}
-
-/* ===== SMALL MOBILE ===== */
-@media (max-width: 400px) {
-    .notificationItem {
-        padding: 12px 10px;
+        font-size: 16px !important;
     }
 
     .title {
@@ -108,6 +139,21 @@
 
     .message {
         font-size: 12px;
+    }
+}
+
+/* ===== SMALL MOBILE ===== */
+@media (max-width: 400px) {
+    .notificationItem {
+        padding: 10px 12px;
+    }
+
+    .title {
+        font-size: 12.5px;
+    }
+
+    .message {
+        font-size: 11.5px;
     }
 
     .time {

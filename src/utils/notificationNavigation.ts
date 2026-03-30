@@ -2,7 +2,7 @@ import type { NotificationDTO } from '../services/notification.service';
 
 export function getPortalPrefix(): string {
     const parts = window.location.pathname.split('/');
-    const portals = ['tutor-portal', 'parent-portal', 'student-portal'];
+    const portals = ['admin-portal', 'tutor-portal', 'parent-portal', 'student-portal'];
     const found = parts.find(p => portals.includes(p));
     return found ? `/${found}` : '/parent-portal';
 }

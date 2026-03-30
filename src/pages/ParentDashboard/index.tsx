@@ -6,6 +6,7 @@ import { getParentBookings } from '../../services/booking.service';
 import { getParentLessons } from '../../services/lesson.service';
 import type { LessonResponse } from '../../services/lesson.service';
 import type { BookingResponseDTO } from '../../services/booking.service';
+import { StatCard } from '../../components/shared';
 import styles from './styles.module.css';
 
 // ===== SVG Icons =====
@@ -255,62 +256,68 @@ const ParentDashboard = () => {
       <div className={styles.container}>
         {/* Welcome Banner */}
         <div className={styles.welcomeBanner}>
+          <div className={styles.bannerDecorStrip} />
+          <div className={styles.bannerOrbSmall} />
           <div className={styles.welcomeContent}>
+            <span className={styles.welcomeGreeting}>Dashboard — Phụ huynh</span>
             <h1 className={styles.welcomeTitle}>Xin chào, {userName}!</h1>
             <p className={styles.welcomeSubtitle}>
               Tổng quan hoạt động học tập tuần này
             </p>
-            <span className={styles.welcomeDate}>{getWeekRange()}</span>
+            <div className={styles.welcomeDatePill}>
+              <span className={styles.welcomeDateIcon}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3">
+                  <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" />
+                  <path d="M1.5 5.5h11" />
+                  <path d="M4.5 1v2.5M9.5 1v2.5" strokeLinecap="round" />
+                </svg>
+              </span>
+              <span className={styles.welcomeDate}>{getWeekRange()}</span>
+            </div>
           </div>
         </div>
 
         {/* Stats Grid */}
         <div className={styles.statsGrid}>
-          {/* Total Bookings */}
-          <div className={styles.statCard} onClick={() => navigate('/parent-portal/booking')} style={{ cursor: 'pointer' }}>
-            <div className={styles.statHeader}>
-              <div className={styles.statIconWrap}><BookingIcon /></div>
-              <span className={`${styles.statBadge} ${styles.badgeGreen}`}>{activeBookings} đang hoạt động</span>
-            </div>
-            <div className={styles.statValue}>{totalBookings}</div>
-            <div className={styles.statLabel}>Tổng Booking</div>
-            <div className={styles.statSubtitle}>Click để xem chi tiết</div>
-          </div>
-
-          {/* Children */}
-          <div className={styles.statCard} onClick={() => navigate('/parent-portal/student')} style={{ cursor: 'pointer' }}>
-            <div className={styles.statHeader}>
-              <div className={styles.statIconWrap}><ChildrenIcon /></div>
-              <span className={`${styles.statBadge} ${styles.badgeBlue}`}>Đã liên kết</span>
-            </div>
-            <div className={styles.statValue}>{childrenCount}</div>
-            <div className={styles.statLabel}>Học sinh</div>
-            <div className={styles.statSubtitle}>Đã liên kết</div>
-          </div>
-
-          {/* Lessons this week */}
-          <div className={styles.statCard} onClick={() => navigate('/parent-portal/lessons')} style={{ cursor: 'pointer' }}>
-            <div className={styles.statHeader}>
-              <div className={styles.statIconWrap}><SessionsIcon /></div>
-              <span className={`${styles.statBadge} ${styles.badgeGreen}`}>Tuần này</span>
-            </div>
-            <div className={styles.statValue}>{weekLessonCount}</div>
-            <div className={styles.statLabel}>Buổi học</div>
-            <div className={styles.statSubtitle}>Đã lên lịch tuần này</div>
-          </div>
-
-          {/* Pending actions */}
-          <div className={styles.statCard}>
-            <div className={styles.statHeader}>
-              <div className={styles.statIconWrap}><PendingIcon /></div>
-              <span className={`${styles.statBadge} ${pendingBookings.length > 0 ? styles.badgeGreen : styles.badgeBlue}`}>
-                {pendingBookings.length > 0 ? 'Cần xử lý' : 'OK'}
-              </span>
-            </div>
-            <div className={styles.statValue}>{pendingBookings.length}</div>
-            <div className={styles.statLabel}>Chờ xử lý</div>
-            <div className={styles.statSubtitle}>Booking cần phản hồi</div>
-          </div>
+          <StatCard
+            icon={<BookingIcon />}
+            value={totalBookings}
+            label="Tổng Booking"
+            subLabel="Click để xem chi tiết"
+            badge={`${activeBookings} đang hoạt động`}
+            badgeVariant="green"
+            onClick={() => navigate('/parent-portal/booking')}
+            className={styles.statCard}
+          />
+          <StatCard
+            icon={<ChildrenIcon />}
+            value={childrenCount}
+            label="Học sinh"
+            subLabel="Đã liên kết"
+            badge="Đã liên kết"
+            badgeVariant="blue"
+            onClick={() => navigate('/parent-portal/student')}
+            className={styles.statCard}
+          />
+          <StatCard
+            icon={<SessionsIcon />}
+            value={weekLessonCount}
+            label="Buổi học"
+            subLabel="Đã lên lịch tuần này"
+            badge="Tuần này"
+            badgeVariant="green"
+            onClick={() => navigate('/parent-portal/lessons')}
+            className={styles.statCard}
+          />
+          <StatCard
+            icon={<PendingIcon />}
+            value={pendingBookings.length}
+            label="Chờ xử lý"
+            subLabel="Booking cần phản hồi"
+            badge={pendingBookings.length > 0 ? 'Cần xử lý' : 'OK'}
+            badgeVariant={pendingBookings.length > 0 ? 'green' : 'blue'}
+            className={styles.statCard}
+          />
         </div>
 
         {/* Quick Actions */}

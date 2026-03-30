@@ -88,7 +88,12 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
     return (
         <div ref={dropdownRef} className={styles.dropdown}>
             <div className={styles.header}>
-                <h3 className={styles.title}>Thông báo</h3>
+                <div className={styles.titleGroup}>
+                    <h3 className={styles.title}>Thông báo</h3>
+                    {notifications.length > 0 && (
+                        <span className={styles.badge}>{notifications.length}</span>
+                    )}
+                </div>
                 <div className={styles.headerActions}>
                     {notifications.length > 0 && (
                         <button className={styles.markAllBtn} onClick={handleMarkAllAsRead}>
@@ -105,12 +110,15 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
                 {loading ? (
                     <div className={styles.loading}>
                         <div className={styles.spinner}></div>
-                        <p>Loading notifications...</p>
+                        <p>Đang tải thông báo...</p>
                     </div>
                 ) : notifications.length === 0 ? (
                     <div className={styles.empty}>
-                        <span className="material-symbols-outlined">notifications_off</span>
-                        <p>No new notifications</p>
+                        <div className={styles.emptyIcon}>
+                            <span className="material-symbols-outlined">notifications_off</span>
+                        </div>
+                        <p className={styles.emptyTitle}>Không có thông báo mới</p>
+                        <p className={styles.emptySubtitle}>Bạn đã xem hết tất cả thông báo rồi!</p>
                     </div>
                 ) : (
                     <div className={styles.notificationList}>

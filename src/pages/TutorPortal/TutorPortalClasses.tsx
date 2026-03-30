@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getTutorLessons, type LessonResponse } from '../../services/lesson.service';
 import { toast } from 'react-toastify';
+import { DataTable, StatusBadge } from '../../components/shared';
+import type { DataTableColumn } from '../../components/shared';
 import styles from '../../styles/pages/tutor-portal-classes.module.css';
 
 // Icons
@@ -18,12 +20,6 @@ const PlusIcon = () => (
     </svg>
 );
 
-// const ChevronRightIcon = () => (
-//     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-//         <path d="M5 3L9 7L5 11" strokeLinecap="round" strokeLinejoin="round" />
-//     </svg>
-// );
-
 // Helper function to format date
 const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -36,19 +32,6 @@ const formatDate = (dateString: string) => {
     return `${day}, Thg ${month}\n${dateNum} ${hours}:${minutes}`;
 };
 
-// Sample data - commented out (only used in commented-out sidebar)
-// const attentionClasses = [
-//     { id: 1, name: 'Đại số cơ bản', homework: '8 BTVN', scores: '4 Điểm', nextLesson: 'Tiếp theo: T4 15:00' },
-//     { id: 2, name: 'Toán học nâng cao A', homework: '8 BTVN', scores: '4 Điểm', nextLesson: 'Tiếp theo: T4 15:00' },
-//     { id: 3, name: 'Vật lý cơ bản', homework: '8 BTVN', scores: '4 Điểm', nextLesson: 'Tiếp theo: T4 15:00' }
-// ];
-
-// Sample data - commented out (only used in commented-out sidebar)
-// const recentActivities = [
-//     { id: 1, text: 'Học sinh mới tham gia lớp Vật lý', time: '2 giờ trước', type: 'student' },
-//     { id: 2, text: 'Đã chấm bài tập Hóa học', time: '5 giờ trước', type: 'homework' },
-//     { id: 3, text: 'Đã nhập điểm cho lớp luyện thi', time: '1 ngày trước', type: 'scores' }
-// ];
 
 // Interface for grouped class data
 interface ClassData {
@@ -79,14 +62,14 @@ const getClassStatus = (lessons: LessonResponse[]): string => {
     return 'scheduled';
 };
 
-const getStatusDisplay = (status: string): { label: string; className: string } => {
+const getStatusDisplay = (status: string): { label: string; variant: 'success' | 'error' | 'info' | 'warning' | 'neutral' } => {
     switch (status) {
-        case 'completed': return { label: 'Hoàn thành', className: 'statusCompleted' };
-        case 'cancelled': return { label: 'Đã hủy', className: 'statusCancelled' };
-        case 'in_progress': return { label: 'Đang học', className: 'statusInProgress' };
-        case 'pending': return { label: 'Chờ xử lý', className: 'statusPending' };
-        case 'scheduled': return { label: 'Đã lên lịch', className: 'statusScheduled' };
-        default: return { label: 'Không rõ', className: 'statusScheduled' };
+        case 'completed': return { label: 'Hoàn thành', variant: 'success' };
+        case 'cancelled': return { label: 'Đã hủy', variant: 'error' };
+        case 'in_progress': return { label: 'Đang học', variant: 'info' };
+        case 'pending': return { label: 'Chờ xử lý', variant: 'warning' };
+        case 'scheduled': return { label: 'Đã lên lịch', variant: 'neutral' };
+        default: return { label: 'Không rõ', variant: 'neutral' };
     }
 };
 
@@ -98,7 +81,7 @@ const TutorPortalClasses: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState<string>('nextLesson');
     const [currentPage, setCurrentPage] = useState(1);
-    const ITEMS_PER_PAGE = 10;
+    const PAGE_SIZE = 10;
 
     useEffect(() => {
         fetchLessons();
@@ -236,21 +219,92 @@ const TutorPortalClasses: React.FC = () => {
         }
     });
 
-    // Pagination
-    const totalPages = Math.max(1, Math.ceil(sortedClasses.length / ITEMS_PER_PAGE));
-    const paginatedClasses = sortedClasses.slice(
-        (currentPage - 1) * ITEMS_PER_PAGE,
-        currentPage * ITEMS_PER_PAGE
-    );
-
-    console.log('🔍 Render state:', {
-        loading,
-        lessonsCount: lessons.length,
-        classesCount: classes.length,
-        filteredClassesCount: filteredClasses.length,
-        searchTerm,
-        sortBy
-    });
+    // Column definitions for DataTable
+    const classColumns: DataTableColumn<ClassData>[] = [
+        {
+            key: 'class',
+            title: 'Lớp học',
+            render: (row) => (
+                <div className={styles.classInfo}>
+                    <div className={styles.className}>{row.subjectName}</div>
+                    <div className={styles.classTags}>
+                        <span className={styles.tag}>{row.totalLessons} buổi</span>
+                    </div>
+                </div>
+            ),
+        },
+        {
+            key: 'schedule',
+            title: 'Lịch học',
+            render: (row) => <div className={styles.scheduleText}>{row.schedule}</div>,
+            hideOnMobile: true,
+        },
+        {
+            key: 'student',
+            title: 'Học sinh',
+            render: (row) => (
+                <div className={styles.studentsList}>
+                    <div className={styles.studentAvatar}>
+                        {row.studentName.substring(0, 2).toUpperCase()}
+                    </div>
+                    <span style={{ marginLeft: '8px', fontSize: '13px' }}>{row.studentName}</span>
+                </div>
+            ),
+        },
+        {
+            key: 'nextLesson',
+            title: 'Buổi tiếp theo',
+            render: (row) => (
+                <div className={styles.nextLessonText}>
+                    {row.nextLesson
+                        ? formatDate(row.nextLesson.scheduledStart).split('\n').map((line, i) => (
+                            <div key={i}>{line}</div>
+                        ))
+                        : 'Không có'}
+                </div>
+            ),
+            hideOnMobile: true,
+        },
+        {
+            key: 'progress',
+            title: 'Tiến độ',
+            render: (row) => (
+                <div className={styles.healthBadges}>
+                    <span className={styles.hwBadge}>
+                        {row.completedLessons}/{row.totalLessons}<br />Hoàn thành
+                    </span>
+                    <span className={styles.scoresBadge}>
+                        {row.hasHomework ? '✓' : '-'}<br />BTVN
+                    </span>
+                </div>
+            ),
+            hideOnMobile: true,
+        },
+        {
+            key: 'status',
+            title: 'Trạng thái',
+            render: (row) => {
+                const { label, variant } = getStatusDisplay(row.status);
+                return <StatusBadge variant={variant}>{label}</StatusBadge>;
+            },
+        },
+        {
+            key: 'actions',
+            title: 'Hành động',
+            align: 'right',
+            render: (row) => (
+                <div className={styles.actions}>
+                    <button
+                        className={styles.openBtn}
+                        onClick={(e) => { e.stopPropagation(); handleOpenClass(row.bookingId); }}
+                    >
+                        Mở
+                    </button>
+                </div>
+            ),
+            width: 80,
+        },
+    ];
 
     return (
         <div className={styles.classManagement}>
@@ -302,220 +356,25 @@ const TutorPortalClasses: React.FC = () => {
 
                     {/* Table */}
                     <div className={styles.tableContainer}>
-                        {loading ? (
-                            <>
-                                {console.log('🔄 Showing loading state')}
-                                <div style={{ textAlign: 'center', padding: '40px' }}>
-                                    <div className={styles.spinner}></div>
-                                    <p>Đang tải dữ liệu...</p>
-                                </div>
-                            </>
-                        ) : filteredClasses.length === 0 ? (
-                            <>
-                                {console.log('⚠️ Showing empty state')}
-                                <div style={{ textAlign: 'center', padding: '40px' }}>
-                                    <p>Chưa có lớp học nào</p>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                {console.log('✅ Rendering table with', filteredClasses.length, 'classes')}
-                                <table className={styles.table}>
-                                    <thead>
-                                        <tr>
-                                            <th>LỚP HỌC</th>
-                                            <th>LỊCH HỌC</th>
-                                            <th>HỌC SINH</th>
-                                            <th>BUỔI<br />TIẾP THEO</th>
-                                            <th>TIẾN ĐỘ</th>
-                                            <th>TRẠNG THÁI</th>
-                                            <th className={styles.alignRight}>HÀNH ĐỘNG</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {paginatedClasses.map((classData) => (
-                                            <tr
-                                                key={classData.bookingId}
-                                                className={styles.clickableRow}
-                                                onClick={() => handleOpenClass(classData.bookingId)}
-                                            >
-                                                <td>
-                                                    <div className={styles.classInfo}>
-                                                        <div className={styles.className}>{classData.subjectName}</div>
-                                                        <div className={styles.classTags}>
-                                                            <span className={styles.tag}>{classData.totalLessons} buổi</span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div className={styles.scheduleText}>
-                                                        {classData.schedule}
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div className={styles.studentsList}>
-                                                        <div className={styles.studentAvatar}>
-                                                            {classData.studentName.substring(0, 2).toUpperCase()}
-                                                        </div>
-                                                        <span style={{ marginLeft: '8px', fontSize: '13px' }}>
-                                                            {classData.studentName}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    {classData.nextLesson ? (
-                                                        <div className={styles.nextLessonText}>
-                                                            {formatDate(classData.nextLesson.scheduledStart).split('\n').map((line, i) => (
-                                                                <div key={i}>{line}</div>
-                                                            ))}
-                                                        </div>
-                                                    ) : (
-                                                        <div className={styles.nextLessonText}>
-                                                            Không có
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td>
-                                                    <div className={styles.healthBadges}>
-                                                        <span className={styles.hwBadge}>
-                                                            {classData.completedLessons}/{classData.totalLessons}<br />Hoàn thành
-                                                        </span>
-                                                        <span className={styles.scoresBadge}>
-                                                            {classData.hasHomework ? '✓' : '-'}<br />BTVN
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span className={`${styles.statusBadge} ${styles[getStatusDisplay(classData.status).className]}`}>
-                                                        {getStatusDisplay(classData.status).label}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <div className={styles.actions}>
-                                                        <button
-                                                            className={styles.openBtn}
-                                                            onClick={(e) => { e.stopPropagation(); handleOpenClass(classData.bookingId); }}
-                                                        >
-                                                            Mở
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-
-                                {/* Pagination */}
-                                {filteredClasses.length > ITEMS_PER_PAGE && (
-                                    <div className={styles.pagination}>
-                                        <span className={styles.paginationInfo}>
-                                            Hiển thị {(currentPage - 1) * ITEMS_PER_PAGE + 1}-
-                                            {Math.min(currentPage * ITEMS_PER_PAGE, filteredClasses.length)} trong số{' '}
-                                            {filteredClasses.length} lớp học
-                                        </span>
-                                        <div className={styles.paginationControls}>
-                                            <button
-                                                className={styles.pageBtn}
-                                                onClick={() => setCurrentPage(currentPage - 1)}
-                                                disabled={currentPage === 1}
-                                            >
-                                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
-                                                    stroke="currentColor" strokeWidth="1.5">
-                                                    <path d="M9 3L5 7L9 11" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
-                                            </button>
-
-                                            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                                                let pageNum: number;
-                                                if (totalPages <= 5) {
-                                                    pageNum = i + 1;
-                                                } else if (currentPage <= 3) {
-                                                    pageNum = i + 1;
-                                                } else if (currentPage >= totalPages - 2) {
-                                                    pageNum = totalPages - 4 + i;
-                                                } else {
-                                                    pageNum = currentPage - 2 + i;
-                                                }
-                                                return (
-                                                    <button
-                                                        key={pageNum}
-                                                        className={`${styles.pageNumber} ${currentPage === pageNum ? styles.pageActive : ''}`}
-                                                        onClick={() => setCurrentPage(pageNum)}
-                                                    >
-                                                        {pageNum}
-                                                    </button>
-                                                );
-                                            })}
-
-                                            {totalPages > 5 && currentPage < totalPages - 2 && (
-                                                <>
-                                                    <span className={styles.paginationEllipsis}>...</span>
-                                                    <button
-                                                        className={styles.pageNumber}
-                                                        onClick={() => setCurrentPage(totalPages)}
-                                                    >
-                                                        {totalPages}
-                                                    </button>
-                                                </>
-                                            )}
-
-                                            <button
-                                                className={styles.pageBtn}
-                                                onClick={() => setCurrentPage(currentPage + 1)}
-                                                disabled={currentPage === totalPages}
-                                            >
-                                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
-                                                    stroke="currentColor" strokeWidth="1.5">
-                                                    <path d="M5 3L9 7L5 11" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </>
-                        )}
+                        <DataTable<ClassData>
+                            columns={classColumns}
+                            data={sortedClasses.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)}
+                            rowKey="bookingId"
+                            loading={loading}
+                            loadingText="Đang tải dữ liệu..."
+                            emptyText="Chưa có lớp học nào"
+                            onRowClick={(row) => handleOpenClass(row.bookingId)}
+                            pagination={sortedClasses.length > PAGE_SIZE ? {
+                                current: currentPage,
+                                pageSize: PAGE_SIZE,
+                                total: sortedClasses.length,
+                                onChange: setCurrentPage,
+                            } : undefined}
+                            minWidth={700}
+                        />
                     </div>
                 </div>
 
-                {/* Right Sidebar - Temporarily hidden (using mock data) */}
-                {/* <aside className={styles.sidebar}>
-                <div className={styles.sidebarSection}>
-                    <div className={styles.sidebarHeader}>
-                        <h3 className={styles.sidebarTitle}>Lớp học cần<br />chú ý</h3>
-                        <span className={styles.classesCount}>3 lớp học</span>
-                    </div>
-                    <div className={styles.attentionList}>
-                        {attentionClasses.map((classItem) => (
-                            <div key={classItem.id} className={styles.attentionCard}>
-                                <div className={styles.attentionHeader}>
-                                    <span className={styles.attentionName}>{classItem.name}</span>
-                                    <ChevronRightIcon />
-                                </div>
-                                <div className={styles.attentionBadges}>
-                                    <span className={styles.attentionHw}>{classItem.homework}</span>
-                                    <span className={styles.attentionScores}>{classItem.scores}</span>
-                                </div>
-                                <div className={styles.attentionNext}>{classItem.nextLesson}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                <div className={styles.sidebarSection}>
-                    <h3 className={styles.sidebarTitle}>Hoạt động gần đây</h3>
-                    <div className={styles.activityList}>
-                        {recentActivities.map((activity) => (
-                            <div key={activity.id} className={styles.activityItem}>
-                                <div className={`${styles.activityDot} ${styles[activity.type]}`} />
-                                <div className={styles.activityContent}>
-                                    <div className={styles.activityText}>{activity.text}</div>
-                                    <div className={styles.activityTime}>{activity.time}</div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </aside> */}
         </div>
     );
 };
