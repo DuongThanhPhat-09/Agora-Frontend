@@ -70,14 +70,14 @@ export const setupAuthInterceptor = (axiosInstance: AxiosInstance): AxiosInstanc
         });
 
         const { token, refreshToken } = response.data.content;
-        updateTokens(token, refreshToken);
+        await updateTokens(token, refreshToken);
 
         processQueue(null, token);
         originalRequest.headers.Authorization = `Bearer ${token}`;
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        clearUserFromStorage();
+        await clearUserFromStorage();
         window.location.href = '/login';
         return Promise.reject(refreshError);
       } finally {

@@ -5,7 +5,10 @@ import { toast } from 'react-toastify';
 import dayjs from 'dayjs';
 import { CalendarView, type CalendarDayDto } from '../../components/CalendarView/CalendarView';
 import { getStudentCalendar } from '../../services/student-lesson.service';
+import { isZaloMiniApp } from '../../services/zalo-env';
 import s from '../StudentPages.module.css';
+
+const inMiniApp = isZaloMiniApp();
 
 const StudentCalendar: React.FC = () => {
     const [calendarData, setCalendarData] = useState<CalendarDayDto[]>([]);
@@ -41,7 +44,7 @@ const StudentCalendar: React.FC = () => {
             <div className={s.topBar}>
                 <div className={s.topBarLeft}>
                     <h1 className={s.pageTitle}>Thời khóa biểu</h1>
-                    <p className={s.pageSubtitle}>Xem lịch học của bạn theo tuần</p>
+                    {!inMiniApp && <p className={s.pageSubtitle}>Xem lịch học của bạn theo tuần</p>}
                 </div>
             </div>
 

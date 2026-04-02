@@ -9,6 +9,7 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { Breadcrumb } from "../../components/shared";
 import CustomDropdown from "../../components/CustomDropdown/CustomDropdown";
+import { isZaloMiniApp } from "../../services/zalo-env";
 import "../../styles/pages/tutor-search.css";
 
 // SVG Icons
@@ -1073,23 +1074,27 @@ const TutorSearchPage = () => {
         }));
     }, []);
 
+    const inMiniApp = isZaloMiniApp();
+
     return (
         <div className="tutor-search-page">
-            <Header />
-            
-            {/* DEDICATED BREADCRUMB STRIP */}
-            <div style={{ width: '100%', backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb', paddingTop: 'var(--header-height, 80px)' }}>
-                <div style={{ maxWidth: '1200px', margin: '0 auto', width: '100%', padding: '0 24px', boxSizing: 'border-box' }}>
-                    <Breadcrumb
-                        items={[
-                            { label: 'Trang chủ', href: '/' },
-                            { label: 'Tìm kiếm Gia sư' }
-                        ]}
-                    />
-                </div>
-            </div>
+            {!inMiniApp && <Header />}
 
-            <main>
+            {/* Breadcrumb — ẩn trong Mini App (Zalo có nav bar riêng) */}
+            {!inMiniApp && (
+                <div style={{ width: '100%', backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb', paddingTop: 'var(--header-height, 80px)' }}>
+                    <div style={{ maxWidth: '1200px', margin: '0 auto', width: '100%', padding: '0 24px', boxSizing: 'border-box' }}>
+                        <Breadcrumb
+                            items={[
+                                { label: 'Trang chủ', href: '/' },
+                                { label: 'Tìm kiếm Gia sư' }
+                            ]}
+                        />
+                    </div>
+                </div>
+            )}
+
+            <main style={inMiniApp ? { paddingTop: 0 } : undefined}>
                 <SearchHero
                     searchTerm={inputSearchTerm}
                     onSearchTermChange={setInputSearchTerm}
@@ -1131,7 +1136,7 @@ const TutorSearchPage = () => {
                     onLoadMore={handleLoadMore}
                 />
             </main>
-            <Footer />
+            {!inMiniApp && <Footer />}
         </div>
     );
 };

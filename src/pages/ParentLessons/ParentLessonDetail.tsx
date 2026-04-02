@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { isZaloMiniApp } from '../../services/zalo-env';
+
+const inMiniApp = isZaloMiniApp();
 import { ArrowLeft } from 'lucide-react';
 import { getParentLessonDetail } from '../../services/parent-lesson.service';
 import { Spin, Tag, Button } from 'antd';
@@ -97,7 +100,7 @@ const ParentLessonDetail: React.FC = () => {
   const endTime = new Date(lesson.scheduledEnd);
 
   return (
-    <div style={{ padding: '24px', maxWidth: '900px', margin: '0 auto' }}>
+    <div style={{ padding: inMiniApp ? '12px' : '24px', maxWidth: inMiniApp ? 'none' : '900px', margin: '0 auto' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
         <button
@@ -145,7 +148,7 @@ const ParentLessonDetail: React.FC = () => {
         <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#1a2238', marginBottom: '16px' }}>
           Thông tin buổi học
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: inMiniApp ? '1fr' : '1fr 1fr', gap: '16px' }}>
           <InfoRow label="Môn học" value={lesson.subjectName || lesson.subject?.subjectName || 'N/A'} />
           <InfoRow label="Gia sư" value={lesson.tutorName || lesson.tutor?.fullName || 'N/A'} />
           <InfoRow

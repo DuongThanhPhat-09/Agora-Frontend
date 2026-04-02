@@ -4,6 +4,7 @@ import { getCurrentUser } from '../../services/auth.service';
 import { toast } from 'react-toastify';
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import { isZaloMiniApp } from "../../services/zalo-env";
 import { Breadcrumb } from "../../components/shared";
 import BookingModal from './BookingModal';
 import { getTutorFullProfile } from '../../services/tutorDetail.service';
@@ -1005,24 +1006,28 @@ const TutorDetailPage = () => {
         );
     }
 
+    const inMiniApp = isZaloMiniApp();
+
     return (
         <div className="tutor-detail-page">
-            <Header />
+            {!inMiniApp && <Header />}
 
-            {/* DEDICATED BREADCRUMB STRIP */}
-            <div style={{ width: '100%', backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb', paddingTop: 'var(--header-height, 80px)' }}>
-                <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%', padding: '0 35px', boxSizing: 'border-box' }}>
-                    <Breadcrumb 
-                        items={[
-                            { label: 'Trang chủ', href: '/' },
-                            { label: 'Tìm kiếm Gia sư', href: '/tutor-search' },
-                            { label: `Hồ sơ ${profile?.fullName || 'Gia sư'}` }
-                        ]} 
-                    />
+            {/* Breadcrumb — ẩn trong Mini App */}
+            {!inMiniApp && (
+                <div style={{ width: '100%', backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb', paddingTop: 'var(--header-height, 80px)' }}>
+                    <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%', padding: '0 35px', boxSizing: 'border-box' }}>
+                        <Breadcrumb
+                            items={[
+                                { label: 'Trang chủ', href: '/' },
+                                { label: 'Tìm kiếm Gia sư', href: '/tutor-search' },
+                                { label: `Hồ sơ ${profile?.fullName || 'Gia sư'}` }
+                            ]}
+                        />
+                    </div>
                 </div>
-            </div>
+            )}
 
-            <main className="tutor-detail-main" style={{ paddingTop: '24px' }}>
+            <main className="tutor-detail-main" style={{ paddingTop: inMiniApp ? '0' : '24px' }}>
                 <div className="tutor-detail-container">
                     <div className="tutor-detail-content">
                         <HeroSection profile={profile} />
@@ -1030,9 +1035,6 @@ const TutorDetailPage = () => {
 
                         <div className="portfolio-stats-wrapper">
                             <AcademicPortfolioSection certificates={profile.certificates} />
-
-                            {/* Hide StatsSection as requested since it doesn't have an API yet */}
-                            {/* <StatsSection /> */}
                         </div>
 
                         <ActiveClassesSection
@@ -1046,15 +1048,18 @@ const TutorDetailPage = () => {
                             tutorId={id}
                         />
                     </div>
-                    <BookingSidebar
-                        hourlyRate={profile.hourlyRate}
-                        trialLessonPrice={profile.trialLessonPrice}
-                        availabilities={profile.availabilities}
-                        onBooking={() => { if (requireLogin()) setShowBooking(true); }}
-                    />
+                    {/* BookingSidebar ẩn trong Mini App — mobile-sticky-cta đã handle */}
+                    {!inMiniApp && (
+                        <BookingSidebar
+                            hourlyRate={profile.hourlyRate}
+                            trialLessonPrice={profile.trialLessonPrice}
+                            availabilities={profile.availabilities}
+                            onBooking={() => { if (requireLogin()) setShowBooking(true); }}
+                        />
+                    )}
                 </div>
             </main>
-            <Footer />
+            {!inMiniApp && <Footer />}
 
             {/* Mobile Sticky CTA Bar */}
             <div className="mobile-sticky-cta">

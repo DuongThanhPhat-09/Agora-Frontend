@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { isZaloMiniApp } from './services/zalo-env';
+import { DeeplinkHandler } from './components/DeeplinkHandler/DeeplinkHandler';
 
 // --- Static imports (layouts, infrastructure, always-needed components) ---
 import AdminLayout from './layouts/AdminLayout';
@@ -88,6 +90,8 @@ const NotificationsPage = lazy(() => import('./pages/Notifications/Notifications
 
 // ---------------------
 
+const inMiniApp = isZaloMiniApp();
+
 function App() {
   const location = useLocation();
   const [showSessionExpired, setShowSessionExpired] = useState(false);
@@ -117,10 +121,10 @@ function App() {
           refreshToken: user.refreshToken,
         });
         const { token, refreshToken } = response.data.content;
-        updateTokens(token, refreshToken);
+        await updateTokens(token, refreshToken);
         return; // refresh thành công, không show modal
       } catch {
-        clearUserFromStorage();
+        await clearUserFromStorage();
       }
     }
 
@@ -147,6 +151,7 @@ function App() {
       <ToastContainer position="top-right" autoClose={5000} style={{ zIndex: 99999 }} />
 
       <Suspense fallback={<PageLoader />}>
+        {inMiniApp && <DeeplinkHandler />}
         <Routes>
           {/* Public Routes */}
           {/* Public Routes */}
@@ -155,57 +160,60 @@ function App() {
           <Route path="/tutor-detail" element={<TutorDetailPage />} />
           <Route path="/tutor-detail/:id" element={<TutorDetailPage />} />
 
-          {/* Admin Layout - PROTECTED */}
-          <Route
-            path="/admin-portal"
-            element={
-              <ProtectedRoute allowedRoles={["Admin"]}>
-                <AdminLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Navigate to="/admin-portal/dashboard" replace />} />
-            <Route path="dashboard" element={<AdminDashboardPage />} />
-            <Route path="users" element={<UserManagementPage />} />
-            <Route path="vetting" element={<AdminVettingPage />} />
-            {/* <Route path="disputes" element={<AdminDisputesPage />} /> */}
-            {/* <Route path="disputes/:disputeId" element={<AdminDisputeDetailPageExpanded />} /> */}
-            <Route path="financials" element={<AdminFinancialsPage />} />
-            <Route path="warnings" element={<AdminWarningsPage />} />
-            <Route path="settings" element={<AdminSettingsPage />} />
-            <Route path="notifications" element={<NotificationsPage />} />
-            <Route path="payouts" element={<PayoutOverviewPage />} />
-            <Route path="payouts/history" element={<AllPayoutRequestsPage />} />
-            <Route path="payouts/:id" element={<PayoutDetailPage />} />
-            <Route path="payout/review" element={<PendingReviewPage />} />
-            <Route path="payout/review/:id" element={<div className="p-6">Payout Request Detail Page (Coming Soon)</div>} />
-            <Route path="payout/fraud-logs" element={<FraudLogsPage />} />
-          </Route>
+          {/* Admin + Tutor Portal — không có trong Zalo Mini App */}
+          {!inMiniApp && (
+            <>
+              {/* Admin Layout - PROTECTED */}
+              <Route
+                path="/admin-portal"
+                element={
+                  <ProtectedRoute allowedRoles={["Admin"]}>
+                    <AdminLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Navigate to="/admin-portal/dashboard" replace />} />
+                <Route path="dashboard" element={<AdminDashboardPage />} />
+                <Route path="users" element={<UserManagementPage />} />
+                <Route path="vetting" element={<AdminVettingPage />} />
+                <Route path="financials" element={<AdminFinancialsPage />} />
+                <Route path="warnings" element={<AdminWarningsPage />} />
+                <Route path="settings" element={<AdminSettingsPage />} />
+                <Route path="notifications" element={<NotificationsPage />} />
+                <Route path="payouts" element={<PayoutOverviewPage />} />
+                <Route path="payouts/history" element={<AllPayoutRequestsPage />} />
+                <Route path="payouts/:id" element={<PayoutDetailPage />} />
+                <Route path="payout/review" element={<PendingReviewPage />} />
+                <Route path="payout/review/:id" element={<div className="p-6">Payout Request Detail Page (Coming Soon)</div>} />
+                <Route path="payout/fraud-logs" element={<FraudLogsPage />} />
+              </Route>
 
-          {/* Tutor Portal - PROTECTED */}
-          <Route path="/tutor-portal" element={
-            <ProtectedRoute allowedRoles={["Tutor"]}>
-              <TutorPortalLayout />
-            </ProtectedRoute>
-          }>
-            <Route index element={<Navigate to="/tutor-portal/dashboard" replace />} />
-            <Route path="dashboard" element={<TutorPortalDashboard />} />
-            <Route path="profile" element={<TutorPortalProfile />} />
-            <Route path="schedule" element={<TutorPortalSchedule />} />
-            <Route path="messages" element={<TutorPortalMessages />} />
-            <Route path="classes" element={<TutorPortalClasses />} />
-            <Route path="classes/:classId" element={<TutorPortalClassDetail />} />
-            <Route path="students/:studentId" element={<TutorPortalStudentProfile />} />
-            <Route path="bookings" element={<TutorPortalBookings />} />
-            <Route path="finance" element={<TutorFinanceDashboardPage />} />
-            <Route path="finance/transactions" element={<TransactionHistoryPage />} />
-            <Route path="finance/bank-info" element={<BankInfoManagementPage />} />
-            <Route path="finance/withdraw" element={<CreateWithdrawalPage />} />
-            <Route path="finance/withdrawals" element={<WithdrawalListPage />} />
-            <Route path="finance/withdrawals/:id" element={<WithdrawalDetailPage />} />
-            <Route path="account" element={<TutorAccount />} />
-            <Route path="notifications" element={<NotificationsPage />} />
-          </Route>
+              {/* Tutor Portal - PROTECTED */}
+              <Route path="/tutor-portal" element={
+                <ProtectedRoute allowedRoles={["Tutor"]}>
+                  <TutorPortalLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="/tutor-portal/dashboard" replace />} />
+                <Route path="dashboard" element={<TutorPortalDashboard />} />
+                <Route path="profile" element={<TutorPortalProfile />} />
+                <Route path="schedule" element={<TutorPortalSchedule />} />
+                <Route path="messages" element={<TutorPortalMessages />} />
+                <Route path="classes" element={<TutorPortalClasses />} />
+                <Route path="classes/:classId" element={<TutorPortalClassDetail />} />
+                <Route path="students/:studentId" element={<TutorPortalStudentProfile />} />
+                <Route path="bookings" element={<TutorPortalBookings />} />
+                <Route path="finance" element={<TutorFinanceDashboardPage />} />
+                <Route path="finance/transactions" element={<TransactionHistoryPage />} />
+                <Route path="finance/bank-info" element={<BankInfoManagementPage />} />
+                <Route path="finance/withdraw" element={<CreateWithdrawalPage />} />
+                <Route path="finance/withdrawals" element={<WithdrawalListPage />} />
+                <Route path="finance/withdrawals/:id" element={<WithdrawalDetailPage />} />
+                <Route path="account" element={<TutorAccount />} />
+                <Route path="notifications" element={<NotificationsPage />} />
+              </Route>
+            </>
+          )}
 
           {/* Parent Layout - PROTECTED */}
           <Route
@@ -259,9 +267,14 @@ function App() {
           <Route path="/payment/success" element={<PaymentCallback />} />
           <Route path="/payment/cancel" element={<PaymentCallback />} />
 
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          {/* Auth routes — không có trong Zalo Mini App (auth qua Zalo token) */}
+          {!inMiniApp && (
+            <>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+            </>
+          )}
 
           {/* Error Pages */}
           <Route path="/401" element={<UnauthorizedPage />} />

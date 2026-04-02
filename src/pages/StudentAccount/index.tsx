@@ -3,8 +3,11 @@ import { toast } from 'react-toastify';
 import Cropper from 'react-easy-crop';
 import type { Area, Point } from 'react-easy-crop';
 import { getUserIdFromToken, changePassword } from '../../services/auth.service';
-import { getUserProfile, updateUserProfile, updateUserAvatar } from '../../services/user.service';
+import { getUserProfile, updateUserProfile, updateUserAvatar, updateZaloNotifyEnabled } from '../../services/user.service';
+import { isZaloMiniApp } from '../../services/zalo-env';
 import styles from './styles.module.css';
+
+const inMiniApp = isZaloMiniApp();
 
 interface UserProfileData {
   userid: string;
@@ -17,6 +20,7 @@ interface UserProfileData {
   avatarurl?: string;
   role?: string;
   createdat?: string;
+  zabornotifyenabled?: boolean;
 }
 
 interface EditForm {
@@ -97,6 +101,7 @@ const StudentAccount = () => {
   const [showOldPw, setShowOldPw] = useState(false);
   const [showNewPw, setShowNewPw] = useState(false);
   const [showConfirmPw, setShowConfirmPw] = useState(false);
+  const [zaloNotifyEnabled, setZaloNotifyEnabled] = useState(true);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -109,6 +114,7 @@ const StudentAccount = () => {
         const res = await getUserProfile(userId);
         const data = res.content || res;
         setProfile(data);
+        setZaloNotifyEnabled(data.zabornotifyenabled !== false);
         setForm({
           fullname: data.fullname || '',
           birthdate: data.birthdate || '',
@@ -231,6 +237,19 @@ const StudentAccount = () => {
       toast.error('Đổi mật khẩu thất bại. Kiểm tra lại mật khẩu cũ.');
     } finally {
       setChangingPassword(false);
+    }
+  };
+
+  const handleToggleZaloNotify = async () => {
+    if (!profile) return;
+    const newValue = !zaloNotifyEnabled;
+    setZaloNotifyEnabled(newValue);
+    try {
+      await updateZaloNotifyEnabled(profile.userid, newValue);
+      toast.success(newValue ? 'Đã bật thông báo Zalo' : 'Đã tắt thông báo Zalo');
+    } catch {
+      setZaloNotifyEnabled(!newValue);
+      toast.error('Không thể cập nhật cài đặt');
     }
   };
 
@@ -525,6 +544,39 @@ const StudentAccount = () => {
           </div>
         )}
       </div>
+
+      {/* Zalo Notifications (Mini App only) */}
+      {inMiniApp && (
+        <div className={styles.sectionCard}>
+          <div style={{ marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid #f5f5f5' }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1a2238', margin: 0 }}>Thông báo Zalo</h3>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <p style={{ fontSize: 14, color: '#1a2238', margin: 0, fontWeight: 500 }}>Nhận thông báo qua Zalo</p>
+              <p style={{ fontSize: 12, color: '#9ca3af', margin: '4px 0 0' }}>Nhắc lịch học, báo cáo buổi học</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleToggleZaloNotify}
+              aria-label="Toggle Zalo notifications"
+              style={{
+                width: 44, height: 26, borderRadius: 13, flexShrink: 0,
+                background: zaloNotifyEnabled ? '#1a2238' : '#e5e5e5',
+                border: 'none', cursor: 'pointer', position: 'relative',
+                transition: 'background 0.2s',
+              }}
+            >
+              <span style={{
+                position: 'absolute', top: 3,
+                left: zaloNotifyEnabled ? 21 : 3,
+                width: 20, height: 20, borderRadius: '50%', background: '#fff',
+                transition: 'left 0.2s', display: 'block',
+              }} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Change Password Section */}
       <div className={styles.sectionCard}>

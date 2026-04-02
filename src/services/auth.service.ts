@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-useless-catch */
 import axios from "axios";
+import { storageAdapter } from "./storage.adapter";
 
 const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5166') + '/api';
-const USER_LOCAL_STORAGE_KEY = "TUTORA_user_data"; // Key để lưu thông tin user
+const USER_LOCAL_STORAGE_KEY = "TUTORA_user_data";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -17,9 +18,9 @@ const api = axios.create({
 /**
  * Lưu thông tin user vào LocalStorage
  */
-export const saveUserToStorage = (userData: any) => {
+export const saveUserToStorage = async (userData: any) => {
   if (userData) {
-    localStorage.setItem(USER_LOCAL_STORAGE_KEY, JSON.stringify(userData));
+    await storageAdapter.set(USER_LOCAL_STORAGE_KEY, JSON.stringify(userData));
   }
 };
 
@@ -27,8 +28,7 @@ export const saveUserToStorage = (userData: any) => {
  * Lấy thông tin user hiện tại từ LocalStorage
  */
 export const getCurrentUser = () => {
-  const data = localStorage.getItem(USER_LOCAL_STORAGE_KEY);
-  return data ? JSON.parse(data) : null;
+  return storageAdapter.getCachedUser();
 };
 
 /**
@@ -61,8 +61,8 @@ export const getUserInfoFromToken = () => {
 /**
  * Xóa thông tin user (Dùng khi Logout)
  */
-export const clearUserFromStorage = () => {
-  localStorage.removeItem(USER_LOCAL_STORAGE_KEY);
+export const clearUserFromStorage = async () => {
+  await storageAdapter.remove(USER_LOCAL_STORAGE_KEY);
 };
 
 /**
@@ -75,9 +75,10 @@ export const getRefreshToken = (): string | null => {
 /**
  * Cập nhật access token và refresh token mới sau khi silent refresh
  */
-export const updateTokens = (accessToken: string, refreshToken: string) => {
+export const updateTokens = async (accessToken: string, refreshToken: string) => {
   const user = getCurrentUser() || {};
-  saveUserToStorage({ ...user, accessToken, refreshToken });
+  storageAdapter.updateCachedTokens(accessToken, refreshToken);
+  await storageAdapter.set(USER_LOCAL_STORAGE_KEY, JSON.stringify({ ...user, accessToken, refreshToken }));
 };
 
 /**
@@ -94,7 +95,7 @@ export const logout = async () => {
       });
     } catch { /* best effort - vẫn logout dù server lỗi */ }
   }
-  clearUserFromStorage();
+  await clearUserFromStorage();
 };
 
 // --- ROLE MANAGEMENT FUNCTIONS ---

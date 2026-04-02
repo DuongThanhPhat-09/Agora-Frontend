@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { isZaloMiniApp } from '../../services/zalo-env';
 import { getUserInfoFromToken } from '../../services/auth.service';
 import { getStudents } from '../../services/student.service';
 import { getParentBookings } from '../../services/booking.service';
@@ -135,6 +136,8 @@ const getBookingStatusLabel = (status: string) => {
 };
 
 // ===== Component =====
+const inMiniApp = isZaloMiniApp();
+
 const ParentDashboard = () => {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('');
@@ -256,24 +259,28 @@ const ParentDashboard = () => {
       <div className={styles.container}>
         {/* Welcome Banner */}
         <div className={styles.welcomeBanner}>
-          <div className={styles.bannerDecorStrip} />
-          <div className={styles.bannerOrbSmall} />
+          {!inMiniApp && <div className={styles.bannerDecorStrip} />}
+          {!inMiniApp && <div className={styles.bannerOrbSmall} />}
           <div className={styles.welcomeContent}>
             <span className={styles.welcomeGreeting}>Dashboard — Phụ huynh</span>
             <h1 className={styles.welcomeTitle}>Xin chào, {userName}!</h1>
-            <p className={styles.welcomeSubtitle}>
-              Tổng quan hoạt động học tập tuần này
-            </p>
-            <div className={styles.welcomeDatePill}>
-              <span className={styles.welcomeDateIcon}>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3">
-                  <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" />
-                  <path d="M1.5 5.5h11" />
-                  <path d="M4.5 1v2.5M9.5 1v2.5" strokeLinecap="round" />
-                </svg>
-              </span>
-              <span className={styles.welcomeDate}>{getWeekRange()}</span>
-            </div>
+            {!inMiniApp && (
+              <p className={styles.welcomeSubtitle}>
+                Tổng quan hoạt động học tập tuần này
+              </p>
+            )}
+            {!inMiniApp && (
+              <div className={styles.welcomeDatePill}>
+                <span className={styles.welcomeDateIcon}>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3">
+                    <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" />
+                    <path d="M1.5 5.5h11" />
+                    <path d="M4.5 1v2.5M9.5 1v2.5" strokeLinecap="round" />
+                  </svg>
+                </span>
+                <span className={styles.welcomeDate}>{getWeekRange()}</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -337,7 +344,7 @@ const ParentDashboard = () => {
         </div>
 
         {/* Main Content Grid */}
-        <div className={styles.contentGrid}>
+        <div className={styles.contentGrid} style={inMiniApp ? { gridTemplateColumns: '1fr' } : undefined}>
           {/* Left: Upcoming Lessons */}
           <div className={styles.lessonsCard}>
             <div className={styles.lessonsHeader}>
