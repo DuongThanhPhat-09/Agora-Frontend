@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getStudents } from '../services/student.service';
 import type { StudentType } from '../types/student.type';
+import { storageAdapter } from '../services/storage.adapter';
 
 interface StudentContextType {
     students: StudentType[];
     selectedStudent: StudentType | null;
-    selectStudent: (student: StudentType) => void;
+    selectStudent: (student: StudentType) => Promise<void>;
     loading: boolean;
     refreshStudents: () => Promise<void>;
 }
@@ -13,7 +14,7 @@ interface StudentContextType {
 const StudentContext = createContext<StudentContextType>({
     students: [],
     selectedStudent: null,
-    selectStudent: () => { },
+    selectStudent: async () => { },
     loading: true,
     refreshStudents: async () => { },
 });
@@ -32,8 +33,8 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
             if (response.content && response.content.length > 0) {
                 setStudents(response.content);
 
-                // Restore previously selected student from localStorage, or pick first
-                const savedId = localStorage.getItem('selectedStudentId');
+                // Restore previously selected student from storage, or pick first
+                const savedId = await storageAdapter.get('selectedStudentId');
                 const savedStudent = savedId
                     ? response.content.find(s => s.studentId === savedId)
                     : null;
@@ -50,9 +51,9 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         loadStudents();
     }, [loadStudents]);
 
-    const selectStudent = (student: StudentType) => {
+    const selectStudent = async (student: StudentType) => {
         setSelectedStudent(student);
-        localStorage.setItem('selectedStudentId', student.studentId);
+        await storageAdapter.set('selectedStudentId', student.studentId);
     };
 
     return (

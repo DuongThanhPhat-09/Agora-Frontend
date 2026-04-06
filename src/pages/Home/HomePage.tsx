@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import { isZaloMiniApp } from "../../services/zalo-env";
 
 // Trusted Universities Banner
 const TrustedBanner = () => {
@@ -45,6 +46,7 @@ const TrustedBanner = () => {
 // Hero Section
 const HeroSection = () => {
     const navigate = useNavigate();
+    const inMiniApp = isZaloMiniApp();
     return (
         <section className="hero-section">
             <div className="hero-container">
@@ -70,12 +72,14 @@ const HeroSection = () => {
 
                     <div className="hero-buttons">
                         <button className="btn-primary" onClick={() => navigate('/tutor-search')}>TÌM GIA SƯ</button>
-                        <button className="btn-secondary" onClick={() => navigate('/register')}>ĐĂNG KÝ DẠY KÈM</button>
+                        {!inMiniApp && (
+                            <button className="btn-secondary" onClick={() => navigate('/register')}>ĐĂNG KÝ DẠY KÈM</button>
+                        )}
                     </div>
                 </div>
 
-                {/* Right Content */}
-                <div className="hero-right">
+                {/* Right Content — ẩn trong Mini App để tiết kiệm viewport */}
+                {!inMiniApp && <div className="hero-right">
                     <div className="hero-image-wrapper">
                         <img
                             src="/students-studying.png"
@@ -94,7 +98,7 @@ const HeroSection = () => {
                         <span className="rating-number">4.9/5</span>
                         <span className="rating-label">Đánh giá trung bình</span>
                     </div>
-                </div>
+                </div>}
             </div>
         </section>
     );
@@ -341,17 +345,18 @@ const TestimonialsSection = () => {
 
 // Main HomePage Component
 const HomePage = () => {
+    const inMiniApp = isZaloMiniApp();
     return (
         <div className="homepage">
-            <Header />
+            {!inMiniApp && <Header />}
             <main className="main-content">
-                <TrustedBanner />
+                {!inMiniApp && <TrustedBanner />}
                 <HeroSection />
-                <StatisticsSection />
-                <FeaturesSection />
-                <TestimonialsSection />
+                {!inMiniApp && <StatisticsSection />}
+                {!inMiniApp && <FeaturesSection />}
+                {!inMiniApp && <TestimonialsSection />}
             </main>
-            <Footer />
+            {!inMiniApp && <Footer />}
         </div>
     );
 };

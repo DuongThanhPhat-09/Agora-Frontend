@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { isZaloMiniApp } from '../../services/zalo-env';
 import { Clock, BookOpen, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getPendingLessons, type PendingLessonDto } from '../../services/parent-lesson.service';
 import { FilterTabs } from '../../components/shared';
@@ -28,6 +29,8 @@ const STATUS_CONFIG: Record<string, { label: string; cssClass: string }> = {
 };
 
 // ===== COMPONENT =====
+const inMiniApp = isZaloMiniApp();
+
 const ParentLessons = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('all');
@@ -83,7 +86,7 @@ const ParentLessons = () => {
       <header className={styles.header}>
         <div className={styles.headerLeft}>
           <h1 className={styles.title}>Buổi học của tôi</h1>
-          <p className={styles.subtitle}>Theo dõi và quản lý các buổi học</p>
+          {!inMiniApp && <p className={styles.subtitle}>Theo dõi và quản lý các buổi học</p>}
         </div>
       </header>
 

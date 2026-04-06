@@ -4,6 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { CalendarView, type CalendarDayDto } from '../../components/CalendarView/CalendarView';
 import { getParentCalendar } from '../../services/parent-lesson.service';
+import { isZaloMiniApp } from '../../services/zalo-env';
+
+const inMiniApp = isZaloMiniApp();
 
 const ParentCalendar: React.FC = () => {
     const [calendarData, setCalendarData] = useState<CalendarDayDto[]>([]);
@@ -36,8 +39,8 @@ const ParentCalendar: React.FC = () => {
     };
 
     return (
-        <div style={{ padding: '24px' }}>
-            <h1 style={{ fontSize: '24px', fontWeight: 600, color: '#1a2238', marginBottom: '24px' }}>Thời khóa biểu</h1>
+        <div style={{ padding: inMiniApp ? '12px' : '24px' }}>
+            <h1 style={{ fontSize: inMiniApp ? '18px' : '24px', fontWeight: 600, color: '#1a2238', marginBottom: '16px' }}>Thời khóa biểu</h1>
             <CalendarView
                 data={calendarData}
                 isLoading={isLoading}

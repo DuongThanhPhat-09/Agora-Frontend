@@ -56,6 +56,19 @@ export const updateUserProfile = async (userId: string, payload: IUpdateUserProf
     }
 };
 
+export const updateZaloNotifyEnabled = async (userId: string, enabled: boolean) => {
+    try {
+        const user = getCurrentUser();
+        const response = await api.patch(`/users/${userId}/zalo-notify`, { zabornotifyenabled: enabled }, {
+            headers: { Authorization: `Bearer ${user?.accessToken}` }
+        });
+        return response.data;
+    } catch (error: any) {
+        console.error('Error updating Zalo notify setting:', error);
+        throw error;
+    }
+};
+
 export const updateUserAvatar = async (userId: string, avatarFile: File) => {
     const user = getCurrentUser();
     const formData = new FormData();

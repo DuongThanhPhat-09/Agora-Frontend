@@ -8,6 +8,7 @@ import NotificationDropdown from '../../NotificationDropdown/NotificationDropdow
 import { clearUserFromStorage, getUserInfoFromToken, getUserProfile } from '../../../services/auth.service';
 import { getUnreadCount } from '../../../services/notification.service';
 import { signalRService } from '../../../services/signalr.service';
+import { isZaloMiniApp } from '../../../services/zalo-env';
 
 // ─── Shared Icons (Logo, Menu, Close, Logout, Notification) ───
 
@@ -120,6 +121,7 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
+    const inMiniApp = isZaloMiniApp();
 
     // ── Sidebar state ──
     const [sidebarOpenInternal, setSidebarOpenInternal] = useState(false);
@@ -238,16 +240,16 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({
     // ── Render ──
     return (
         <div className={styles.layout}>
-            {/* Mobile Sidebar Overlay */}
-            {sidebarOpen && (
+            {/* Mobile Sidebar Overlay — ẩn trong Mini App */}
+            {!inMiniApp && sidebarOpen && (
                 <div
                     className={styles.sidebarOverlay}
                     onClick={() => setSidebarOpen(false)}
                 />
             )}
 
-            {/* Sidebar */}
-            <aside
+            {/* Sidebar — ẩn trong Mini App (dùng bottom nav thay thế) */}
+            {!inMiniApp && <aside
                 className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}
                 {...(sidebarDataTour ? { 'data-tour': sidebarDataTour } : {})}
             >
@@ -327,12 +329,15 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({
                         </div>
                     </div>
                 )}
-            </aside>
+            </aside>}
 
             {/* Main Content */}
-            <main className={styles.main}>
-                {/* Header */}
-                <header className={styles.header}>
+            <main
+                className={styles.main}
+                style={inMiniApp ? { marginLeft: 0, paddingBottom: '60px' } : undefined}
+            >
+                {/* Header — ẩn trong Mini App (Zalo cung cấp app bar riêng) */}
+                {!inMiniApp && <header className={styles.header}>
                     <div className={styles.headerContainer}>
                         {/* Mobile Menu Button */}
                         <button
@@ -431,7 +436,7 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({
                             </Popconfirm>
                         </div>
                     </div>
-                </header>
+                </header>}
 
                 {/* Page Content */}
                 <div className={styles.contentArea}>
@@ -441,6 +446,53 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({
 
             {/* Portal-specific extras (tour modals, etc.) */}
             {extras}
+
+            {/* Bottom Tab Navigation — chỉ hiển thị trong Zalo Mini App */}
+            {inMiniApp && (
+                <nav style={{
+                    position: 'fixed', bottom: 0, left: 0, right: 0, height: '60px',
+                    backgroundColor: '#1a2238', display: 'flex', alignItems: 'stretch',
+                    zIndex: 100, borderTop: '1px solid rgba(255,255,255,0.1)',
+                }}>
+                    {navItems.slice(0, 5).map((item) => {
+                        const active = checkActive(item.path);
+                        return (
+                            <button
+                                key={item.path}
+                                onClick={() => navigate(item.path)}
+                                style={{
+                                    flex: 1, display: 'flex', flexDirection: 'column',
+                                    alignItems: 'center', justifyContent: 'center', gap: 3,
+                                    border: 'none', background: 'transparent', cursor: 'pointer',
+                                    color: active ? '#d4b483' : 'rgba(242,240,228,0.55)',
+                                    padding: '4px 2px',
+                                }}
+                            >
+                                {item.icon ? <item.icon /> : item.materialIcon ? (
+                                    <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
+                                        {item.materialIcon}
+                                    </span>
+                                ) : null}
+                                <span style={{
+                                    fontSize: 10, lineHeight: '13px', fontFamily: "'IBM Plex Sans', sans-serif",
+                                    whiteSpace: 'nowrap', overflow: 'hidden', maxWidth: '100%',
+                                    textOverflow: 'ellipsis',
+                                }}>
+                                    {item.label}
+                                </span>
+                                {item.badge != null && item.badge > 0 && (
+                                    <span style={{
+                                        position: 'absolute', top: 6, right: 'calc(50% - 14px)',
+                                        backgroundColor: '#ef4444', color: '#fff',
+                                        borderRadius: 9999, fontSize: 9, padding: '1px 4px',
+                                        lineHeight: '12px',
+                                    }}>{item.badge}</span>
+                                )}
+                            </button>
+                        );
+                    })}
+                </nav>
+            )}
 
             {/* Avatar Lightbox */}
             {viewingAvatar && showAvatarImage && (

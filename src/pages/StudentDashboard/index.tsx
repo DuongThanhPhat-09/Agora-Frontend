@@ -15,7 +15,10 @@ import {
 } from 'lucide-react';
 import { getStudentPendingLessons, getStudentCalendar, getStudentBookings, getStudentLessons } from '../../services/student-lesson.service';
 import { getUserInfoFromToken } from '../../services/auth.service';
+import { isZaloMiniApp } from '../../services/zalo-env';
 import styles from './styles.module.css';
+
+const inMiniApp = isZaloMiniApp();
 
 const StudentDashboard = () => {
   const [lessons, setLessons] = useState<any[]>([]);         // all lessons
@@ -152,9 +155,11 @@ const StudentDashboard = () => {
               Nâng cao <em>hiệu suất</em>,{' '}
               {userName}.
             </h1>
-            <p className={styles.greetingSubtitle}>
-              Chào mừng bạn quay lại hệ thống Tutora.
-            </p>
+            {!inMiniApp && (
+              <p className={styles.greetingSubtitle}>
+                Chào mừng bạn quay lại hệ thống Tutora.
+              </p>
+            )}
           </div>
 
           {/* Metric Cards */}
@@ -333,8 +338,8 @@ const StudentDashboard = () => {
           )}
         </div>
 
-        {/* ===== RIGHT SIDEBAR ===== */}
-        <div className={styles.rightSidebar}>
+        {/* ===== RIGHT SIDEBAR (web only) ===== */}
+        {!inMiniApp && <div className={styles.rightSidebar}>
           {/* Mini Calendar */}
           <div className={styles.calendarWidget}>
             <div className={styles.calendarHeader}>
@@ -415,7 +420,7 @@ const StudentDashboard = () => {
               )}
             </div>
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   );

@@ -8,6 +8,8 @@ import {
     type PaymentInfoResponse,
     type BookingResponseDTO
 } from '../../../services/booking.service';
+import { isZaloMiniApp } from '../../../services/zalo-env';
+import { storageAdapter } from '../../../services/storage.adapter';
 import styles from './styles.module.css';
 import {
     CreditCard,
@@ -28,7 +30,10 @@ const PaymentPage = () => {
     const [booking, setBooking] = useState<BookingResponseDTO | null>(null);
     const [paymentInfo, setPaymentInfo] = useState<PaymentInfoResponse | null>(null);
     const [loading, setLoading] = useState(true);
-    const [paymentMethod, setPaymentMethod] = useState<'payos' | 'wallet'>('payos');
+    const inMiniApp = isZaloMiniApp();
+    const [paymentMethod, setPaymentMethod] = useState<'payos' | 'wallet' | 'zalopay'>(
+        inMiniApp ? 'zalopay' : 'payos'
+    );
     const [isPaying, setIsPaying] = useState(false);
     const [paymentSuccess, setPaymentSuccess] = useState(false);
     const [waitingForPayOS, setWaitingForPayOS] = useState(false);
@@ -66,11 +71,9 @@ const PaymentPage = () => {
         if (bookingId) fetchData();
     }, [bookingId, navigate]);
 
-    // Dọn localStorage khi rời khỏi trang thanh toán
+    // Dọn storage khi rời khỏi trang thanh toán
     useEffect(() => {
-        return () => {
-            localStorage.removeItem('payos_payment_result');
-        };
+        return () => { storageAdapter.remove('payos_payment_result'); };
     }, []);
 
     // Listen for localStorage changes from PaymentCallback page (in new tab)
@@ -167,6 +170,29 @@ const PaymentPage = () => {
             setIsPaying(false);
         }
     };
+
+    // ZaloPay — TODO: kích hoạt sau khi có ZaloPay Merchant account
+    // const handleZaloPay = async () => {
+    //     try {
+    //         setIsPaying(true);
+    //         const { payment } = await import('zmp-sdk/apis');
+    //         const orderRes = await apiClient.post('/payment/zalopay/create-order', { bookingId });
+    //         const { zpTransToken, amount } = orderRes.data.content;
+    //         const result = await payment.createOrder({
+    //             desc: `Tutora - Đặt lịch gia sư #${bookingId}`,
+    //             item: [],
+    //             amount,
+    //         });
+    //         if (result.code === 1) {
+    //             await apiClient.post('/payment/zalopay/confirm', { bookingId, zpTransToken });
+    //             setPaymentSuccess(true);
+    //         }
+    //     } catch (error: any) {
+    //         antMessage.error(error.message || 'ZaloPay thất bại.');
+    //     } finally {
+    //         setIsPaying(false);
+    //     }
+    // };
 
     const formatPrice = (amount: number) =>
         new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
@@ -291,18 +317,37 @@ const PaymentPage = () => {
                             value={paymentMethod}
                             className={styles.methodGroup}
                         >
-                            <label className={`${styles.methodItem} ${paymentMethod === 'payos' ? styles.methodActive : ''}`}>
-                                <Radio value="payos" />
-                                <div className={styles.methodContent}>
-                                    <div className={styles.methodIcon}>
-                                        <CreditCard size={24} />
+                            {/* ZaloPay — chỉ hiển thị trong Zalo Mini App */}
+                            {inMiniApp && (
+                                <label className={`${styles.methodItem} ${paymentMethod === 'zalopay' ? styles.methodActive : ''}`}>
+                                    <Radio value="zalopay" />
+                                    <div className={styles.methodContent}>
+                                        <div className={styles.methodIcon}>
+                                            <CreditCard size={24} />
+                                        </div>
+                                        <div className={styles.methodInfo}>
+                                            <h3>ZaloPay</h3>
+                                            <p>Thanh toán nhanh qua ZaloPay trong Zalo</p>
+                                        </div>
                                     </div>
-                                    <div className={styles.methodInfo}>
-                                        <h3>Quét mã QR Ngân hàng (PayOS)</h3>
-                                        <p>Hỗ trợ tất cả ứng dụng Mobile Banking</p>
+                                </label>
+                            )}
+
+                            {/* PayOS — ẩn trong Mini App (dùng ZaloPay thay thế) */}
+                            {!inMiniApp && (
+                                <label className={`${styles.methodItem} ${paymentMethod === 'payos' ? styles.methodActive : ''}`}>
+                                    <Radio value="payos" />
+                                    <div className={styles.methodContent}>
+                                        <div className={styles.methodIcon}>
+                                            <CreditCard size={24} />
+                                        </div>
+                                        <div className={styles.methodInfo}>
+                                            <h3>Quét mã QR Ngân hàng (PayOS)</h3>
+                                            <p>Hỗ trợ tất cả ứng dụng Mobile Banking</p>
+                                        </div>
                                     </div>
-                                </div>
-                            </label>
+                                </label>
+                            )}
 
                             <label className={`${styles.methodItem} ${paymentMethod === 'wallet' ? styles.methodActive : ''}`}>
                                 <Radio value="wallet" />
@@ -319,7 +364,26 @@ const PaymentPage = () => {
                         </Radio.Group>
 
                         <div className={styles.paymentActionArea}>
-                            {paymentMethod === 'payos' ? (
+                            {paymentMethod === 'zalopay' ? (
+                                <div className={styles.walletArea}>
+                                    <p className={styles.walletHint}>
+                                        Thanh toán <strong>{formatPrice(paymentInfo?.amount || 0)}</strong> qua ZaloPay.
+                                    </p>
+                                    <Button
+                                        type="primary"
+                                        size="large"
+                                        block
+                                        disabled
+                                        className={styles.payBtn}
+                                        style={{ marginTop: '16px' }}
+                                    >
+                                        ZaloPay (sắp ra mắt)
+                                    </Button>
+                                    <p style={{ fontSize: 12, color: '#888', marginTop: 8, textAlign: 'center' }}>
+                                        Tạm thời dùng Ví TUTORA để thanh toán
+                                    </p>
+                                </div>
+                            ) : paymentMethod === 'payos' ? (
                                 <div className={styles.payosArea}>
                                     <div className={styles.qrContainer} style={{ marginBottom: '20px' }}>
                                         <p className={styles.qrHint} style={{ fontSize: '16px' }}>
@@ -333,7 +397,7 @@ const PaymentPage = () => {
                                         disabled={!paymentInfo?.checkoutUrl}
                                         onClick={() => {
                                             if (paymentInfo?.checkoutUrl) {
-                                                localStorage.removeItem('payos_payment_result');
+                                                storageAdapter.remove('payos_payment_result');
                                                 const w = window.open(paymentInfo.checkoutUrl, '_blank');
                                                 payosWindowRef.current = w;
                                                 setWaitingForPayOS(true);
