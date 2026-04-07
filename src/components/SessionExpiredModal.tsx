@@ -2,6 +2,7 @@ import React, { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { logout } from "../services/auth.service";
+import { handleAuthFailure } from "../services/zalo-auth.service";
 import styles from "../styles/components/session-expired-modal.module.css";
 
 interface SessionExpiredModalProps {
@@ -19,6 +20,7 @@ const SessionExpiredModal: React.FC<SessionExpiredModalProps> = ({
         await logout();
         await supabase.auth.signOut();
         onClose();
+        await handleAuthFailure();
         navigate("/login");
     }, [navigate, onClose]);
 

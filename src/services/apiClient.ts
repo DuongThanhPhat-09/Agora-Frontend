@@ -78,7 +78,8 @@ export const setupAuthInterceptor = (axiosInstance: AxiosInstance): AxiosInstanc
       } catch (refreshError) {
         processQueue(refreshError, null);
         await clearUserFromStorage();
-        window.location.href = '/login';
+        const { handleAuthFailure } = await import('./zalo-auth.service');
+        await handleAuthFailure();
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

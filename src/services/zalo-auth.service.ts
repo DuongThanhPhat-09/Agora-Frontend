@@ -18,35 +18,39 @@ export interface ZaloLoginResult {
  * 3. Exchange lấy Tutora JWT từ backend
  * 4. Lưu vào storage adapter
  */
-export const loginWithZalo = async (): Promise<ZaloLoginResult> => {
+export const loginWithZalo = async (role?: string): Promise<ZaloLoginResult> => {
   if (!isZaloMiniApp()) {
     throw new Error('loginWithZalo chỉ chạy được trong Zalo Mini App');
   }
 
-  const { authorize, getAccessToken, getUserInfo } = await import('zmp-sdk/apis');
+  const { getAccessToken, getUserInfo } = await import('zmp-sdk/apis');
 
-  // 1. Authorize user (prompt nếu chưa grant)
-  await authorize({});
-
-  // 2. Lấy Zalo access token
+  // Lấy Zalo access token (user đã login Zalo rồi, không cần authorize thêm)
+  console.log('[ZaloAuth] getAccessToken...');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const tokenResult = await getAccessToken({}) as any;
+  const tokenResult = await (getAccessToken as any)({}) as any;
   const zaloToken: string = tokenResult?.accessToken ?? tokenResult;
+  console.log('[ZaloAuth] token length:', zaloToken?.length);
 
-  // 3. Lấy Zalo user info
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const userInfoResult = await getUserInfo({}) as any;
-  const userInfo = userInfoResult?.userInfo ?? userInfoResult;
+  // Lấy Zalo user ID client-side — cần thiết khi server IP ngoài Việt Nam (-501)
+  let zaloUserId = '';
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const userInfoResult = await (getUserInfo as any)({}) as any;
+    zaloUserId = userInfoResult?.userInfo?.id ?? '';
+    console.log('[ZaloAuth] zaloUserId:', zaloUserId ? 'obtained' : 'empty');
+  } catch (e) {
+    console.warn('[ZaloAuth] getUserInfo failed:', e);
+  }
 
-  // 4. Exchange với backend Tutora
+  // 3. Exchange với backend
   const response = await fetch(`${API_BASE_URL}/auth/login-zalo`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       zaloAccessToken: zaloToken,
-      zaloUserId: userInfo.id,
-      name: userInfo.name,
-      avatar: userInfo.avatar?.small || userInfo.avatar,
+      zaloUserId,
+      role: role ?? 'Parent',
     }),
   });
 
@@ -69,9 +73,26 @@ export const loginWithZalo = async (): Promise<ZaloLoginResult> => {
     accessToken: token,
     refreshToken,
     userId: result.content.userId || '',
-    fullname: result.content.fullname || userInfo.name || '',
+    fullname: result.content.fullname || '',
     role: result.content.role || 'Parent',
   };
+};
+
+/**
+ * Xử lý khi auth fail (401 / session expired):
+ * - Mini App: re-trigger loginWithZalo
+ * - Web: redirect to /login
+ */
+export const handleAuthFailure = async (): Promise<void> => {
+  if (isZaloMiniApp()) {
+    try {
+      await loginWithZalo();
+    } catch {
+      // silent — user will see blank state and can retry
+    }
+  } else {
+    window.location.href = '/login';
+  }
 };
 
 /**
