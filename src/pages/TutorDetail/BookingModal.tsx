@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { getStudents } from '../../services/student.service';
+import { getStudents, getMyLinkStatus } from '../../services/student.service';
 import { createBooking, validatePromotion } from '../../services/booking.service';
 import { getCurrentUserRole, getUserIdFromToken } from '../../services/auth.service';
 import type { StudentType } from '../../types/student.type';
@@ -803,10 +803,21 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
         subjects.some(tutorSubj => tutorSubj.subjectId === s.id)
     );
 
+    // Fetch student profile for Student role (to get correct studentId)
+    useEffect(() => {
+        if (!isOpen || userRole !== 'Student') return;
+        getMyLinkStatus().then(res => {
+            const profile = res?.content?.studentProfile;
+            if (profile?.studentId) {
+                setFormData(d => ({ ...d, studentId: profile.studentId }));
+            }
+        }).catch(() => {/* ignore */});
+    }, [isOpen, userRole]);
+
     // Fetch students on modal open (only for Parent role)
     useEffect(() => {
         if (!isOpen) return;
-        if (userRole !== 'Parent') return; // Students don't need to fetch student profiles
+        if (userRole !== 'Parent') return;
         const fetchStudents = async () => {
             setLoadingStudents(true);
             try {

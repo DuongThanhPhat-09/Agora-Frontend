@@ -5,6 +5,8 @@ import { toast } from 'react-toastify';
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { isZaloMiniApp } from "../../services/zalo-env";
+import { loginWithZalo } from "../../services/zalo-auth.service";
+import ZaloRoleSelectModal from "../../components/ZaloRoleSelectModal/ZaloRoleSelectModal";
 import { Breadcrumb } from "../../components/shared";
 import BookingModal from './BookingModal';
 import { getTutorFullProfile } from '../../services/tutorDetail.service';
@@ -939,16 +941,37 @@ const TutorDetailPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showBooking, setShowBooking] = useState(false);
+    const [showRoleSelect, setShowRoleSelect] = useState(false);
+    const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
     // Login guard: check if user is logged in before actions
-    const requireLogin = (): boolean => {
+    const requireLogin = async (onSuccess: () => void): Promise<void> => {
         const user = getCurrentUser();
         if (!user) {
+            if (isZaloMiniApp()) {
+                setPendingAction(() => onSuccess);
+                setShowRoleSelect(true);
+                return;
+            }
             toast.info('Vui lòng đăng nhập để sử dụng tính năng này.');
             navigate('/login');
-            return false;
+            return;
         }
-        return true;
+        onSuccess();
+    };
+
+    const handleRoleSelect = async (role: 'Parent' | 'Student' | 'Tutor') => {
+        setShowRoleSelect(false);
+        try {
+            await loginWithZalo(role);
+            if (pendingAction) {
+                pendingAction();
+                setPendingAction(null);
+            }
+        } catch (e) {
+            console.error('[requireLogin] Zalo auth error:', e);
+            toast.error('Đăng nhập Zalo thất bại, vui lòng thử lại.');
+        }
     };
 
     useEffect(() => {
@@ -1054,7 +1077,7 @@ const TutorDetailPage = () => {
                             hourlyRate={profile.hourlyRate}
                             trialLessonPrice={profile.trialLessonPrice}
                             availabilities={profile.availabilities}
-                            onBooking={() => { if (requireLogin()) setShowBooking(true); }}
+                            onBooking={() => requireLogin(() => setShowBooking(true))}
                         />
                     )}
                 </div>
@@ -1067,7 +1090,7 @@ const TutorDetailPage = () => {
                     <span className="mobile-cta-price-amount">{formatCurrency(profile.hourlyRate ? Math.round(profile.hourlyRate * 1.05) : null)}</span>
                     <span className="mobile-cta-price-unit">/ buổi học</span>
                 </div>
-                <button className="mobile-cta-book" onClick={() => { if (requireLogin()) setShowBooking(true); }}>
+                <button className="mobile-cta-book" onClick={() => requireLogin(() => setShowBooking(true))}>
                     <b>ĐẶT LỊCH</b>
                 </button>
             </div>
@@ -1081,6 +1104,13 @@ const TutorDetailPage = () => {
                 subjects={profile.subjects || []}
                 availabilities={profile.availabilities}
             />
+
+            {showRoleSelect && (
+                <ZaloRoleSelectModal
+                    onSelect={handleRoleSelect}
+                    onCancel={() => { setShowRoleSelect(false); setPendingAction(null); }}
+                />
+            )}
         </div>
     );
 };

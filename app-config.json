@@ -13,7 +13,11 @@
     "hideAndroidBottomNavigationBar": true,
     "hideIOSSafeAreaBottom": false
   },
-  "listCSS": [],
-  "listSyncJS": [],
+  "listCSS": [
+    "assets/index-CKuXpRwY.css"
+  ],
+  "listSyncJS": [
+    "assets/bootstrap.js"
+  ],
   "listAsyncJS": []
 }
