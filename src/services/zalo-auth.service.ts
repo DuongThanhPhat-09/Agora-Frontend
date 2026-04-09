@@ -18,7 +18,7 @@ export interface ZaloLoginResult {
  * 3. Exchange lấy Tutora JWT từ backend
  * 4. Lưu vào storage adapter
  */
-export const loginWithZalo = async (role?: string): Promise<ZaloLoginResult> => {
+export const loginWithZalo = async (requestedRole?: string): Promise<ZaloLoginResult> => {
   if (!isZaloMiniApp()) {
     throw new Error('loginWithZalo chỉ chạy được trong Zalo Mini App');
   }
@@ -50,7 +50,7 @@ export const loginWithZalo = async (role?: string): Promise<ZaloLoginResult> => 
     body: JSON.stringify({
       zaloAccessToken: zaloToken,
       zaloUserId,
-      role: role ?? 'Parent',
+      role: requestedRole ?? 'Parent',
     }),
   });
 
@@ -70,10 +70,10 @@ export const loginWithZalo = async (role?: string): Promise<ZaloLoginResult> => 
   await storageAdapter.set('TUTORA_user_data', JSON.stringify(userData));
 
   // Decode JWT để lấy role
-  let role = 'Parent';
+  let decodedRole = 'Parent';
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
-    role = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || 'Parent';
+    decodedRole = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || 'Parent';
   } catch { /* ignore */ }
 
   return {
@@ -81,7 +81,7 @@ export const loginWithZalo = async (role?: string): Promise<ZaloLoginResult> => 
     refreshToken,
     userId: result.content.userId || '',
     fullname: result.content.fullname || '',
-    role,
+    role: decodedRole,
   };
 };
 
