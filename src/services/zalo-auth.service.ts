@@ -9,6 +9,7 @@ export interface ZaloLoginResult {
   userId: string;
   fullname: string;
   role: string;
+  studentId?: string;
 }
 
 /**
@@ -82,6 +83,7 @@ export const loginWithZalo = async (requestedRole?: string): Promise<ZaloLoginRe
     userId: result.content.userId || '',
     fullname: result.content.fullname || '',
     role: decodedRole,
+    studentId: result.content.studentId || undefined,
   };
 };
 

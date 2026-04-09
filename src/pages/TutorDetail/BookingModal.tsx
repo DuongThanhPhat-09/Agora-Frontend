@@ -807,22 +807,21 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
     useEffect(() => {
         if (!isOpen || userRole !== 'Student') return;
         const fetchStudentId = async () => {
+            try {
+                // Re-login silently — backend trả studentId trực tiếp trong response
+                const { loginWithZalo } = await import('../../services/zalo-auth.service');
+                const loginResult = await loginWithZalo();
+                if (loginResult.studentId) {
+                    setFormData(d => ({ ...d, studentId: loginResult.studentId! }));
+                    return;
+                }
+            } catch { /* ignore */ }
+            // Fallback: getMyLinkStatus
             const res = await getMyLinkStatus().catch(() => null);
             const profile = res?.content?.studentProfile;
             if (profile?.studentId) {
                 setFormData(d => ({ ...d, studentId: profile.studentId }));
-                return;
             }
-            // Student profile chưa có — re-login silently để backend tự tạo
-            try {
-                const { loginWithZalo } = await import('../../services/zalo-auth.service');
-                await loginWithZalo('Student');
-                const res2 = await getMyLinkStatus().catch(() => null);
-                const profile2 = res2?.content?.studentProfile;
-                if (profile2?.studentId) {
-                    setFormData(d => ({ ...d, studentId: profile2.studentId }));
-                }
-            } catch { /* ignore */ }
         };
         fetchStudentId();
     }, [isOpen, userRole]);
