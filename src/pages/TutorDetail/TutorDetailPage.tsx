@@ -963,10 +963,18 @@ const TutorDetailPage = () => {
     const handleRoleSelect = async (role: 'Parent' | 'Student' | 'Tutor') => {
         setShowRoleSelect(false);
         try {
-            await loginWithZalo(role);
+            const result = await loginWithZalo(role);
             if (pendingAction) {
                 pendingAction();
                 setPendingAction(null);
+            } else {
+                // Không có pending action — navigate đến portal
+                const portalMap: Record<string, string> = {
+                    Parent: '/parent-portal/dashboard',
+                    Student: '/student-portal/dashboard',
+                    Tutor: '/tutor-portal/dashboard',
+                };
+                navigate(portalMap[result.role] || '/parent-portal/dashboard');
             }
         } catch (e) {
             console.error('[requireLogin] Zalo auth error:', e);

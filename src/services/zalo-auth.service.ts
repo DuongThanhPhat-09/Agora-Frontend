@@ -62,19 +62,26 @@ export const loginWithZalo = async (role?: string): Promise<ZaloLoginResult> => 
   const result = await response.json();
   const { token, refreshToken } = result.content;
 
-  // 5. Lưu JWT vào storage
+  // Lưu JWT vào storage
   const userData = {
     accessToken: token,
     refreshToken,
   };
   await storageAdapter.set('TUTORA_user_data', JSON.stringify(userData));
 
+  // Decode JWT để lấy role
+  let role = 'Parent';
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    role = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || 'Parent';
+  } catch { /* ignore */ }
+
   return {
     accessToken: token,
     refreshToken,
     userId: result.content.userId || '',
     fullname: result.content.fullname || '',
-    role: result.content.role || 'Parent',
+    role,
   };
 };
 
