@@ -806,12 +806,25 @@ const BookingModal = ({ isOpen, onClose, tutorName, tutorId, hourlyRate, subject
     // Fetch student profile for Student role (to get correct studentId)
     useEffect(() => {
         if (!isOpen || userRole !== 'Student') return;
-        getMyLinkStatus().then(res => {
+        const fetchStudentId = async () => {
+            const res = await getMyLinkStatus().catch(() => null);
             const profile = res?.content?.studentProfile;
             if (profile?.studentId) {
                 setFormData(d => ({ ...d, studentId: profile.studentId }));
+                return;
             }
-        }).catch(() => {/* ignore */});
+            // Student profile chưa có — re-login silently để backend tự tạo
+            try {
+                const { loginWithZalo } = await import('../../services/zalo-auth.service');
+                await loginWithZalo('Student');
+                const res2 = await getMyLinkStatus().catch(() => null);
+                const profile2 = res2?.content?.studentProfile;
+                if (profile2?.studentId) {
+                    setFormData(d => ({ ...d, studentId: profile2.studentId }));
+                }
+            } catch { /* ignore */ }
+        };
+        fetchStudentId();
     }, [isOpen, userRole]);
 
     // Fetch students on modal open (only for Parent role)
