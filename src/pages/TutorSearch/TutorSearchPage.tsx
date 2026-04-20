@@ -7,7 +7,6 @@ import type {
 import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
-import { Breadcrumb } from "../../components/shared";
 import CustomDropdown from "../../components/CustomDropdown/CustomDropdown";
 import { isZaloMiniApp } from "../../services/zalo-env";
 import "../../styles/pages/tutor-search.css";
@@ -830,7 +829,7 @@ const ResultsSection = ({ tutors, loading, error, totalCount, hasNext, onLoadMor
             <div className="results-header">
                 <div className="results-header-left">
                     <span className="results-label">TUTORA Selection</span>
-                    <h2 className="results-title">Chuyên gia đang online</h2>
+                    <h2 className="results-title">Danh sách gia sư</h2>
                 </div>
                 <span className="results-count">{totalCount} Kết quả tìm thấy</span>
             </div>
@@ -1079,20 +1078,6 @@ const TutorSearchPage = () => {
     return (
         <div className="tutor-search-page">
             {!inMiniApp && <Header />}
-
-            {/* Breadcrumb — ẩn trong Mini App (Zalo có nav bar riêng) */}
-            {!inMiniApp && (
-                <div style={{ width: '100%', backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb', paddingTop: 'var(--header-height, 80px)' }}>
-                    <div style={{ maxWidth: '1200px', margin: '0 auto', width: '100%', padding: '0 24px', boxSizing: 'border-box' }}>
-                        <Breadcrumb
-                            items={[
-                                { label: 'Trang chủ', href: '/' },
-                                { label: 'Tìm kiếm Gia sư' }
-                            ]}
-                        />
-                    </div>
-                </div>
-            )}
 
             <main style={inMiniApp ? { paddingTop: 0 } : undefined}>
                 <SearchHero

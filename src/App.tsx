@@ -11,6 +11,7 @@ import StudentLayout from './layouts/StudentLayout';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import SessionExpiredModal from './components/SessionExpiredModal';
 import PageLoader from './components/PageLoader/PageLoader';
+import { ErrorBoundary } from './components/shared';
 import axios from 'axios';
 import { getCurrentUser, isTokenExpired, updateTokens, clearUserFromStorage } from './services/auth.service';
 
@@ -150,6 +151,7 @@ function App() {
       />
       <ToastContainer position="top-right" autoClose={5000} style={{ zIndex: 99999 }} />
 
+      <ErrorBoundary>
       <Suspense fallback={<PageLoader />}>
         {inMiniApp && <DeeplinkHandler />}
         <Routes>
@@ -285,6 +287,7 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
+      </ErrorBoundary>
     </div>
   );
 }

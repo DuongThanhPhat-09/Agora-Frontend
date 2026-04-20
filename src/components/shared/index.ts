@@ -32,3 +32,6 @@ export type { PortalLayoutProps, NavItem } from './PortalLayout';
 
 export { Breadcrumb } from './Breadcrumb';
 export type { BreadcrumbItem } from './Breadcrumb';
+
+export { ErrorBoundary, ErrorFallback } from './ErrorBoundary';
+export type { ErrorFallbackProps } from './ErrorBoundary';
