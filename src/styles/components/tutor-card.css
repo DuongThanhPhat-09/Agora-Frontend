@@ -417,6 +417,18 @@
     white-space: nowrap;
 }
 
+.tutor-search-page .trial-price-badge.is-placeholder {
+    background: transparent;
+    border-color: #e5e7eb;
+    color: #b0b4bb;
+    font-weight: 600;
+}
+
+.tutor-search-page .highlight-item.is-disabled .highlight-icon,
+.tutor-search-page .highlight-item.is-disabled .highlight-text {
+    color: #d1d5db;
+}
+
 /* Action Buttons */
 .tutor-search-page .tutor-actions {
     display: flex;
