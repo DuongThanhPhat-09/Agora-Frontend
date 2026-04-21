@@ -339,11 +339,13 @@ const TutorPortalSchedule: React.FC = () => {
             <MobileHeader
                 currentDate={currentDate}
                 activeTab={activeTab}
+                viewMode={viewMode}
                 isCurrentPeriod={isCurrentPeriod}
                 onPrev={handlePrev}
                 onNext={handleNext}
                 onToday={handleToday}
                 onTabChange={setActiveTab}
+                onViewModeChange={setViewMode}
             />
 
             <div className={styles.mainContainer}>
