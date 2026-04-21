@@ -51,15 +51,14 @@ const AvailabilityGrid: React.FC<Props> = ({
     onEditAvailability,
     onDeleteAvailability,
 }) => {
+    const isDayView = viewMode === "day";
+
     return (
         <div
-            className={styles.calendarGrid}
-            style={viewMode === "day" ? ({ "--col-count": "1" } as React.CSSProperties) : undefined}
+            className={`${styles.calendarGrid} ${isDayView ? styles.dayView : ""}`}
+            style={isDayView ? ({ "--col-count": "1" } as React.CSSProperties) : undefined}
         >
-            <div
-                className={styles.calendarHeader}
-                style={viewMode === "day" ? { gridTemplateColumns: "70px 1fr" } : undefined}
-            >
+            <div className={styles.calendarHeader}>
                 <div className={styles.timeColumn} />
                 {displayDates.map((date, index) => (
                     <div
@@ -67,7 +66,7 @@ const AvailabilityGrid: React.FC<Props> = ({
                         className={`${styles.dayColumn} ${isToday(date) ? styles.today : ""}`}
                     >
                         <span className={styles.dayName}>
-                            {viewMode === "day" ? date.format("dddd") : DAYS_OF_WEEK[index]}
+                            {isDayView ? date.format("dddd") : DAYS_OF_WEEK[index]}
                         </span>
                         <span className={styles.dayNumber}>{date.format("DD")}</span>
                         <span className={styles.monthName}>{date.format("MMM")}</span>
@@ -84,7 +83,6 @@ const AvailabilityGrid: React.FC<Props> = ({
                             minHeight: `${rowHeight}px`,
                             zIndex: TIME_SLOTS.length - index,
                             position: "relative",
-                            ...(viewMode === "day" ? { gridTemplateColumns: "70px 1fr" } : {}),
                         }}
                     >
                         <div className={styles.timeLabel}>{hour.toString().padStart(2, "0")}:00</div>

@@ -25,6 +25,11 @@
     /* Shown only on mobile via media query */
 }
 
+.mobileViewRow {
+    display: none;
+    /* Shown only on mobile via media query */
+}
+
 /* ===== FLOATING ACTION BUTTON (hidden on desktop) ===== */
 .fab {
     display: none;
@@ -422,6 +427,12 @@
     /* Match body scrollbar width so columns align perfectly */
     overflow-y: scroll;
     max-height: none;
+}
+
+/* Day view — single day column takes remaining width */
+.calendarGrid.dayView .calendarHeader,
+.calendarGrid.dayView .timeRow {
+    grid-template-columns: 70px 1fr;
 }
 
 /* Hide the header's scrollbar visually */
@@ -1556,6 +1567,47 @@
         opacity: 1;
     }
 
+    /* === MOBILE VIEW TOGGLE (second row: Ngày / Tuần / Tháng) === */
+    .mobileViewRow {
+        display: flex;
+        justify-content: center;
+        padding: 6px 12px 8px;
+        background-color: #f2f0e4;
+        border-bottom: 1px solid rgba(26, 34, 56, 0.08);
+        flex-shrink: 0;
+    }
+
+    .mobileViewToggle {
+        display: flex;
+        gap: 2px;
+        padding: 3px;
+        border-radius: 10px;
+        background-color: rgba(26, 34, 56, 0.06);
+        width: 100%;
+        max-width: 320px;
+    }
+
+    .mobileViewBtn {
+        flex: 1;
+        padding: 6px 10px;
+        border-radius: 7px;
+        background: none;
+        border: none;
+        font-family: 'IBM Plex Sans', sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        color: rgba(26, 34, 56, 0.55);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .mobileViewBtn.active {
+        background-color: #fff;
+        color: #1a2238;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
     /* === SHOW FAB === */
     .fab {
         display: flex;
@@ -1613,6 +1665,63 @@
         grid-template-columns: 36px repeat(7, 1fr);
     }
 
+    /* Day view on mobile — wider time label, horizontal day header */
+    .calendarGrid.dayView .calendarHeader,
+    .calendarGrid.dayView .timeRow {
+        grid-template-columns: 48px 1fr;
+    }
+
+    .calendarGrid.dayView .dayColumn {
+        flex-direction: row;
+        align-items: baseline;
+        justify-content: flex-start;
+        padding: 12px 18px;
+        gap: 10px;
+        text-align: left;
+    }
+
+    .calendarGrid.dayView .dayName {
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        color: #1a2238;
+        text-transform: capitalize;
+    }
+
+    .calendarGrid.dayView .dayNumber {
+        font-size: 22px;
+        line-height: 26px;
+        font-weight: 700;
+        opacity: 1;
+    }
+
+    .calendarGrid.dayView .monthName {
+        display: inline;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        color: rgba(26, 34, 56, 0.55);
+        text-transform: uppercase;
+    }
+
+    .calendarGrid.dayView .today .dayName {
+        color: #4f8cff;
+    }
+
+    .calendarGrid.dayView .today .dayNumber {
+        width: auto;
+        height: auto;
+        background: none;
+        color: #4f8cff;
+        border-radius: 0;
+        display: inline;
+        line-height: 26px;
+    }
+
+    .calendarGrid.dayView .today .monthName {
+        color: rgba(79, 140, 255, 0.7);
+    }
+
     .timeColumn {
         min-width: 0;
     }
@@ -1622,6 +1731,14 @@
         font-size: 9px;
         line-height: 12px;
         color: rgba(26, 34, 56, 0.4);
+    }
+
+    /* Day view has more room for time labels */
+    .calendarGrid.dayView .timeLabel {
+        padding: 4px 8px;
+        font-size: 11px;
+        line-height: 14px;
+        color: rgba(26, 34, 56, 0.55);
     }
 
     /* Google Calendar-style compact day headers */
@@ -1724,6 +1841,56 @@
         font-size: 7px;
         line-height: 10px;
         word-break: break-all;
+    }
+
+    /* Day view — block is full-width, so text can breathe */
+    .calendarGrid.dayView .availableBlock {
+        padding: 10px 14px;
+        border-radius: 10px;
+        min-height: 52px;
+        gap: 4px;
+    }
+
+    .calendarGrid.dayView .availableLabel {
+        font-size: 13px;
+        letter-spacing: 0.5px;
+    }
+
+    .calendarGrid.dayView .availableTime {
+        font-size: 12px;
+        line-height: 16px;
+        word-break: normal;
+    }
+
+    /* Use the single-line "HH:MM - HH:MM" format instead of split "Từ Xh / Đến Yh" */
+    .calendarGrid.dayView .availableTime.mobileOnly {
+        display: none !important;
+    }
+
+    .calendarGrid.dayView .availableTime.desktopOnly {
+        display: inline !important;
+    }
+
+    /* Lesson block — same day-view treatment */
+    .calendarGrid.dayView .lessonBlock {
+        padding: 10px 14px;
+        border-radius: 10px;
+        border-left-width: 3px;
+    }
+
+    .calendarGrid.dayView .lessonLabel {
+        font-size: 13px;
+        line-height: 18px;
+    }
+
+    .calendarGrid.dayView .lessonTime {
+        font-size: 12px;
+        line-height: 16px;
+    }
+
+    .calendarGrid.dayView .lessonStudent {
+        font-size: 11px;
+        line-height: 14px;
     }
 
     .slotActions {
@@ -1859,6 +2026,30 @@
 
     .timeRow {
         grid-template-columns: 32px repeat(7, 1fr);
+    }
+
+    /* Day view — slightly narrower but still readable */
+    .calendarGrid.dayView .calendarHeader,
+    .calendarGrid.dayView .timeRow {
+        grid-template-columns: 42px 1fr;
+    }
+
+    .calendarGrid.dayView .dayColumn {
+        padding: 10px 14px;
+        gap: 8px;
+    }
+
+    .calendarGrid.dayView .dayName {
+        font-size: 13px;
+    }
+
+    .calendarGrid.dayView .dayNumber {
+        font-size: 20px;
+        line-height: 24px;
+    }
+
+    .calendarGrid.dayView .monthName {
+        font-size: 11px;
     }
 
     .timeLabel {
