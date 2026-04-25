@@ -1,29 +1,64 @@
-import { Button } from 'antd';
+import type { Metadata } from 'next';
+import Header from './_components/Header';
+import Footer from './_components/Footer';
+import TrustedBanner from './_components/TrustedBanner';
+import HeroSection from './_components/HeroSection';
+import StatisticsSection from './_components/StatisticsSection';
+import FeaturesSection from './_components/FeaturesSection';
+import TestimonialsSection from './_components/TestimonialsSection';
 
 /**
- * Phase 1 stub — validate:
- *  - Server Component render được
- *  - antd Button SSR ra HTML đúng (inline cssinjs style) — không FOUC khi hydrate
- *  - Tailwind class `min-h-screen flex items-center justify-center` hoạt động
- *  - Font Bricolage load được (variable --font-sans)
+ * Home page — Server Component.
  *
- * Phase 2 sẽ replace file này bằng Home SSR thật.
+ * Port từ `src/pages/Home/HomePage.tsx` (Vite). Các khác biệt chính:
+ *  - Render SSR thay vì CSR → Google crawler thấy nội dung ngay
+ *  - `!inMiniApp` gating bị loại bỏ (Next = web only, Zalo chỉ chạy trên Vite)
+ *  - CTA buttons dùng `<Link>` → có href thật cho crawler
+ *  - Accordion FAQ tách thành client island (`FaqSection`)
+ *  - Header là client (auth state + mobile menu) nhưng prerender vẫn ra markup
+ *    "chưa login" để tránh hydration mismatch
  */
 
-export default function Page() {
+export const metadata: Metadata = {
+  title: 'TUTORA — Nền tảng kết nối gia sư chất lượng cho K-12',
+  description:
+    'TUTORA — nền tảng kết nối phụ huynh, học sinh với gia sư chất lượng. Tìm gia sư theo môn, cấp học, khu vực; đặt lịch và thanh toán an toàn qua cơ chế giữ tiền trung gian.',
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'TUTORA — Nền tảng kết nối gia sư',
+    description: 'Tìm gia sư đã được xác minh, đặt lịch học online, nhận báo cáo tiến độ tự động sau mỗi buổi.',
+    url: '/',
+    images: [
+      {
+        url: '/collaboration-1.png',
+        width: 1200,
+        height: 630,
+        alt: 'TUTORA — Nền tảng kết nối gia sư',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'TUTORA — Nền tảng kết nối gia sư',
+    description: 'Tìm gia sư đã được xác minh, đặt lịch học online, nhận báo cáo tiến độ tự động.',
+    images: ['/collaboration-1.png'],
+  },
+};
+
+export default function HomePage() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center gap-6 p-8 bg-zinc-50">
-      <h1 className="text-4xl font-bold tracking-tight text-zinc-900">
-        TUTORA <span className="text-blue-600">·</span> Next.js scaffold
-      </h1>
-      <p className="text-zinc-600 max-w-md text-center">
-        Nếu bạn thấy nút xanh bên dưới đã được styled <strong>ngay lần render đầu</strong> (không flash
-        trắng), antd SSR + cssinjs đang chạy đúng.
-      </p>
-      <Button type="primary" size="large">
-        Hello TUTORA
-      </Button>
-      <p className="text-xs text-zinc-400 mt-4">Phase 1 foundation — ready for Phase 2 (Home port)</p>
-    </main>
+    <div className="homepage">
+      <Header />
+      <main className="main-content">
+        <TrustedBanner />
+        <HeroSection />
+        <StatisticsSection />
+        <FeaturesSection />
+        <TestimonialsSection />
+      </main>
+      <Footer />
+    </div>
   );
 }
