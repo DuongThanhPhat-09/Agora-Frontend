@@ -44,8 +44,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
+    // suppressHydrationWarning ở <body> để bỏ qua attribute do browser extension
+    // (Grammarly, Backpack, LastPass...) inject sau SSR. Chỉ suppress 1 cấp; React
+    // vẫn cảnh báo bình thường nếu component bên trong gây hydration mismatch.
     <html lang="vi" className={`${bricolage.variable} ${notoSans.variable}`}>
-      <body>
+      <body suppressHydrationWarning>
         <RootProviders>{children}</RootProviders>
       </body>
     </html>
