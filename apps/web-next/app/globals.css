@@ -14,13 +14,20 @@
 @import "../styles/tutora/features.css";
 @import "../styles/tutora/testimonials.css";
 
+/* Component / page CSS — Tutor Search (Phase 3) */
+@import "../styles/tutora/search-bar.css";
+@import "../styles/tutora/category-tabs.css";
+@import "../styles/tutora/filter-bar.css";
+@import "../styles/tutora/active-filters.css";
+@import "../styles/tutora/tutor-card.css";
+@import "../styles/tutora/tutor-search.css";
+
 /*
- * next/font inject `--font-sans` + `--font-noto` vào <html>.
- * Vite CSS tham chiếu `var(--font-primary)` (giá trị literal "Bricolage Grotesque").
- * Map sang next/font ở đây để first paint không dùng fallback font.
+ * Font loading qua raw <link> trong layout.tsx (match Vite, đầy đủ VI glyphs).
+ * Vite CSS tham chiếu `var(--font-primary)` — set trực tiếp font name.
  */
 :root {
-  --font-primary: var(--font-sans, "Bricolage Grotesque"), system-ui, sans-serif;
+  --font-primary: "Bricolage Grotesque", system-ui, sans-serif;
 }
 
 html,
