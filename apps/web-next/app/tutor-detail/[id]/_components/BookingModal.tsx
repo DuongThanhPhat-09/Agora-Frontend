@@ -1,9 +1,9 @@
 'use client';
 
 /* eslint-disable react-hooks/set-state-in-effect */
-/* eslint-disable @next/next/no-img-element */
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { toast } from 'react-toastify';
 import {
   useCallback,
@@ -300,7 +300,7 @@ function StepStudentSubject({
                 >
                   <span className="bm-student-avatar">
                     {student.avatarURL ? (
-                      <img src={student.avatarURL} alt={student.fullName} />
+                      <Image src={student.avatarURL} alt={student.fullName} width={40} height={40} />
                     ) : (
                       student.fullName.charAt(0)
                     )}

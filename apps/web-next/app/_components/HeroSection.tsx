@@ -9,6 +9,7 @@
  */
 
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function HeroSection() {
   return (
@@ -50,8 +51,14 @@ export default function HeroSection() {
         {/* Right Content */}
         <div className="hero-right">
           <div className="hero-image-wrapper">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/students-studying.png" alt="Students studying together" className="hero-image" />
+            <Image
+              src="/students-studying.png"
+              alt="Students studying together"
+              className="hero-image"
+              width={600}
+              height={500}
+              priority
+            />
             <div className="hero-image-gradient"></div>
             <div className="hero-lms-badge">
               <span className="lms-title">TUTORA — Theo dõi học tập.</span>
