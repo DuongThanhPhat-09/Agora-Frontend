@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import type { TutorFullProfile } from '@/services/tutorDetail.types';
 import { PlayIcon, StarIcon, HeartIcon } from './icons';
 
@@ -35,18 +36,20 @@ export default function HeroSection({ profile }: { profile: TutorFullProfile }) 
       <section className="tutor-hero-section">
         <div className="component-2">
           {!profile.videoIntroUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               className="interview-thumbnail"
               src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800"
               alt={profile.fullName || 'Tutor Interview'}
+              width={800}
+              height={351}
             />
           ) : ytMatch?.[1] ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               className="interview-thumbnail"
               src={`https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`}
               alt={profile.fullName || 'Tutor Interview'}
+              width={800}
+              height={351}
             />
           ) : (
             <video
@@ -81,10 +84,11 @@ export default function HeroSection({ profile }: { profile: TutorFullProfile }) 
           <div className="tutor-info-card">
             <div className="tutor-info-content">
               <div className="tutor-mini-avatar">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={profile.avatarUrl || 'https://randomuser.me/api/portraits/lego/1.jpg'}
                   alt={profile.fullName || ''}
+                  width={80}
+                  height={80}
                 />
                 <div className="mini-avatar-gradient"></div>
               </div>

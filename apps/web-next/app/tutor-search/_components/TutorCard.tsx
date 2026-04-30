@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Tutor } from './types';
 import { typeLabels, statsLabels } from './constants';
 import { VerifiedIcon, UniversityIcon, CheckIcon, MinusIcon, ArrowIcon } from './icons';
@@ -29,8 +30,7 @@ export default function TutorCard({ tutor }: TutorCardProps) {
         <div className="tutor-card-header">
           <div className="tutor-profile">
             <div className="tutor-avatar-container">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={tutor.avatar} alt={tutor.name} className="tutor-avatar" />
+              <Image src={tutor.avatar} alt={tutor.name} className="tutor-avatar" width={64} height={64} />
               <div className="tutor-verified-badge">
                 <VerifiedIcon />
               </div>

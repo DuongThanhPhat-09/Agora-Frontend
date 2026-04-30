@@ -6,6 +6,8 @@
  * với Vite. Khi nào backend có route thực, đổi sang `<Link>`.
  */
 
+import Image from 'next/image';
+
 const footerLinks = {
   academic: ['Tìm gia sư', 'Đăng ký dạy kèm', 'Cách hoạt động', 'Môn học hỗ trợ'],
   platform: ['Theo dõi học tập', 'Báo cáo tiến độ', 'Lộ trình cá nhân', 'Hỗ trợ phụ huynh'],
@@ -21,8 +23,7 @@ export default function Footer() {
           <div className="footer-brand">
             <div className="footer-logo">
               <div className="footer-logo-icon">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/tutora-logo.png" alt="Tutora" width={38} height={38} />
+                <Image src="/tutora-logo.png" alt="Tutora" width={38} height={38} />
               </div>
               <span className="footer-logo-text">TUTORA.</span>
             </div>

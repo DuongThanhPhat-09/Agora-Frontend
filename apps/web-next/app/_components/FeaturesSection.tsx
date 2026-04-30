@@ -6,6 +6,7 @@
  */
 
 import Link from 'next/link';
+import Image from 'next/image';
 
 const BENEFITS = [
   'Tự đặt giá, tự chọn lịch — bạn quyết định dạy bao nhiêu giờ/tuần.',
@@ -20,8 +21,7 @@ export default function FeaturesSection() {
       <div className="features-cards">
         <div className="feature-column">
           <div className="feature-card-image">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/collaboration-1.png" alt="Tham gia đội ngũ gia sư" />
+            <Image src="/collaboration-1.png" alt="Tham gia đội ngũ gia sư" width={400} height={300} />
           </div>
           <div className="feature-card green">
             <h3 className="feature-card-title">Tham gia đội ngũ gia sư.</h3>
@@ -39,8 +39,7 @@ export default function FeaturesSection() {
             </p>
           </div>
           <div className="feature-card-image">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/collaboration-2.png" alt="Hiệu quả rõ rệt" />
+            <Image src="/collaboration-2.png" alt="Hiệu quả rõ rệt" width={400} height={300} />
           </div>
         </div>
       </div>

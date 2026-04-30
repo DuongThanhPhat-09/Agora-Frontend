@@ -54,6 +54,9 @@ function writeStoredUser(user: StoredUser) {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
   window.dispatchEvent(new Event('tutora-auth-change'));
+
+  // Sync to cookie for middleware access
+  import('@/lib/auth-cookie').then(({ syncAuthToCookie }) => syncAuthToCookie());
 }
 
 export function decodeJwtPayload(token: string): JwtPayload | null {
