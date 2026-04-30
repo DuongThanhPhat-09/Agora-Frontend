@@ -18,6 +18,7 @@
 
 import { useMemo, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Popconfirm } from 'antd';
 import { LogOut, LayoutDashboard } from 'lucide-react';
@@ -114,8 +115,7 @@ export default function Header() {
       <div className="header-content">
         <Link href="/" className="logo-link">
           <div className="logo-icon">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/tutora-logo.png" alt="Tutora" width={38} height={38} />
+            <Image src="/tutora-logo.png" alt="Tutora" width={38} height={38} priority />
           </div>
           <div className="logo-text">
             <span className="logo-name">TUTORA</span>
