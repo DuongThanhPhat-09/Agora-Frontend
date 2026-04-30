@@ -22,6 +22,10 @@
 @import "../styles/tutora/tutor-card.css";
 @import "../styles/tutora/tutor-search.css";
 
+/* Component / page CSS — Tutor Detail (Phase 4) */
+@import "../styles/tutora/tutor-detail.css";
+@import "../styles/tutora/booking-modal.css";
+
 /*
  * Font loading qua raw <link> trong layout.tsx (match Vite, đầy đủ VI glyphs).
  * Vite CSS tham chiếu `var(--font-primary)` — set trực tiếp font name.

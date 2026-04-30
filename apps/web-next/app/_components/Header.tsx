@@ -16,12 +16,12 @@
  * thành UI logged-in. Đây là pattern dùng khi prerendered HTML khác client state.
  */
 
-import { useEffect, useState } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Popconfirm } from 'antd';
 import { LogOut, LayoutDashboard } from 'lucide-react';
-import { clearStoredUser, getPortalPath, readAuthInfo } from '../_lib/read-auth';
+import { clearStoredUser, decodeJwtPayload, getPortalPath } from '../_lib/read-auth';
 
 type AuthState = {
   isLoggedIn: boolean;
@@ -35,23 +35,67 @@ const INITIAL_AUTH: AuthState = {
   portalPath: '/login',
 };
 
+const AUTH_STORAGE_KEY = 'TUTORA_user_data';
+
+function subscribeAuthStorage(onStoreChange: () => void) {
+  if (typeof window === 'undefined') return () => {};
+
+  window.addEventListener('storage', onStoreChange);
+  window.addEventListener('tutora-auth-change', onStoreChange);
+
+  return () => {
+    window.removeEventListener('storage', onStoreChange);
+    window.removeEventListener('tutora-auth-change', onStoreChange);
+  };
+}
+
+function getAuthSnapshot() {
+  if (typeof window === 'undefined') return '';
+
+  try {
+    return window.localStorage.getItem(AUTH_STORAGE_KEY) || '';
+  } catch {
+    return '';
+  }
+}
+
+function getServerAuthSnapshot() {
+  return '';
+}
+
+function parseAuthSnapshot(snapshot: string): AuthState {
+  if (!snapshot) return INITIAL_AUTH;
+
+  try {
+    const user = JSON.parse(snapshot) as { accessToken?: string };
+    if (!user.accessToken) return INITIAL_AUTH;
+
+    const payload = decodeJwtPayload(user.accessToken);
+    const displayName =
+      payload?.fullname ||
+      (payload?.firstName && payload?.lastName ? `${payload.firstName} ${payload.lastName}` : null) ||
+      payload?.email?.split('@')[0] ||
+      'User';
+
+    return {
+      isLoggedIn: true,
+      displayName,
+      portalPath: getPortalPath(payload?.role ?? null),
+    };
+  } catch {
+    return INITIAL_AUTH;
+  }
+}
+
 export default function Header() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [auth, setAuth] = useState<AuthState>(INITIAL_AUTH);
-
-  useEffect(() => {
-    const info = readAuthInfo();
-    if (info) {
-      setAuth({
-        isLoggedIn: true,
-        displayName: info.displayName,
-        portalPath: getPortalPath(info.role),
-      });
-    } else {
-      setAuth(INITIAL_AUTH);
-    }
-  }, [pathname]); // re-check khi navigate
+  const authSnapshot = useSyncExternalStore(
+    subscribeAuthStorage,
+    getAuthSnapshot,
+    getServerAuthSnapshot
+  );
+  const auth = useMemo(() => parseAuthSnapshot(authSnapshot), [authSnapshot]);
 
   // Ẩn user info trên trang đăng ký/đăng nhập (dù Next rewrite sang Vite,
   // user có thể landed trực tiếp nếu vào qua sai URL)
@@ -59,7 +103,7 @@ export default function Header() {
 
   const confirmLogout = () => {
     clearStoredUser();
-    setAuth(INITIAL_AUTH);
+    window.dispatchEvent(new Event('tutora-auth-change'));
     setIsMenuOpen(false);
     // Reload về login (rewrite sang Vite xử lý)
     window.location.href = '/login';
@@ -82,15 +126,15 @@ export default function Header() {
           <Link href="/tutor-search" className="nav-link">
             TÌM GIA SƯ
           </Link>
-          <a href="/#learning-path" className="nav-link">
+          <Link href="/#learning-path" className="nav-link">
             LỘ TRÌNH HỌC
-          </a>
-          <a href="/#lms" className="nav-link">
+          </Link>
+          <Link href="/#lms" className="nav-link">
             THEO DÕI HỌC TẬP
-          </a>
-          <a href="/#about" className="nav-link">
+          </Link>
+          <Link href="/#about" className="nav-link">
             VỀ CHÚNG TÔI
-          </a>
+          </Link>
         </nav>
 
         {/* Auth Buttons */}
@@ -176,15 +220,15 @@ export default function Header() {
             <Link href="/tutor-search" className="mobile-nav-link" onClick={() => setIsMenuOpen(false)}>
               TÌM GIA SƯ
             </Link>
-            <a href="/#learning-path" className="mobile-nav-link" onClick={() => setIsMenuOpen(false)}>
+            <Link href="/#learning-path" className="mobile-nav-link" onClick={() => setIsMenuOpen(false)}>
               LỘ TRÌNH HỌC
-            </a>
-            <a href="/#lms" className="mobile-nav-link" onClick={() => setIsMenuOpen(false)}>
+            </Link>
+            <Link href="/#lms" className="mobile-nav-link" onClick={() => setIsMenuOpen(false)}>
               THEO DÕI HỌC TẬP
-            </a>
-            <a href="/#about" className="mobile-nav-link" onClick={() => setIsMenuOpen(false)}>
+            </Link>
+            <Link href="/#about" className="mobile-nav-link" onClick={() => setIsMenuOpen(false)}>
               VỀ CHÚNG TÔI
-            </a>
+            </Link>
           </nav>
 
           {/* Mobile Auth */}
