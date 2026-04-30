@@ -3,6 +3,8 @@ import RootProviders from './providers';
 import './globals.css';
 import { env } from '@/lib/env';
 
+/* eslint-disable @next/next/no-page-custom-font */
+
 /**
  * Root layout — Server Component.
  *
