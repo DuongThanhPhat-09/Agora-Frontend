@@ -1,6 +1,18 @@
 {
     "rewrites": [
         {
+            "source": "/",
+            "destination": "https://tutora-nextjs.vercel.app/"
+        },
+        {
+            "source": "/tutor-search",
+            "destination": "https://tutora-nextjs.vercel.app/tutor-search"
+        },
+        {
+            "source": "/tutor-detail/:path*",
+            "destination": "https://tutora-nextjs.vercel.app/tutor-detail/:path*"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }
