@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
+import { useCallback, useMemo, useState, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import SearchHero from './SearchHero';
 import CategoryTabs from './CategoryTabs';
@@ -16,7 +16,7 @@ import {
   parseSearchParams,
 } from './filters';
 import { mapApiTutorToUi } from './utils';
-import { defaultFilters, type SearchFilters, type Tutor } from './types';
+import type { SearchFilters, Tutor } from './types';
 
 /**
  * SearchClient — Orchestrator client island.
@@ -41,15 +41,13 @@ interface SearchClientProps {
   initialPage: number;
 }
 
-export default function SearchClient({
-  initialTutors,
-  initialTotalCount,
-  initialHasNext,
-  initialPage,
-}: SearchClientProps) {
-  const router = useRouter();
+interface StatefulSearchClientProps extends SearchClientProps {
+  filters: SearchFilters;
+}
+
+export default function SearchClient(props: SearchClientProps) {
   const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  const searchKey = searchParams.toString();
 
   const filters: SearchFilters = useMemo(() => {
     const raw: Record<string, string> = {};
@@ -59,22 +57,25 @@ export default function SearchClient({
     return parseSearchParams(raw);
   }, [searchParams]);
 
+  return <StatefulSearchClient key={searchKey} {...props} filters={filters} />;
+}
+
+function StatefulSearchClient({
+  initialTutors,
+  initialTotalCount,
+  initialHasNext,
+  initialPage,
+  filters,
+}: StatefulSearchClientProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
   const [inputSearchTerm, setInputSearchTerm] = useState(filters.searchTerm);
   const [loadedMore, setLoadedMore] = useState<Tutor[]>([]);
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [hasNext, setHasNext] = useState(initialHasNext);
   const [loadMoreLoading, setLoadMoreLoading] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
-
-  // URL changed (filters changed) → reset load-more state, sync input
-  useEffect(() => {
-    setLoadedMore([]);
-    setCurrentPage(initialPage);
-    setHasNext(initialHasNext);
-    setInputSearchTerm(filters.searchTerm);
-    setLoadMoreError(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams.toString()]);
 
   const allTutors = useMemo(() => [...initialTutors, ...loadedMore], [initialTutors, loadedMore]);
 
