@@ -129,29 +129,16 @@ export default async function TutorSearchPage({ searchParams }: PageProps) {
   const raw = await searchParams;
   const filters = parseSearchParams(raw);
 
-  // Server-side fetch
-  let initialTutors: Tutor[] = [];
-  let initialTotalCount = 0;
-  let initialHasNext = false;
+  const apiParams = buildApiParams(filters);
+  const response = await searchTutorsServer(apiParams);
+  let initialTutors: Tutor[] = response.content.items.map(mapApiTutorToUi);
+  let initialTotalCount = response.content.totalCount;
+  let initialHasNext = response.content.hasNext;
 
-  try {
-    const apiParams = buildApiParams(filters);
-    const response = await searchTutorsServer(apiParams);
-    let mapped = response.content.items.map(mapApiTutorToUi);
-
-    if (needsMultiSelectFilter(filters)) {
-      mapped = applyMultiSelectFilters(mapped, filters);
-      initialTotalCount = mapped.length;
-      initialHasNext = false; // multi-select chỉ load 1 page
-    } else {
-      initialTotalCount = response.content.totalCount;
-      initialHasNext = response.content.hasNext;
-    }
-
-    initialTutors = mapped;
-  } catch (error) {
-    // Soft fail — render trang trống thay vì 500. Client có thể retry qua reset filter.
-    console.error('[tutor-search] server fetch failed:', error);
+  if (needsMultiSelectFilter(filters)) {
+    initialTutors = applyMultiSelectFilters(initialTutors, filters);
+    initialTotalCount = initialTutors.length;
+    initialHasNext = false; // multi-select chỉ load 1 page
   }
 
   return (

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * NextJS Middleware - Route protection & auth handling.
+ * NextJS Proxy - Route protection & auth handling.
  *
  * Runs on Edge Runtime (fast, global). Executes BEFORE page render.
  * Use cases:
@@ -55,10 +55,10 @@ function getPortalForRole(role: string): string {
   return roleMap[role] || '/login';
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip middleware for static files, API routes, Next internals
+  // Skip proxy for static files, API routes, Next internals
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
