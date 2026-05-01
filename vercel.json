@@ -13,6 +13,14 @@
             "destination": "https://tutora-nextjs.vercel.app/tutor-detail/:path*"
         },
         {
+            "source": "/robots.txt",
+            "destination": "https://tutora-nextjs.vercel.app/robots.txt"
+        },
+        {
+            "source": "/sitemap.xml",
+            "destination": "https://tutora-nextjs.vercel.app/sitemap.xml"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }
