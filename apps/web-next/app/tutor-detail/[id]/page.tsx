@@ -84,8 +84,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         images: [ogImage],
       },
     };
-  } catch {
-    // 404 hoặc lỗi → metadata default; trang chính sẽ notFound()
+  } catch (error) {
+    if (!(error instanceof TutorNotFoundError)) {
+      throw error;
+    }
+
     return {
       title: 'Gia sư không tồn tại',
       description: 'Không tìm thấy thông tin gia sư.',
