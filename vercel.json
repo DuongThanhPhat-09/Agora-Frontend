@@ -21,6 +21,10 @@
             "destination": "https://tutora-nextjs.vercel.app/sitemap.xml"
         },
         {
+            "source": "/favicon.ico",
+            "destination": "https://tutora-nextjs.vercel.app/favicon.ico"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }
