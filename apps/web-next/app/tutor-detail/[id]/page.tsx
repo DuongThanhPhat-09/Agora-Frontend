@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Header from '../../_components/Header';
@@ -6,6 +7,15 @@ import TutorDetailClient from './_components/TutorDetailClient';
 import { getTutorFullProfileServer, TutorNotFoundError } from '@/services/tutorDetail.server';
 import { env } from '@/lib/env';
 import { formatCity } from './_components/utils';
+
+/**
+ * Cached fetch wrapper — đảm bảo `generateMetadata` và `TutorDetailPage` chia sẻ
+ * cùng 1 promise của fetch tutor. Next dedupe fetch() tự động theo URL nhưng
+ * `cache()` của React đảm bảo dedupe ở cấp cao hơn (cùng promise reference),
+ * giúp metadata resolve cùng lúc với page render → metadata vào được initial
+ * `<head>` thay vì stream sang body (Lighthouse SEO audit fail nếu thiếu).
+ */
+const getTutorCached = cache(getTutorFullProfileServer);
 
 /**
  * /tutor-detail/[id] — Server Component (Phase 4 SEO chủ lực).
@@ -30,7 +40,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { id } = await params;
 
   try {
-    const response = await getTutorFullProfileServer(id);
+    const response = await getTutorCached(id);
     const profile = response.content;
 
     const subjects =
@@ -170,7 +180,7 @@ export default async function TutorDetailPage({ params }: PageProps) {
 
   let profile;
   try {
-    const response = await getTutorFullProfileServer(id);
+    const response = await getTutorCached(id);
     profile = response.content;
   } catch (error) {
     if (error instanceof TutorNotFoundError) {
