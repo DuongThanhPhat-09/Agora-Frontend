@@ -1,32 +1,8 @@
 {
     "rewrites": [
         {
-            "source": "/",
-            "destination": "https://tutora-nextjs.vercel.app/"
-        },
-        {
-            "source": "/tutor-search",
-            "destination": "https://tutora-nextjs.vercel.app/tutor-search"
-        },
-        {
-            "source": "/tutor-detail/:path*",
-            "destination": "https://tutora-nextjs.vercel.app/tutor-detail/:path*"
-        },
-        {
-            "source": "/robots.txt",
-            "destination": "https://tutora-nextjs.vercel.app/robots.txt"
-        },
-        {
-            "source": "/sitemap.xml",
-            "destination": "https://tutora-nextjs.vercel.app/sitemap.xml"
-        },
-        {
-            "source": "/favicon.ico",
-            "destination": "https://tutora-nextjs.vercel.app/favicon.ico"
-        },
-        {
             "source": "/(.*)",
-            "destination": "/index.html"
+            "destination": "/maintenance.html"
         }
     ]
 }
