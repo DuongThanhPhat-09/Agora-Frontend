@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
-import { getAllUsers, deactivateUser, updateUser } from '../../services/admin.service';
+import { getAllUsers, deactivateUser, updateUser, issueWarning, suspendTutor } from '../../services/admin.service';
 import { DataTable, StatusBadge } from '../../components/shared';
 import type { DataTableColumn } from '../../components/shared';
 import type { FlatUserDetail } from './mockData';
@@ -8,6 +8,7 @@ import UserDetailModal from './components/UserDetailModal';
 import BlockUserModal from './components/BlockUserModal';
 import IssueWarningModal from './components/IssueWarningModal';
 import SuspendUserModal from './components/SuspendUserModal';
+import { getRoleDisplay } from './roleDisplay';
 
 import '../../styles/pages/admin-user-management.css';
 import '../../styles/pages/admin-vetting-modal.css';
@@ -23,7 +24,16 @@ const UserManagementPage = () => {
     // Filters
     const [roleFilter, setRoleFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
+    // searchInput: live value of the text box (changes on every keystroke)
+    // searchQuery: committed value sent to BE — only updates when the user
+    //              clicks the "Tìm kiếm" button or presses Enter. Keeping
+    //              these split avoids 1 API call per keystroke.
+    const [searchInput, setSearchInput] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+
+    // Tracks the in-flight fetch so a newer request can cancel an older one,
+    // preventing late responses from overwriting fresh results.
+    const fetchAbortRef = useRef<AbortController | null>(null);
 
     // Modals
     const [selectedUser, setSelectedUser] = useState<FlatUserDetail | null>(null);
@@ -32,12 +42,22 @@ const UserManagementPage = () => {
     const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
     const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false);
 
-    // Fetch users on mount and filter changes
+    // Fetch users on mount, page change, or any committed filter change.
+    // Cleanup aborts any in-flight request when deps change or component unmounts,
+    // so we never call setState on stale responses.
     useEffect(() => {
         fetchUsers();
+        return () => fetchAbortRef.current?.abort();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, roleFilter, statusFilter, searchQuery]);
 
     const fetchUsers = async () => {
+        // Abort any in-flight fetch — protects against out-of-order responses
+        // when filters change quickly (e.g. user switches role then status).
+        fetchAbortRef.current?.abort();
+        const controller = new AbortController();
+        fetchAbortRef.current = controller;
+
         try {
             setLoading(true);
             const params: {
@@ -50,10 +70,14 @@ const UserManagementPage = () => {
 
             if (searchQuery) params.searchTerm = searchQuery;
             if (roleFilter !== 'all') params.role = roleFilter;
+            // BE status is a 0/1 column — map UI selections accordingly.
             if (statusFilter === 'active') params.status = 1;
-            else if (statusFilter === 'inactive' || statusFilter === 'blocked') params.status = 0;
+            else if (statusFilter === 'blocked') params.status = 0;
 
-            const { users: data, total: totalCount } = await getAllUsers(params);
+            const { users: data, total: totalCount } = await getAllUsers(params, controller.signal);
+
+            // If a newer request has already started, drop this stale response.
+            if (controller.signal.aborted) return;
 
             // Map UserListItem → FlatUserDetail
             const mapped: FlatUserDetail[] = data.map((u: any) => ({
@@ -73,11 +97,20 @@ const UserManagementPage = () => {
 
             setUsers(mapped);
             setTotal(totalCount);
-        } catch (err) {
+        } catch (err: unknown) {
+            // Aborted requests throw — silently ignore them, only surface real errors.
+            const isAbort =
+                (err as { name?: string; code?: string })?.name === 'CanceledError' ||
+                (err as { name?: string; code?: string })?.code === 'ERR_CANCELED';
+            if (isAbort) return;
             console.error('Error fetching users:', err);
             toast.error('Không thể tải danh sách người dùng');
         } finally {
-            setLoading(false);
+            // Only clear loading if THIS request is still the active one;
+            // otherwise the newer request will manage the loading state.
+            if (fetchAbortRef.current === controller) {
+                setLoading(false);
+            }
         }
     };
 
@@ -111,25 +144,82 @@ const UserManagementPage = () => {
         }
     };
 
-    const handleIssueWarning = async (_userId: string, _reason: string, _severity: string, _relatedBookingId?: string) => {
-        toast.info('Chức năng cảnh cáo sẽ được hỗ trợ trong phiên bản tới');
-        setIsWarningModalOpen(false);
+    const handleIssueWarning = async (
+        userId: string,
+        reason: string,
+        severity: string,
+        relatedBookingId?: string,
+    ) => {
+        // BE supports only 2 warning levels: 1 = minor, 2 = major.
+        // The UI exposes 3 (low / medium / high); collapse them so:
+        //   low                  → 1 (gentle reminder)
+        //   medium / high        → 2 (formal warning / serious violation)
+        // Keeps semantic meaning: any escalation beyond a "nudge" goes on record as major.
+        const warninglevel = severity === 'low' ? 1 : 2;
+        try {
+            await issueWarning({
+                userid: userId,
+                warninglevel,
+                reason,
+                relatedbookingid: relatedBookingId,
+            });
+            // The modal owns its own success toast; we just refresh the list
+            // so warningcount in the row updates without needing a manual reload.
+            setIsWarningModalOpen(false);
+            setIsDetailModalOpen(false);
+            await fetchUsers();
+        } catch (err) {
+            // Re-throw so the modal can keep itself open and surface its own error toast.
+            console.error('issueWarning failed:', err);
+            throw err;
+        }
     };
 
-    const handleSuspendUser = async (_userId: string, _reason: string, _durationDays: number) => {
-        toast.info('Chức năng tạm ngưng sẽ được hỗ trợ trong phiên bản tới');
-        setIsSuspendModalOpen(false);
-        setIsDetailModalOpen(false);
+    const handleSuspendUser = async (
+        userId: string,
+        reason: string,
+        durationDays: number,
+    ) => {
+        try {
+            await suspendTutor({
+                userid: userId,
+                // FE doesn't have a type selector — fall back to the same heuristic
+                // used in AdminDisputes: long suspensions = full lock, short = soft hide.
+                suspensiontype: durationDays > 30 ? 'account_locked' : 'hidden_1_week',
+                reason,
+                durationDays,
+            });
+            setIsSuspendModalOpen(false);
+            setIsDetailModalOpen(false);
+            await fetchUsers();
+        } catch (err) {
+            console.error('suspendTutor failed:', err);
+            throw err;
+        }
     };
 
-    const handleResetPassword = async () => {
-        if (!selectedUser) return;
-        toast.info(`Chức năng đặt lại mật khẩu sẽ được hỗ trợ trong phiên bản tới`);
+    /** Reset-password is intentionally not wired: BE has no endpoint for an
+     *  admin-initiated password reset (only student self-service). The button
+     *  is hidden in the UserDetailModal until BE adds support. */
+
+    /** Commit the current input value as the search query — this is the
+     *  one place where an API call is triggered. Called by the search
+     *  button and by Enter inside the input. Trim avoids whitespace-only
+     *  searches hitting the BE. */
+    const commitSearch = () => {
+        const next = searchInput.trim();
+        // No-op if nothing actually changed (avoids redundant fetch when the
+        // user clicks the button without changing the query).
+        if (next === searchQuery) return;
+        setSearchQuery(next);
+        setPage(1);
     };
 
-    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchQuery(e.target.value);
-        setPage(1); // Reset to first page when searching
+    const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            commitSearch();
+        }
     };
 
     const getStatusVariant = (status: string): 'success' | 'warning' | 'error' | 'neutral' => {
@@ -151,12 +241,8 @@ const UserManagementPage = () => {
     };
 
     const getRoleBadge = (role: string) => {
-        const map: Record<string, { label: string; variant: 'info' | 'dark' | 'neutral' }> = {
-            tutor: { label: 'Gia sư', variant: 'info' },
-            admin: { label: 'Quản trị', variant: 'dark' },
-        };
-        const entry = map[role] || { label: 'Học viên', variant: 'neutral' };
-        return <StatusBadge variant={entry.variant} shape="tag">{entry.label}</StatusBadge>;
+        const { label, variant } = getRoleDisplay(role);
+        return <StatusBadge variant={variant} shape="tag">{label}</StatusBadge>;
     };
 
     const userColumns: DataTableColumn<FlatUserDetail>[] = [
@@ -272,16 +358,32 @@ const UserManagementPage = () => {
                 {/* FILTER & TOOLBAR */}
                 <div className="user-mgmt-toolbar">
                     <div className="user-mgmt-toolbar-inner">
-                        {/* Search */}
-                        <div className="user-mgmt-search-wrapper">
-                            <input
-                                className="user-mgmt-search-input"
-                                placeholder="Tìm kiếm tên, email, hoặc UID..."
-                                type="text"
-                                value={searchQuery}
-                                onChange={handleSearch}
-                            />
-                            <span className="material-symbols-outlined user-mgmt-search-icon">search</span>
+                        {/* Search — manual trigger via button or Enter key.
+                            BE searches Fullname, Email, Phone (not userid),
+                            so the placeholder reflects the actual fields. */}
+                        <div className="user-mgmt-search-row">
+                            <div className="user-mgmt-search-wrapper">
+                                <input
+                                    className="user-mgmt-search-input"
+                                    placeholder="Tìm kiếm tên, email, hoặc số điện thoại..."
+                                    type="text"
+                                    value={searchInput}
+                                    onChange={(e) => setSearchInput(e.target.value)}
+                                    onKeyDown={handleSearchKeyDown}
+                                    aria-label="Từ khoá tìm kiếm"
+                                />
+                                <span className="material-symbols-outlined user-mgmt-search-icon">search</span>
+                            </div>
+                            <button
+                                type="button"
+                                className="user-mgmt-search-btn"
+                                onClick={commitSearch}
+                                disabled={loading}
+                                aria-label="Tìm kiếm"
+                            >
+                                <span className="material-symbols-outlined user-mgmt-search-btn-icon">search</span>
+                                <span>Tìm kiếm</span>
+                            </button>
                         </div>
 
                         {/* Filters Group */}
@@ -295,17 +397,19 @@ const UserManagementPage = () => {
                                         setRoleFilter(e.target.value);
                                         setPage(1);
                                     }}
-                                    style={{ cursor: 'pointer' }}
+                                    aria-label="Lọc theo vai trò"
                                 >
                                     <option value="all">Vai trò: Tất cả</option>
-                                    <option value="Student">Học viên</option>
-                                    <option value="Tutor">Gia sư</option>
-                                    <option value="Parent">Phụ huynh</option>
-                                    <option value="Admin">Quản trị viên</option>
+                                    <option value="Student">Vai trò: Học viên</option>
+                                    <option value="Tutor">Vai trò: Gia sư</option>
+                                    <option value="Parent">Vai trò: Phụ huynh</option>
+                                    <option value="Admin">Vai trò: Quản trị viên</option>
                                 </select>
                             </div>
 
-                            {/* Status Dropdown */}
+                            {/* Status Dropdown — only Active / Blocked are supported by BE
+                                (status is a 0/1 column; "Tạm ngưng" was a no-op filter that
+                                returned all users, so it has been removed). */}
                             <div className="user-mgmt-filter-group">
                                 <select
                                     className="user-mgmt-filter-btn"
@@ -314,12 +418,11 @@ const UserManagementPage = () => {
                                         setStatusFilter(e.target.value);
                                         setPage(1);
                                     }}
-                                    style={{ cursor: 'pointer' }}
+                                    aria-label="Lọc theo trạng thái"
                                 >
                                     <option value="all">Trạng thái: Tất cả</option>
-                                    <option value="active">Hoạt động</option>
-                                    <option value="suspended">Tạm ngưng</option>
-                                    <option value="blocked">Bị chặn</option>
+                                    <option value="active">Trạng thái: Hoạt động</option>
+                                    <option value="blocked">Trạng thái: Bị chặn</option>
                                 </select>
                             </div>
                         </div>
@@ -371,7 +474,8 @@ const UserManagementPage = () => {
                 onUnblockUser={handleUnblockUser}
                 onIssueWarning={() => setIsWarningModalOpen(true)}
                 onSuspendUser={() => setIsSuspendModalOpen(true)}
-                onResetPassword={handleResetPassword}
+                /* onResetPassword intentionally omitted — BE has no admin
+                   reset-password endpoint yet, so the button stays hidden. */
             />
 
             <BlockUserModal

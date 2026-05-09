@@ -67,6 +67,7 @@ const SuspendUserModal = ({ isOpen, onClose, user, onSuspend }: SuspendUserModal
                 onClick={(e) => e.stopPropagation()}
                 style={{ maxWidth: '550px' }}
             >
+                <div className="vetting-rejection-body">
                 <h3 style={{ color: '#991b1b' }}>🚫 Tạm ngưng hồ sơ gia sư</h3>
                 <p style={{ marginBottom: '20px', color: '#475569' }}>
                     Tạm ngưng sẽ không cho phép gia sư nhận buổi học mới. Các buổi học đã đặt vẫn được duy trì. Gia sư
@@ -285,6 +286,7 @@ const SuspendUserModal = ({ isOpen, onClose, user, onSuspend }: SuspendUserModal
                         </p>
                     </div>
                 </div>
+                </div>{/* /.vetting-rejection-body */}
 
                 {/* Actions */}
                 <div className="vetting-rejection-footer">

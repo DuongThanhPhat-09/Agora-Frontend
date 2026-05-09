@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import type { FlatUserDetail } from '../mockData';
+import { getRoleDisplay } from '../roleDisplay';
 
 interface IssueWarningModalProps {
     isOpen: boolean;
@@ -66,6 +67,7 @@ const IssueWarningModal = ({ isOpen, onClose, user, onIssue }: IssueWarningModal
                 onClick={(e) => e.stopPropagation()}
                 style={{ maxWidth: '550px' }}
             >
+                <div className="vetting-rejection-body">
                 <h3 style={{ color: '#92400e' }}>⚠️ Cảnh cáo người dùng</h3>
                 <p style={{ marginBottom: '20px', color: '#475569' }}>
                     Cảnh cáo sẽ được ghi vào hồ sơ người dùng và họ sẽ nhận được thông báo. Nhiều cảnh cáo có thể dẫn
@@ -98,7 +100,7 @@ const IssueWarningModal = ({ isOpen, onClose, user, onIssue }: IssueWarningModal
                                 {user.fullname}
                             </p>
                             <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
-                                {user.primaryrole === 'tutor' ? 'Gia sư' : 'Học viên'} • Hiện có {user.warningcount}{' '}
+                                {getRoleDisplay(user.primaryrole).label} • Hiện có {user.warningcount}{' '}
                                 cảnh cáo
                             </p>
                         </div>
@@ -268,6 +270,8 @@ const IssueWarningModal = ({ isOpen, onClose, user, onIssue }: IssueWarningModal
                         }}
                     />
                 </div>
+
+                </div>{/* /.vetting-rejection-body */}
 
                 {/* Actions */}
                 <div className="vetting-rejection-footer">

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import type { FlatUserDetail } from '../mockData';
+import { getRoleDisplay } from '../roleDisplay';
 
 interface BlockUserModalProps {
     isOpen: boolean;
@@ -55,6 +56,7 @@ const BlockUserModal = ({ isOpen, onClose, user, onBlock }: BlockUserModalProps)
                 onClick={(e) => e.stopPropagation()}
                 style={{ maxWidth: '550px' }}
             >
+                <div className="vetting-rejection-body">
                 <h3 style={{ color: '#991b1b' }}>🚫 Chặn tài khoản người dùng</h3>
                 <p style={{ marginBottom: '20px', color: '#475569' }}>
                     Hành động này sẽ chặn toàn bộ quyền truy cập của người dùng vào nền tảng. Vui lòng cung cấp lý do
@@ -87,7 +89,7 @@ const BlockUserModal = ({ isOpen, onClose, user, onBlock }: BlockUserModalProps)
                                 {user.fullname}
                             </p>
                             <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
-                                {user.primaryrole === 'tutor' ? 'Gia sư' : 'Học viên'} • {user.email}
+                                {getRoleDisplay(user.primaryrole).label} • {user.email}
                             </p>
                         </div>
                     </div>
@@ -201,6 +203,8 @@ const BlockUserModal = ({ isOpen, onClose, user, onBlock }: BlockUserModalProps)
                         ))}
                     </div>
                 </div>
+
+                </div>{/* /.vetting-rejection-body */}
 
                 {/* Actions */}
                 <div className="vetting-rejection-footer">

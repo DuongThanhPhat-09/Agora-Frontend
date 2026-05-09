@@ -23,6 +23,11 @@ interface PricingModalProps {
     initialData: PricingData;
 }
 
+// Display "" for 0/null so the input shows the placeholder (e.g. "VD: 200,000 VND")
+// instead of an off-putting "0 VND" prefill on first open.
+const displayPrice = (value: number | null | undefined): string =>
+    value && value > 0 ? formatVND(value) : '';
+
 const PricingModal: React.FC<PricingModalProps> = ({
     isOpen,
     onClose,
@@ -30,10 +35,8 @@ const PricingModal: React.FC<PricingModalProps> = ({
     initialData
 }) => {
     const [formData, setFormData] = useState<PricingData>(initialData);
-    const [hourlyRateDisplay, setHourlyRateDisplay] = useState(formatVND(initialData.hourlyRate));
-    const [trialPriceDisplay, setTrialPriceDisplay] = useState(
-        initialData.trialLessonPrice ? formatVND(initialData.trialLessonPrice) : ''
-    );
+    const [hourlyRateDisplay, setHourlyRateDisplay] = useState(displayPrice(initialData.hourlyRate));
+    const [trialPriceDisplay, setTrialPriceDisplay] = useState(displayPrice(initialData.trialLessonPrice));
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isLoading, setIsLoading] = useState(false);
     const { saveDraft, loadDraft, clearDraft } = useFormDraft<PricingData>('draft_pricing');
@@ -44,8 +47,8 @@ const PricingModal: React.FC<PricingModalProps> = ({
             const draft = loadDraft();
             const dataToUse = draft ?? initialData;
             setFormData(dataToUse);
-            setHourlyRateDisplay(formatVND(dataToUse.hourlyRate));
-            setTrialPriceDisplay(dataToUse.trialLessonPrice ? formatVND(dataToUse.trialLessonPrice) : '');
+            setHourlyRateDisplay(displayPrice(dataToUse.hourlyRate));
+            setTrialPriceDisplay(displayPrice(dataToUse.trialLessonPrice));
             setErrors({});
         }
     }, [isOpen, initialData, loadDraft]);
