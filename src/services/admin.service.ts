@@ -371,14 +371,37 @@ export const resolveDispute = async (
 };
 
 /**
- * Issue warning to user
- * Creates entry in userwarnings table
+ * Issue a warning to a user.
+ * Backend: POST /api/admin/Warning/user/{userId}
+ * BE DTO (CreateWarningRequest):
+ *   - warningLevel: int (1 = minor, 2 = major)
+ *   - reason: string (10-1000 chars, required)
+ *   - relatedBookingId: int? (nullable)
+ *
+ * The FE type uses lowercase keys (`warninglevel`, `relatedbookingid`) for
+ * historical reasons; we remap to camelCase here and parse the optional
+ * booking id from string to int (BE rejects strings).
  */
 export const issueWarning = async (
   request: IssueWarningRequest
 ): Promise<ApiResponse<any>> => {
   try {
-    const { data } = await api.post('/admin/users/warnings', request);
+    const { userid, warninglevel, reason, relatedbookingid } = request;
+
+    // BE wants an int — drop the field entirely if the input isn't a clean number,
+    // otherwise binding fails with a 400 on a perfectly valid optional field.
+    let relatedBookingId: number | undefined;
+    if (relatedbookingid) {
+      const parsed = parseInt(relatedbookingid, 10);
+      if (!Number.isNaN(parsed)) relatedBookingId = parsed;
+    }
+
+    const body = {
+      warningLevel: warninglevel,
+      reason,
+      ...(relatedBookingId !== undefined ? { relatedBookingId } : {}),
+    };
+    const { data } = await api.post(`/admin/Warning/user/${userid}`, body);
     return data;
   } catch (error) {
     console.error('issueWarning error:', error);
@@ -387,14 +410,27 @@ export const issueWarning = async (
 };
 
 /**
- * Suspend tutor profile
- * Updates profilestatus, creates suspensions entry
+ * Apply a suspension to a user.
+ * Backend: POST /api/admin/Warning/user/{userId}/suspend
+ * BE DTO (SuspensionRequest):
+ *   - suspensionType: string (e.g. "temporary", "hidden_1_week", "account_locked")
+ *   - reason: string (required)
+ *   - durationDays: int? (nullable, BE defaults to 7)
+ *
+ * Kept the name `suspendTutor` for backward compatibility with the
+ * AdminDisputes page; the underlying BE endpoint is generic across roles.
  */
 export const suspendTutor = async (
   request: SuspendUserRequest
 ): Promise<ApiResponse<any>> => {
   try {
-    const { data } = await api.post('/admin/users/suspend', request);
+    const { userid, suspensiontype, reason, durationDays } = request;
+    const body = {
+      suspensionType: suspensiontype,
+      reason,
+      ...(durationDays !== undefined ? { durationDays } : {}),
+    };
+    const { data } = await api.post(`/admin/Warning/user/${userid}/suspend`, body);
     return data;
   } catch (error) {
     console.error('suspendTutor error:', error);
@@ -518,15 +554,18 @@ export const getTransactions = async (
  * Backend: GET /api/admin/users with AdminUserFilterParameters
  * Returns APIResponse<PagedList<UserResponse>> with X-Pagination header
  */
-export const getAllUsers = async (params?: {
-  searchTerm?: string;
-  role?: string;
-  status?: number;
-  pageNumber?: number;
-  pageSize?: number;
-}): Promise<{ users: UserListItem[]; total: number }> => {
+export const getAllUsers = async (
+  params?: {
+    searchTerm?: string;
+    role?: string;
+    status?: number;
+    pageNumber?: number;
+    pageSize?: number;
+  },
+  signal?: AbortSignal
+): Promise<{ users: UserListItem[]; total: number }> => {
   try {
-    const response = await api.get('/admin/users', { params });
+    const response = await api.get('/admin/users', { params, signal });
     const data = response.data;
     // Backend: APIResponse<PagedList<UserResponse>> - content is array, total from X-Pagination header
     const paginationHeader = response.headers['x-pagination'];

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { formatCurrency, formatDateTime } from '../../../utils/formatters';
 import { mockGetUserWarnings, mockGetUserSuspensions } from '../mockData';
 import type { FlatUserDetail } from '../mockData';
+import { getRoleDisplay } from '../roleDisplay';
 
 interface UserDetailModalProps {
     isOpen: boolean;
@@ -11,7 +12,13 @@ interface UserDetailModalProps {
     onUnblockUser: () => void;
     onIssueWarning: () => void;
     onSuspendUser: () => void;
-    onResetPassword: () => void;
+    /**
+     * Optional — only render the "Đặt lại mật khẩu" button when provided.
+     * BE has no admin reset-password endpoint yet, so the page can simply
+     * omit this prop to hide the button. Once BE adds support, wire it
+     * back through and the button reappears with no other code change.
+     */
+    onResetPassword?: () => void;
 }
 
 const UserDetailModal = ({
@@ -86,6 +93,7 @@ const UserDetailModal = ({
 
     const isTutor = user.primaryrole === 'tutor';
     const isBlocked = user.accountstatus === 'blocked';
+    const roleDisplay = getRoleDisplay(user.primaryrole);
 
     return (
         <div className="vetting-modal-overlay" onClick={onClose}>
@@ -127,9 +135,9 @@ const UserDetailModal = ({
                                 </span>
                                 <span className="user-detail-meta-item">
                                     <span className="material-symbols-outlined">
-                                        {user.primaryrole === 'tutor' ? 'school' : 'person'}
+                                        {roleDisplay.icon}
                                     </span>
-                                    {user.primaryrole === 'tutor' ? 'Gia sư' : 'Học viên'}
+                                    {roleDisplay.label}
                                 </span>
                             </div>
                         </div>
@@ -306,10 +314,16 @@ const UserDetailModal = ({
 
                 {/* Footer Actions */}
                 <div className="vetting-modal-footer">
-                    <button className="vetting-btn vetting-btn-secondary" onClick={onResetPassword}>
-                        <span className="material-symbols-outlined">lock_reset</span>
-                        Đặt lại mật khẩu
-                    </button>
+                    {/* Reset-password is hidden until BE exposes an admin reset endpoint
+                        (today only /api/student/{id}/reset-password exists, scoped to
+                        students). Once BE adds POST /api/admin/users/{id}/reset-password,
+                        pass `onResetPassword` from the page and this button reappears. */}
+                    {onResetPassword && (
+                        <button className="vetting-btn vetting-btn-secondary" onClick={onResetPassword}>
+                            <span className="material-symbols-outlined">lock_reset</span>
+                            Đặt lại mật khẩu
+                        </button>
+                    )}
 
                     <button className="vetting-btn user-detail-btn-warning" onClick={onIssueWarning}>
                         <span className="material-symbols-outlined">warning</span>

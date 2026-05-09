@@ -83,10 +83,22 @@
 }
 
 /* Search */
+/* Search row groups the text input + submit button so they always stay
+   side-by-side, even on mobile (where the parent toolbar stacks vertically). */
+.user-mgmt-search-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    /* Full search row (input + button) — bounded so it doesn't crowd the filters. */
+    max-width: 640px;
+    min-width: 0;
+}
+
 .user-mgmt-search-wrapper {
     position: relative;
     flex: 1;
-    max-width: 512px;
+    min-width: 0;
 }
 
 .user-mgmt-search-input {
@@ -123,6 +135,56 @@
     pointer-events: none;
 }
 
+/* Search submit button — sibling of the input, matches the 48px height
+   used across the toolbar (filter dropdowns, export button) so the row
+   reads as one cohesive control strip. Manual trigger pattern: typing
+   only updates local state; this button (or pressing Enter) fires the API. */
+.user-mgmt-search-btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 48px;
+    padding: 0 22px;
+    border-radius: var(--radius-xl);
+    border: none;
+    background-color: var(--color-navy);
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    transition: background-color 0.18s ease, transform 0.1s ease, opacity 0.18s ease, box-shadow 0.18s ease;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.user-mgmt-search-btn-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.user-mgmt-search-btn:hover:not(:disabled) {
+    background-color: #2a3248;
+    box-shadow: 0 4px 10px rgba(26, 34, 56, 0.15);
+}
+
+.user-mgmt-search-btn:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.user-mgmt-search-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(212, 180, 131, 0.35);
+}
+
+.user-mgmt-search-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* Filters */
 .user-mgmt-filters {
     display: flex;
@@ -132,32 +194,53 @@
 
 .user-mgmt-filter-group {
     position: relative;
+    flex: 0 0 auto;
 }
 
+/* Native <select> styled to match the rest of the toolbar.
+   Both filter selects share the same min-width so they line up regardless
+   of the selected option's text length ("Hoạt động" vs "Vai trò: Tất cả"). */
 .user-mgmt-filter-btn {
+    /* Strip browser-default chrome so we can draw our own */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
     height: 48px;
-    padding: 0 16px;
+    min-width: 200px;
+    padding: 0 44px 0 16px;       /* right padding leaves room for the custom chevron */
     border-radius: var(--radius-xl);
     background-color: var(--color-white);
     border: 1px solid #e5e7eb;
     color: var(--color-navy);
+    font-family: inherit;
     font-size: 14px;
     font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    line-height: 48px;            /* vertical-center text without using flex on <select> */
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+
+    /* Custom chevron — matches the navy used across the admin portal */
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%231a2238' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
 }
 
 .user-mgmt-filter-btn:hover {
     border-color: rgba(212, 180, 131, 0.5);
 }
 
+.user-mgmt-filter-btn:focus-visible {
+    outline: none;
+    border-color: var(--color-gold);
+    box-shadow: 0 0 0 3px rgba(212, 180, 131, 0.18);
+}
+
+/* Legacy icon slot inside the filter button — hidden because the custom
+   chevron in the background-image is now the single source of truth */
 .user-mgmt-filter-btn .material-symbols-outlined {
-    color: var(--color-navy-60);
-    font-size: 20px;
+    display: none;
 }
 
 /* Divider */
@@ -603,12 +686,27 @@
         gap: 10px;
     }
 
+    /* Keep the input + button on the same row on mobile too — stacking
+       them vertically would feel awkward for a search action. */
+    .user-mgmt-search-row {
+        width: 100%;
+        max-width: 100%;
+        gap: 8px;
+    }
+
     .user-mgmt-search-wrapper {
         max-width: 100%;
     }
 
     .user-mgmt-search-input {
         height: 42px;
+        font-size: 13px;
+        padding-right: 16px;
+    }
+
+    .user-mgmt-search-btn {
+        height: 42px;
+        padding: 0 14px;
         font-size: 13px;
     }
 
@@ -617,10 +715,18 @@
         justify-content: space-between;
     }
 
+    .user-mgmt-filter-group {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
     .user-mgmt-filter-btn {
         height: 40px;
         font-size: 13px;
-        flex: 1;
+        line-height: 40px;
+        /* Allow shrinking below the desktop min-width on narrow screens */
+        min-width: 0;
+        width: 100%;
     }
 
     .user-mgmt-export-btn {
@@ -695,5 +801,16 @@
 
     .user-mgmt-pagination-info {
         font-size: 12px;
+    }
+}
+
+/* Drop the search-button icon prefix on very narrow phones so the
+   button doesn't crowd the input. The label alone is enough context. */
+@media (max-width: 480px) {
+    .user-mgmt-search-btn-icon {
+        display: none;
+    }
+    .user-mgmt-search-btn {
+        padding: 0 12px;
     }
 }
