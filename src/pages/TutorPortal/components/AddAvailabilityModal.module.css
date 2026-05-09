@@ -422,6 +422,53 @@
     border-left: 3px solid #4f8cff;
 }
 
+/* Validity hint — 30-day auto-expiry notice */
+.validityHint {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, rgba(79, 140, 255, 0.08) 0%, rgba(79, 140, 255, 0.04) 100%);
+    border: 1px solid rgba(79, 140, 255, 0.18);
+    border-radius: 12px;
+    margin-top: 4px;
+}
+
+.validityHintIcon {
+    color: #4f8cff;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.validityHintContent {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.validityHintTitle {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 18px;
+    color: #1a2238;
+}
+
+.validityHintText {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 17px;
+    color: rgba(26, 34, 56, 0.7);
+}
+
+.validityHintText b {
+    font-weight: 600;
+    color: #1a2238;
+}
+
 /* ===== ACTIONS ===== */
 
 .actions {

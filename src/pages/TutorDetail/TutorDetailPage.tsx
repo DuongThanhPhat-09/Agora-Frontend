@@ -178,6 +178,7 @@ const TutorDetailPage = () => {
                 hourlyRate={profile.hourlyRate || 0}
                 subjects={profile.subjects || []}
                 availabilities={profile.availabilities}
+                tutorTeachingMode={profile.teachingMode}
             />
 
             {showRoleSelect && (
