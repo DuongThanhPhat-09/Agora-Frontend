@@ -22,6 +22,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
     hourlyRate,
     subjects,
     availabilities,
+    tutorTeachingMode,
 }) => {
     const {
         formData,
@@ -39,7 +40,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
         handleSubmit,
         bookingSuccess,
         successBookingId,
-    } = useBookingForm({ isOpen, tutorId, onClose });
+    } = useBookingForm({ isOpen, tutorId, onClose, tutorTeachingMode });
 
     // Compute available subjects (intersection of SUBJECT_MAPPING and tutor's subjects)
     const availableSubjects = SUBJECT_MAPPING.filter(s =>
@@ -101,6 +102,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
         slotDuration,
         setSlotDuration,
         userRole,
+        tutorTeachingMode: tutorTeachingMode ?? null,
     };
 
     return (
