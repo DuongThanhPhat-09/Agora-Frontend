@@ -11,6 +11,27 @@ interface Args {
     isOpen: boolean;
     tutorId: string;
     onClose: () => void;
+    /**
+     * Tutor's preferred teaching mode (raw, mixed-case from BE).
+     * Used to lock the booking flow's mode when the tutor only supports one.
+     */
+    tutorTeachingMode?: string | null;
+}
+
+/**
+ * Resolve the tutor's preferred teaching mode into a single, immutable mode
+ * the student/parent must use, OR `null` if they're free to pick.
+ *
+ * - "online"  → "online"   (locked)
+ * - "offline" → "offline"  (locked)
+ * - "both" / "hybrid" → null (free choice)
+ * - null / "" / unknown → null (free choice — legacy fallback)
+ */
+function resolveLockedMode(raw?: string | null): "online" | "offline" | null {
+    const m = (raw ?? "").toLowerCase();
+    if (m === "online") return "online";
+    if (m === "offline") return "offline";
+    return null; // "both", "hybrid", null, or anything else — student picks
 }
 
 /**
@@ -18,14 +39,17 @@ interface Args {
  * student fetching, and the submit flow. The orchestrator consumes this
  * hook and stays focused on rendering.
  */
-export function useBookingForm({ isOpen, tutorId, onClose }: Args) {
+export function useBookingForm({ isOpen, tutorId, onClose, tutorTeachingMode }: Args) {
     const userRole = getCurrentUserRole();
     const currentUserId = getUserIdFromToken();
+    const lockedMode = resolveLockedMode(tutorTeachingMode);
 
     const defaultFormData: BookingFormData = useMemo(() => ({
         studentId: userRole === "Student" ? (currentUserId || "") : "",
         subjectId: 0,
-        teachingMode: "online",
+        // If tutor only teaches one mode, pre-select it so the student
+        // can't accidentally submit a mismatched request (BE will 400).
+        teachingMode: lockedMode ?? "online",
         startDate: new Date().toISOString().split("T")[0],
         schedule: [],
         locationCity: "",
@@ -33,7 +57,7 @@ export function useBookingForm({ isOpen, tutorId, onClose }: Args) {
         locationWard: "",
         locationDetail: "",
         promotionCode: "",
-    }), [userRole, currentUserId]);
+    }), [userRole, currentUserId, lockedMode]);
 
     const [step, setStep] = useState(0);
     const [students, setStudents] = useState<StudentType[]>([]);
@@ -89,7 +113,12 @@ export function useBookingForm({ isOpen, tutorId, onClose }: Args) {
         if (isOpen) {
             const draft = loadDraft();
             if (draft) {
-                setFormData(draft.formData || defaultFormData);
+                const restored = draft.formData || defaultFormData;
+                // If the tutor now only supports one mode, override any stale
+                // draft selection so we never submit an incompatible mode.
+                setFormData(lockedMode
+                    ? { ...restored, teachingMode: lockedMode }
+                    : restored);
                 setStep(draft.step || 0);
                 setSlotDuration(draft.slotDuration || 2);
             }

@@ -25,6 +25,8 @@ export interface BookingFormData {
     promotionCode: string;
 }
 
+export type TutorTeachingModeKey = "online" | "offline" | "hybrid" | "both";
+
 export interface StepProps {
     formData: BookingFormData;
     setFormData: React.Dispatch<React.SetStateAction<BookingFormData>>;
@@ -36,6 +38,13 @@ export interface StepProps {
     slotDuration: number;
     setSlotDuration: React.Dispatch<React.SetStateAction<number>>;
     userRole: string | null;
+    /**
+     * Tutor's preferred teaching mode (raw value from BE, may be mixed case).
+     * - "online" / "offline": single mode → student/parent CANNOT change.
+     * - "both" / "hybrid": tutor accepts multiple modes → student/parent CAN choose.
+     * - null / empty: legacy data → fall back to all modes.
+     */
+    tutorTeachingMode: string | null;
 }
 
 export interface BookingModalProps {
@@ -46,4 +55,8 @@ export interface BookingModalProps {
     hourlyRate: number;
     subjects: SubjectInfo[];
     availabilities?: AvailabilitySlot[] | null;
+    /**
+     * Tutor's preferred teaching mode. Drives whether student/parent can pick a mode.
+     */
+    tutorTeachingMode?: string | null;
 }

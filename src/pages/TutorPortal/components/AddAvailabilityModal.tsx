@@ -1,5 +1,5 @@
-import { type FunctionComponent, useState, useEffect } from 'react';
-import { X, Clock } from 'lucide-react';
+import { type FunctionComponent, useState, useEffect, useMemo } from 'react';
+import { X, Clock, Info } from 'lucide-react';
 import { toast } from 'react-toastify';
 import styles from './AddAvailabilityModal.module.css';
 import { createAvailability, DAY_OF_WEEK_MAP } from '../../../services/availability.service';
@@ -79,6 +79,23 @@ const AddAvailabilityModal: FunctionComponent<AddAvailabilityModalProps> = ({
     const { saveDraft, loadDraft, clearDraft } = useFormDraft<{
         dayOfWeek: number; fromHour: string; fromMinute: string; toHour: string; toMinute: string;
     }>('draft_add_availability');
+
+    // Validity window — slot is valid for 30 days from creation (Vietnam time).
+    // Mirrors backend logic in TutorAvailabilityResponse (ValidFrom/ValidTo).
+    // Recomputed each render; cost is trivial and keeps the date fresh.
+    const { startDateLabel, endDateLabel } = useMemo(() => {
+        const formatter = new Intl.DateTimeFormat('vi-VN', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+        });
+        const now = new Date();
+        const end = new Date(now);
+        end.setDate(end.getDate() + 30);
+        return {
+            startDateLabel: formatter.format(now),
+            endDateLabel: formatter.format(end),
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen]);
 
     // Handle animation - delay visibility for smooth transition
     useEffect(() => {
@@ -197,7 +214,7 @@ const AddAvailabilityModal: FunctionComponent<AddAvailabilityModalProps> = ({
                 endtime: toTime,
             });
 
-            toast.success('Thêm lịch rảnh thành công!');
+            toast.success(`Đã thêm lịch rảnh — hiệu lực đến ${endDateLabel}`);
 
             // Reset form and clear draft
             clearDraft();
@@ -390,10 +407,17 @@ const AddAvailabilityModal: FunctionComponent<AddAvailabilityModalProps> = ({
                                 </div>
                             </div>
 
-                            {/* Time hint */}
-                            {/* <p className={styles.timeHint}>
-                                Lưu ý: Thời gian phải nằm trong khoảng 07:00 - 21:00
-                            </p> */}
+                            {/* Validity hint - 30-day auto-expiry */}
+                            <div className={styles.validityHint}>
+                                <Info size={16} strokeWidth={2} className={styles.validityHintIcon} />
+                                <div className={styles.validityHintContent}>
+                                    <span className={styles.validityHintTitle}>Lịch rảnh hiệu lực 30 ngày</span>
+                                    <span className={styles.validityHintText}>
+                                        Bắt đầu từ <b>{startDateLabel}</b> và tự động hết hạn vào <b>{endDateLabel}</b>.
+                                        Sau ngày này, bạn cần thêm lại lịch để tiếp tục nhận học sinh.
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Action Buttons */}
