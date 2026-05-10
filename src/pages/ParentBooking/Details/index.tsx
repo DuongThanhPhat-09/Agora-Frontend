@@ -22,6 +22,7 @@ import {
     type BookingResponseDTO
 } from '../../../services/booking.service';
 import { canLeaveBookingFeedback } from '../../../services/feedback.service';
+import { getPaymentBadge } from '../../../utils/paymentBadge';
 import CreateFeedbackModal from '../../ParentLessons/components/CreateFeedbackModal';
 import styles from './styles.module.css';
 import { message as antMessage, Spin, Modal, Input } from 'antd';
@@ -307,25 +308,23 @@ const BookingDetailPage = () => {
                             </div>
                         </div>
 
-                        {/* Payment Status */}
-                        <div className={styles.paymentStatusBox}>
-                            {booking.paymentStatus === 'Escrowed' ? (
-                                <>
-                                    <CheckCircle2 size={18} className={styles.paymentPaid} />
-                                    <span className={styles.paymentPaid}>Đã thanh toán nốt</span>
-                                </>
-                            ) : booking.paymentStatus === 'DepositEscrowed' ? (
-                                <>
-                                    <CheckCircle2 size={18} className={styles.paymentPaid} />
-                                    <span className={styles.paymentPaid}>Đã thanh toán cọc (50%)</span>
-                                </>
-                            ) : (
-                                <>
-                                    <AlertCircle size={18} className={styles.paymentUnpaid} />
-                                    <span className={styles.paymentUnpaid}>Chưa thanh toán</span>
-                                </>
-                            )}
-                        </div>
+                        {/* Payment Status — hidden for cancelled bookings (the
+                            booking is dead so its payment state is moot, see
+                            BUG-010). The shared helper also avoids leaking raw
+                            BE values like "Pending" to the UI. */}
+                        {(() => {
+                            const badge = getPaymentBadge(booking.status, booking.paymentStatus);
+                            if (!badge) return null;
+                            const isPaid = badge.tone === 'success';
+                            const Icon = isPaid ? CheckCircle2 : AlertCircle;
+                            const cls = isPaid ? styles.paymentPaid : styles.paymentUnpaid;
+                            return (
+                                <div className={styles.paymentStatusBox}>
+                                    <Icon size={18} className={cls} />
+                                    <span className={cls}>{badge.label}</span>
+                                </div>
+                            );
+                        })()}
 
                         {booking.paymentDueAt && (
                             <div className={styles.paymentDue}>
