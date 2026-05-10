@@ -77,16 +77,21 @@ const AdminWarningsPage: React.FC = () => {
     const fetchSuspensions = useCallback(async () => {
         try {
             setSuspensionsLoading(true);
-            const response = await getActiveSuspensions(currentPage, pageSize);
-            const data = response.data || response;
-            if (Array.isArray(data)) {
-                setSuspensions(data);
-            } else if (data?.items) {
-                setSuspensions(data.items);
+            // BE envelope shape: { content, statusCode, message } — the actual
+            // PagedList lives at `response.content`. Note: admin.types.ts
+            // declares ApiResponse<T> with `data?: T` (legacy/wrong shape),
+            // but the runtime envelope from BE uses `content`, hence the cast.
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const response: any = await getActiveSuspensions(currentPage, pageSize);
+            const content = response?.content ?? response;
+            if (Array.isArray(content)) {
+                setSuspensions(content);
+            } else if (Array.isArray(content?.items)) {
+                setSuspensions(content.items);
             } else {
                 setSuspensions([]);
             }
-        } catch (error) {
+        } catch {
             toast.error('Không thể tải danh sách đình chỉ.');
         } finally {
             setSuspensionsLoading(false);
@@ -121,11 +126,25 @@ const AdminWarningsPage: React.FC = () => {
         }
         try {
             setLookupLoading(true);
-            const response = await getUserWarnings(searchUserId.trim());
-            const data = response.data || response;
-            setWarningSummary(data);
-        } catch (error: any) {
-            if (error?.response?.status === 404) {
+            // BE envelope shape is { content, statusCode, message } — the actual
+            // UserWarningSummary lives at `response.content`. The previous code
+            // read `response.data || response`, which fell through to the whole
+            // envelope and made `summary.warnings` undefined, crashing the
+            // render with "Cannot read properties of undefined (reading 'length')".
+            // (admin.types.ts ApiResponse<T> declares `data?: T` which mismatches
+            //  the BE shape — cast bypasses the stale type.)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const response: any = await getUserWarnings(searchUserId.trim());
+            const content = response?.content ?? response;
+            // Defensive: BE has `Warnings = new()` initializer so it shouldn't
+            // be null, but normalize anyway so a future shape change doesn't
+            // crash the UI.
+            setWarningSummary(content
+                ? { ...content, warnings: content.warnings ?? [] }
+                : null);
+        } catch (error: unknown) {
+            const status = (error as { response?: { status?: number } })?.response?.status;
+            if (status === 404) {
                 toast.error('Không tìm thấy user.');
             } else {
                 toast.error('Lỗi khi tra cứu cảnh báo.');
