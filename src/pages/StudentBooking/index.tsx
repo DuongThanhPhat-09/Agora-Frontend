@@ -5,7 +5,17 @@ import { BookOpen, Clock, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import dayjs from 'dayjs';
 import { Spin } from 'antd';
 import { getStudentBookings } from '../../services/student-lesson.service';
+import { getPaymentBadge, type PaymentBadgeTone } from '../../utils/paymentBadge';
 import s from '../StudentPages.module.css';
+
+// Map shared badge tone → local color values. Keeps the visual decisions
+// owned by this page while the labels / when-to-hide rules stay shared.
+const TONE_STYLES: Record<PaymentBadgeTone, { bg: string; fg: string }> = {
+    success: { bg: '#D1FAE5', fg: '#065F46' },
+    warning: { bg: '#FEF3C7', fg: '#92400E' },
+    danger: { bg: '#FEE2E2', fg: '#991B1B' },
+    neutral: { bg: '#E5E7EB', fg: '#374151' },
+};
 
 const TABS = [
     { key: '', label: 'Tất cả' },
@@ -126,26 +136,34 @@ const StudentBooking = () => {
                                             </div>
                                             <div className={s.cardRight}>
                                                 <span className={`${s.badge} ${st.cls}`}>{st.label}</span>
-                                                {b.paymentStatus && (
-                                                    <>
-                                                        <span
-                                                            className={s.paymentBadge}
-                                                            style={{
-                                                                background: b.paymentStatus === 'Paid' ? '#D1FAE5' : '#FEF3C7',
-                                                                color: b.paymentStatus === 'Paid' ? '#065F46' : '#92400E',
-                                                            }}
-                                                        >
-                                                            {b.paymentStatus === 'Paid' ? 'Đã thanh toán' :
-                                                                b.paymentStatus === 'DepositPaid' ? 'Đã cọc' : b.paymentStatus}
-                                                        </span>
-                                                        {b.finalPrice != null && (
-                                                            <span className={s.price}>{formatPrice(b.finalPrice)}</span>
-                                                        )}
-                                                    </>
-                                                )}
-                                                {!b.paymentStatus && b.totalPrice != null && (
-                                                    <span className={s.price}>{formatPrice(b.totalPrice)}</span>
-                                                )}
+                                                {(() => {
+                                                    // Shared resolver: hides badge for cancelled/rejected/timed-out
+                                                    // bookings, returns Vietnamese labels for known statuses, and
+                                                    // returns null for unknown values (so we never leak raw English
+                                                    // like "Pending" into the UI — see BUG-010).
+                                                    const badge = getPaymentBadge(b.status, b.paymentStatus);
+                                                    if (badge) {
+                                                        const tone = TONE_STYLES[badge.tone];
+                                                        return (
+                                                            <>
+                                                                <span
+                                                                    className={s.paymentBadge}
+                                                                    style={{ background: tone.bg, color: tone.fg }}
+                                                                >
+                                                                    {badge.label}
+                                                                </span>
+                                                                {b.finalPrice != null && (
+                                                                    <span className={s.price}>{formatPrice(b.finalPrice)}</span>
+                                                                )}
+                                                            </>
+                                                        );
+                                                    }
+                                                    // No payment badge → fall back to plain price.
+                                                    if (b.totalPrice != null) {
+                                                        return <span className={s.price}>{formatPrice(b.totalPrice)}</span>;
+                                                    }
+                                                    return null;
+                                                })()}
                                             </div>
                                         </div>
                                     );
