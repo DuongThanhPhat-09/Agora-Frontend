@@ -69,11 +69,15 @@ export function useBookingForm({ isOpen, tutorId, onClose, tutorTeachingMode }: 
     const [slotDuration, setSlotDuration] = useState(2);
     const [formData, setFormData] = useState<BookingFormData>(defaultFormData);
 
+    // Bind draft theo userId để phòng vệ thêm: nếu vì lý do gì đó draft cũ
+    // không bị dọn lúc logout (xem `clearUserFromStorage` trong auth.service),
+    // user mới đăng nhập vào cùng tab cũng KHÔNG đọc trúng draft của user trước.
+    // Fallback `anon` cho trường hợp guest mở modal khi chưa login.
     const { saveDraft, loadDraft, clearDraft } = useFormDraft<{
         formData: BookingFormData;
         step: number;
         slotDuration: number;
-    }>(`draft_booking_${tutorId}`);
+    }>(`draft_booking_${currentUserId || 'anon'}_${tutorId}`);
 
     // Fetch student profile for Student role (to get correct studentId)
     useEffect(() => {
