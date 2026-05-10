@@ -60,9 +60,23 @@ export const getUserInfoFromToken = () => {
 
 /**
  * Xóa thông tin user (Dùng khi Logout)
+ *
+ * Ngoài việc xoá user data, còn dọn sạch các form draft đang lưu trong
+ * sessionStorage (key prefix `draft_`) — nếu không, draft của user vừa
+ * logout sẽ rò rỉ sang user kế tiếp đăng nhập trên cùng tab (xem
+ * `useFormDraft` hook + các modal: booking, about-me, credential, ...).
  */
 export const clearUserFromStorage = async () => {
   await storageAdapter.remove(USER_LOCAL_STORAGE_KEY);
+  if (typeof window !== 'undefined') {
+    try {
+      Object.keys(sessionStorage)
+        .filter((k) => k.startsWith('draft_'))
+        .forEach((k) => sessionStorage.removeItem(k));
+    } catch {
+      /* sessionStorage có thể không khả dụng (ví dụ Zalo Mini App) — bỏ qua */
+    }
+  }
 };
 
 /**
