@@ -834,16 +834,61 @@
   transform: translateY(0);
 }
 
-/* Rejection Modal - Elegant Confirmation Style */
+/* Rejection Modal — confirmation style used by Cảnh cáo / Chặn / Tạm ngưng.
+   Layout is a flex column of two children:
+     .vetting-rejection-body   → scrollable content area (form fields)
+     .vetting-rejection-footer → action buttons, fixed at bottom
+   The OUTER modal owns the rounded shape and clips both children, so the
+   scrollbar inside the body stays inside the rounded boundary instead of
+   bleeding past it. Padding lives on the body/footer (not the modal),
+   so we don't need negative-margin tricks to extend backgrounds. */
 .vetting-rejection-modal {
   background: var(--color-cream, #faf9f6);
-  border-radius: var(--radius-2xl, 32px);
-  padding: clamp(2rem, 4vw, 2.5rem);
+  /* Smaller, cleaner radius — the previous 2xl (32px) felt over-rounded
+     for a confirmation dialog. */
+  border-radius: var(--radius-lg, 16px);
+  padding: 0;
   width: 90%;
   max-width: 550px;
+  /* Fit comfortably inside the viewport with breathing room from the
+     overlay padding (~2rem above and below). */
+  max-height: calc(100vh - 4rem);
+  display: flex;
+  flex-direction: column;
+  /* Crucial: clips the inner scrollbar to the rounded modal shape. */
+  overflow: hidden;
   box-shadow: var(--shadow-medium, 0 20px 60px rgba(26, 34, 56, 0.2));
   border: 2px solid rgba(212, 180, 131, 0.2);
   animation: modalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Scrollable form area — takes all space the footer doesn't need. */
+.vetting-rejection-body {
+  flex: 1 1 auto;
+  /* Required for flex children to actually shrink and enable overflow. */
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding: clamp(1.5rem, 3vw, 2rem);
+}
+
+/* Custom scrollbar — narrow, subtle, matches cream/navy palette. Lives
+   on the body (not the modal) so the scrollbar track sits inside the
+   rounded modal edge rather than running over the corner radius. */
+.vetting-rejection-body::-webkit-scrollbar {
+  width: 6px;
+}
+.vetting-rejection-body::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 4px 0;
+}
+.vetting-rejection-body::-webkit-scrollbar-thumb {
+  background: rgba(26, 34, 56, 0.18);
+  border-radius: 8px;
+}
+.vetting-rejection-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(26, 34, 56, 0.32);
 }
 
 .vetting-rejection-modal h3 {
@@ -855,7 +900,12 @@
   letter-spacing: -0.02em;
 }
 
-.vetting-rejection-modal > p {
+/* Description paragraph directly after the title. After the body wrapper
+   was introduced, the `<p>` is now a direct child of .vetting-rejection-body,
+   not the modal itself — but inline-styled paragraphs deeper in the form
+   are still descendants too, so we scope to "first-of-type after h3" to
+   avoid leaking these styles to user-card text and similar. */
+.vetting-rejection-body > p {
   font-family: var(--font-primary, 'Bricolage Grotesque', sans-serif);
   font-size: clamp(0.875rem, 1.2vw, 1rem);
   color: rgba(26, 34, 56, 0.7);
@@ -897,11 +947,19 @@
   margin: 0.625rem 0 0;
 }
 
+/* Footer — sibling of .vetting-rejection-body. Always pinned to the bottom
+   of the modal because flex-column with body=flex:1 pushes it there
+   automatically. No sticky / negative margins needed. */
 .vetting-rejection-footer {
+  flex: 0 0 auto;            /* don't grow, don't shrink */
   display: flex;
   justify-content: flex-end;
   gap: 0.875rem;
-  margin-top: 1.75rem;
+  padding: 1rem clamp(1.5rem, 3vw, 2rem);
+  background: var(--color-cream, #faf9f6);
+  border-top: 1px solid rgba(212, 180, 131, 0.25);
+  /* Subtle hint that the body above might have more to scroll. */
+  box-shadow: 0 -4px 12px rgba(26, 34, 56, 0.04);
 }
 
 /* Responsive Design - Mobile Optimized */
@@ -1009,9 +1067,17 @@
   }
 
   .vetting-rejection-modal {
-    padding: 1.5rem;
+    /* Padding lives on body/footer now, not on the modal itself. */
+    padding: 0;
     width: 95%;
-    border-radius: var(--radius-xl, 24px);
+    border-radius: var(--radius-md, 12px);
+    /* Tighter top/bottom breathing room on mobile so the modal can use
+       more of the smaller viewport. */
+    max-height: calc(100vh - 2rem);
+  }
+
+  .vetting-rejection-body {
+    padding: 1.25rem;
   }
 
   .vetting-rejection-modal h3 {
@@ -1021,6 +1087,7 @@
   .vetting-rejection-footer {
     flex-direction: column;
     gap: 0.75rem;
+    padding: 1rem 1.25rem;
   }
 
   .vetting-rejection-footer .vetting-btn {

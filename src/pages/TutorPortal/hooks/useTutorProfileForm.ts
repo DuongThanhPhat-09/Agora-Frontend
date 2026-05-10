@@ -268,19 +268,17 @@ function mapSectionsToFormData(sections: VerificationSections): Partial<TutorPro
             };
         }),
 
-        // Identity card section
-        identityVerification: {
-            idNumber: '',
-            fullNameOnId: '',
-            dateOfBirth: '',
-            idFrontImage: null,
-            idFrontImageUrl: sections.identityCard.frontImageUrl || undefined,
-            idBackImage: null,
-            idBackImageUrl: sections.identityCard.backImageUrl || undefined,
-            verificationStatus: sections.identityCard.isVerified ? 'verified' :
-                sections.identityCard.status === 'updated' ? 'pending' : 'not_submitted'
-        },
-
+        // Identity card section is INTENTIONALLY OMITTED here.
+        // The progress endpoint only carries the bare-bones identity status
+        // (image URLs + verification flag), while /api/users/{id} returns the
+        // full eKYC payload (idNumber, name on ID, DOB, address, etc.). Letting
+        // both endpoints populate the same field caused a race where a
+        // late-arriving progress response overwrote the richer KYC data with
+        // empty strings. Initial load now reads identity exclusively from KYC
+        // (see the mount useEffect below); post-save refetches no longer
+        // touch identity at all (which is correct — saving basic info / pricing
+        // / etc. has no business resetting identity fields).
+        //
         // Pricing section
         hourlyRate: sections.pricing.hourlyRate || 0,
         trialLessonPrice: sections.pricing.trialLessonPrice,
@@ -381,57 +379,140 @@ export function useTutorProfileForm() {
         }
     }, [userId]);
 
-    // Fetch user's KYC verification status from /api/users/{id}
-    const fetchUserKYCStatus = useCallback(async () => {
-        if (!userId) return;
-
-        try {
-            const kycData = await getUserKYCData(userId);
-
-            if (kycData) {
-                console.log('✅ User KYC data loaded:', kycData);
-
-                // Update fullName from KYC data if available
-                if (kycData.fullName) {
-                    setFormData(prev => ({ ...prev, fullName: kycData.fullName! }));
-                    setSavedData(prev => ({ ...prev, fullName: kycData.fullName! }));
-                }
-
-                // Update identity verification state based on user data
-                const identityVerification: IdentityVerificationData = {
-                    idNumber: kycData.ekycData?.id || '',
-                    fullNameOnId: kycData.ekycData?.name || '',
-                    dateOfBirth: kycData.ekycData?.dob || '',
-                    address: kycData.ekycData?.address || '',
-                    hometown: kycData.ekycData?.home || '',
-                    gender: kycData.ekycData?.sex || '',
-                    idFrontImage: null,
-                    idFrontImageUrl: kycData.idCardFrontUrl || undefined,
-                    idBackImage: null,
-                    idBackImageUrl: kycData.idCardBackUrl || undefined,
-                    verificationStatus: kycData.isIdentityVerified ? 'verified' :
-                        (kycData.idCardFrontUrl && kycData.idCardBackUrl) ? 'pending' : 'not_submitted'
-                };
-
-                setFormData(prev => ({ ...prev, identityVerification }));
-                setSavedData(prev => ({ ...prev, identityVerification }));
-
-                // Also update section status if verified
-                if (kycData.isIdentityVerified) {
-                    setSectionStatuses(prev => ({ ...prev, identityCard: 'updated' }));
-                }
-            }
-        } catch (err: unknown) {
-            console.error('Failed to fetch user KYC status:', err);
-        }
-    }, [userId]);
+    // (Previously: a separate fetchUserKYCStatus useCallback fired its own
+    // setState on resolve. Removed because it raced with fetchProgress over
+    // the identityVerification field and contributed to the multi-step
+    // animation of the profile-completeness bar. KYC is now fetched and
+    // merged in the unified mount useEffect below.)
 
     // Load data on mount
+    // Initial load — fetch all three sources in parallel but commit state
+    // ONCE so the ProfileCompleteness progress bar animates a single time
+    // from 0% to its final value, instead of stair-stepping up as each
+    // request resolves. Also eliminates the identityVerification race
+    // condition between getVerificationProgress and getUserKYCData.
+    //
+    // fetchProgress and fetchAvailabilityData (the useCallback fetchers
+    // above) remain for ad-hoc refetches by consumers — fetchProgress is
+    // exposed on the hook return so the page can refresh after certain
+    // actions. They're just not used on mount anymore.
     useEffect(() => {
-        fetchProgress();
-        fetchAvailabilityData();
-        fetchUserKYCStatus();
-    }, [fetchProgress, fetchAvailabilityData, fetchUserKYCStatus]);
+        if (!userId) {
+            setError('User not authenticated');
+            setIsInitialLoading(false);
+            return;
+        }
+
+        let cancelled = false;
+
+        const loadAll = async () => {
+            try {
+                setError(null);
+
+                const [progressR, availR, kycR] = await Promise.allSettled([
+                    getVerificationProgress(userId),
+                    getAvailability(userId),
+                    getUserKYCData(userId),
+                ]);
+
+                if (cancelled) return;
+
+                // Build the merged update incrementally.
+                let mergedForm: Partial<TutorProfileFormData> = {};
+                let mergedStatuses: SectionStatuses | null = null;
+
+                // 1) Verification progress — basicInfo / video / introduction /
+                //    credentials / pricing. mapSectionsToFormData no longer
+                //    returns identityVerification (see comment in mapper).
+                if (progressR.status === 'fulfilled' &&
+                    progressR.value.statusCode === 200 &&
+                    progressR.value.content?.sections) {
+                    const sections = progressR.value.content.sections;
+                    mergedForm = { ...mergedForm, ...mapSectionsToFormData(sections) };
+                    mergedStatuses = mapSectionStatuses(sections);
+                }
+
+                // 2) Availability slots
+                if (availR.status === 'fulfilled' &&
+                    availR.value.content &&
+                    Array.isArray(availR.value.content)) {
+                    mergedForm.availability = availR.value.content.map((slot: ApiAvailabilitySlot) => ({
+                        id: slot.availabilityid,
+                        dayOfWeek: slot.dayofweek,
+                        apiDayOfWeek: slot.dayofweek,
+                        startTime: slot.starttime,
+                        endTime: slot.endtime,
+                        dayName: DAY_OF_WEEK_MAP[slot.dayofweek] || ''
+                    }));
+                }
+
+                // 3) KYC — single source of truth for identityVerification + fullName.
+                if (kycR.status === 'fulfilled' && kycR.value) {
+                    const kycData = kycR.value;
+                    if (kycData.fullName) {
+                        mergedForm.fullName = kycData.fullName;
+                    }
+                    mergedForm.identityVerification = {
+                        idNumber: kycData.ekycData?.id || '',
+                        fullNameOnId: kycData.ekycData?.name || '',
+                        dateOfBirth: kycData.ekycData?.dob || '',
+                        address: kycData.ekycData?.address || '',
+                        hometown: kycData.ekycData?.home || '',
+                        gender: kycData.ekycData?.sex || '',
+                        idFrontImage: null,
+                        idFrontImageUrl: kycData.idCardFrontUrl || undefined,
+                        idBackImage: null,
+                        idBackImageUrl: kycData.idCardBackUrl || undefined,
+                        verificationStatus: kycData.isIdentityVerified ? 'verified' :
+                            (kycData.idCardFrontUrl && kycData.idCardBackUrl) ? 'pending' : 'not_submitted'
+                    };
+                    if (kycData.isIdentityVerified && mergedStatuses) {
+                        mergedStatuses = { ...mergedStatuses, identityCard: 'updated' };
+                    }
+                }
+
+                if (cancelled) return;
+
+                // Single commit — one re-render, one progress-bar animation.
+                setFormData(prev => ({ ...prev, ...mergedForm }));
+                setSavedData(prev => ({ ...prev, ...mergedForm }));
+                if (mergedStatuses) {
+                    setSectionStatuses(mergedStatuses);
+                }
+
+                // Surface a non-blocking warning if progress (the most important
+                // source) failed — the page is still partially usable.
+                if (progressR.status === 'rejected') {
+                    console.error('Failed to fetch verification progress:', progressR.reason);
+                    const reason = progressR.reason as { response?: { data?: { message?: string } }; message?: string };
+                    const message = reason?.response?.data?.message || reason?.message || 'Failed to load profile data';
+                    setError(message);
+                    toast.error(message);
+                }
+                if (availR.status === 'rejected') {
+                    // 404 = "no availability yet" is normal for new tutors; ignore.
+                    const reason = availR.reason as { response?: { status?: number } };
+                    if (reason?.response?.status !== 404) {
+                        console.error('Failed to fetch availability:', availR.reason);
+                    }
+                }
+                if (kycR.status === 'rejected') {
+                    console.error('Failed to fetch KYC status:', kycR.reason);
+                }
+            } finally {
+                if (!cancelled) {
+                    setIsInitialLoading(false);
+                }
+            }
+        };
+
+        loadAll();
+
+        return () => {
+            cancelled = true;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [userId]);
 
     // Check if form has unsaved changes
     const isDirty = useMemo(() => {

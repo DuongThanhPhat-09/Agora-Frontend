@@ -381,6 +381,17 @@
     box-shadow: 0 4px 15px rgba(26, 34, 56, 0.12);
 }
 
+/* Locked: tutor only supports this one mode — disable hover affordance */
+.bm-teaching-mode-card.locked {
+    cursor: not-allowed;
+}
+
+.bm-teaching-mode-card.locked:hover {
+    transform: none;
+    border-color: var(--color-navy);
+    box-shadow: 0 4px 15px rgba(26, 34, 56, 0.12);
+}
+
 .bm-teaching-mode-icon {
     width: 48px;
     height: 48px;
