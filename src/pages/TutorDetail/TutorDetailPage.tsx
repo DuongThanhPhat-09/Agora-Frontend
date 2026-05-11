@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
-import { Breadcrumb } from '../../components/shared';
 import { getCurrentUser } from '../../services/auth.service';
 import { isZaloMiniApp } from '../../services/zalo-env';
 import { loginWithZalo } from '../../services/zalo-auth.service';
@@ -112,21 +111,17 @@ const TutorDetailPage = () => {
         <div className="tutor-detail-page">
             {!inMiniApp && <Header />}
 
-            {!inMiniApp && (
-                <div style={{ width: '100%', backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb', paddingTop: 'var(--header-height, 80px)' }}>
-                    <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%', padding: '0 35px', boxSizing: 'border-box' }}>
-                        <Breadcrumb
-                            items={[
-                                { label: 'Trang chủ', href: '/' },
-                                { label: 'Tìm kiếm Gia sư', href: '/tutor-search' },
-                                { label: `Hồ sơ ${profile?.fullName || 'Gia sư'}` },
-                            ]}
-                        />
-                    </div>
-                </div>
-            )}
+            {/*
+              * Breadcrumb (back + Trang chủ / Tìm kiếm Gia sư / Hồ sơ <tên>) đã bỏ
+              * theo yêu cầu UX. Lưu ý: trang này SEO-critical (xem CLAUDE.md) —
+              * nếu cần khôi phục cấu trúc BreadcrumbList cho rich result của Google,
+              * có thể thêm lại bằng JSON-LD trong <head> mà không hiển thị UI.
+              */}
 
-            <main className="tutor-detail-main" style={{ paddingTop: inMiniApp ? '0' : '24px' }}>
+            <main
+                className="tutor-detail-main"
+                style={inMiniApp ? { paddingTop: '0' } : undefined}
+            >
                 <div className="tutor-detail-container">
                     <div className="tutor-detail-content">
                         <HeroSection profile={profile} />
