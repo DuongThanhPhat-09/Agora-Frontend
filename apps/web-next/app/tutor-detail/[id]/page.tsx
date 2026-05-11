@@ -1,9 +1,10 @@
-import { cache } from 'react';
+import { cache, Suspense } from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Header from '../../_components/Header';
 import Footer from '../../_components/Footer';
 import TutorDetailClient from './_components/TutorDetailClient';
+import TutorDetailSkeleton from './_components/TutorDetailSkeleton';
 import { getTutorFullProfileServer, TutorNotFoundError } from '@/services/tutorDetail.server';
 import { env } from '@/lib/env';
 import { formatCity } from './_components/utils';
@@ -26,7 +27,17 @@ const getTutorCached = cache(getTutorFullProfileServer);
  *  3. generateMetadata: dynamic title, description, OG image (avatar), canonical.
  *  4. JSON-LD `Person` schema → Google Rich Results (star rating + review count
  *     trong search snippet).
- *  5. Render Header + TutorDetailClient + Footer.
+ *  5. Render Header + <Suspense fallback={skeleton}> + Footer.
+ *
+ * Suspense streaming refactor (giải pháp #3):
+ *  - Header/Footer render NGAY LẬP TỨC → user có "neo" trực quan, không cảm giác
+ *    mất context khi chuyển từ /tutor-search.
+ *  - Phần content (TutorDetailServerContent) được wrap trong <Suspense>. Trong lúc
+ *    getTutorCached pending, skeleton hiện ra thay vì block toàn bộ route.
+ *  - generateMetadata vẫn chạy song song phía server (React cache() dedupe) — KHÔNG
+ *    bị Suspense ảnh hưởng vì metadata resolve TRƯỚC khi <head> flush.
+ *  - loading.tsx vẫn giữ làm full-shell fallback cho cold first-paint (user gõ URL
+ *    trực tiếp, không có prefetch cache).
  *
  * Caching: page-level revalidate KHÔNG cần (searchParams = path params, Next handle
  * naturally). `searchTutorsServer` đã có `revalidate: 300` ở fetch level.
@@ -175,9 +186,16 @@ function buildPersonSchema(
   return JSON.parse(JSON.stringify(baseSchema));
 }
 
-export default async function TutorDetailPage({ params }: PageProps) {
-  const { id } = await params;
-
+/**
+ * Async Server Component — phần data-dependent, chạy bên trong <Suspense>.
+ *
+ * Khi promise getTutorCached pending → React stream fallback (TutorDetailSkeleton).
+ * Khi resolve → React swap skeleton bằng nội dung thật, client hydrate.
+ *
+ * 404 handling: notFound() gọi từ đây vẫn hoạt động bình thường trong Suspense —
+ * React server sẽ abort stream và redirect tới app/not-found.tsx.
+ */
+async function TutorDetailServerContent({ id }: { id: string }) {
   let profile;
   try {
     const response = await getTutorCached(id);
@@ -190,6 +208,22 @@ export default async function TutorDetailPage({ params }: PageProps) {
   }
 
   const personSchema = buildPersonSchema(profile, id);
+
+  return (
+    <>
+      <TutorDetailClient profile={profile} tutorId={id} />
+
+      {/* JSON-LD Person schema — Google Rich Results */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
+      />
+    </>
+  );
+}
+
+export default async function TutorDetailPage({ params }: PageProps) {
+  const { id } = await params;
 
   return (
     <div className="tutor-detail-page">
@@ -220,15 +254,19 @@ export default async function TutorDetailPage({ params }: PageProps) {
         />
       </div>
 
-      <TutorDetailClient profile={profile} tutorId={id} />
+      {/*
+        Suspense streaming: Header + spacer + Footer render NGAY LẬP TỨC.
+        Chỉ phần content (fetch data → TutorDetailClient) được stream sau.
+        Skeleton hiện thay vì block toàn bộ route.
+
+        generateMetadata chạy song song phía server bằng React cache() dedupe,
+        KHÔNG bị Suspense ảnh hưởng — metadata vào <head> initial flush.
+      */}
+      <Suspense fallback={<TutorDetailSkeleton />}>
+        <TutorDetailServerContent id={id} />
+      </Suspense>
 
       <Footer />
-
-      {/* JSON-LD Person schema — Google Rich Results */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
-      />
     </div>
   );
 }

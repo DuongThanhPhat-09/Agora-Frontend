@@ -1,63 +1,49 @@
+import Header from '../../_components/Header';
+import Footer from '../../_components/Footer';
+import TutorDetailSkeleton from './_components/TutorDetailSkeleton';
+
 /**
- * Tutor detail loading skeleton
+ * Route-level loading fallback — shown by Next.js while the entire route
+ * (page.tsx) is being prepared on the server.
+ *
+ * With the Suspense streaming refactor in page.tsx, this loading.tsx is now
+ * only triggered on **cold first-paint** (user types URL directly, or
+ * browser back/forward without prefetch cache). In most navigation cases
+ * (clicking from /tutor-search), PrefetchLink warms the cache and page.tsx's
+ * Suspense boundary handles the fallback instead — showing Header/Footer
+ * immediately with only the content skeleton.
+ *
+ * This file renders the FULL shell (Header + Skeleton + Footer) for the
+ * cold-start case so the user still gets a meaningful placeholder.
  */
 export default function Loading() {
   return (
-    <div className="animate-pulse">
-      {/* Header skeleton */}
-      <div className="h-20 bg-gray-100 border-b border-gray-200" />
+    <div className="tutor-detail-page">
+      <Header />
 
-      {/* Hero section skeleton */}
-      <div className="max-w-7xl mx-auto px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left: Video + Info */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="aspect-video bg-gray-200 rounded-lg" />
-            <div className="flex gap-4">
-              <div className="w-20 h-20 bg-gray-200 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <div className="h-8 bg-gray-200 rounded w-48" />
-                <div className="h-4 bg-gray-100 rounded w-64" />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-8 bg-gray-100 rounded w-24" />
-              ))}
-            </div>
-          </div>
-
-          {/* Right: Booking sidebar */}
-          <div className="space-y-4">
-            <div className="border border-gray-200 rounded-lg p-6 space-y-4">
-              <div className="h-8 bg-gray-200 rounded w-32" />
-              <div className="h-12 bg-gray-100 rounded" />
-              <div className="h-12 bg-gray-100 rounded" />
-              <div className="h-12 bg-blue-100 rounded" />
-            </div>
-          </div>
-        </div>
-
-        {/* About section skeleton */}
-        <div className="mt-12 space-y-6">
-          <div className="h-8 bg-gray-200 rounded w-48" />
-          <div className="space-y-2">
-            <div className="h-4 bg-gray-100 rounded w-full" />
-            <div className="h-4 bg-gray-100 rounded w-full" />
-            <div className="h-4 bg-gray-100 rounded w-3/4" />
-          </div>
-        </div>
-
-        {/* Portfolio section skeleton */}
-        <div className="mt-12 space-y-6">
-          <div className="h-8 bg-gray-200 rounded w-48" />
-          <div className="grid grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-48 bg-gray-200 rounded-lg" />
-            ))}
-          </div>
-        </div>
+      {/* Spacer wrapper — matches page.tsx exactly to prevent layout shift */}
+      <div
+        style={{
+          width: '100%',
+          backgroundColor: '#fff',
+          borderBottom: '1px solid #e5e7eb',
+          paddingTop: 'var(--header-height, 80px)',
+        }}
+      >
+        <div
+          style={{
+            maxWidth: '1400px',
+            margin: '0 auto',
+            width: '100%',
+            padding: '0 35px',
+            boxSizing: 'border-box',
+          }}
+        />
       </div>
+
+      <TutorDetailSkeleton />
+
+      <Footer />
     </div>
   );
 }
