@@ -78,9 +78,24 @@ export const DAY_OF_WEEK_MAP_EN: Record<number, string> = {
 // ============================================
 
 /**
- * Get all availability slots for a tutor
+ * Get availability slots for the currently authenticated tutor
+ * GET /api/tutor/availability (requires Auth, tutorId from JWT)
+ *
+ * Use this when the tutor views their OWN schedule (Tutor Portal).
+ * @returns List of availability slots
+ */
+export const getMyAvailability = async (): Promise<ApiResponse<AvailabilitySlot[]>> => {
+    const response = await api.get('/tutor/availability', {
+        headers: getAuthHeaders()
+    });
+    return response.data;
+};
+
+/**
+ * Get all availability slots for a specific tutor (public)
  * GET /api/tutor/availability/{tutorId}
  *
+ * Use this when parents/students view a tutor's schedule.
  * @param tutorId - Tutor ID
  * @returns List of availability slots
  */

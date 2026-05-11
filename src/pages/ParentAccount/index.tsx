@@ -114,7 +114,10 @@ const ParentAccount = () => {
             }
             try {
                 const res = await getUserProfile(userId);
-                const data = res.content || res;
+                const data = res.content ?? res;
+                if (!data || !data.userid) {
+                    throw new Error('Dữ liệu người dùng không hợp lệ');
+                }
                 setProfile(data);
                 setZaloNotifyEnabled(data.zabornotifyenabled !== false);
                 setForm({
