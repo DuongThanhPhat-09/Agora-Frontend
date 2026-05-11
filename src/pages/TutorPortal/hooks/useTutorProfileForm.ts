@@ -13,7 +13,7 @@ import {
     type PricingUpdateData
 } from '../../../services/tutorProfile.service';
 import { getUserIdFromToken } from '../../../services/auth.service';
-import { getAvailability, DAY_OF_WEEK_MAP } from '../../../services/availability.service';
+import { getMyAvailability, DAY_OF_WEEK_MAP } from '../../../services/availability.service';
 import { getUserKYCData } from '../../../services/verification.service';
 import type { AvailabilitySlot as ApiAvailabilitySlot } from '../../../services/availability.service';
 import type { IdentityVerificationData } from '../components/IdentityVerificationModal';
@@ -348,10 +348,8 @@ export function useTutorProfileForm() {
 
     // Fetch availability from API
     const fetchAvailabilityData = useCallback(async () => {
-        if (!userId) return;
-
         try {
-            const response = await getAvailability(userId);
+            const response = await getMyAvailability();
 
             if (response.content && Array.isArray(response.content)) {
                 // Map API response to local format
@@ -377,7 +375,7 @@ export function useTutorProfileForm() {
                 console.error('Failed to fetch availability:', err);
             }
         }
-    }, [userId]);
+    }, []);
 
     // (Previously: a separate fetchUserKYCStatus useCallback fired its own
     // setState on resolve. Removed because it raced with fetchProgress over
@@ -411,7 +409,7 @@ export function useTutorProfileForm() {
 
                 const [progressR, availR, kycR] = await Promise.allSettled([
                     getVerificationProgress(userId),
-                    getAvailability(userId),
+                    getMyAvailability(),
                     getUserKYCData(userId),
                 ]);
 

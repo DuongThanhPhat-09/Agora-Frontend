@@ -36,9 +36,8 @@ import type {
     LocalAvailabilitySlot,
     ViewMode,
 } from "./schedule-components";
-import { getAvailability, deleteAvailability } from "../../services/availability.service";
+import { getMyAvailability, deleteAvailability } from "../../services/availability.service";
 import type { AvailabilitySlot } from "../../services/availability.service";
-import { getUserIdFromToken } from "../../services/auth.service";
 import { getTutorCalendar, getTutorLessonDetail } from "../../services/lesson.service";
 import type { CalendarDay, CalendarLesson, LessonDetailDto } from "../../services/lesson.service";
 
@@ -90,12 +89,9 @@ const TutorPortalSchedule: React.FC = () => {
 
     // Fetch availability
     const fetchAvailability = useCallback(async () => {
-        const userId = getUserIdFromToken();
-        if (!userId) return;
-
         setIsLoadingAvailability(true);
         try {
-            const response = await getAvailability(userId);
+            const response = await getMyAvailability();
             const mapped: LocalAvailabilitySlot[] = (response.content || []).map((slot: AvailabilitySlot, index: number) => ({
                 id: index + 1,
                 dayOfWeek: apiDayToIsoDay(slot.dayofweek),
