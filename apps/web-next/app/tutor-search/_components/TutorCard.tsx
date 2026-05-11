@@ -1,5 +1,5 @@
-import Link from 'next/link';
 import Image from 'next/image';
+import PrefetchLink from './PrefetchLink';
 import type { Tutor } from './types';
 import { typeLabels, statsLabels } from './constants';
 import { VerifiedIcon, UniversityIcon, CheckIcon, MinusIcon, ArrowIcon } from './icons';
@@ -15,6 +15,11 @@ import { formatGradeLevelRanges } from './utils';
  *
  * Card click cũng wrap bằng `<Link>` thay vì `onClick`. CSS `cursor: pointer`
  * vẫn hoạt động vì `<a>` có style mặc định.
+ *
+ * Wrapper là `<PrefetchLink>` (client) thay vì `<Link>` thuần: thêm hover/touch
+ * prefetch để warm Next Data Cache theo intent → giảm thời gian hiện `loading.tsx`
+ * khi click sang trang chi tiết. TutorCard vẫn là SC (children render server-side);
+ * chỉ phần handler điều hướng là client.
  */
 interface TutorCardProps {
   tutor: Tutor;
@@ -25,7 +30,7 @@ export default function TutorCard({ tutor }: TutorCardProps) {
   const detailHref = `/tutor-detail/${tutor.id}`;
 
   return (
-    <Link href={detailHref} className="tutor-card" style={{ textDecoration: 'none', color: 'inherit' }}>
+    <PrefetchLink href={detailHref} className="tutor-card" style={{ textDecoration: 'none', color: 'inherit' }}>
       <div className="tutor-card-body">
         <div className="tutor-card-header">
           <div className="tutor-profile">
@@ -144,6 +149,6 @@ export default function TutorCard({ tutor }: TutorCardProps) {
           </span>
         </div>
       </div>
-    </Link>
+    </PrefetchLink>
   );
 }
