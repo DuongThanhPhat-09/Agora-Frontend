@@ -10,6 +10,7 @@ import {
 } from "./styles";
 import { SpinnerIcon } from "./icons";
 import type { UserProfileData } from "./types";
+import { formatDateTime } from "../../../utils/formatters";
 
 interface Props {
     profile: UserProfileData | null;
@@ -84,6 +85,11 @@ const ProfileHeaderCard: React.FC<Props> = ({
             {profile?.createdat && (
                 <p style={memberSince}>
                     Thành viên từ {new Date(profile.createdat).toLocaleDateString("vi-VN", { month: "long", year: "numeric" })}
+                </p>
+            )}
+            {(profile?.lastloginat || (profile as any)?.lastLoginAt) && (
+                <p style={{ ...memberSince, marginTop: 4 }}>
+                    Đăng nhập lần cuối: {formatDateTime(profile?.lastloginat || (profile as any)?.lastLoginAt)}
                 </p>
             )}
         </div>
