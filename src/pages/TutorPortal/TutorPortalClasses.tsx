@@ -14,9 +14,11 @@ const SearchIcon = () => (
     </svg>
 );
 
-const PlusIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M7 2V12M2 7H12" strokeLinecap="round" />
+const CalendarIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <rect x="3" y="4" width="18" height="18" rx="2" />
+        <path d="M16 2v4M8 2v4M3 10h18" />
+        <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" strokeLinecap="round" />
     </svg>
 );
 
@@ -312,10 +314,6 @@ const TutorPortalClasses: React.FC = () => {
                     {/* Header */}
                     <div className={styles.header}>
                         <h1 className={styles.title}>Quản lý lớp học</h1>
-                        <button className={styles.createBtn} onClick={() => navigate('/tutor-portal/schedule')}>
-                            <PlusIcon />
-                            <span>Tạo lớp học</span>
-                        </button>
                     </div>
 
                     {/* Filters */}
@@ -354,25 +352,43 @@ const TutorPortalClasses: React.FC = () => {
                         </select>
                     </div>
 
-                    {/* Table */}
-                    <div className={styles.tableContainer}>
-                        <DataTable<ClassData>
-                            columns={classColumns}
-                            data={sortedClasses.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)}
-                            rowKey="bookingId"
-                            loading={loading}
-                            loadingText="Đang tải dữ liệu..."
-                            emptyText="Chưa có lớp học nào"
-                            onRowClick={(row) => handleOpenClass(row.bookingId)}
-                            pagination={sortedClasses.length > PAGE_SIZE ? {
-                                current: currentPage,
-                                pageSize: PAGE_SIZE,
-                                total: sortedClasses.length,
-                                onChange: setCurrentPage,
-                            } : undefined}
-                            minWidth={700}
-                        />
-                    </div>
+                    {/* Table or Empty State */}
+                    {!loading && sortedClasses.length === 0 ? (
+                        <div className={styles.emptyState}>
+                            <div className={styles.emptyIcon}>📚</div>
+                            <h3 className={styles.emptyTitle}>Chưa có lớp học nào</h3>
+                            <p className={styles.emptyDesc}>
+                                Lớp học sẽ tự động xuất hiện khi học viên đặt lịch với bạn.
+                                Hãy thiết lập lịch rảnh để bắt đầu nhận booking.
+                            </p>
+                            <button
+                                className={styles.emptyAction}
+                                onClick={() => navigate('/tutor-portal/schedule')}
+                            >
+                                <CalendarIcon />
+                                <span>Thiết lập lịch rảnh</span>
+                            </button>
+                        </div>
+                    ) : (
+                        <div className={styles.tableContainer}>
+                            <DataTable<ClassData>
+                                columns={classColumns}
+                                data={sortedClasses.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)}
+                                rowKey="bookingId"
+                                loading={loading}
+                                loadingText="Đang tải dữ liệu..."
+                                emptyText="Chưa có lớp học nào"
+                                onRowClick={(row) => handleOpenClass(row.bookingId)}
+                                pagination={sortedClasses.length > PAGE_SIZE ? {
+                                    current: currentPage,
+                                    pageSize: PAGE_SIZE,
+                                    total: sortedClasses.length,
+                                    onChange: setCurrentPage,
+                                } : undefined}
+                                minWidth={700}
+                            />
+                        </div>
+                    )}
                 </div>
 
         </div>
