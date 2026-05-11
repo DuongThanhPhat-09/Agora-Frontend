@@ -9,6 +9,7 @@ export interface UserProfileData {
     avatarurl?: string;
     role?: string;
     createdat?: string;
+    lastloginat?: string;
     zabornotifyenabled?: boolean;
 }
 

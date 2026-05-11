@@ -15,7 +15,11 @@ export const formatDate = (dateString: string | null): string => {
   if (!dateString) return 'N/A';
 
   try {
-    const date = new Date(dateString);
+    let safeString = dateString;
+    if (!safeString.endsWith('Z') && !safeString.match(/[+-]\d{2}:?\d{2}$/)) {
+      safeString += 'Z';
+    }
+    const date = new Date(safeString);
     return date.toLocaleDateString('vi-VN');
   } catch {
     return 'N/A';
@@ -31,7 +35,11 @@ export const formatDateTime = (dateString: string | null): string => {
   if (!dateString) return 'N/A';
 
   try {
-    const date = new Date(dateString);
+    let safeString = dateString;
+    if (!safeString.endsWith('Z') && !safeString.match(/[+-]\d{2}:?\d{2}$/)) {
+      safeString += 'Z';
+    }
+    const date = new Date(safeString);
     return date.toLocaleString('vi-VN', {
       year: 'numeric',
       month: '2-digit',
@@ -52,7 +60,11 @@ export const formatDateTime = (dateString: string | null): string => {
 export const formatRelativeTime = (dateString: string): string => {
   console.log('🔍 formatRelativeTime - Input dateString:', dateString);
 
-  const date = new Date(dateString);
+  let safeString = dateString;
+  if (!safeString.endsWith('Z') && !safeString.match(/[+-]\d{2}:?\d{2}$/)) {
+    safeString += 'Z';
+  }
+  const date = new Date(safeString);
   const now = new Date();
 
   console.log('🔍 formatRelativeTime - Parsed date:', date.toISOString());

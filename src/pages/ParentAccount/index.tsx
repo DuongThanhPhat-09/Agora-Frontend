@@ -5,6 +5,7 @@ import type { Area, Point } from 'react-easy-crop';
 import { getUserIdFromToken, changePassword } from '../../services/auth.service';
 import { getUserProfile, updateUserProfile, updateUserAvatar, updateZaloNotifyEnabled } from '../../services/user.service';
 import { isZaloMiniApp } from '../../services/zalo-env';
+import { formatDateTime } from '../../utils/formatters';
 import styles from './styles.module.css';
 
 const inMiniApp = isZaloMiniApp();
@@ -20,6 +21,7 @@ interface UserProfileData {
     avatarurl?: string;
     role?: string;
     createdat?: string;
+    lastloginat?: string;
     zabornotifyenabled?: boolean;
 }
 
@@ -438,6 +440,11 @@ const ParentAccount = () => {
                     {profile?.createdat && (
                         <p style={memberSince}>
                             Thành viên từ {new Date(profile.createdat).toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' })}
+                        </p>
+                    )}
+                    {(profile?.lastloginat || (profile as any)?.lastLoginAt) && (
+                        <p style={{ ...memberSince, marginTop: 4 }}>
+                            Đăng nhập lần cuối: {formatDateTime(profile.lastloginat || (profile as any)?.lastLoginAt)}
                         </p>
                     )}
                 </div>

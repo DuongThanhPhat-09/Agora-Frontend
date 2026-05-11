@@ -9,6 +9,7 @@ import BlockUserModal from './components/BlockUserModal';
 import IssueWarningModal from './components/IssueWarningModal';
 import SuspendUserModal from './components/SuspendUserModal';
 import { getRoleDisplay } from './roleDisplay';
+import { formatDateTime } from '../../utils/formatters';
 
 import '../../styles/pages/admin-user-management.css';
 import '../../styles/pages/admin-vetting-modal.css';
@@ -269,6 +270,12 @@ const UserManagementPage = () => {
             key: 'joinDate',
             title: 'Ngày tham gia',
             render: (user) => new Date(user.createdat).toLocaleDateString('vi-VN'),
+            hideOnMobile: true,
+        },
+        {
+            key: 'lastLoginAt',
+            title: 'Lần đăng nhập cuối',
+            render: (user) => user.lastloginat ? formatDateTime(user.lastloginat) : 'N/A',
             hideOnMobile: true,
         },
         {
