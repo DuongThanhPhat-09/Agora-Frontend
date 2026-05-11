@@ -425,7 +425,7 @@ const TutorAccount = () => {
                     )}
                     {(profile?.lastloginat || (profile as any)?.lastLoginAt) && (
                         <p style={{ ...memberSince, marginTop: 4 }}>
-                            Đăng nhập lần cuối: {formatDateTime(profile.lastloginat || (profile as any)?.lastLoginAt)}
+                            Đăng nhập lần cuối: {formatDateTime(profile?.lastloginat || (profile as any)?.lastLoginAt)}
                         </p>
                     )}
                 </div>
