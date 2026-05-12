@@ -23,6 +23,7 @@ import 'react-toastify/dist/ReactToastify.css';
 // Public
 const HomePage = lazy(() => import('./pages/Home/HomePage'));
 const TutorSearchPage = lazy(() => import('./pages/TutorSearch/TutorSearchPage'));
+const TutorDetailPage = lazy(() => import('./pages/TutorDetail/TutorDetailPage'));
 const LoginPage = lazy(() => import('./pages/Login/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/Register/RegisterPage'));
 const ResetPasswordPage = lazy(() => import('./pages/Login/ResetPasswordPage'));
@@ -94,14 +95,13 @@ const inMiniApp = isZaloMiniApp();
 
 const FallbackRedirect = () => {
   useEffect(() => {
-    // If user accesses this via Vite's port/domain directly, redirect to Next.js
-    const isViteDirect = window.location.port === '5173' || window.location.hostname === 'app.tutora.vn';
-    if (isViteDirect) {
+    if (window.location.port === '5173' || window.location.hostname === 'app.tutora.vn') {
       const nextDomain = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://tutora.vn';
       window.location.replace(`${nextDomain}${window.location.pathname}${window.location.search}`);
     } else {
-      // If on Next.js domain but Vite router caught it (e.g. from Vite SPA link), force reload so Next.js SSR takes over
-      window.location.href = window.location.href;
+      // Force full page navigation → Next.js SSR handles the route.
+      // replace() tears down the current Vite SPA entirely.
+      window.location.replace(window.location.pathname + window.location.search);
     }
   }, []);
   return <PageLoader />;
