@@ -110,19 +110,25 @@
 }
 
 .bm-stepper-label {
+  position: relative;
+  z-index: 1;
+  background: #fff;
+  padding-right: 8px;
   overflow: hidden;
   color: inherit;
   font-size: 13px;
   font-weight: 600;
+  text-transform: uppercase;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .bm-stepper-line {
   position: absolute;
+  z-index: 0;
   top: 15px;
-  right: calc(-50% + 20px);
-  left: calc(50% + 20px);
+  right: -8px;
+  left: 30px;
   height: 1px;
   background: #e5e7eb;
 }
