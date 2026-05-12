@@ -23,7 +23,6 @@ import 'react-toastify/dist/ReactToastify.css';
 // Public
 const HomePage = lazy(() => import('./pages/Home/HomePage'));
 const TutorSearchPage = lazy(() => import('./pages/TutorSearch/TutorSearchPage'));
-const TutorDetailPage = lazy(() => import('./pages/TutorDetail/TutorDetailPage'));
 const LoginPage = lazy(() => import('./pages/Login/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/Register/RegisterPage'));
 const ResetPasswordPage = lazy(() => import('./pages/Login/ResetPasswordPage'));
