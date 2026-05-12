@@ -59,6 +59,7 @@ type BookingModalProps = {
   hourlyRate: number;
   subjects: SubjectInfo[];
   availabilities?: AvailabilitySlot[] | null;
+  tutorTeachingMode?: string | null;
 };
 
 type StepProps = {
@@ -72,7 +73,15 @@ type StepProps = {
   slotDuration: number;
   setSlotDuration: Dispatch<SetStateAction<number>>;
   userRole: string | null;
+  tutorTeachingMode?: string | null;
 };
+
+function resolveLockedMode(raw?: string | null): 'online' | 'offline' | null {
+  const m = (raw ?? '').toLowerCase();
+  if (m === 'online') return 'online';
+  if (m === 'offline') return 'offline';
+  return null;
+}
 
 const SUBJECT_MAPPING: SubjectOption[] = [
   { id: 1, name: 'Toán' },
@@ -143,7 +152,7 @@ function isSlotWithinAvailability(
   endTime: string,
   availabilities: AvailabilitySlot[]
 ) {
-  if (availabilities.length === 0) return true;
+  if (availabilities.length === 0) return false;
 
   const [sh, sm] = startTime.split(':').map(Number);
   const [eh, em] = endTime.split(':').map(Number);
@@ -342,26 +351,74 @@ function StepStudentSubject({
   );
 }
 
-function StepTeachingMode({ formData, setFormData }: StepProps) {
+function StepTeachingMode({ formData, setFormData, tutorTeachingMode }: StepProps) {
+  const lockedMode = useMemo(() => resolveLockedMode(tutorTeachingMode), [tutorTeachingMode]);
+  const isLocked = lockedMode !== null;
+
+  const visibleModes = useMemo(() => {
+    if (!lockedMode) return TEACHING_MODES;
+    return TEACHING_MODES.filter((m) => m.key === lockedMode);
+  }, [lockedMode]);
+
+  useEffect(() => {
+    if (lockedMode && formData.teachingMode !== lockedMode) {
+      setFormData((d) => ({
+        ...d,
+        teachingMode: lockedMode,
+        ...(lockedMode === 'online'
+          ? { locationCity: '', locationDistrict: '', locationWard: '', locationDetail: '' }
+          : {}),
+      }));
+    }
+  }, [lockedMode, formData.teachingMode, setFormData]);
+
   const needsLocation = formData.teachingMode === 'offline' || formData.teachingMode === 'hybrid';
 
   return (
     <div className="bm-step">
       <div className="bm-step-title">Hình thức học</div>
-      <div className="bm-teaching-mode-grid">
-        {TEACHING_MODES.map((mode) => (
+      
+      {isLocked && (
+        <div
+          className="bm-locked-mode-banner"
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 10,
+            padding: '12px 14px',
+            marginBottom: 16,
+            background: 'linear-gradient(135deg, rgba(79, 140, 255, 0.10) 0%, rgba(79, 140, 255, 0.04) 100%)',
+            border: '1px solid rgba(79, 140, 255, 0.20)',
+            borderRadius: 12,
+            color: '#1a2238',
+            fontSize: 13,
+            lineHeight: 1.5,
+          }}
+        >
+          <span aria-hidden style={{ fontSize: 16, lineHeight: '20px' }}>ℹ️</span>
+          <span>
+            Gia sư này chỉ dạy theo hình thức{' '}
+            <b>{lockedMode === 'online' ? 'Online' : 'Tại nhà (Offline)'}</b>. Bạn không thể đổi sang hình thức khác.
+          </span>
+        </div>
+      )}
+
+      <div className="bm-teaching-mode-grid" aria-disabled={isLocked || undefined}>
+        {visibleModes.map((mode) => (
           <button
             key={mode.key}
-            className={`bm-teaching-mode-card ${formData.teachingMode === mode.key ? 'selected' : ''}`}
-            onClick={() =>
+            className={`bm-teaching-mode-card ${formData.teachingMode === mode.key ? 'selected' : ''} ${isLocked ? 'locked' : ''}`}
+            onClick={() => {
+              if (isLocked) return;
               setFormData((draft) => ({
                 ...draft,
                 teachingMode: mode.key,
                 ...(mode.key === 'online'
                   ? { locationCity: '', locationDistrict: '', locationWard: '', locationDetail: '' }
                   : {}),
-              }))
-            }
+              }));
+            }}
+            style={isLocked ? { cursor: 'not-allowed', opacity: 0.95 } : undefined}
             type="button"
           >
             <span className="bm-teaching-mode-icon">{mode.icon}</span>
@@ -453,7 +510,7 @@ function StepSchedule({
 
   const isChunkAvailable = useCallback(
     (day: number, time: string) => {
-      if (availabilities.length === 0) return true;
+      if (availabilities.length === 0) return false;
       const [h, m] = time.split(':').map(Number);
       const startMins = h * 60 + m;
       const endMins = startMins + 30;
@@ -620,6 +677,8 @@ function StepSchedule({
               key={option.value}
               className={`bm-hours-btn ${slotDuration === option.value ? 'selected' : ''}`}
               onClick={() => handleDurationChange(option.value)}
+              disabled={availabilities.length === 0}
+              style={availabilities.length === 0 ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
               type="button"
             >
               {option.label}
@@ -627,6 +686,12 @@ function StepSchedule({
           ))}
         </div>
       </div>
+
+      {availabilities.length === 0 && (
+        <div className="bm-toast-warning" style={{ marginBottom: 16 }}>
+          <span>Gia sư này chưa thiết lập lịch rảnh. Bạn tạm thời chưa thể đặt lịch.</span>
+        </div>
+      )}
 
       <div className="bm-schedule-table">
         <div className="bm-schedule-header">
@@ -843,14 +908,17 @@ export default function BookingModal({
   hourlyRate,
   subjects,
   availabilities,
+  tutorTeachingMode,
 }: BookingModalProps) {
   const userRole = getCurrentUserRole();
   const currentUserId = getUserIdFromToken();
+  const lockedMode = resolveLockedMode(tutorTeachingMode);
+
   const defaultFormData: BookingFormData = useMemo(
     () => ({
       studentId: userRole === 'Student' ? currentUserId || '' : '',
       subjectId: 0,
-      teachingMode: 'online',
+      teachingMode: lockedMode ?? 'online',
       startDate: new Date().toISOString().split('T')[0],
       schedule: [],
       locationCity: '',
@@ -859,7 +927,7 @@ export default function BookingModal({
       locationDetail: '',
       promotionCode: '',
     }),
-    [currentUserId, userRole]
+    [currentUserId, userRole, lockedMode]
   );
 
   const [step, setStep] = useState(0);
@@ -875,7 +943,7 @@ export default function BookingModal({
     formData: BookingFormData;
     step: number;
     slotDuration: number;
-  }>(`draft_booking_${tutorId}`);
+  }>(`draft_booking_${currentUserId || 'anon'}_${tutorId}`);
 
   const availableSubjects = useMemo(
     () =>
@@ -916,7 +984,12 @@ export default function BookingModal({
     if (isOpen) {
       const draft = loadDraft();
       if (draft) {
-        setFormData(draft.formData || defaultFormData);
+        const restored = draft.formData || defaultFormData;
+        const todayStr = new Date().toISOString().split('T')[0];
+        if (restored.startDate && restored.startDate < todayStr) {
+          restored.startDate = todayStr;
+        }
+        setFormData(lockedMode ? { ...restored, teachingMode: lockedMode } : restored);
         setStep(draft.step || 0);
         setSlotDuration(draft.slotDuration || 2);
       } else {
@@ -1031,6 +1104,7 @@ export default function BookingModal({
     slotDuration,
     setSlotDuration,
     userRole,
+    tutorTeachingMode,
   };
 
   return (
