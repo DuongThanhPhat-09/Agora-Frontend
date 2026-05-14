@@ -1113,7 +1113,13 @@ export default function BookingModal({
         {bookingSuccess && (
           <div className="bm-success-overlay">
             <div className="bm-success-content">
-              <div className="bm-success-icon">✓</div>
+              <div className="bm-success-icon-wrap">
+                <div className="bm-success-icon">
+                  <svg className="bm-success-checkmark" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M5 12.5l4.5 4.5L19 7.5" />
+                  </svg>
+                </div>
+              </div>
               <h3 className="bm-success-title">Đặt lịch thành công!</h3>
               <p className="bm-success-desc">
                 Yêu cầu booking của bạn đã được gửi đến <strong>{tutorName}</strong>. Gia sư sẽ xác nhận
@@ -1121,13 +1127,23 @@ export default function BookingModal({
               </p>
               {successBookingId && (
                 <div className="bm-success-booking-id">
-                  Mã booking: <strong>#{successBookingId}</strong>
+                  <span>Mã booking</span>
+                  <strong>#{successBookingId}</strong>
                 </div>
               )}
               <div className="bm-success-steps">
-                <div><strong>1</strong><span>Gia sư xem xét yêu cầu</span></div>
-                <div><strong>2</strong><span>Xác nhận & thanh toán</span></div>
-                <div><strong>3</strong><span>Bắt đầu học</span></div>
+                <div className="bm-success-step is-active">
+                  <strong>1</strong>
+                  <span>Gia sư xem xét yêu cầu</span>
+                </div>
+                <div className="bm-success-step">
+                  <strong>2</strong>
+                  <span>Xác nhận &amp; thanh toán</span>
+                </div>
+                <div className="bm-success-step">
+                  <strong>3</strong>
+                  <span>Bắt đầu học</span>
+                </div>
               </div>
               <button className="bm-success-close-btn" onClick={onClose} type="button">
                 Đóng
