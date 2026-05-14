@@ -2,37 +2,16 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabaseServiceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error("Thiếu biến môi trường Supabase! Hãy kiểm tra file .env");
 }
 
-// Debug: Log để kiểm tra service role key có được load không
-console.log('🔍 Supabase Environment Check:', {
-  hasUrl: !!supabaseUrl,
-  hasAnonKey: !!supabaseAnonKey,
-  hasServiceRoleKey: !!supabaseServiceRoleKey,
-  serviceRoleKeyPrefix: supabaseServiceRoleKey ? supabaseServiceRoleKey.substring(0, 20) + '...' : 'MISSING'
-});
-
-if (!supabaseServiceRoleKey) {
-  console.error('❌ VITE_SUPABASE_SERVICE_ROLE_KEY not found! Please check .env file and restart dev server.');
-}
-
-// Regular client for public operations (auth, public queries)
+// Public anon client — safe to ship to the browser. Used for Supabase Auth
+// flows (password reset emails, magic links) that don't need elevated privileges.
+//
+// ⚠️ NEVER add a service-role client here. Anything that needs to bypass
+// Row Level Security (private bucket uploads, auth.admin.*, cross-user reads,
+// etc.) MUST run on the backend, where the service-role key stays in env vars
+// and never reaches the bundle.
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Admin client for operations that need to bypass RLS (e.g., file uploads)
-// ⚠️ Use with caution - this bypasses all Row Level Security policies
-export const supabaseAdmin = createClient(
-  supabaseUrl,
-  supabaseServiceRoleKey || supabaseAnonKey,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      storageKey: 'supabase-admin-auth-token'
-    }
-  }
-);

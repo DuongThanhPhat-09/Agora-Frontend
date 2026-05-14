@@ -1,169 +1,110 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { supabaseAdmin } from '../lib/supabase';
+//
+// ID card storage operations.
+//
+// History: Trước đây file này gọi trực tiếp Supabase Storage bằng service-role
+// key ở browser → key bị bundle vào JS, lộ ra tutora.vn. Đã refactor sang
+// gọi backend; service-role key chỉ còn sống ở env BE.
+//
+// Backend endpoints cần (TODO Công):
+//   POST   /api/storage/id-cards            multipart {file, side} → { content: { path } }
+//   DELETE /api/storage/id-cards?path=...   → 204
+//   GET    /api/storage/id-cards/signed-url?path=...&expiresIn=... → { content: { url } }
+//
+// Toàn bộ 3 endpoint phải auth (Bearer JWT của tutor) và check ownership:
+// path phải bắt đầu bằng userId của caller, hoặc caller là admin/staff.
+//
+import axios from 'axios';
+import { setupAuthInterceptor } from './apiClient';
+import { getAuthHeaders } from './tutorProfile.service';
 import type { UploadResult } from '../types/verification.types';
-import { getCurrentUser } from './auth.service';
 
-const ID_CARDS_BUCKET = 'id-cards';
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5166') + '/api';
+
+const api = axios.create({
+    baseURL: API_BASE_URL,
+});
+setupAuthInterceptor(api);
+
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB
 
 /**
- * Upload ID card image to Supabase Storage
- * @param file - Image file to upload
- * @param side - 'front' or 'back'
- * @returns Upload result with path
+ * Upload ID card image via backend (BE writes to private Supabase bucket using
+ * its server-side service-role key).
  */
 export const uploadIdCard = async (
     file: File,
     side: 'front' | 'back'
 ): Promise<UploadResult> => {
+    if (!file.type.startsWith('image/')) {
+        return { path: '', error: 'Vui lòng chỉ upload file ảnh (JPG, PNG, etc.)' };
+    }
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+        return { path: '', error: 'Kích thước file không được vượt quá 5MB' };
+    }
+
+    const form = new FormData();
+    form.append('file', file);
+    form.append('side', side);
+
     try {
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
-            return {
-                path: '',
-                error: 'Vui lòng chỉ upload file ảnh (JPG, PNG, etc.)'
-            };
+        const response = await api.post('/storage/id-cards', form, {
+            headers: {
+                ...getAuthHeaders(),
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+
+        const path: string | undefined = response.data?.content?.path;
+        if (!path) {
+            return { path: '', error: 'Phản hồi từ server không hợp lệ' };
         }
 
-        // Validate file size (max 5MB)
-        const maxSize = 5 * 1024 * 1024; // 5MB
-        if (file.size > maxSize) {
-            return {
-                path: '',
-                error: 'Kích thước file không được vượt quá 5MB'
-            };
-        }
-
-
-        // Get current user
-        const user = getCurrentUser();
-        if (!user) {
-            return {
-                path: '',
-                error: 'Không tìm thấy thông tin user. Vui lòng đăng nhập lại.'
-            };
-        }
-
-        // Get userId from JWT token
-        let userId = null;
-
-        if (user.accessToken) {
-            try {
-                // Decode JWT token
-                const base64Url = user.accessToken.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(
-                    atob(base64)
-                        .split('')
-                        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-                        .join('')
-                );
-                const payload = JSON.parse(jsonPayload);
-
-                // Try different field names in JWT
-                userId = payload.userId || payload.nameid || payload.sub || payload.id;
-
-                console.log('📋 Decoded userId from JWT:', userId);
-            } catch (error) {
-                console.error('❌ Error decoding JWT:', error);
-            }
-        }
-
-        // Fallback: try to get from user object directly
-        if (!userId) {
-            userId = user.id || user.userId || user.ID || user.UserId;
-        }
-
-        if (!userId) {
-            console.error('❌ Cannot find userId. User data:', user);
-            return {
-                path: '',
-                error: 'Không tìm thấy User ID. Vui lòng đăng nhập lại.'
-            };
-        }
-
-        // Generate file path: userId/cccd_front.{ext} or userId/cccd_back.{ext}
-        const fileExt = file.name.split('.').pop();
-        const fileName = `cccd_${side}.${fileExt}`;
-        const filePath = `${userId}/${fileName}`;
-
-        console.log('📤 Uploading ID card to Supabase:', { filePath, size: file.size });
-
-        // Upload to Supabase Storage using admin client (bypasses RLS)
-        const { data, error } = await supabaseAdmin.storage
-            .from(ID_CARDS_BUCKET)
-            .upload(filePath, file, {
-                cacheControl: '3600',
-                upsert: true // Overwrite if exists
-            });
-
-        if (error) {
-            console.error('❌ Supabase upload error:', error);
-            return {
-                path: '',
-                error: `Lỗi upload: ${error.message}`
-            };
-        }
-
-        console.log('✅ Upload successful:', data);
-
-        // Return the file path only - backend will generate fresh signed URLs on demand
-        return {
-            path: filePath,
-            publicUrl: filePath
-        };
-
+        return { path, publicUrl: path };
     } catch (error: any) {
-        console.error('❌ Upload error:', error);
-        return {
-            path: '',
-            error: error.message || 'Có lỗi xảy ra khi upload'
-        };
+        const message =
+            error.response?.data?.message ||
+            error.response?.data?.content ||
+            error.message ||
+            'Có lỗi xảy ra khi upload';
+        console.error('❌ Upload ID card failed:', message);
+        return { path: '', error: message };
     }
 };
 
 /**
- * Delete ID card image from Supabase Storage
- * @param path - File path to delete
+ * Delete an ID card image from storage via backend.
  */
 export const deleteIdCard = async (path: string): Promise<boolean> => {
     try {
-        const { error } = await supabaseAdmin.storage
-            .from(ID_CARDS_BUCKET)
-            .remove([path]);
-
-        if (error) {
-            console.error('❌ Delete error:', error);
-            return false;
-        }
-
-        console.log('✅ Deleted:', path);
+        await api.delete('/storage/id-cards', {
+            headers: getAuthHeaders(),
+            params: { path },
+        });
         return true;
-    } catch (error) {
-        console.error('❌ Delete error:', error);
+    } catch (error: any) {
+        console.error('❌ Delete ID card failed:', error?.message);
         return false;
     }
 };
 
 /**
- * Get download URL for an ID card image
- * @param path - File path in Supabase
- * @param expiresIn - URL expiration time in seconds (default: 1 year)
- * @returns Signed download URL with token
+ * Ask backend for a short-lived signed URL to view an ID card image.
+ * `expiresIn` is a hint to backend; backend may clamp to its own max.
  */
-export const getIdCardUrl = async (path: string, expiresIn: number = 31536000): Promise<string | null> => {
+export const getIdCardUrl = async (
+    path: string,
+    expiresIn: number = 31536000
+): Promise<string | null> => {
     try {
-        const { data, error } = await supabaseAdmin.storage
-            .from(ID_CARDS_BUCKET)
-            .createSignedUrl(path, expiresIn);
-
-        if (error) {
-            console.error('❌ Error creating signed URL:', error);
-            return null;
-        }
-
-        return data?.signedUrl || null;
-    } catch (error) {
-        console.error('❌ Error getting URL:', error);
+        const response = await api.get('/storage/id-cards/signed-url', {
+            headers: getAuthHeaders(),
+            params: { path, expiresIn },
+        });
+        return response.data?.content?.url || null;
+    } catch (error: any) {
+        console.error('❌ Get signed URL failed:', error?.message);
         return null;
     }
 };
