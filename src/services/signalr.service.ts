@@ -6,10 +6,14 @@ const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5166'
 const HUB_URL = `${API_BASE_URL}/hubs/chat`;
 const NOTIFICATION_HUB_URL = `${API_BASE_URL}/notificationHub`;
 
-console.log('🔌 SignalR Config:');
-console.log('  - API_BASE_URL:', API_BASE_URL);
-console.log('  - Chat HUB_URL:', HUB_URL);
-console.log('  - Notification HUB_URL:', NOTIFICATION_HUB_URL);
+// Debug log chỉ chạy ở local dev; production build (import.meta.env.DEV === false)
+// sẽ tree-shake block này khỏi bundle để giữ console im lặng.
+if (import.meta.env.DEV) {
+  console.log('🔌 SignalR Config:');
+  console.log('  - API_BASE_URL:', API_BASE_URL);
+  console.log('  - Chat HUB_URL:', HUB_URL);
+  console.log('  - Notification HUB_URL:', NOTIFICATION_HUB_URL);
+}
 
 class SignalRService {
   // Chat hub connection
