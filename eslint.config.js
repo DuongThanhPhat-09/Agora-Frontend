@@ -19,5 +19,12 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Block accidental `console.log / info / debug` from sneaking into source.
+      // `warn` level (not `error`) so it doesn't block CI on legacy occurrences,
+      // but it shows in editor + `npm run lint`. console.warn / console.error
+      // are allowed for genuine problem signals.
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+    },
   },
 ])
