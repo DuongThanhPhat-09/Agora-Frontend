@@ -1,50 +1,61 @@
+import Header from './_components/Header';
+import Footer from './_components/Footer';
+
 /**
- * Homepage loading skeleton
+ * Root-level loading fallback — shown trong khi route bất kỳ chưa có
+ * `loading.tsx` riêng đang chuẩn bị render. Trang chủ (`/`) static nên file này
+ * hiếm khi trigger, nhưng giữ làm fallback an toàn cho mọi route segment
+ * không khai báo loading.
+ *
+ * Đồng bộ với `tutor-search/loading.tsx`: full shell (Header + Footer) + spinner
+ * trung tâm, dùng cùng keyframe `tutora-spin`.
  */
 export default function Loading() {
   return (
-    <div className="animate-pulse">
-      {/* Header skeleton */}
-      <div className="h-20 bg-gray-100 border-b border-gray-200" />
-
-      {/* Hero section skeleton */}
-      <div className="max-w-7xl mx-auto px-8 py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <div className="space-y-6">
-            <div className="h-8 bg-gray-200 rounded w-3/4" />
-            <div className="h-12 bg-gray-300 rounded w-full" />
-            <div className="h-12 bg-gray-300 rounded w-5/6" />
-            <div className="h-20 bg-gray-200 rounded" />
-            <div className="flex gap-4">
-              <div className="h-12 bg-blue-200 rounded w-40" />
-              <div className="h-12 bg-gray-200 rounded w-40" />
-            </div>
-          </div>
-          <div className="h-96 bg-gray-200 rounded-lg" />
-        </div>
-      </div>
-
-      {/* Stats section skeleton */}
-      <div className="bg-gray-50 py-12">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="grid grid-cols-3 gap-8">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="text-center space-y-2">
-                <div className="h-12 bg-gray-300 rounded w-24 mx-auto" />
-                <div className="h-6 bg-gray-200 rounded w-32 mx-auto" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Features section skeleton */}
-      <div className="max-w-7xl mx-auto px-8 py-16">
-        <div className="grid grid-cols-2 gap-8">
-          <div className="h-64 bg-gray-200 rounded-lg" />
-          <div className="h-64 bg-gray-200 rounded-lg" />
-        </div>
-      </div>
+    <div className="homepage">
+      <Header />
+      <main
+        style={{
+          minHeight: 'calc(100vh - 200px)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 18,
+          padding: '64px 24px',
+        }}
+      >
+        <div
+          role="status"
+          aria-label="Đang tải"
+          style={{
+            width: 52,
+            height: 52,
+            borderRadius: '50%',
+            border: '3px solid #e5e7eb',
+            borderTopColor: '#1a2238',
+            animation: 'tutora-spin 0.8s linear infinite',
+          }}
+        />
+        <p
+          style={{
+            margin: 0,
+            fontFamily: "'IBM Plex Sans', sans-serif",
+            fontSize: 14,
+            fontWeight: 600,
+            color: '#6b7280',
+            letterSpacing: '0.02em',
+          }}
+        >
+          Đang tải...
+        </p>
+      </main>
+      <Footer />
+      <style>{`
+        @keyframes tutora-spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
