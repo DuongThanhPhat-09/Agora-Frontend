@@ -130,15 +130,32 @@ export default async function TutorSearchPage({ searchParams }: PageProps) {
   const filters = parseSearchParams(raw);
 
   const apiParams = buildApiParams(filters);
-  const response = await searchTutorsServer(apiParams);
-  let initialTutors: Tutor[] = response.content.items.map(mapApiTutorToUi);
-  let initialTotalCount = response.content.totalCount;
-  let initialHasNext = response.content.hasNext;
 
-  if (needsMultiSelectFilter(filters)) {
-    initialTutors = applyMultiSelectFilters(initialTutors, filters);
-    initialTotalCount = initialTutors.length;
-    initialHasNext = false; // multi-select chỉ load 1 page
+  let initialTutors: Tutor[] = [];
+  let initialTotalCount = 0;
+  let initialHasNext = false;
+  let initialError: string | null = null;
+
+  try {
+    const response = await searchTutorsServer(apiParams);
+    initialTutors = response.content.items.map(mapApiTutorToUi);
+    initialTotalCount = response.content.totalCount;
+    initialHasNext = response.content.hasNext;
+
+    if (needsMultiSelectFilter(filters)) {
+      initialTutors = applyMultiSelectFilters(initialTutors, filters);
+      initialTotalCount = initialTutors.length;
+      initialHasNext = false; // multi-select chỉ load 1 page
+    }
+  } catch (err) {
+    // Backend unreachable / 5xx / parse error → don't crash the route. Render the
+    // same shell (Header/Filter/Footer) and let SearchClient show an error card so
+    // user can retry without seeing Vercel's generic 500 page.
+    //
+    // `error.tsx` ở cùng segment vẫn là backup nếu có throw khác (vd. trong
+    // parseSearchParams, generateMetadata) — catch ở đây xử lý case phổ biến nhất.
+    console.error('[tutor-search] initial server fetch failed:', err);
+    initialError = 'Hệ thống đang tạm thời không phản hồi. Vui lòng thử lại sau ít phút.';
   }
 
   return (
@@ -150,6 +167,7 @@ export default async function TutorSearchPage({ searchParams }: PageProps) {
           initialTotalCount={initialTotalCount}
           initialHasNext={initialHasNext}
           initialPage={filters.pageNumber}
+          initialError={initialError}
         />
       </main>
       <Footer />
