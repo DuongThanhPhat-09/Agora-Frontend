@@ -39,6 +39,12 @@ interface SearchClientProps {
   initialTotalCount: number;
   initialHasNext: boolean;
   initialPage: number;
+  /**
+   * Set bởi Server `page.tsx` khi `searchTutorsServer` throw (vd. backend 5xx /
+   * connect timeout). Khi non-null, ResultsSection render error card thay vì
+   * danh sách rỗng — user thấy được lý do + nút "Thử lại".
+   */
+  initialError: string | null;
 }
 
 interface StatefulSearchClientProps extends SearchClientProps {
@@ -65,6 +71,7 @@ function StatefulSearchClient({
   initialTotalCount,
   initialHasNext,
   initialPage,
+  initialError,
   filters,
 }: StatefulSearchClientProps) {
   const router = useRouter();
@@ -164,6 +171,17 @@ function StatefulSearchClient({
     updateFilters({ sortBy: 'rating_desc' });
   }, [updateFilters]);
 
+  /**
+   * Soft retry — re-run server component (re-fetch initial data) mà không full reload.
+   * Giữ scroll position + client state (filter input). Nếu lý do là BE vẫn down,
+   * page render lại sẽ trả `initialError` mới qua try/catch ở `page.tsx`.
+   */
+  const handleRetry = useCallback(() => {
+    startTransition(() => {
+      router.refresh();
+    });
+  }, [router]);
+
   const handleLoadMore = useCallback(async () => {
     setLoadMoreLoading(true);
     setLoadMoreError(null);
@@ -230,10 +248,14 @@ function StatefulSearchClient({
       <ResultsSection
         tutors={allTutors}
         loading={isPending || loadMoreLoading}
-        error={loadMoreError}
+        // initialError (BE down ở server-side fetch) ưu tiên hơn loadMoreError vì
+        // nó nói trang đang vô dụng, không chỉ "load more failed".
+        error={initialError ?? loadMoreError}
+        errorVariant={initialError ? 'fatal' : 'inline'}
         totalCount={initialTotalCount}
         hasNext={hasNext}
         onLoadMore={handleLoadMore}
+        onRetry={handleRetry}
       />
     </div>
   );
