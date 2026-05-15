@@ -1,73 +1,67 @@
+import Header from '../_components/Header';
+import Footer from '../_components/Footer';
+
 /**
- * Tutor search loading skeleton
+ * Route-level loading fallback cho `/tutor-search`.
+ *
+ * Next.js bật file này khi:
+ *  - Cold first-paint (user gõ URL trực tiếp, F5 hard reload)
+ *  - Soft nav từ trang khác trong lúc server fetch chưa xong
+ *
+ * Render full shell (Header + Footer) + spinner trung tâm. Đồng bộ với
+ * `tutor-detail/[id]/loading.tsx` (cũng render Header/Footer) và `ErrorPage` —
+ * user luôn thấy navigation, không bị "blank screen panic".
+ *
+ * Trước đây file này dùng skeleton placeholder (animate-pulse). Đổi sang spinner
+ * vì skeleton chỉ hợp khi đã biết layout, còn trang search có nhiều variant
+ * (multi-select filter, no result...) → spinner đơn giản trung thực hơn.
  */
 export default function Loading() {
   return (
-    <div className="animate-pulse">
-      {/* Header skeleton */}
-      <div className="h-20 bg-gray-100 border-b border-gray-200" />
-
-      {/* Search hero skeleton */}
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 py-12">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="h-10 bg-gray-200 rounded w-64 mb-4" />
-          <div className="h-6 bg-gray-200 rounded w-96 mb-8" />
-          <div className="h-12 bg-white rounded-lg w-full max-w-2xl" />
-        </div>
-      </div>
-
-      {/* Category tabs skeleton */}
-      <div className="border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="flex gap-4 py-4">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-10 bg-gray-200 rounded w-24" />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Filters + Results skeleton */}
-      <div className="max-w-7xl mx-auto px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Filters sidebar skeleton */}
-          <div className="space-y-6">
-            <div className="h-8 bg-gray-200 rounded w-32" />
-            <div className="space-y-3">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-10 bg-gray-100 rounded" />
-              ))}
-            </div>
-          </div>
-
-          {/* Results skeleton */}
-          <div className="lg:col-span-3 space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-48 mb-6" />
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="border border-gray-200 rounded-lg p-6 space-y-4">
-                <div className="flex gap-4">
-                  <div className="w-16 h-16 bg-gray-200 rounded-full" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-6 bg-gray-200 rounded w-48" />
-                    <div className="h-4 bg-gray-100 rounded w-32" />
-                  </div>
-                  <div className="h-8 bg-gray-200 rounded w-16" />
-                </div>
-                <div className="flex gap-2">
-                  {[1, 2, 3].map((j) => (
-                    <div key={j} className="h-6 bg-gray-100 rounded w-20" />
-                  ))}
-                </div>
-                <div className="h-4 bg-gray-100 rounded w-full" />
-                <div className="flex justify-between items-center pt-4 border-t">
-                  <div className="h-8 bg-gray-200 rounded w-32" />
-                  <div className="h-10 bg-blue-100 rounded w-40" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+    <div className="tutor-search-page">
+      <Header />
+      <main
+        style={{
+          minHeight: 'calc(100vh - 200px)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 18,
+          padding: '64px 24px',
+        }}
+      >
+        <div
+          role="status"
+          aria-label="Đang tải"
+          style={{
+            width: 52,
+            height: 52,
+            borderRadius: '50%',
+            border: '3px solid #e5e7eb',
+            borderTopColor: '#1a2238',
+            animation: 'tutora-spin 0.8s linear infinite',
+          }}
+        />
+        <p
+          style={{
+            margin: 0,
+            fontFamily: "'IBM Plex Sans', sans-serif",
+            fontSize: 14,
+            fontWeight: 600,
+            color: '#6b7280',
+            letterSpacing: '0.02em',
+          }}
+        >
+          Đang tải danh sách gia sư...
+        </p>
+      </main>
+      <Footer />
+      <style>{`
+        @keyframes tutora-spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
