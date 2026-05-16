@@ -27,6 +27,11 @@ class SignalRService {
   private messageHandlers: Map<string, (message: any) => void> = new Map();
   private notificationHandlers: Map<string, (data: any) => void> = new Map();
 
+  // Multi-subscriber sets — cho các sidebar badge / global listener cần co-exist với
+  // ChatArea (vốn dùng single-slot `onMessageReceived`). Khi message tới, cả handler
+  // ở `messageHandlers` (ChatArea) lẫn mọi subscriber ở đây đều được gọi.
+  private chatMessageSubscribers: Set<(message: any) => void> = new Set();
+
   // ==================== CONNECT / DISCONNECT ====================
 
   async connect(): Promise<void> {
@@ -274,6 +279,19 @@ class SignalRService {
     this.removeChatHandler('messageReceived');
   }
 
+  /**
+   * Multi-subscriber API cho chat messages — dùng khi có ≥2 component cùng cần
+   * lắng nghe message tới (vd. sidebar badge ở Layout + ChatArea ở page).
+   *
+   * Trả về cleanup function — gọi để unsubscribe. Khác với `onMessageReceived`
+   * (single-slot, register thứ 2 ghi đè thứ 1), mỗi subscriber ở đây giữ nguyên
+   * khi có subscriber khác đăng ký.
+   */
+  subscribeToChatMessages(handler: (message: any) => void): () => void {
+    this.chatMessageSubscribers.add(handler);
+    return () => { this.chatMessageSubscribers.delete(handler); };
+  }
+
   onUserJoined(handler: (data: any) => void): void {
     this.addOrUpdateChatHandler('userJoined', handler);
   }
@@ -330,6 +348,10 @@ class SignalRService {
       console.log('📩 Chat messageReceived:', message);
       const handler = this.messageHandlers.get('messageReceived');
       if (handler) handler(message);
+      // Notify multi-subscribers (sidebar badge, global toast, ...)
+      this.chatMessageSubscribers.forEach((fn) => {
+        try { fn(message); } catch (err) { console.error('chat subscriber failed:', err); }
+      });
     });
 
     this.connection.on('userJoined', (data: any) => {
