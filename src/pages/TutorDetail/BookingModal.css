@@ -1074,214 +1074,249 @@
     display: block;
 }
 
-/* ===== SUCCESS OVERLAY ===== */
+/* ===========================================================================
+   SUCCESS OVERLAY — đồng bộ design với Next.js BookingModal (web-next).
+   Tokens: navy #1a2238, gold #d4b483, green #15803d/#34d399 (success icon).
+   Pattern: card centered + animated checkmark + ring pulse + horizontal stepper.
+   =========================================================================== */
 .bm-success-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(255, 255, 255, 0.97);
-    backdrop-filter: blur(12px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background:
+        radial-gradient(circle at 50% 30%, rgba(34, 197, 94, 0.08), transparent 55%),
+        rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     border-radius: 24px;
-    animation: bmSuccessFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: bm-success-fade-in 0.35s ease-out;
 }
 
-@keyframes bmSuccessFadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
+@keyframes bm-success-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .bm-success-content {
+    position: relative;
+    width: min(460px, 100%);
+    padding: 36px 28px 26px;
+    border-radius: 22px;
+    background: #fff;
+    box-shadow:
+        0 28px 56px -16px rgba(15, 23, 42, 0.22),
+        0 0 0 1px rgba(15, 23, 42, 0.05);
     text-align: center;
-    padding: 40px 32px;
-    max-width: 420px;
-    animation: bmSuccessContentSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+    animation: bm-success-pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes bmSuccessContentSlide {
-    from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.95);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+@keyframes bm-success-pop-in {
+    from { opacity: 0; transform: translateY(16px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.bm-success-icon-wrapper {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 24px;
+.bm-success-icon-wrap {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 92px;
+    height: 92px;
+    margin: 0 auto 18px;
+}
+
+.bm-success-icon-wrap::before,
+.bm-success-icon-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border-radius: 50%;
+    border: 2px solid #22c55e;
+    opacity: 0;
+    animation: bm-success-ring 1.8s ease-out infinite;
+}
+
+.bm-success-icon-wrap::after {
+    animation-delay: 0.6s;
+}
+
+@keyframes bm-success-ring {
+    0% { transform: scale(0.85); opacity: 0.55; }
+    100% { transform: scale(1.55); opacity: 0; }
 }
 
 .bm-success-icon {
-    width: 80px;
-    height: 80px;
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 8px 32px rgba(76, 175, 80, 0.2);
-    animation: bmSuccessIconPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both;
+    background: linear-gradient(135deg, #34d399 0%, #15803d 100%);
+    color: #fff;
+    box-shadow:
+        0 12px 28px rgba(21, 128, 61, 0.32),
+        inset 0 -3px 0 rgba(0, 0, 0, 0.08);
+    animation: bm-success-icon-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes bmSuccessIconPop {
-    from {
-        transform: scale(0);
-    }
-
-    to {
-        transform: scale(1);
-    }
+@keyframes bm-success-icon-pop {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.1); }
+    100% { transform: scale(1); }
 }
 
 .bm-success-checkmark {
     width: 40px;
     height: 40px;
-}
-
-.bm-success-circle {
-    stroke-dasharray: 166;
-    stroke-dashoffset: 166;
-    stroke-width: 2;
-    stroke-miterlimit: 10;
-    stroke: #4CAF50;
-    animation: bmStrokeCircle 0.6s cubic-bezier(0.65, 0, 0.45, 1) 0.5s forwards;
-}
-
-@keyframes bmStrokeCircle {
-    to {
-        stroke-dashoffset: 0;
-    }
-}
-
-.bm-success-check {
-    stroke-dasharray: 48;
-    stroke-dashoffset: 48;
-    stroke-width: 3;
+    stroke: #fff;
+    stroke-width: 3.5;
     stroke-linecap: round;
     stroke-linejoin: round;
-    stroke: #4CAF50;
-    animation: bmStrokeCheck 0.35s cubic-bezier(0.65, 0, 0.45, 1) 0.9s forwards;
+    fill: none;
+    stroke-dasharray: 60;
+    stroke-dashoffset: 60;
+    animation: bm-success-check-draw 0.5s ease-out 0.35s forwards;
 }
 
-@keyframes bmStrokeCheck {
-    to {
-        stroke-dashoffset: 0;
-    }
+@keyframes bm-success-check-draw {
+    to { stroke-dashoffset: 0; }
 }
 
 .bm-success-title {
-    font-family: var(--font-serif), Georgia, serif;
-    font-size: 26px;
-    font-weight: 700;
-    color: var(--color-navy);
-    margin: 0 0 12px 0;
-    letter-spacing: -0.5px;
+    margin: 0 0 8px;
+    color: #0f172a;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
 }
 
 .bm-success-desc {
-    font-family: var(--font-primary);
-    font-size: 14px;
-    color: rgba(62, 47, 40, 0.65);
+    margin: 0 auto;
+    max-width: 360px;
+    color: #475569;
+    font-size: 14.5px;
     line-height: 1.6;
-    margin: 0 0 16px 0;
 }
 
 .bm-success-desc strong {
-    color: var(--color-navy);
-    font-weight: 700;
+    color: #1a2238;
 }
 
 .bm-success-booking-id {
-    display: inline-block;
-    padding: 8px 20px;
-    background: rgba(250, 245, 238, 0.8);
-    border: 1px solid rgba(212, 180, 131, 0.3);
-    border-radius: 20px;
-    font-family: var(--font-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 22px auto 6px;
+    padding: 9px 16px 9px 18px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #f8fafc, #eef2f7);
+    border: 1px dashed #cbd5e1;
+    color: #64748b;
     font-size: 13px;
-    color: rgba(62, 47, 40, 0.7);
-    margin-bottom: 28px;
+    font-weight: 600;
 }
 
 .bm-success-booking-id strong {
-    color: var(--color-navy);
-    font-weight: 700;
+    color: #1a2238;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
 }
 
 .bm-success-steps {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin-bottom: 32px;
-    padding: 20px;
-    background: rgba(250, 245, 238, 0.5);
-    border-radius: 16px;
-    border: 1px solid rgba(62, 47, 40, 0.06);
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    margin: 26px 0 24px;
+    padding: 0 4px;
+}
+
+.bm-success-steps::before {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 18%;
+    right: 18%;
+    height: 2px;
+    background-image: linear-gradient(to right, #cbd5e1 50%, transparent 50%);
+    background-size: 8px 2px;
+    background-repeat: repeat-x;
 }
 
 .bm-success-step {
-    display: flex;
+    display: flex !important;
     flex-direction: column;
-    align-items: center;
+    align-items: center !important;
     gap: 8px;
-    flex: 1;
+    position: relative;
+    z-index: 1;
 }
 
-.bm-success-step-num {
-    width: 28px;
-    height: 28px;
+.bm-success-step strong {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    background: var(--color-navy);
-    color: var(--color-gold);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-primary);
-    font-size: 12px;
-    font-weight: 700;
-    box-shadow: 0 2px 8px rgba(26, 34, 56, 0.2);
+    background: #fff;
+    border: 2px solid #cbd5e1;
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 800;
+    transition: all 0.2s ease;
+}
+
+.bm-success-step.is-active strong {
+    background: linear-gradient(135deg, #1a2238, #2a3654);
+    border-color: #1a2238;
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(26, 34, 56, 0.28);
 }
 
 .bm-success-step span {
-    font-family: var(--font-primary);
-    font-size: 11px;
+    color: #64748b;
+    font-size: 12px;
     font-weight: 600;
-    color: rgba(62, 47, 40, 0.6);
+    line-height: 1.35;
+    max-width: 110px;
     text-align: center;
-    line-height: 1.3;
+}
+
+.bm-success-step.is-active span {
+    color: #1a2238;
+    font-weight: 700;
 }
 
 .bm-success-close-btn {
-    padding: 14px 40px;
-    background: var(--color-navy);
-    border: none;
+    width: 100%;
+    margin-top: 4px;
+    padding: 12px 18px;
     border-radius: 12px;
-    font-family: var(--font-primary);
-    font-size: 15px;
+    border: none;
+    background: linear-gradient(135deg, #1a2238, #2a3654);
+    color: #fff;
+    font-size: 14.5px;
     font-weight: 700;
-    color: var(--color-gold);
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px rgba(26, 34, 56, 0.22);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 15px rgba(26, 34, 56, 0.25);
-    letter-spacing: 0.3px;
 }
 
 .bm-success-close-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(26, 34, 56, 0.35);
-    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(26, 34, 56, 0.28);
+    filter: brightness(1.08);
+}
+
+.bm-success-close-btn:active {
+    transform: translateY(0);
+    filter: brightness(0.95);
 }
 
 /* ===== ERROR TOAST ===== */
@@ -1419,13 +1454,16 @@
         border-radius: 20px;
     }
 
-    .bm-success-steps {
-        flex-direction: column;
-        gap: 12px;
+    .bm-success-content {
+        padding: 32px 22px 22px;
     }
 
-    .bm-success-step {
-        flex-direction: row;
-        gap: 12px;
+    .bm-success-title {
+        font-size: 21px;
+    }
+
+    .bm-success-step span {
+        font-size: 11px;
+        max-width: 90px;
     }
 }
