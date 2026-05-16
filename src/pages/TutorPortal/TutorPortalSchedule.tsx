@@ -107,7 +107,12 @@ const TutorPortalSchedule: React.FC = () => {
         } catch (error: unknown) {
             const axiosError = error as { response?: { status?: number } };
             if (axiosError.response?.status !== 404) {
-                toast.error("Không thể tải lịch rảnh. Vui lòng thử lại.");
+                // toastId dedupe — tránh double-fire khi React StrictMode chạy
+                // effect 2 lần ở dev mode. Cùng toastId → react-toastify chỉ
+                // render 1 toast tại 1 thời điểm.
+                toast.error("Không thể tải lịch rảnh. Vui lòng thử lại.", {
+                    toastId: 'load-availability-error',
+                });
             }
         } finally {
             setIsLoadingAvailability(false);
@@ -124,7 +129,9 @@ const TutorPortalSchedule: React.FC = () => {
             setCalendarData(response.content || []);
         } catch (error: unknown) {
             console.error("fetchCalendar error:", error);
-            toast.error("Không thể tải lịch dạy. Vui lòng thử lại.");
+            toast.error("Không thể tải lịch dạy. Vui lòng thử lại.", {
+                toastId: 'load-calendar-error',
+            });
         } finally {
             setIsLoadingLessons(false);
         }
