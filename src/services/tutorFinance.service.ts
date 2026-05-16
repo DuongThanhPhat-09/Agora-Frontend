@@ -106,7 +106,7 @@ export const getTransactionDetail = async (id: number): Promise<TutorTransaction
  */
 export const getBankInfo = async (): Promise<BankInfo> => {
     try {
-        const { data } = await api.get('/tutor/bank-info');
+        const { data } = await api.get('/tutor/bank');
         return data.content;
     } catch (error) {
         throw error;
@@ -117,7 +117,7 @@ export const getBankInfo = async (): Promise<BankInfo> => {
  * Update bank info
  */
 export const updateBankInfo = async (request: Partial<BankInfo>): Promise<BankInfo> => {
-    const { data } = await api.put('/tutor/bank-info', request);
+    const { data } = await api.put('/tutor/bank', request);
     return data.content;
 };
 

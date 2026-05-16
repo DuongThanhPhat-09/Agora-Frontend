@@ -3,7 +3,7 @@
  * Dùng cho "Xem thêm" pagination trong browser — fetch tiếp từ frontend
  * mà không cần navigate đổi URL (giữ nguyên scroll position).
  *
- * Endpoint cùng `/api/tutor-search` AllowAnonymous; gọi qua relative URL
+ * Endpoint cùng `/api/tutors/search` AllowAnonymous; gọi qua relative URL
  * để tận dụng same-origin (browser → Next 3000 → Vite 5173 proxy → Backend).
  */
 
@@ -19,7 +19,7 @@ export async function searchTutors(
 ): Promise<ApiResponse<TutorSearchPagedResponse>> {
   const queryParams = paramsToRecord(params);
   const search = new URLSearchParams(queryParams).toString();
-  const res = await fetch(`/api/tutor-search${search ? `?${search}` : ''}`, {
+  const res = await fetch(`/api/tutors/search${search ? `?${search}` : ''}`, {
     headers: { Accept: 'application/json' },
   });
   if (!res.ok) throw new Error(`Tutor search failed: ${res.status}`);

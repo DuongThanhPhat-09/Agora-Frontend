@@ -173,10 +173,10 @@ export const cancelBooking = async (bookingId: number, reason?: string): Promise
     }
 };
 
-/** GET /api/parent/bookings — Get list of parent bookings */
+/** GET /api/bookings — Get list of parent bookings (BE differentiates by JWT role) */
 export const getParentBookings = async (params: { page?: number; pageSize?: number; status?: string }): Promise<ApiResponse<{ items: BookingResponseDTO[], totalCount: number }>> => {
     try {
-        const response = await api.get('/parent/bookings', {
+        const response = await api.get('/bookings', {
             headers: getAuthHeaders(),
             params,
         });
@@ -223,7 +223,7 @@ export const declineBooking = async (bookingId: number, reason: string): Promise
     }
 };
 
-/** GET /api/bookings/:id/payment-info — Get payment link or wallet info */
+/** GET /api/bookings/:id/payment — Get payment link or wallet info */
 export interface PaymentInfoResponse {
     bookingId: number;
     paymentLinkId?: string;
@@ -251,7 +251,7 @@ export interface PaymentInfoResponse {
 
 export const getPaymentInfo = async (bookingId: number): Promise<ApiResponse<PaymentInfoResponse>> => {
     try {
-        const response = await api.get(`/bookings/${bookingId}/payment-info`, {
+        const response = await api.get(`/bookings/${bookingId}/payment`, {
             headers: getAuthHeaders(),
         });
         return response.data;
@@ -260,10 +260,10 @@ export const getPaymentInfo = async (bookingId: number): Promise<ApiResponse<Pay
     }
 };
 
-/** POST /api/bookings/:id/pay-with-wallet — Pay using internal wallet */
+/** POST /api/bookings/:id/pay/wallet — Pay using internal wallet */
 export const payWithWallet = async (bookingId: number): Promise<ApiResponse<any>> => {
     try {
-        const response = await api.post(`/bookings/${bookingId}/pay-with-wallet`, {}, {
+        const response = await api.post(`/bookings/${bookingId}/pay/wallet`, {}, {
             headers: getAuthHeaders(),
         });
         return response.data;
@@ -285,10 +285,10 @@ export interface PaymentStatusResponse {
     isRemainingPaid?: boolean;
 }
 
-/** GET /api/bookings/:id/payment-status — Check payment status */
+/** GET /api/bookings/:id/payment/status — Check payment status */
 export const getPaymentStatus = async (bookingId: number): Promise<ApiResponse<PaymentStatusResponse>> => {
     try {
-        const response = await api.get(`/bookings/${bookingId}/payment-status`, {
+        const response = await api.get(`/bookings/${bookingId}/payment/status`, {
             headers: getAuthHeaders(),
         });
         return response.data;

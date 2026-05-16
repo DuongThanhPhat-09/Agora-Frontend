@@ -152,14 +152,14 @@ export const getRecentActivities = async (
 
 /**
  * Get list of pending tutors for review
- * API: GET /api/Tutor/pending
+ * API: GET /api/tutors/pending
  */
 export const getPendingTutors = async (
   pageNumber: number = 1,
   pageSize: number = 10
 ): Promise<PendingTutorsAPIResponse> => {
   try {
-    const { data } = await api.get<PendingTutorsAPIResponse>('/Tutor/pending', {
+    const { data } = await api.get<PendingTutorsAPIResponse>('/tutors/pending', {
       params: { PageNumber: pageNumber, PageSize: pageSize },
     });
     return data;
@@ -171,7 +171,7 @@ export const getPendingTutors = async (
 
 /**
  * Get single pending tutor (từ danh sách pending đã fetch)
- * Không cần API riêng vì data đã đầy đủ từ /api/Tutor/pending
+ * Không cần API riêng vì data đã đầy đủ từ /api/tutors/pending
  */
 export const getPendingTutorById = async (
   tutorId: string
@@ -203,8 +203,8 @@ export const updateTutorApproval = async (
       isApproved,
       reason: reason || '',
     };
-    // AdminController has [Route("api/admin")], so endpoint is /api/admin/tutors/{id}/approval
-    const { data } = await api.put(`/admin/tutors/${tutorId}/approval`, requestBody);
+    // AdminController has [Route("api/admin")], so endpoint is /api/admin/tutors/{id}/approve
+    const { data } = await api.put(`/admin/tutors/${tutorId}/approve`, requestBody);
     return data;
   } catch (error) {
     console.error('updateTutorApproval error:', error);
@@ -304,14 +304,14 @@ export const verifyCredential = async (
 
 /**
  * Get list of disputes with optional filtering
- * Backend: GET /api/admin/dispute?status=&page=&pageSize=
+ * Backend: GET /api/admin/disputes?status=&page=&pageSize=
  * Returns APIResponse<PagedList<DisputeListDto>>
  */
 export const getDisputes = async (
   params?: DisputeQueryParams
 ): Promise<DisputeForAdmin[]> => {
   try {
-    const { data } = await api.get('/admin/dispute', { params });
+    const { data } = await api.get('/admin/disputes', { params });
     // Backend returns APIResponse<PagedList<T>> where PagedList serializes as array with pagination metadata
     return data.content || [];
   } catch (error) {
@@ -327,7 +327,7 @@ export const getDisputesLegacy = async (
   filters?: FilterParams
 ): Promise<DisputeListItem[]> => {
   try {
-    const { data } = await api.get('/admin/dispute', { params: filters });
+    const { data } = await api.get('/admin/disputes', { params: filters });
     return data.content || [];
   } catch (error) {
     console.error('getDisputesLegacy error:', error);
@@ -337,14 +337,14 @@ export const getDisputesLegacy = async (
 
 /**
  * Get detailed dispute information
- * Backend: GET /api/admin/dispute/{disputeId}
+ * Backend: GET /api/admin/disputes/{disputeId}
  * Returns APIResponse<DisputeDetailDto>
  */
 export const getDisputeDetail = async (
   disputeId: string | number
 ): Promise<DisputeDetail> => {
   try {
-    const { data } = await api.get(`/admin/dispute/${disputeId}`);
+    const { data } = await api.get(`/admin/disputes/${disputeId}`);
     return data.content;
   } catch (error) {
     console.error('getDisputeDetail error:', error);
@@ -354,7 +354,7 @@ export const getDisputeDetail = async (
 
 /**
  * Resolve dispute with admin decision
- * Backend: PUT /api/admin/dispute/{disputeId}/resolve
+ * Backend: PUT /api/admin/disputes/{disputeId}/resolve
  * Returns APIResponse<DisputeDetailDto>
  */
 export const resolveDispute = async (
@@ -362,7 +362,7 @@ export const resolveDispute = async (
   request: ResolveDisputeRequest
 ): Promise<DisputeDetail> => {
   try {
-    const { data } = await api.put(`/admin/dispute/${disputeId}/resolve`, request);
+    const { data } = await api.put(`/admin/disputes/${disputeId}/resolve`, request);
     return data.content;
   } catch (error) {
     console.error('resolveDispute error:', error);
@@ -372,7 +372,7 @@ export const resolveDispute = async (
 
 /**
  * Issue a warning to a user.
- * Backend: POST /api/admin/Warning/user/{userId}
+ * Backend: POST /api/admin/warnings/users/{userId}
  * BE DTO (CreateWarningRequest):
  *   - warningLevel: int (1 = minor, 2 = major)
  *   - reason: string (10-1000 chars, required)
@@ -401,7 +401,7 @@ export const issueWarning = async (
       reason,
       ...(relatedBookingId !== undefined ? { relatedBookingId } : {}),
     };
-    const { data } = await api.post(`/admin/Warning/user/${userid}`, body);
+    const { data } = await api.post(`/admin/warnings/users/${userid}`, body);
     return data;
   } catch (error) {
     console.error('issueWarning error:', error);
@@ -411,7 +411,7 @@ export const issueWarning = async (
 
 /**
  * Apply a suspension to a user.
- * Backend: POST /api/admin/Warning/user/{userId}/suspend
+ * Backend: POST /api/admin/warnings/users/{userId}/suspend
  * BE DTO (SuspensionRequest):
  *   - suspensionType: string (e.g. "temporary", "hidden_1_week", "account_locked")
  *   - reason: string (required)
@@ -430,7 +430,7 @@ export const suspendTutor = async (
       reason,
       ...(durationDays !== undefined ? { durationDays } : {}),
     };
-    const { data } = await api.post(`/admin/Warning/user/${userid}/suspend`, body);
+    const { data } = await api.post(`/admin/warnings/users/${userid}/suspend`, body);
     return data;
   } catch (error) {
     console.error('suspendTutor error:', error);
@@ -811,14 +811,14 @@ export const exportToCSV = async (
 
 /**
  * Get chat history for dispute
- * Backend: GET /api/admin/dispute/{disputeId}/chat
+ * Backend: GET /api/admin/disputes/{disputeId}/chat
  * Returns APIResponse<List<ChatMessageResponseDTO>>
  */
 export const getDisputeChatHistory = async (
   disputeId: string | number
 ): Promise<any[]> => {
   try {
-    const { data } = await api.get(`/admin/dispute/${disputeId}/chat`);
+    const { data } = await api.get(`/admin/disputes/${disputeId}/chat`);
     return data.content || [];
   } catch (error) {
     console.error('getDisputeChatHistory error:', error);
@@ -861,14 +861,14 @@ export const uploadDisputeEvidence = async (
 
 /**
  * Start investigating a dispute
- * Backend: PUT /api/admin/dispute/{disputeId}/investigate
+ * Backend: PUT /api/admin/disputes/{disputeId}/investigate
  * Returns APIResponse<DisputeDetailDto>
  */
 export const investigateDispute = async (
   disputeId: string | number
 ): Promise<DisputeDetail> => {
   try {
-    const { data } = await api.put(`/admin/dispute/${disputeId}/investigate`);
+    const { data } = await api.put(`/admin/disputes/${disputeId}/investigate`);
     return data.content;
   } catch (error) {
     console.error('investigateDispute error:', error);
@@ -878,12 +878,12 @@ export const investigateDispute = async (
 
 /**
  * Get dispute statistics
- * Backend: GET /api/admin/dispute/stats
+ * Backend: GET /api/admin/disputes/stats
  * Returns APIResponse<DisputeStatsDto>
  */
 export const getDisputeStats = async (): Promise<DisputeStatsDto> => {
   try {
-    const { data } = await api.get('/admin/dispute/stats');
+    const { data } = await api.get('/admin/disputes/stats');
     return data.content;
   } catch (error) {
     console.error('getDisputeStats error:', error);
@@ -898,7 +898,7 @@ export const getUserWarnings = async (
   userId: string
 ): Promise<ApiResponse<any>> => {
   try {
-    const { data } = await api.get(`/admin/warning/user/${userId}`);
+    const { data } = await api.get(`/admin/warnings/users/${userId}`);
     return data;
   } catch (error) {
     console.error('getUserWarnings error:', error);
@@ -913,7 +913,7 @@ export const unsuspendUser = async (
   userId: string
 ): Promise<ApiResponse<any>> => {
   try {
-    const { data } = await api.put(`/admin/warning/user/${userId}/unsuspend`);
+    const { data } = await api.put(`/admin/warnings/users/${userId}/unsuspend`);
     return data;
   } catch (error) {
     console.error('unsuspendUser error:', error);
@@ -929,7 +929,7 @@ export const getActiveSuspensions = async (
   pageSize: number = 10
 ): Promise<ApiResponse<any>> => {
   try {
-    const { data } = await api.get('/admin/warning/suspensions', {
+    const { data } = await api.get('/admin/warnings/suspensions', {
       params: { page, pageSize },
     });
     return data;

@@ -36,7 +36,7 @@ export interface ApiResponse<T> {
  */
 export const getMyNotifications = async (): Promise<NotificationDTO[]> => {
     try {
-        const response = await api.get('/notifications/my-notifications', {
+        const response = await api.get('/notifications/mine', {
             headers: getAuthHeaders(),
         });
         return Array.isArray(response.data) ? response.data : (response.data?.content || []);
@@ -51,7 +51,7 @@ export const getMyNotifications = async (): Promise<NotificationDTO[]> => {
  */
 export const getUnreadNotifications = async (): Promise<NotificationDTO[]> => {
     try {
-        const response = await api.get('/notifications/my-notifications/unread', {
+        const response = await api.get('/notifications/mine/unread', {
             headers: getAuthHeaders(),
         });
         return response.data;
@@ -66,7 +66,7 @@ export const getUnreadNotifications = async (): Promise<NotificationDTO[]> => {
  */
 export const getUnreadCount = async (): Promise<number> => {
     try {
-        const response = await api.get('/notifications/my-notifications/unread-count', {
+        const response = await api.get('/notifications/mine/unread-count', {
             headers: getAuthHeaders(),
         });
         // Backend returns: { unreadCount: number }
@@ -83,7 +83,7 @@ export const getUnreadCount = async (): Promise<number> => {
  */
 export const markAsRead = async (notificationId: number): Promise<void> => {
     try {
-        await api.put(`/notifications/${notificationId}/mark-read`, null, {
+        await api.put(`/notifications/${notificationId}/read`, null, {
             headers: getAuthHeaders(),
         });
     } catch (error: any) {
@@ -97,7 +97,7 @@ export const markAsRead = async (notificationId: number): Promise<void> => {
  */
 export const markAllAsRead = async (): Promise<void> => {
     try {
-        await api.put('/notifications/mark-all-read', null, {
+        await api.put('/notifications/read-all', null, {
             headers: getAuthHeaders(),
         });
     } catch (error: any) {
@@ -125,7 +125,7 @@ export const deleteNotification = async (notificationId: number): Promise<void> 
  */
 export const deleteAllMyNotifications = async (): Promise<void> => {
     try {
-        await api.delete('/notifications/my-notifications', {
+        await api.delete('/notifications/mine', {
             headers: getAuthHeaders(),
         });
     } catch (error: any) {

@@ -119,7 +119,7 @@ export interface CalendarDayDto {
  */
 export const getPendingLessons = async (): Promise<ApiResponse<PendingLessonDto[]>> => {
   try {
-    const response = await api.get('/parentlesson/pending', {
+    const response = await api.get('/parent/lessons/pending', {
       headers: getAuthHeaders(),
     });
     return response.data;
@@ -136,7 +136,7 @@ export const getParentLessonDetail = async (
   lessonId: number
 ): Promise<ApiResponse<LessonDetailDto>> => {
   try {
-    const response = await api.get(`/parentlesson/${lessonId}`, {
+    const response = await api.get(`/parent/lessons/${lessonId}`, {
       headers: getAuthHeaders(),
     });
     return response.data;
@@ -153,7 +153,7 @@ export const confirmLesson = async (
   lessonId: number
 ): Promise<ApiResponse<SettlementResultDto>> => {
   try {
-    const response = await api.put(`/parentlesson/${lessonId}/confirm`, {}, {
+    const response = await api.put(`/parent/lessons/${lessonId}/confirm`, {}, {
       headers: getAuthHeaders(),
     });
     return response.data;
@@ -171,7 +171,7 @@ export const createDispute = async (
   request: CreateDisputeRequest
 ): Promise<ApiResponse<DisputeDetailDto>> => {
   try {
-    const response = await api.post(`/parentlesson/${lessonId}/dispute`, request, {
+    const response = await api.post(`/parent/lessons/${lessonId}/dispute`, request, {
       headers: getAuthHeaders(),
     });
     return response.data;
@@ -189,7 +189,7 @@ export const getParentDisputes = async (
   pageSize: number = 10
 ): Promise<ApiResponse<PagedList<DisputeListDto>>> => {
   try {
-    const response = await api.get('/parentlesson/disputes', {
+    const response = await api.get('/parent/lessons/disputes', {
       headers: getAuthHeaders(),
       params: { page, pageSize },
     });
@@ -207,7 +207,7 @@ export const reportNoShow = async (
   lessonId: number
 ): Promise<ApiResponse<LessonDetailDto>> => {
   try {
-    const response = await api.post(`/parentlesson/${lessonId}/report-noshow`, {}, {
+    const response = await api.post(`/parent/lessons/${lessonId}/report-noshow`, {}, {
       headers: getAuthHeaders(),
     });
     return response.data;
@@ -225,7 +225,7 @@ export const processNoShowAction = async (
   request: NoShowActionRequest
 ): Promise<ApiResponse<NoShowActionResultDto>> => {
   try {
-    const response = await api.put(`/parentlesson/${lessonId}/noshow-action`, request, {
+    const response = await api.put(`/parent/lessons/${lessonId}/noshow-action`, request, {
       headers: getAuthHeaders(),
     });
     return response.data;
@@ -246,7 +246,7 @@ export const uploadDisputeEvidence = async (
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await api.post(`/parentlesson/${lessonId}/evidence`, formData, {
+    const response = await api.post(`/parent/lessons/${lessonId}/evidence`, formData, {
       headers: {
         ...getAuthHeaders(),
         'Content-Type': 'multipart/form-data',
@@ -271,7 +271,7 @@ export const getParentCalendar = async (
     if (startDate) params.startDate = startDate;
     if (endDate) params.endDate = endDate;
 
-    const response = await api.get('/parentlesson/calendar', {
+    const response = await api.get('/parent/lessons/calendar', {
       headers: getAuthHeaders(),
       params,
     });

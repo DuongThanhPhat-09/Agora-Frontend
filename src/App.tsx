@@ -132,7 +132,7 @@ function App() {
     // Thử silent refresh trước khi show modal
     if (user.refreshToken) {
       try {
-        const response = await axios.post(`${BACKEND_API}/token/refresh`, {
+        const response = await axios.post(`${BACKEND_API}/tokens/refresh`, {
           accessToken: user.accessToken,
           refreshToken: user.refreshToken,
         });

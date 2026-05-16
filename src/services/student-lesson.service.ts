@@ -124,7 +124,7 @@ export const getStudentBookings = async (params: {
     status?: string;
 }): Promise<ApiResponse<{ items: any[]; totalCount: number }>> => {
     try {
-        const response = await api.get('/student/bookings', {
+        const response = await api.get('/bookings', {
             headers: getAuthHeaders(),
             params,
         });

@@ -41,7 +41,7 @@ export const submitVerification = async (
             BackImgPath: backImagePath
         };
 
-        const response = await api.post('/tutor-verification/submit', payload);
+        const response = await api.post('/tutors/verification/submit', payload);
 
         console.log('✅ Verification API response:', response.data);
 
@@ -90,7 +90,10 @@ export const submitVerification = async (
  */
 export const getVerificationStatus = async (): Promise<VerificationResponse | null> => {
     try {
-        const response = await api.get('/tutor-verification/status');
+        // Note: endpoint này không có trong ENDPOINT_MAPPING.md — suy luận theo
+        // pattern `/tutor-verification/*` → `/tutors/verification/*`. Nếu BE
+        // không expose, hàm gracefully trả null qua catch bên dưới.
+        const response = await api.get('/tutors/verification/status');
         return response.data;
     } catch (error: any) {
         console.error('❌ Error getting verification status:', error);

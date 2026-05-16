@@ -14,7 +14,7 @@ import {
  * vào HTTP cache. Cùng request từ nhiều user trong vòng `revalidate` giây sẽ chia
  * sẻ cùng response → giảm tải backend cho trang public.
  *
- * Endpoint: GET /api/tutor-search (AllowAnonymous, không cần auth header).
+ * Endpoint: GET /api/tutors/search (AllowAnonymous, không cần auth header).
  */
 
 const REVALIDATE_SECONDS = 120; // 2 phút — đủ tươi cho danh sách tutor public
@@ -22,7 +22,7 @@ const REVALIDATE_SECONDS = 120; // 2 phút — đủ tươi cho danh sách tutor
 export async function searchTutorsServer(
   params: TutorSearchParams = {}
 ): Promise<ApiResponse<TutorSearchPagedResponse>> {
-  const url = new URL('/api/tutor-search', env.BACKEND_URL);
+  const url = new URL('/api/tutors/search', env.BACKEND_URL);
   const queryParams = paramsToRecord(params);
   Object.entries(queryParams).forEach(([k, v]) => url.searchParams.set(k, v));
 

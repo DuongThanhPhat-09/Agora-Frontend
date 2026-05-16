@@ -70,8 +70,8 @@ const LoginForm: React.FC = () => {
     try {
       setIsSubmitting(true);
 
-      // Call SimpleAuth login API directly (no Supabase)
-      const response = await axios.post(`${API_BASE_URL}/SimpleAuth/login`, {
+      // Call auth login API directly (no Supabase)
+      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
         emailOrPhone: formData.email,
         password: formData.password,
       });

@@ -119,14 +119,14 @@ export const sendMessageREST = async (
   }
 };
 
-/** POST /api/chat/channels/:id/upload-image — Upload image and send as chat message */
+/** POST /api/chat/channels/:id/images — Upload image and send as chat message */
 export const uploadChatImage = async (channelId: number, file: File): Promise<ApiResponse<ChatMessage>> => {
   try {
     const formData = new FormData();
     formData.append('file', file);
 
     const authHeaders = getAuthHeaders();
-    const response = await api.post(`/chat/channels/${channelId}/upload-image`, formData, {
+    const response = await api.post(`/chat/channels/${channelId}/images`, formData, {
       headers: {
         ...authHeaders,
         'Content-Type': 'multipart/form-data',

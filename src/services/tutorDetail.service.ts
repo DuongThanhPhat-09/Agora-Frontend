@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // ============================================
 // Tutor Detail API Service
-// GET /api/tutors/{id}/full-profile-landing-page (AllowAnonymous)
+// GET /api/tutors/{id}/full-profile (AllowAnonymous)
 // Uses Vite proxy → backend
 // ============================================
 
@@ -132,7 +132,7 @@ export interface ApiResponse<T> {
 
 /**
  * Get full tutor profile for public display (tutor detail / landing page)
- * GET /api/tutors/{tutorId}/full-profile-landing-page
+ * GET /api/tutors/{tutorId}/full-profile
  */
 export const getTutorFullProfile = async (
     tutorId: string
@@ -141,7 +141,7 @@ export const getTutorFullProfile = async (
         console.log('📄 Fetching tutor full profile for:', tutorId);
 
         const response = await api.get<ApiResponse<TutorFullProfile>>(
-            `/Tutor/${tutorId}/full-profile-landing-page`
+            `/tutors/${tutorId}/full-profile`
         );
 
         console.log('✅ Tutor full profile fetched:', response.data);
