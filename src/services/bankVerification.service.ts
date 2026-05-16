@@ -38,7 +38,7 @@ export const requestVerification = async (params: {
     accountNumber: string;
 }): Promise<any> => {
     try {
-        const { data } = await api.post('/tutor/bank-info/request-verify', params);
+        const { data } = await api.post('/tutor/bank-verification/request', params);
         return data.content;
     } catch (error) {
         throw error;
@@ -52,7 +52,7 @@ export const confirmVerification = async (params: {
     verificationCode: string;
 }): Promise<any> => {
     try {
-        const { data } = await api.post('/tutor/bank-info/confirm-verify', params);
+        const { data } = await api.post('/tutor/bank-verification/confirm', params);
         return data.content;
     } catch (error) {
         throw error;
@@ -64,7 +64,7 @@ export const confirmVerification = async (params: {
  */
 export const getVerificationStatus = async (): Promise<BankVerificationStatus> => {
     try {
-        const { data } = await api.get('/tutor/bank-info/verify-status');
+        const { data } = await api.get('/tutor/bank-verification/status');
         return data.content;
     } catch (error) {
         throw error;

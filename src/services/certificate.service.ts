@@ -99,7 +99,7 @@ export const uploadCertificate = async (
         }
 
         const response = await api.post(
-            `/tutor-verification/${userId}/tutor-profile/certificates`,
+            `/tutors/${userId}/profile/certificates`,
             formData,
             {
                 headers: {
@@ -140,7 +140,7 @@ export const submitCertificateForReview = async (
 ): Promise<{ success: boolean; message: string; alreadyPending?: boolean }> => {
     try {
         const response = await api.post(
-            `/tutor-verification/${userId}/submit-for-review`,
+            `/tutors/${userId}/submit-for-review`,
             { certificateId }
         );
 
@@ -180,7 +180,7 @@ export const submitCertificateForReview = async (
  */
 export const getTutorCertificates = async (userId: string): Promise<CertificateData[]> => {
     try {
-        const response = await api.get(`/tutor-verification/${userId}/tutor-profile/certificates`);
+        const response = await api.get(`/tutors/${userId}/profile/certificates`);
         return response.data.content || [];
     } catch (error: any) {
         console.error('❌ Get certificates error:', error);
@@ -200,7 +200,7 @@ export const deleteCertificate = async (
 ): Promise<{ success: boolean; message: string }> => {
     try {
         const response = await api.delete(
-            `/tutor-verification/${userId}/tutor-profile/certificates/${certificateId}`
+            `/tutors/${userId}/profile/certificates/${certificateId}`
         );
 
         return {

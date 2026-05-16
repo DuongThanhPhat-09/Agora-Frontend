@@ -64,7 +64,7 @@ export const setupAuthInterceptor = (axiosInstance: AxiosInstance): AxiosInstanc
         }
 
         // Dùng axios gốc (không qua intercepted instance) để tránh vòng lặp
-        const response = await axios.post(`${API_BASE_URL}/token/refresh`, {
+        const response = await axios.post(`${API_BASE_URL}/tokens/refresh`, {
           accessToken: user.accessToken,
           refreshToken: user.refreshToken,
         });

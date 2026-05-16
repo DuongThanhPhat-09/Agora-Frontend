@@ -123,7 +123,7 @@ async function parseResponseBody(res: Response) {
 async function refreshTokens(user: StoredUser) {
   if (!user.accessToken || !user.refreshToken) return null;
 
-  const res = await fetch(`${env.API_URL}/token/refresh`, {
+  const res = await fetch(`${env.API_URL}/tokens/refresh`, {
     method: 'POST',
     headers: {
       Accept: 'application/json',

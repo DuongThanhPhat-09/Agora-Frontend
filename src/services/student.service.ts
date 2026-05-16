@@ -98,7 +98,7 @@ export const updateParentStudent = async (id: string, payload: IUpdateParentStud
 
 export const generateLinkCode = async (studentId: string): Promise<ApiResponse<StudentType>> => {
   try {
-    const response = await api.post(`/parent/students/${studentId}/link-code`, {}, {
+    const response = await api.post(`/parent/students/${studentId}/generate-link-code`, {}, {
       headers: getAuthHeaders(),
     });
     return response.data;
@@ -110,7 +110,7 @@ export const generateLinkCode = async (studentId: string): Promise<ApiResponse<S
 
 export const linkWithCode = async (code: string): Promise<ApiResponse<StudentType>> => {
   try {
-    const response = await api.post(`/parent/students/link-with-code`, { code }, {
+    const response = await api.post(`/parent/students/link`, { code }, {
       headers: getAuthHeaders(),
     });
     return response.data;
@@ -122,7 +122,7 @@ export const linkWithCode = async (code: string): Promise<ApiResponse<StudentTyp
 
 export const getParentBookings = async (params: IGetBookingParams = { page: 1, pageSize: 10 }) => {
   try {
-    const response = await api.get(`/parent/bookings`, {
+    const response = await api.get(`/bookings`, {
       headers: getAuthHeaders(),
       params,
     });
@@ -176,7 +176,7 @@ export const createParentStudentWithCredentials = async (
  */
 export const generateParentCode = async (): Promise<ApiResponse<{ parentCode: string }>> => {
   try {
-    const response = await api.post(`/parent/students/parent-code`, {}, {
+    const response = await api.post(`/parent/students/generate-parent-code`, {}, {
       headers: getAuthHeaders(),
     });
     return response.data;
@@ -213,7 +213,7 @@ export interface LinkStatusResponse {
  */
 export const getMyLinkStatus = async (): Promise<ApiResponse<LinkStatusResponse>> => {
   try {
-    const response = await api.get(`/parent/students/my-link-status`, {
+    const response = await api.get(`/parent/students/link-status`, {
       headers: getAuthHeaders(),
     });
     return response.data;

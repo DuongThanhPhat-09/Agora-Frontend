@@ -54,7 +54,7 @@ export interface PaymentStatusDTO {
 
 /** Get payment information for a booking (QR code, checkout URL, wallet balance) */
 export const getPaymentInfo = async (bookingId: number): Promise<PaymentInfoDTO> => {
-    const response = await api.get(`/bookings/${bookingId}/payment-info`, {
+    const response = await api.get(`/bookings/${bookingId}/payment`, {
         headers: getAuthHeaders(),
     });
     // Backend wraps in APIResponse<T> with { statusCode, content, ... }
@@ -63,7 +63,7 @@ export const getPaymentInfo = async (bookingId: number): Promise<PaymentInfoDTO>
 
 /** Get current payment status for a booking */
 export const getPaymentStatus = async (bookingId: number): Promise<PaymentStatusDTO> => {
-    const response = await api.get(`/bookings/${bookingId}/payment-status`, {
+    const response = await api.get(`/bookings/${bookingId}/payment/status`, {
         headers: getAuthHeaders(),
     });
     return response.data.content ?? response.data;
@@ -71,7 +71,7 @@ export const getPaymentStatus = async (bookingId: number): Promise<PaymentStatus
 
 /** Pay for a booking using wallet balance */
 export const payWithWallet = async (bookingId: number): Promise<ApiResponse<any>> => {
-    const response = await api.post(`/bookings/${bookingId}/pay-with-wallet`, null, {
+    const response = await api.post(`/bookings/${bookingId}/pay/wallet`, null, {
         headers: getAuthHeaders(),
     });
     return response.data;

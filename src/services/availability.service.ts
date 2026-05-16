@@ -79,13 +79,13 @@ export const DAY_OF_WEEK_MAP_EN: Record<number, string> = {
 
 /**
  * Get availability slots for the currently authenticated tutor
- * GET /api/tutor/availability (requires Auth, tutorId from JWT)
+ * GET /api/tutor/availabilities (requires Auth, tutorId from JWT)
  *
  * Use this when the tutor views their OWN schedule (Tutor Portal).
  * @returns List of availability slots
  */
 export const getMyAvailability = async (): Promise<ApiResponse<AvailabilitySlot[]>> => {
-    const response = await api.get('/tutor/availability', {
+    const response = await api.get('/tutor/availabilities', {
         headers: getAuthHeaders()
     });
     return response.data;
@@ -93,14 +93,14 @@ export const getMyAvailability = async (): Promise<ApiResponse<AvailabilitySlot[
 
 /**
  * Get all availability slots for a specific tutor (public)
- * GET /api/tutor/availability/{tutorId}
+ * GET /api/tutor/availabilities/{tutorId}
  *
  * Use this when parents/students view a tutor's schedule.
  * @param tutorId - Tutor ID
  * @returns List of availability slots
  */
 export const getAvailability = async (tutorId: string): Promise<ApiResponse<AvailabilitySlot[]>> => {
-    const response = await api.get(`/tutor/availability/${tutorId}`, {
+    const response = await api.get(`/tutor/availabilities/${tutorId}`, {
         headers: getAuthHeaders()
     });
     return response.data;
@@ -108,7 +108,7 @@ export const getAvailability = async (tutorId: string): Promise<ApiResponse<Avai
 
 /**
  * Create a new availability slot
- * POST /api/tutor/availability
+ * POST /api/tutor/availabilities
  *
  * @param data - Availability slot data
  * @returns Created availability slot
@@ -117,7 +117,7 @@ export const createAvailability = async (
     data: CreateAvailabilityData
 ): Promise<ApiResponse<AvailabilitySlot>> => {
     const response = await api.post(
-        '/tutor/availability',
+        '/tutor/availabilities',
         data,
         {
             headers: {
@@ -131,7 +131,7 @@ export const createAvailability = async (
 
 /**
  * Update an availability slot
- * PUT /api/tutor/availability/{id}
+ * PUT /api/tutor/availabilities/{id}
  *
  * @param availabilityId - Availability slot ID
  * @param data - Updated availability slot data
@@ -142,7 +142,7 @@ export const updateAvailability = async (
     data: CreateAvailabilityData
 ): Promise<ApiResponse<AvailabilitySlot>> => {
     const response = await api.put(
-        `/tutor/availability/${availabilityId}`,
+        `/tutor/availabilities/${availabilityId}`,
         data,
         {
             headers: {
@@ -156,7 +156,7 @@ export const updateAvailability = async (
 
 /**
  * Delete an availability slot
- * DELETE /api/tutor/availability/{id}
+ * DELETE /api/tutor/availabilities/{id}
  *
  * @param availabilityId - Availability slot ID
  * @returns API response
@@ -164,7 +164,7 @@ export const updateAvailability = async (
 export const deleteAvailability = async (
     availabilityId: number
 ): Promise<ApiResponse> => {
-    const response = await api.delete(`/tutor/availability/${availabilityId}`, {
+    const response = await api.delete(`/tutor/availabilities/${availabilityId}`, {
         headers: getAuthHeaders()
     });
     return response.data;

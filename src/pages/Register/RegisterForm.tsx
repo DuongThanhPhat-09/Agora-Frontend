@@ -71,8 +71,8 @@ const RegisterForm: React.FC = () => {
             // NOTE: Supabase Auth sync (auth.admin.createUser) đã được gỡ khỏi FE vì
             // yêu cầu service-role key — không an toàn để ship xuống browser.
             // Nếu cần đồng bộ user sang Supabase Auth (để hỗ trợ password reset qua
-            // Supabase email), backend phải làm trong endpoint /SimpleAuth/register.
-            const response = await axios.post(`${API_BASE_URL}/SimpleAuth/register`, {
+            // Supabase email), backend phải làm trong endpoint /auth/register.
+            const response = await axios.post(`${API_BASE_URL}/auth/register`, {
                 email: formData.email,
                 phone: formData.phone || undefined,
                 password: formData.password,

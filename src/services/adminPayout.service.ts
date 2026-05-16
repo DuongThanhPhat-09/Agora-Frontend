@@ -43,7 +43,7 @@ api.interceptors.request.use(
  */
 export const getPayoutOverview = async (): Promise<PayoutOverview> => {
     try {
-        const { data } = await api.get('/admin/payout/overview');
+        const { data } = await api.get('/admin/payouts/overview');
         return data.content;
     } catch (error) {
         throw error;
@@ -55,7 +55,7 @@ export const getPayoutOverview = async (): Promise<PayoutOverview> => {
  */
 export const getPayoutSummary = async (): Promise<AdminPayoutSummary> => {
     try {
-        const { data } = await api.get('/admin/payout/overview');
+        const { data } = await api.get('/admin/payouts/overview');
         return data.content;
     } catch (error) {
         throw error;
@@ -67,7 +67,7 @@ export const getPayoutSummary = async (): Promise<AdminPayoutSummary> => {
  */
 export const getPendingReview = async (page: number = 1, pageSize: number = 20): Promise<PendingReviewResponse> => {
     try {
-        const { data } = await api.get('/admin/payout/pending-review', {
+        const { data } = await api.get('/admin/payouts/pending', {
             params: { page, pageSize },
         });
         return data.content;
@@ -85,7 +85,7 @@ export const getWithdrawalRequests = async (
     status?: string
 ): Promise<WithdrawalRequestListResponse> => {
     try {
-        const { data } = await api.get('/admin/payout/requests', {
+        const { data } = await api.get('/admin/payouts', {
             params: { page, pageSize, status },
         });
         return data.content;
@@ -106,7 +106,7 @@ export const getAllPayoutRequests = async (params: {
     to?: string;
 }): Promise<WithdrawalListResponse> => {
     try {
-        const { data } = await api.get('/admin/payout/requests', { params });
+        const { data } = await api.get('/admin/payouts', { params });
         return data.content;
     } catch (error) {
         throw error;
@@ -118,7 +118,7 @@ export const getAllPayoutRequests = async (params: {
  */
 export const getPayoutRequestDetail = async (id: number): Promise<AdminWithdrawalDetail> => {
     try {
-        const { data } = await api.get(`/admin/payout/requests/${id}`);
+        const { data } = await api.get(`/admin/payouts/${id}`);
         return data.content;
     } catch (error) {
         throw error;
@@ -130,7 +130,7 @@ export const getPayoutRequestDetail = async (id: number): Promise<AdminWithdrawa
  */
 export const approvePayoutRequest = async (id: number, note?: string): Promise<ApproveResult> => {
     try {
-        const { data } = await api.post(`/admin/payout/requests/${id}/approve`, { note });
+        const { data } = await api.post(`/admin/payouts/${id}/approve`, { note });
         return data.content;
     } catch (error) {
         throw error;
@@ -142,7 +142,7 @@ export const approvePayoutRequest = async (id: number, note?: string): Promise<A
  */
 export const rejectPayoutRequest = async (id: number, reason: string): Promise<RejectResult> => {
     try {
-        const { data } = await api.post(`/admin/payout/requests/${id}/reject`, { reason });
+        const { data } = await api.post(`/admin/payouts/${id}/reject`, { reason });
         return data.content;
     } catch (error) {
         throw error;
@@ -153,7 +153,7 @@ export const rejectPayoutRequest = async (id: number, reason: string): Promise<R
  * Get current PayOS balance and alert levels
  */
 export const getPayOSBalance = async (): Promise<{ balance: number; currency: string; alertLevel: string }> => {
-    const { data } = await api.get('/admin/payout/payos-balance');
+    const { data } = await api.get('/admin/payouts/payos-balance');
     return data.content;
 };
 
@@ -170,7 +170,7 @@ export const getFraudLogs = async (params: {
     to?: string;
 }): Promise<FraudLogResponse> => {
     try {
-        const { data } = await api.get('/admin/payout/fraud-logs', { params });
+        const { data } = await api.get('/admin/payouts/fraud-logs', { params });
         return data.content;
     } catch (error) {
         throw error;
@@ -186,7 +186,7 @@ export const getSystemAlerts = async (params: {
     resolved?: boolean;
 }): Promise<SystemAlertResponse> => {
     try {
-        const { data } = await api.get('/admin/payout/system-alerts', { params });
+        const { data } = await api.get('/admin/system-alerts', { params });
         return data.content;
     } catch (error) {
         throw error;
@@ -198,7 +198,7 @@ export const getSystemAlerts = async (params: {
  */
 export const resolveSystemAlert = async (id: number): Promise<void> => {
     try {
-        await api.post(`/admin/payout/system-alerts/${id}/resolve`);
+        await api.post(`/admin/system-alerts/${id}/resolve`);
     } catch (error) {
         throw error;
     }

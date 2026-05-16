@@ -152,7 +152,7 @@ export const searchTutors = async (
         });
 
         const response = await api.get<ApiResponse<TutorSearchPagedResponse>>(
-            '/tutor-search',
+            '/tutors/search',
             { params: queryParams }
         );
 
