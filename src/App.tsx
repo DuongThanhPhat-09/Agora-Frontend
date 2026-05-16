@@ -16,8 +16,10 @@ import axios from 'axios';
 import { getCurrentUser, isTokenExpired, updateTokens, clearUserFromStorage } from './services/auth.service';
 
 const BACKEND_API = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5166') + '/api';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, Slide } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+// TUTORA brand override — phải import SAU default CSS để cascade thắng.
+import './styles/toastify.css';
 
 // --- Lazy-loaded pages ---
 // Public
@@ -162,7 +164,19 @@ function App() {
         isOpen={showSessionExpired}
         onClose={() => setShowSessionExpired(false)}
       />
-      <ToastContainer position="top-right" autoClose={5000} style={{ zIndex: 99999 }} />
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        limit={3}
+        theme="light"
+        transition={Slide}
+        closeOnClick
+        pauseOnHover
+        pauseOnFocusLoss
+        newestOnTop
+        draggable
+        style={{ zIndex: 99999 }}
+      />
 
       <ErrorBoundary>
       <Suspense fallback={<PageLoader />}>
