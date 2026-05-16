@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { PortalLayout } from '../components/shared/PortalLayout';
 import type { NavItem } from '../components/shared/PortalLayout';
 import styles from '../components/shared/PortalLayout/PortalLayout.module.css';
 import { getTourStatus, completeTour } from '../services/auth.service';
 import TutorTour, { type TourStep } from '../components/TutorTour/TutorTour';
+import { useUnreadMessageBadge } from '../hooks/useUnreadMessageBadge';
+
+const MESSAGES_PATH = '/tutor-portal/messages';
 
 // ─── Tutor-specific SVG Icons ───
 
@@ -69,10 +72,12 @@ const AccountIcon = () => (
 
 // ─── Navigation items ───
 
-const navItems: NavItem[] = [
+// Static base list — chỉ chứa các field không thay đổi runtime. Badge được
+// inject dynamically trong component qua `useUnreadMessageBadge`.
+const baseNavItems: NavItem[] = [
     { path: '/tutor-portal/dashboard', label: 'Tổng quan', icon: DashboardIcon, dataTour: 'nav-dashboard' },
     { path: '/tutor-portal/profile', label: 'Hồ sơ công khai', icon: ProfileIcon, dataTour: 'nav-profile' },
-    { path: '/tutor-portal/messages', label: 'Tin nhắn', icon: MessagesIcon, dataTour: 'nav-messages' },
+    { path: MESSAGES_PATH, label: 'Tin nhắn', icon: MessagesIcon, dataTour: 'nav-messages' },
     { path: '/tutor-portal/bookings', label: 'Yêu cầu đặt lịch', icon: BookingIcon, dataTour: 'nav-bookings' },
     { path: '/tutor-portal/schedule', label: 'Lịch dạy', icon: ScheduleIcon, dataTour: 'nav-schedule' },
     { path: '/tutor-portal/classes', label: 'Quản lý lớp học', icon: ClassIcon, dataTour: 'nav-classes' },
@@ -170,6 +175,16 @@ const TutorPortalLayout: React.FC = () => {
     const [showTour, setShowTour] = useState(false);
     const [showTourPrompt, setShowTourPrompt] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    // Tin nhắn unread badge — fetch + SignalR real-time + auto-clear khi vào /messages.
+    const unreadMessageCount = useUnreadMessageBadge(MESSAGES_PATH);
+    const navItems = useMemo<NavItem[]>(
+        () =>
+            baseNavItems.map((item) =>
+                item.path === MESSAGES_PATH ? { ...item, badge: unreadMessageCount } : item,
+            ),
+        [unreadMessageCount],
+    );
 
     // Show tour prompt only on first visit to dashboard
     useEffect(() => {

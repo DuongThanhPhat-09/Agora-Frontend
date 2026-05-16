@@ -1,20 +1,23 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { PortalLayout } from '../../components/shared/PortalLayout';
 import type { NavItem } from '../../components/shared/PortalLayout';
 import { getUserInfoFromToken } from '../../services/auth.service';
 import { StudentProvider, useStudentContext } from '../../contexts/StudentContext';
 import { useNextLesson } from '../shared/useLayoutData';
+import { useUnreadMessageBadge } from '../../hooks/useUnreadMessageBadge';
 import {
     DashboardIcon, ChildrenIcon, MessagesIcon, BookingIcon,
     AccountIcon, LessonsIcon, CalendarIcon, ClockIcon,
 } from '../shared/icons';
 
-const parentNavItems: NavItem[] = [
+const MESSAGES_PATH = '/parent-portal/messages';
+
+const baseParentNavItems: NavItem[] = [
     { path: '/parent-portal/dashboard', label: 'Tổng quan', icon: DashboardIcon },
     { path: '/parent-portal/student', label: 'Quản lý con', icon: ChildrenIcon },
     { path: '/parent-portal/lessons', label: 'Buổi học', icon: LessonsIcon },
     { path: '/parent-portal/calendar', label: 'Thời khóa biểu', icon: CalendarIcon },
-    { path: '/parent-portal/messages', label: 'Tin nhắn', icon: MessagesIcon },
+    { path: MESSAGES_PATH, label: 'Tin nhắn', icon: MessagesIcon },
     { path: '/parent-portal/booking', label: 'Đặt lịch', icon: BookingIcon },
     { path: '/parent-portal/account', label: 'Tài khoản', icon: AccountIcon },
 ];
@@ -59,9 +62,19 @@ const ParentLayoutInner: React.FC<ParentLayoutProps> = ({ children }) => {
     // Activate student context (side effects)
     useStudentContext();
 
+    // Tin nhắn unread badge — sidebar nav
+    const unreadMessageCount = useUnreadMessageBadge(MESSAGES_PATH);
+    const navItems = useMemo<NavItem[]>(
+        () =>
+            baseParentNavItems.map((item) =>
+                item.path === MESSAGES_PATH ? { ...item, badge: unreadMessageCount } : item,
+            ),
+        [unreadMessageCount],
+    );
+
     return (
         <PortalLayout
-            navItems={parentNavItems}
+            navItems={navItems}
             userRole="PARENT"
             headerLeft={<NextLessonIndicator />}
             showSidebarUserCard={false}
