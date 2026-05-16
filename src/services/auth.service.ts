@@ -243,7 +243,7 @@ export const loginToBackend = async (accessToken: string, password: string) => {
   try {
     console.log("Gửi yêu cầu đăng nhập thủ công Backend...");
 
-    const response = await api.post("/auth/login-supabase", {
+    const response = await api.post("/auth/supabase/login", {
       accessToken: accessToken,
       password: password,
     });
@@ -258,7 +258,7 @@ export const loginWithOAuth = async (accessToken: string, email: string) => {
   try {
     console.log("Gửi yêu cầu đăng nhập OAuth Backend...");
 
-    const response = await api.post("/auth/login-supabase", {
+    const response = await api.post("/auth/supabase/login", {
       accessToken: accessToken,
       email: email,
     });
@@ -278,7 +278,7 @@ export const loginManual = async (accessToken: string, password: string) => {
       password: password
     };
 
-    const response = await api.post("/auth/login-supabase", payload);
+    const response = await api.post("/auth/supabase/login", payload);
     return response.data;
   } catch (error) {
     throw error;
@@ -298,8 +298,8 @@ export const registerUserToBackend = async (supabaseToken: string, password: str
       role: role
     };
 
-    // Endpoint: /api/auth/register-supabase
-    const response = await api.post("/auth/register-supabase", payload);
+    // Endpoint: /api/auth/supabase/register
+    const response = await api.post("/auth/supabase/register", payload);
     console.log("✅ Backend registration successful:", response.data);
     return response.data;
   } catch (error: any) {
@@ -382,7 +382,7 @@ export const simpleRegister = async (data: {
 }) => {
   try {
     console.log("🔐 Simple Register...");
-    const response = await api.post("/SimpleAuth/register", data);
+    const response = await api.post("/auth/register", data);
     console.log("✅ Register successful:", response.data);
     return response.data;
   } catch (error: any) {
@@ -394,7 +394,7 @@ export const simpleRegister = async (data: {
 export const simpleLogin = async (emailOrPhone: string, password: string) => {
   try {
     console.log("🔐 Simple Login...");
-    const response = await api.post("/SimpleAuth/login", {
+    const response = await api.post("/auth/login", {
       emailOrPhone,
       password,
     });

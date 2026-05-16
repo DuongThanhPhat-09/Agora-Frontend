@@ -5,7 +5,7 @@ import type { ApiResponse, TutorFullProfile } from './tutorDetail.types';
 /**
  * Server-only tutor full profile fetcher.
  *
- * Endpoint: GET /api/Tutor/{id}/full-profile-landing-page (AllowAnonymous).
+ * Endpoint: GET /api/tutors/{id}/full-profile (AllowAnonymous).
  *
  * Cache: revalidate 300s (5 phút) — profile gia sư không đổi thường xuyên,
  * cache lâu hơn list search (120s) để giảm tải backend cho trang SEO chủ lực.
@@ -26,7 +26,7 @@ export class TutorNotFoundError extends Error {
 export async function getTutorFullProfileServer(
   tutorId: string
 ): Promise<ApiResponse<TutorFullProfile>> {
-  const url = `${env.BACKEND_URL}/api/Tutor/${encodeURIComponent(tutorId)}/full-profile-landing-page`;
+  const url = `${env.BACKEND_URL}/api/tutors/${encodeURIComponent(tutorId)}/full-profile`;
 
   const res = await fetch(url, {
     headers: { Accept: 'application/json' },

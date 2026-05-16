@@ -81,7 +81,7 @@ export const createFeedback = async (
   request: CreateFeedbackRequest
 ): Promise<ApiResponse<FeedbackDto>> => {
   try {
-    const response = await api.post('/feedback', request, {
+    const response = await api.post('/feedbacks', request, {
       headers: getAuthHeaders(),
     });
     return response.data;
@@ -99,7 +99,7 @@ export const replyFeedback = async (
   request: ReplyFeedbackRequest
 ): Promise<ApiResponse<FeedbackDto>> => {
   try {
-    const response = await api.put(`/feedback/${feedbackId}/reply`, request, {
+    const response = await api.put(`/feedbacks/${feedbackId}/reply`, request, {
       headers: getAuthHeaders(),
     });
     return response.data;
@@ -118,7 +118,7 @@ export const getTutorFeedbacks = async (
   pageSize: number = 10
 ): Promise<ApiResponse<PagedList<FeedbackDto>>> => {
   try {
-    const response = await api.get(`/feedback/tutor/${tutorId}`, {
+    const response = await api.get(`/feedbacks/tutors/${tutorId}`, {
       params: { page, pageSize },
     });
     return response.data;
@@ -135,7 +135,7 @@ export const getTutorFeedbackStats = async (
   tutorId: string
 ): Promise<ApiResponse<FeedbackStatsDto>> => {
   try {
-    const response = await api.get(`/feedback/tutor/${tutorId}/stats`);
+    const response = await api.get(`/feedbacks/tutors/${tutorId}/stats`);
     return response.data;
   } catch (error: any) {
     console.error('Error fetching feedback stats:', error.message);
@@ -150,7 +150,7 @@ export const canLeaveFeedback = async (
   lessonId: number
 ): Promise<ApiResponse<boolean>> => {
   try {
-    const response = await api.get(`/feedback/can-leave/${lessonId}`, {
+    const response = await api.get(`/feedbacks/eligibility/lessons/${lessonId}`, {
       headers: getAuthHeaders(),
     });
     return response.data;
@@ -167,7 +167,7 @@ export const canLeaveBookingFeedback = async (
   bookingId: number
 ): Promise<ApiResponse<boolean>> => {
   try {
-    const response = await api.get(`/feedback/can-leave-booking/${bookingId}`, {
+    const response = await api.get(`/feedbacks/eligibility/bookings/${bookingId}`, {
       headers: getAuthHeaders(),
     });
     return response.data;
@@ -184,7 +184,7 @@ export const toggleFeedbackVisibility = async (
   feedbackId: number
 ): Promise<ApiResponse<boolean>> => {
   try {
-    const response = await api.put(`/feedback/${feedbackId}/toggle-visibility`, {}, {
+    const response = await api.put(`/feedbacks/${feedbackId}/visibility`, {}, {
       headers: getAuthHeaders(),
     });
     return response.data;

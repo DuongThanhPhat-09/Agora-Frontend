@@ -44,7 +44,7 @@ export const loginWithZalo = async (role?: string): Promise<ZaloLoginResult> => 
   }
 
   // 3. Exchange với backend
-  const response = await fetch(`${API_BASE_URL}/auth/login-zalo`, {
+  const response = await fetch(`${API_BASE_URL}/auth/zalo/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

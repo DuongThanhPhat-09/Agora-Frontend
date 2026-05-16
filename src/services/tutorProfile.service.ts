@@ -134,7 +134,7 @@ export const getAuthHeaders = () => {
 
 /**
  * Get tutor verification progress
- * GET /api/tutor-verification/{id}/progress
+ * GET /api/tutors/{id}/verification/progress
  *
  * @param userId - User ID (same as tutor ID)
  * @returns Verification progress with all sections
@@ -143,7 +143,7 @@ export const getVerificationProgress = async (userId: string): Promise<Verificat
   try {
     console.log('📊 Fetching verification progress for:', userId);
 
-    const response = await api.get(`/tutor-verification/${userId}/progress`, {
+    const response = await api.get(`/tutors/${userId}/verification/progress`, {
       headers: getAuthHeaders(),
     });
 
@@ -161,7 +161,7 @@ export const getVerificationProgress = async (userId: string): Promise<Verificat
 
 /**
  * Upload/Update intro video
- * PUT /api/tutor-verification/{id}/tutor-profile/video
+ * PUT /api/tutors/{id}/profile/video
  *
  * @param userId - User ID (same as tutor ID)
  * @param videoFile - Video file to upload
@@ -179,7 +179,7 @@ export const updateVideo = async (userId: string, videoFile: File): Promise<ApiR
     const formData = new FormData();
     formData.append('VideoFile', videoFile);
 
-    const response = await api.put(`/tutor-verification/${userId}/tutor-profile/video`, formData, {
+    const response = await api.put(`/tutors/${userId}/profile/video`, formData, {
       headers: {
         ...getAuthHeaders(),
         'Content-Type': 'multipart/form-data',
@@ -218,7 +218,7 @@ export interface BasicInfoUpdateData {
 
 /**
  * Update avatar
- * PUT /api/tutor-verification/{id}/tutor-profile/avatar
+ * PUT /api/tutors/{id}/profile/avatar
  *
  * @param userId - User ID (same as tutor ID)
  * @param avatarFile - Avatar image file
@@ -236,7 +236,7 @@ export const updateAvatar = async (userId: string, avatarFile: File): Promise<Ap
     const formData = new FormData();
     formData.append('AvatarFile', avatarFile);
 
-    const response = await api.put(`/tutor-verification/${userId}/tutor-profile/avatar`, formData, {
+    const response = await api.put(`/tutors/${userId}/profile/avatar`, formData, {
       headers: {
         ...getAuthHeaders(),
         'Content-Type': 'multipart/form-data',
@@ -257,7 +257,7 @@ export const updateAvatar = async (userId: string, avatarFile: File): Promise<Ap
 
 /**
  * Update basic info
- * PUT /api/tutor-verification/{id}/tutor-profile/basic-info
+ * PUT /api/tutors/{id}/profile/basic-info
  *
  * @param userId - User ID (same as tutor ID)
  * @param data - Basic info data to update (JSON)
@@ -270,7 +270,7 @@ export const updateBasicInfo = async (userId: string, data: BasicInfoUpdateData)
 
     // Send as JSON (application/json)
     const response = await api.put(
-      `/tutor-verification/${userId}/tutor-profile/basic-info`,
+      `/tutors/${userId}/profile/basic-info`,
       data, // Send JSON directly
       {
         headers: {
@@ -306,7 +306,7 @@ export interface IntroductionUpdateData {
 
 /**
  * Update introduction (about me)
- * PUT /api/tutor-verification/{id}/tutor-profile/introduction
+ * PUT /api/tutors/{id}/profile/introduction
  *
  * @param userId - User ID (same as tutor ID)
  * @param data - Introduction data to update
@@ -317,7 +317,7 @@ export const updateIntroduction = async (userId: string, data: IntroductionUpdat
     console.log('📝 Updating introduction for:', userId);
     console.log('Data:', data);
 
-    const response = await api.put(`/tutor-verification/${userId}/tutor-profile/introduction`, data, {
+    const response = await api.put(`/tutors/${userId}/profile/introduction`, data, {
       headers: {
         ...getAuthHeaders(),
         'Content-Type': 'application/json',
@@ -348,7 +348,7 @@ export interface PricingUpdateData {
 
 /**
  * Update pricing
- * PUT /api/tutor-verification/{id}/tutor-profile/pricing
+ * PUT /api/tutors/{id}/profile/pricing
  *
  * @param userId - User ID (same as tutor ID)
  * @param data - Pricing data to update
@@ -359,7 +359,7 @@ export const updatePricing = async (userId: string, data: PricingUpdateData): Pr
     console.log('💰 Updating pricing for:', userId);
     console.log('Data:', data);
 
-    const response = await api.put(`/tutor-verification/${userId}/tutor-profile/pricing`, data, {
+    const response = await api.put(`/tutors/${userId}/profile/pricing`, data, {
       headers: {
         ...getAuthHeaders(),
         'Content-Type': 'application/json',
@@ -380,6 +380,6 @@ export const updatePricing = async (userId: string, data: PricingUpdateData): Pr
 
 // ============================================
 // TODO: Add more update endpoints here
-// - PUT /api/tutor-verification/{id}/certificates
-// - PUT /api/tutor-verification/{id}/identity-card
+// - PUT /api/tutors/{id}/profile/certificates
+// - PUT /api/tutors/{id}/profile/identity-card
 // ============================================

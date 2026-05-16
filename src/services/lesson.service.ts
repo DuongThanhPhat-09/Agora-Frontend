@@ -187,7 +187,7 @@ export const getNextLesson = async (): Promise<LessonResponse | null> => {
  */
 export const getTutorDashboardStats = async (): Promise<ApiResponse<TutorDashboardStats>> => {
   try {
-    const response = await api.get('/tutorlesson/dashboard', {
+    const response = await api.get('/tutor/lessons/dashboard', {
       headers: getAuthHeaders(),
     });
 
@@ -214,7 +214,7 @@ export const getTutorCalendar = async (
     if (startDate) params.startDate = startDate;
     if (endDate) params.endDate = endDate;
 
-    const response = await api.get('/tutorlesson/calendar', {
+    const response = await api.get('/tutor/lessons/calendar', {
       headers: getAuthHeaders(),
       params,
     });
@@ -244,7 +244,7 @@ export const getTutorLessons = async (
     if (fromDate) params.fromDate = fromDate;
     if (status) params.status = status;
 
-    const response = await api.get('/tutorlesson/lessons', {
+    const response = await api.get('/tutor/lessons', {
       headers: getAuthHeaders(),
       params,
     });
@@ -267,7 +267,7 @@ export const getTutorLessonDetail = async (
   lessonId: number
 ): Promise<ApiResponse<LessonDetailDto>> => {
   try {
-    const response = await api.get(`/tutorlesson/${lessonId}`, {
+    const response = await api.get(`/tutor/lessons/${lessonId}`, {
       headers: getAuthHeaders(),
     });
     return response.data;
@@ -285,7 +285,7 @@ export const checkInLesson = async (
   request: CheckInRequest = {}
 ): Promise<ApiResponse<LessonDetailDto>> => {
   try {
-    const response = await api.put(`/tutorlesson/${lessonId}/checkin`, request, {
+    const response = await api.put(`/tutor/lessons/${lessonId}/checkin`, request, {
       headers: getAuthHeaders(),
     });
     return response.data;
@@ -303,7 +303,7 @@ export const checkOutLesson = async (
   request: CheckOutRequest = {}
 ): Promise<ApiResponse<LessonDetailDto>> => {
   try {
-    const response = await api.put(`/tutorlesson/${lessonId}/checkout`, request, {
+    const response = await api.put(`/tutor/lessons/${lessonId}/checkout`, request, {
       headers: getAuthHeaders(),
     });
     return response.data;
@@ -321,7 +321,7 @@ export const submitLessonReport = async (
   request: SubmitReportRequest
 ): Promise<ApiResponse<LessonDetailDto>> => {
   try {
-    const response = await api.put(`/tutorlesson/${lessonId}/report`, request, {
+    const response = await api.put(`/tutor/lessons/${lessonId}/report`, request, {
       headers: getAuthHeaders(),
     });
     return response.data;
@@ -342,7 +342,7 @@ export const uploadLessonAttachment = async (
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await api.post(`/tutorlesson/${lessonId}/attachments`, formData, {
+    const response = await api.post(`/tutor/lessons/${lessonId}/attachments`, formData, {
       headers: {
         ...getAuthHeaders(),
         'Content-Type': 'multipart/form-data',

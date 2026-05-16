@@ -30,5 +30,5 @@ export function getStudents(): Promise<ApiResponse<StudentType[]>> {
 }
 
 export function getMyLinkStatus(): Promise<ApiResponse<LinkStatusResponse>> {
-  return apiRequest<LinkStatusResponse>('/parent/students/my-link-status');
+  return apiRequest<LinkStatusResponse>('/parent/students/link-status');
 }
