@@ -22,6 +22,12 @@ export interface ChatChannel {
   status: string;
   lastMessageAt: string;
   lastMessagePreview: string;
+  /**
+   * Số tin nhắn chưa đọc trong kênh (do người khác gửi). BE optional — chỉ set
+   * sau khi `ChatChannelListItemResponse` bên BE bổ sung trường này. Dùng cho
+   * badge per-conversation ở trang messages list (chưa wire UI).
+   */
+  unreadCount?: number;
 }
 
 export interface ChatMessageQuery {
@@ -145,6 +151,27 @@ export const markMessagesAsRead = async (channelId: number): Promise<void> => {
     await api.put(`/chat/channels/${channelId}/read`, {}, { headers: getAuthHeaders() });
   } catch (error: any) {
     console.error('❌ Error marking messages as read:', error.message);
+  }
+};
+
+/**
+ * GET /api/chat/unread-total-count — Total unread chat messages across all
+ * channels for the current user. Used by sidebar nav badge.
+ *
+ * BE pattern mirror: `notification.service.ts:getUnreadCount` returns
+ * `{ unreadCount: number }` shape, expect same here.
+ */
+export const getTotalUnreadMessageCount = async (): Promise<number> => {
+  try {
+    const response = await api.get('/chat/unread-total-count', {
+      headers: getAuthHeaders(),
+    });
+    // Support both raw `{ unreadCount }` and envelope `{ content: { unreadCount } }`
+    const data = response.data?.content ?? response.data;
+    return data?.unreadCount ?? 0;
+  } catch (error: any) {
+    console.error('❌ Error fetching unread message count:', error?.message);
+    return 0; // Fail soft — badge just stays 0, không vỡ UI
   }
 };
 
