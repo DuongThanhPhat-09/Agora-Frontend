@@ -16,6 +16,7 @@ const AdminLayout: React.FC = () => {
     const navItems: NavItem[] = [
         { path: '/admin-portal/dashboard', label: 'Bảng điều khiển', materialIcon: 'dashboard' },
         { path: '/admin-portal/users', label: 'Quản lý người dùng', materialIcon: 'group' },
+        { path: '/admin-portal/bookings', label: 'Quản lý booking', materialIcon: 'event_note' },
         { path: '/admin-portal/vetting', label: 'Kiểm duyệt', materialIcon: 'description', badge: pendingCount },
         { path: '/admin-portal/warnings', label: 'Cảnh báo', materialIcon: 'warning' },
         { path: '/admin-portal/financials', label: 'Tài chính', materialIcon: 'account_balance' },
@@ -29,6 +30,9 @@ const AdminLayout: React.FC = () => {
         }
         if (path === '/admin-portal/warnings') {
             return pathname.startsWith('/admin-portal/warnings');
+        }
+        if (path === '/admin-portal/bookings') {
+            return pathname.startsWith('/admin-portal/bookings');
         }
         return pathname === path;
     };

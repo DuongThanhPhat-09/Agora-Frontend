@@ -38,6 +38,8 @@ const ForbiddenPage = lazy(() => import('./pages/Error/ForbiddenPage'));
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboard/AdminDashboardPageEnhanced'));
 const UserManagementPage = lazy(() => import('./pages/AdminUserManagement/UserManagementPage'));
 const AdminVettingPage = lazy(() => import('./pages/AdminVetting/AdminVettingPage'));
+const AdminBookingsPage = lazy(() => import('./pages/AdminBookings/AdminBookingsPage'));
+const AdminBookingDetailPage = lazy(() => import('./pages/AdminBookings/AdminBookingDetailPage'));
 const AdminFinancialsPage = lazy(() => import('./pages/AdminFinancials/AdminFinancialsPage'));
 const AdminSettingsPage = lazy(() => import('./pages/AdminSettings/AdminSettingsPage'));
 const AdminWarningsPage = lazy(() => import('./pages/AdminWarnings/AdminWarningsPage'));
@@ -205,6 +207,8 @@ function App() {
                 <Route path="dashboard" element={<AdminDashboardPage />} />
                 <Route path="users" element={<UserManagementPage />} />
                 <Route path="vetting" element={<AdminVettingPage />} />
+                <Route path="bookings" element={<AdminBookingsPage />} />
+                <Route path="bookings/:id" element={<AdminBookingDetailPage />} />
                 <Route path="financials" element={<AdminFinancialsPage />} />
                 <Route path="warnings" element={<AdminWarningsPage />} />
                 <Route path="settings" element={<AdminSettingsPage />} />
