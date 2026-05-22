@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getTutorLessons, checkInLesson, checkOutLesson, type LessonResponse } from '../../services/lesson.service';
-import { isJitsiFallbackLink } from '../../services/googleAuth.service';
 import { Tag } from 'antd';
 import { toast } from 'react-toastify';
 import styles from '../../styles/pages/tutor-portal-class-detail.module.css';
@@ -353,7 +352,6 @@ const TutorPortalClassDetail: React.FC = () => {
                                         <div className={styles.classHeader}>
                                             <h1 className={styles.className}>{classInfo.name}</h1>
                                             <span className={styles.subjectTag}>{classInfo.subject}</span>
-                                            <span className={styles.gradeTag}>{classInfo.grade}</span>
                                         </div>
                                         <p className={styles.nextLesson}>Buổi học tiếp theo: {classInfo.nextLesson}</p>
                                     </>
@@ -361,16 +359,6 @@ const TutorPortalClassDetail: React.FC = () => {
                                     <div>Không tìm thấy dữ liệu</div>
                                 )}
                             </div>
-                        </div>
-                        <div className={styles.headerActions}>
-                            <button className={styles.actionBtn} onClick={() => toast.info('Tính năng đang phát triển')}>
-                                <MessageIcon />
-                                <span>Nhắn tin lớp</span>
-                            </button>
-                            <button className={styles.actionBtn} onClick={() => toast.info('Tính năng đang phát triển')}>
-                                <PlusIcon />
-                                <span>Thêm học sinh</span>
-                            </button>
                         </div>
                     </div>
 
@@ -598,16 +586,6 @@ const TutorPortalClassDetail: React.FC = () => {
                                                                 <div style={{ gridColumn: '1 / -1' }}>
                                                                     <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: 8 }}>
                                                                         <span>Link học online</span>
-                                                                        {isJitsiFallbackLink(lesson.meetingLink) && (
-                                                                            <span style={{
-                                                                                fontSize: '10px', fontWeight: 600,
-                                                                                color: '#92400e', background: '#fef3c7',
-                                                                                padding: '1px 6px', borderRadius: 4,
-                                                                                letterSpacing: 0.3,
-                                                                            }} title="Tutor chưa kết nối Google Calendar. Đang dùng Jitsi làm dự phòng.">
-                                                                                Jitsi (dự phòng)
-                                                                            </span>
-                                                                        )}
                                                                     </div>
                                                                     <a href={lesson.meetingLink} target="_blank" rel="noopener noreferrer"
                                                                         style={{ fontSize: '14px', color: '#1890ff', wordBreak: 'break-all' }}>

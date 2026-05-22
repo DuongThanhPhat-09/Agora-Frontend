@@ -211,7 +211,6 @@ const StudentLessons = () => {
                                         <div style={dateHeader}>
                                             {formatDayHeader(dateKey)}
                                             <span style={dateDivider} />
-                                            <span style={dateCount}>{dayLessons.length}</span>
                                         </div>
                                         {dayLessons.map((lesson) => (
                                             <LessonRow
@@ -331,8 +330,7 @@ const LessonRow = ({ lesson, onClick }: { lesson: any; onClick: () => void }) =>
         >
             {/* Time */}
             <div style={timeBlock}>
-                <span style={timeStart}>{startTime}</span>
-                {endTime && <span style={timeEnd}>– {endTime}</span>}
+                <span style={timeStart}>{startTime}{endTime ? ` - ${endTime}` : ''}</span>
             </div>
 
             {/* Title + tutor inline */}
@@ -528,15 +526,6 @@ const dateDivider: React.CSSProperties = {
     background: 'linear-gradient(90deg, #e5e5e5, transparent)',
 };
 
-const dateCount: React.CSSProperties = {
-    fontSize: 10,
-    fontWeight: 700,
-    color: '#9ca3af',
-    background: '#f5f5f5',
-    padding: '2px 7px',
-    borderRadius: 999,
-};
-
 // ── Lesson row (compact) ──
 const lessonRow: React.CSSProperties = {
     display: 'flex',
@@ -554,24 +543,17 @@ const lessonRow: React.CSSProperties = {
 
 const timeBlock: React.CSSProperties = {
     display: 'flex',
-    flexDirection: 'column',
-    minWidth: 56,
+    alignItems: 'center',
+    minWidth: 100,
     flexShrink: 0,
 };
 
 const timeStart: React.CSSProperties = {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 700,
     color: '#1a2238',
     fontFamily: "'Bricolage Grotesque', 'IBM Plex Sans', sans-serif",
     lineHeight: 1.1,
-};
-
-const timeEnd: React.CSSProperties = {
-    fontSize: 10,
-    color: '#9ca3af',
-    fontWeight: 500,
-    marginTop: 1,
 };
 
 const infoBlock: React.CSSProperties = {
@@ -643,7 +625,7 @@ const statusPill: React.CSSProperties = {
     alignItems: 'center',
     gap: 5,
     padding: '3px 9px',
-    borderRadius: 999,
+    borderRadius: 6,
     fontSize: 11,
     fontWeight: 600,
     fontFamily: "'IBM Plex Sans', sans-serif",

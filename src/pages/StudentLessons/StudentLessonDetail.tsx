@@ -2,12 +2,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-    ArrowLeft, Clock, BookOpen, AlertCircle, Video, DollarSign,
+    ArrowLeft, Clock, BookOpen, AlertCircle, Video,
     Calendar as CalendarIcon, FileText, ClipboardCheck, Star,
+    User, ChevronRight, PlayCircle, StopCircle,
 } from 'lucide-react';
 import dayjs from 'dayjs';
 import { getStudentLessonDetail, confirmStudentLesson } from '../../services/student-lesson.service';
-import { isJitsiFallbackLink } from '../../services/googleAuth.service';
 import { useLessonStartedListener } from '../../hooks/useLessonStartedListener';
 import type { LessonDetailDto } from '../../services/lesson.service';
 import { message as antMessage, Spin, Modal } from 'antd';
@@ -15,17 +15,17 @@ import CreateFeedbackModal from '../ParentLessons/components/CreateFeedbackModal
 import s from '../StudentPages.module.css';
 
 // ── Status definitions — khớp với LessonStatus.cs ở BE ─────────────────
-type StatusInfo = { label: string; color: string; bg: string };
+type StatusInfo = { label: string; color: string; bg: string; icon: string };
 
 const STATUS_INFO: Record<string, StatusInfo> = {
-    scheduled:            { label: 'Đã lên lịch',     color: '#6366F1', bg: 'rgba(99,102,241,0.10)' },
-    in_progress:          { label: 'Đang diễn ra',    color: '#0d9488', bg: 'rgba(13,148,136,0.12)' },
-    pending_confirmation: { label: 'Chờ xác nhận',    color: '#d97706', bg: 'rgba(217,119,6,0.10)' },
-    completed:            { label: 'Hoàn thành',      color: '#059669', bg: 'rgba(5,150,105,0.10)' },
-    cancelled:            { label: 'Đã hủy',          color: '#737373', bg: '#f5f5f5' },
-    cancelled_noshow:     { label: 'Hủy (vắng mặt)',  color: '#737373', bg: '#f5f5f5' },
-    no_show:              { label: 'Vắng mặt',        color: '#DC2626', bg: '#FEF2F2' },
-    disputed:             { label: 'Khiếu nại',       color: '#DC2626', bg: '#FEF2F2' },
+    scheduled:            { label: 'Đã lên lịch',     color: '#6366F1', bg: 'rgba(99,102,241,0.10)',  icon: '📅' },
+    in_progress:          { label: 'Đang diễn ra',    color: '#0d9488', bg: 'rgba(13,148,136,0.12)',  icon: '🟢' },
+    pending_confirmation: { label: 'Chờ xác nhận',    color: '#d97706', bg: 'rgba(217,119,6,0.10)',   icon: '⏳' },
+    completed:            { label: 'Hoàn thành',      color: '#059669', bg: 'rgba(5,150,105,0.10)',   icon: '✅' },
+    cancelled:            { label: 'Đã hủy',          color: '#737373', bg: '#f5f5f5',                icon: '❌' },
+    cancelled_noshow:     { label: 'Hủy (vắng mặt)',  color: '#737373', bg: '#f5f5f5',                icon: '❌' },
+    no_show:              { label: 'Vắng mặt',        color: '#DC2626', bg: '#FEF2F2',                icon: '⚠️' },
+    disputed:             { label: 'Khiếu nại',       color: '#DC2626', bg: '#FEF2F2',                icon: '🚨' },
 };
 
 const getStatus = (status: string | null | undefined): StatusInfo => {
@@ -46,21 +46,26 @@ const formatTime = (iso: string | null | undefined): string => {
     return dayjs(iso).format('HH:mm');
 };
 
-const formatPrice = (amount: number | undefined) =>
-    amount != null ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount) : 'N/A';
-
 const getInitial = (name: string | null | undefined): string => {
     if (!name) return '?';
     const parts = name.trim().split(/\s+/);
     return (parts[parts.length - 1]?.[0] ?? '?').toUpperCase();
 };
 
-const getAvatarBg = (name: string | null | undefined): string => {
-    const palette = ['#6366F1', '#0d9488', '#d97706', '#059669', '#7c3aed', '#0891b2', '#db2777'];
-    if (!name) return palette[0];
+const getAvatarGradient = (name: string | null | undefined): string => {
+    const gradients = [
+        'linear-gradient(135deg, #6366F1, #8B5CF6)',
+        'linear-gradient(135deg, #0d9488, #06b6d4)',
+        'linear-gradient(135deg, #d97706, #f59e0b)',
+        'linear-gradient(135deg, #059669, #10b981)',
+        'linear-gradient(135deg, #7c3aed, #a78bfa)',
+        'linear-gradient(135deg, #0891b2, #22d3ee)',
+        'linear-gradient(135deg, #db2777, #f472b6)',
+    ];
+    if (!name) return gradients[0];
     let hash = 0;
     for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) & 0xffff;
-    return palette[hash % palette.length];
+    return gradients[hash % gradients.length];
 };
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -152,7 +157,6 @@ const StudentLessonDetail = () => {
     const status = getStatus(lesson.status);
     const isInProgress = lesson.status === 'in_progress';
     const canJoin = isInProgress && lesson.meetingLink;
-    const isJitsi = isJitsiFallbackLink(lesson.meetingLink);
     const tutorName = (lesson as any).tutorName ?? (lesson as any).tutor?.fullName ?? 'Gia sư';
     const subjectName = (lesson as any).subjectName ?? (lesson as any).subject?.subjectName ?? 'Buổi học';
     const report = (lesson as any).report;
@@ -163,212 +167,237 @@ const StudentLessonDetail = () => {
             <div className={s.topBar}>
                 <div className={s.topBarLeft}>
                     <h1 className={s.pageTitle}>Chi tiết buổi học</h1>
-                    <p className={s.pageSubtitle}>
-                        Lesson #{lesson.lessonId} · Booking #{lesson.bookingId}
-                    </p>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className={s.mainContent} style={{ maxWidth: 1100 }}>
-                {/* Back */}
-                <button className={s.backBtn} onClick={() => navigate('/student-portal/lessons')}>
-                    <ArrowLeft size={16} /> Quay lại danh sách
-                </button>
+            <div className={s.mainContent} style={{ maxWidth: 860, margin: '0 auto', width: '100%' }}>
+                {/* Breadcrumb-style back nav */}
+                <div style={breadcrumbRow}>
+                    <button style={backBtnStyle} onClick={() => navigate('/student-portal/lessons')}>
+                        <ArrowLeft size={15} />
+                        <span>Danh sách buổi học</span>
+                    </button>
+                </div>
 
-                {/* Hero Join — compact, chỉ khi in_progress + meetingLink */}
+                {/* Hero Join Banner — only when in_progress + meetingLink */}
                 {canJoin && (
                     <div style={heroCard}>
-                        <div style={heroLeft}>
-                            <div style={heroLiveDot}>
-                                <span style={heroPulseRing} />
-                                <span style={heroSolidDot} />
-                            </div>
-                            <div>
-                                <div style={heroBadgeText}>BUỔI HỌC ĐÃ BẮT ĐẦU</div>
-                                <div style={heroSubtext}>
-                                    Gia sư đang chờ bạn trong lớp
-                                    {isJitsi && <span style={heroJitsiTag}>Jitsi (dự phòng)</span>}
+                        {/* Animated background circles */}
+                        <div style={heroBgCircle1} />
+                        <div style={heroBgCircle2} />
+                        <div style={heroInner}>
+                            <div style={heroLeft}>
+                                <div style={heroLiveDot}>
+                                    <span style={heroPulseRing} />
+                                    <span style={heroSolidDot} />
+                                </div>
+                                <div>
+                                    <div style={heroBadgeText}>BUỔI HỌC ĐÃ BẮT ĐẦU</div>
+                                    <div style={heroSubtext}>
+                                        Gia sư đang chờ bạn trong lớp
+                                    </div>
                                 </div>
                             </div>
+                            <a
+                                href={lesson.meetingLink!}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={heroJoinBtn}
+                            >
+                                <Video size={16} /> Tham gia ngay
+                            </a>
                         </div>
-                        <a
-                            href={lesson.meetingLink!}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={heroJoinBtn}
-                        >
-                            <Video size={16} /> Tham gia ngay
-                        </a>
                     </div>
                 )}
 
-                {/* Two-column grid: main info (left) + sidebar (right) */}
-                <div style={twoColLayout}>
-                    {/* ─── LEFT: Main Info ─── */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
-                        {/* Subject + status header */}
-                        <div style={mainCard}>
-                            <div style={subjectHeader}>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={subjectTitle}>{subjectName}</div>
-                                    <div style={subjectDate}>
-                                        <CalendarIcon size={13} />
-                                        {formatLongDate(lesson.scheduledStart)}
-                                    </div>
+                {/* ─── Subject Header Card ─── */}
+                <div style={subjectCard}>
+                    <div style={subjectCardInner}>
+                        <div style={subjectTopRow}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={subjectTitle}>{subjectName}</div>
+                                <div style={subjectDateRow}>
+                                    <CalendarIcon size={14} style={{ color: '#9ca3af' }} />
+                                    <span>{formatLongDate(lesson.scheduledStart)}</span>
                                 </div>
-                                <span style={{ ...statusPill, color: status.color, background: status.bg }}>
-                                    <span style={{ ...statusDot, background: status.color }} />
-                                    {status.label}
-                                </span>
                             </div>
-
-                            {/* Key metrics grid */}
-                            <div style={metricsGrid}>
-                                <MetricCell
-                                    icon={<Clock size={16} />}
-                                    label="Bắt đầu"
-                                    value={formatTime(lesson.scheduledStart)}
-                                    accent="#6366F1"
-                                />
-                                <MetricCell
-                                    icon={<Clock size={16} />}
-                                    label="Kết thúc"
-                                    value={formatTime(lesson.scheduledEnd)}
-                                    accent="#0891b2"
-                                />
-                                {lesson.lessonPrice != null && (
-                                    <MetricCell
-                                        icon={<DollarSign size={16} />}
-                                        label="Giá buổi học"
-                                        value={formatPrice(lesson.lessonPrice)}
-                                        accent="#059669"
-                                    />
-                                )}
+                            <div style={{ ...statusChip, color: status.color, background: status.bg }}>
+                                <span style={{ fontSize: 12 }}>{status.icon}</span>
+                                {status.label}
                             </div>
-
-                            {/* Meeting link inline (nếu có và chưa hiện hero) */}
-                            {lesson.meetingLink && !canJoin && (
-                                <div style={meetingLinkBox}>
-                                    <div style={meetingLinkLabel}>
-                                        <Video size={14} />
-                                        Link buổi học
-                                        {isJitsi && (
-                                            <span style={inlineJitsiTag}>Jitsi (dự phòng)</span>
-                                        )}
-                                    </div>
-                                    <a
-                                        href={lesson.meetingLink}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={meetingLinkValue}
-                                    >
-                                        {lesson.meetingLink}
-                                    </a>
-                                </div>
-                            )}
                         </div>
 
-                        {/* Content + Homework — chỉ render nếu có */}
-                        {(lesson.lessonContent || lesson.homework) && (
-                            <div style={mainCard}>
-                                <div style={sectionTitle}>Nội dung & bài tập</div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                                    {lesson.lessonContent && (
-                                        <InfoBlock
-                                            icon={<BookOpen size={15} />}
-                                            iconBg="rgba(99,102,241,0.10)"
-                                            iconColor="#6366F1"
-                                            label="Nội dung buổi học"
-                                            value={lesson.lessonContent}
-                                        />
-                                    )}
-                                    {lesson.homework && (
-                                        <InfoBlock
-                                            icon={<AlertCircle size={15} />}
-                                            iconBg="rgba(217,119,6,0.10)"
-                                            iconColor="#d97706"
-                                            label="Bài tập về nhà"
-                                            value={lesson.homework}
-                                        />
-                                    )}
+                        {/* Time blocks — horizontal timeline style */}
+                        <div style={timelineRow}>
+                            <div style={timeBlock}>
+                                <div style={{ ...timeBlockIconWrap, background: 'rgba(16,185,129,0.10)' }}>
+                                    <PlayCircle size={16} style={{ color: '#10b981' }} />
+                                </div>
+                                <div>
+                                    <div style={timeBlockLabel}>BẮT ĐẦU</div>
+                                    <div style={timeBlockValue}>{formatTime(lesson.scheduledStart)}</div>
                                 </div>
                             </div>
-                        )}
-
-                        {/* Tutor Report */}
-                        {report && (
-                            <div style={mainCard}>
-                                <div style={sectionTitle}>
-                                    <ClipboardCheck size={16} style={{ color: '#059669', marginRight: 8 }} />
-                                    Báo cáo gia sư
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                    {report.contentCovered && (
-                                        <ReportRow label="Nội dung đã dạy" value={report.contentCovered} />
-                                    )}
-                                    {report.homeworkAssigned && (
-                                        <ReportRow label="Bài tập giao" value={report.homeworkAssigned} />
-                                    )}
-                                    {report.studentPerformanceRating != null && (
-                                        <div style={ratingRow}>
-                                            <span style={reportLabel}>Đánh giá học sinh</span>
-                                            <span style={ratingValue}>
-                                                <Star size={14} fill="#fbbf24" color="#fbbf24" />
-                                                <strong>{report.studentPerformanceRating}</strong>
-                                                <span style={{ color: '#9ca3af', fontSize: 12 }}>/ 5</span>
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
+                            <div style={timeConnector}>
+                                <div style={timeConnectorLine} />
+                                <div style={timeConnectorDot} />
+                                <div style={timeConnectorLine} />
                             </div>
-                        )}
-                    </div>
-
-                    {/* ─── RIGHT: Sidebar ─── */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                        {/* Tutor card */}
-                        <div style={tutorCard}>
-                            <div style={tutorCardLabel}>Gia sư</div>
-                            <div style={tutorRow}>
-                                <span style={tutorAvatar(tutorName)}>{getInitial(tutorName)}</span>
-                                <div style={{ minWidth: 0 }}>
-                                    <div style={tutorNameText}>{tutorName}</div>
-                                    <div style={tutorSubText}>Người dạy của bạn</div>
+                            <div style={timeBlock}>
+                                <div style={{ ...timeBlockIconWrap, background: 'rgba(244,63,94,0.10)' }}>
+                                    <StopCircle size={16} style={{ color: '#f43f5e' }} />
+                                </div>
+                                <div>
+                                    <div style={timeBlockLabel}>KẾT THÚC</div>
+                                    <div style={timeBlockValue}>{formatTime(lesson.scheduledEnd)}</div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Action card */}
-                        {(lesson.status === 'pending_confirmation' || lesson.status === 'completed') && (
-                            <div style={actionCard}>
-                                <div style={actionCardLabel}>
-                                    {lesson.status === 'pending_confirmation' ? 'Cần xác nhận' : 'Đánh giá'}
-                                </div>
-                                <div style={actionCardText}>
-                                    {lesson.status === 'pending_confirmation'
-                                        ? 'Xác nhận để hoàn tất thanh toán cho gia sư.'
-                                        : 'Đánh giá giúp gia sư cải thiện chất lượng.'}
-                                </div>
-                                {lesson.status === 'pending_confirmation' ? (
-                                    <button
-                                        style={{ ...primaryActionBtn, background: '#059669' }}
-                                        onClick={() => setShowConfirmModal(true)}
-                                    >
-                                        <ClipboardCheck size={15} /> Xác nhận buổi học
-                                    </button>
-                                ) : (
-                                    <button
-                                        style={{ ...primaryActionBtn, background: '#3e2f28' }}
-                                        onClick={() => setShowFeedbackModal(true)}
-                                    >
-                                        <Star size={15} /> Đánh giá buổi học
-                                    </button>
-                                )}
+                        {/* Meeting link — subtle inline (when not showing hero) */}
+                        {lesson.meetingLink && !canJoin && (
+                            <div style={meetingLinkBox}>
+                                <Video size={14} style={{ color: '#6366F1', flexShrink: 0 }} />
+                                <span style={meetingLinkLabel}>Link buổi học:</span>
+                                <a
+                                    href={lesson.meetingLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={meetingLinkValue}
+                                >
+                                    {lesson.meetingLink}
+                                </a>
                             </div>
                         )}
                     </div>
                 </div>
+
+                {/* ─── Tutor Card ─── */}
+                <div style={tutorCard}>
+                    <div style={tutorCardInner}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={tutorLabelRow}>
+                                <User size={12} style={{ color: '#9ca3af' }} />
+                                <span style={tutorLabel}>GIA SƯ</span>
+                            </div>
+                            <div style={tutorNameStyle}>{tutorName}</div>
+                        </div>
+                        <div style={tutorBadge}>
+                            Người dạy của bạn
+                        </div>
+                    </div>
+                </div>
+
+                {/* ─── Action card — Confirm / Feedback ─── */}
+                {lesson.status === 'pending_confirmation' && (
+                    <div style={actionCardConfirm}>
+                        <div style={actionCardIconWrap}>
+                            <ClipboardCheck size={20} style={{ color: '#d97706' }} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={actionCardTitle}>Xác nhận buổi học</div>
+                            <div style={actionCardDesc}>
+                                Gia sư đã gửi báo cáo. Hãy xác nhận để hoàn tất thanh toán.
+                            </div>
+                        </div>
+                        <button
+                            style={actionBtnConfirm}
+                            onClick={() => setShowConfirmModal(true)}
+                        >
+                            <ClipboardCheck size={15} /> Xác nhận
+                        </button>
+                    </div>
+                )}
+
+                {lesson.status === 'completed' && (
+                    <div style={actionCardFeedback}>
+                        <div style={{ ...actionCardIconWrap, background: 'rgba(26,34,56,0.08)' }}>
+                            <Star size={20} style={{ color: '#1a2238' }} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={actionCardTitle}>Đánh giá buổi học</div>
+                            <div style={actionCardDesc}>
+                                Chia sẻ trải nghiệm giúp gia sư cải thiện chất lượng dạy.
+                            </div>
+                        </div>
+                        <button
+                            style={actionBtnFeedback}
+                            onClick={() => setShowFeedbackModal(true)}
+                        >
+                            <Star size={15} /> Đánh giá
+                        </button>
+                    </div>
+                )}
+
+                {/* ─── Content + Homework ─── */}
+                {(lesson.lessonContent || lesson.homework) && (
+                    <div style={sectionCard}>
+                        <div style={sectionHeaderRow}>
+                            <div style={sectionIconWrap}>
+                                <BookOpen size={16} style={{ color: '#6366F1' }} />
+                            </div>
+                            <div style={sectionTitleText}>Nội dung & bài tập</div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                            {lesson.lessonContent && (
+                                <ContentBlock
+                                    icon={<BookOpen size={15} />}
+                                    accent="#6366F1"
+                                    label="Nội dung buổi học"
+                                    value={lesson.lessonContent}
+                                />
+                            )}
+                            {lesson.homework && (
+                                <ContentBlock
+                                    icon={<AlertCircle size={15} />}
+                                    accent="#d97706"
+                                    label="Bài tập về nhà"
+                                    value={lesson.homework}
+                                />
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* ─── Tutor Report ─── */}
+                {report && (
+                    <div style={sectionCard}>
+                        <div style={sectionHeaderRow}>
+                            <div style={{ ...sectionIconWrap, background: 'rgba(5,150,105,0.10)' }}>
+                                <ClipboardCheck size={16} style={{ color: '#059669' }} />
+                            </div>
+                            <div style={sectionTitleText}>Báo cáo gia sư</div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                            {report.contentCovered && (
+                                <ReportRow label="Nội dung đã dạy" value={report.contentCovered} />
+                            )}
+                            {report.homeworkAssigned && (
+                                <ReportRow label="Bài tập giao" value={report.homeworkAssigned} />
+                            )}
+                            {report.studentPerformanceRating != null && (
+                                <div style={ratingRow}>
+                                    <span style={reportLabelStyle}>Đánh giá học sinh</span>
+                                    <div style={ratingStars}>
+                                        {[1, 2, 3, 4, 5].map(i => (
+                                            <Star
+                                                key={i}
+                                                size={16}
+                                                fill={i <= report.studentPerformanceRating ? '#fbbf24' : '#e5e7eb'}
+                                                color={i <= report.studentPerformanceRating ? '#f59e0b' : '#d1d5db'}
+                                                strokeWidth={1.5}
+                                            />
+                                        ))}
+                                        <span style={ratingNumber}>
+                                            {report.studentPerformanceRating}/5
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Modals */}
                 <Modal
@@ -402,82 +431,139 @@ const StudentLessonDetail = () => {
 export default StudentLessonDetail;
 
 // ─────────────────────────────────────────────────────────────────────────
-// Small subcomponents
+// Sub-components
 // ─────────────────────────────────────────────────────────────────────────
 
-const MetricCell = ({
+const ContentBlock = ({
     icon,
-    label,
-    value,
     accent,
-}: {
-    icon: React.ReactNode;
-    label: string;
-    value: string;
-    accent: string;
-}) => (
-    <div style={metricCell}>
-        <div style={{ ...metricIcon, background: `${accent}1A`, color: accent }}>{icon}</div>
-        <div style={{ minWidth: 0 }}>
-            <div style={metricLabel}>{label}</div>
-            <div style={metricValue}>{value}</div>
-        </div>
-    </div>
-);
-
-const InfoBlock = ({
-    icon,
-    iconBg,
-    iconColor,
     label,
     value,
 }: {
     icon: React.ReactNode;
-    iconBg: string;
-    iconColor: string;
+    accent: string;
     label: string;
     value: string;
 }) => (
-    <div style={infoBlock}>
-        <div style={{ ...infoBlockIcon, background: iconBg, color: iconColor }}>{icon}</div>
+    <div style={contentBlock}>
+        <div style={{ ...contentBlockIcon, background: `${accent}1A`, color: accent }}>{icon}</div>
         <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={infoBlockLabel}>{label}</div>
-            <div style={infoBlockValue}>{value}</div>
+            <div style={contentBlockLabel}>{label}</div>
+            <div style={contentBlockValue}>{value}</div>
         </div>
     </div>
 );
 
 const ReportRow = ({ label, value }: { label: string; value: string }) => (
-    <div>
-        <div style={reportLabel}>{label}</div>
-        <div style={reportValue}>{value}</div>
+    <div style={reportRowBlock}>
+        <div style={reportLabelStyle}>{label}</div>
+        <div style={reportValueStyle}>{value}</div>
     </div>
 );
+
+// ─────────────────────────────────────────────────────────────────────────
+// Keyframes — injected via a tiny <style> tag
+// ─────────────────────────────────────────────────────────────────────────
+const styleTag = document.createElement('style');
+styleTag.textContent = `
+@keyframes sld-pulse {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(2.2); opacity: 0; }
+}
+@keyframes sld-float1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(10px, -8px) scale(1.1); }
+}
+@keyframes sld-float2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-8px, 6px) scale(1.15); }
+}
+`;
+if (!document.getElementById('sld-keyframes')) {
+    styleTag.id = 'sld-keyframes';
+    document.head.appendChild(styleTag);
+}
 
 // ─────────────────────────────────────────────────────────────────────────
 // Styles
 // ─────────────────────────────────────────────────────────────────────────
 
-// ── Two-column layout ──
-const twoColLayout: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1fr) 320px',
-    gap: 16,
-    alignItems: 'start',
+const FONT_DISPLAY = "'Bricolage Grotesque', 'IBM Plex Sans', sans-serif";
+const FONT_BODY = "'IBM Plex Sans', sans-serif";
+
+// ── Breadcrumb ──
+const breadcrumbRow: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 20,
 };
 
-// ── Hero card ──
+const backBtnStyle: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    color: '#737373',
+    fontFamily: FONT_BODY,
+    fontSize: 13,
+    fontWeight: 500,
+    padding: 0,
+    transition: 'color 0.2s',
+};
+
+const breadcrumbCurrent: React.CSSProperties = {
+    fontSize: 13,
+    fontWeight: 600,
+    color: '#1a2238',
+    fontFamily: FONT_BODY,
+    background: 'rgba(99,102,241,0.08)',
+    padding: '2px 10px',
+    borderRadius: 6,
+};
+
+// ── Hero ──
 const heroCard: React.CSSProperties = {
+    position: 'relative',
+    overflow: 'hidden',
+    background: 'linear-gradient(135deg, #15803d 0%, #059669 50%, #0d9488 100%)',
+    color: '#fff',
+    borderRadius: 16,
+    marginBottom: 16,
+    boxShadow: '0 8px 24px rgba(5,150,105,0.25), 0 2px 8px rgba(0,0,0,0.08)',
+};
+
+const heroBgCircle1: React.CSSProperties = {
+    position: 'absolute',
+    top: -20,
+    right: -20,
+    width: 100,
+    height: 100,
+    borderRadius: '50%',
+    background: 'rgba(255,255,255,0.08)',
+    animation: 'sld-float1 6s ease-in-out infinite',
+};
+
+const heroBgCircle2: React.CSSProperties = {
+    position: 'absolute',
+    bottom: -15,
+    left: '30%',
+    width: 70,
+    height: 70,
+    borderRadius: '50%',
+    background: 'rgba(255,255,255,0.06)',
+    animation: 'sld-float2 8s ease-in-out infinite',
+};
+
+const heroInner: React.CSSProperties = {
+    position: 'relative',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 16,
-    padding: '14px 18px',
-    background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
-    color: '#fff',
-    borderRadius: 12,
-    marginBottom: 16,
-    boxShadow: '0 4px 14px rgba(22,163,74,0.25)',
+    padding: '18px 24px',
 };
 
 const heroLeft: React.CSSProperties = {
@@ -490,8 +576,8 @@ const heroLeft: React.CSSProperties = {
 
 const heroLiveDot: React.CSSProperties = {
     position: 'relative',
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     borderRadius: '50%',
     background: 'rgba(255,255,255,0.18)',
     display: 'flex',
@@ -505,224 +591,413 @@ const heroPulseRing: React.CSSProperties = {
     inset: 0,
     borderRadius: '50%',
     border: '2px solid rgba(255,255,255,0.5)',
+    animation: 'sld-pulse 2s ease-out infinite',
 };
 
 const heroSolidDot: React.CSSProperties = {
-    width: 10,
-    height: 10,
+    width: 12,
+    height: 12,
     borderRadius: '50%',
     background: '#fff',
-    boxShadow: '0 0 0 3px rgba(255,255,255,0.4)',
+    boxShadow: '0 0 0 3px rgba(255,255,255,0.35)',
 };
 
 const heroBadgeText: React.CSSProperties = {
     fontSize: 11,
     fontWeight: 700,
-    letterSpacing: 1,
+    letterSpacing: 1.2,
     opacity: 0.95,
-    fontFamily: "'IBM Plex Sans', sans-serif",
+    fontFamily: FONT_BODY,
     marginBottom: 4,
+    textTransform: 'uppercase',
 };
 
 const heroSubtext: React.CSSProperties = {
-    fontSize: 13,
+    fontSize: 14,
     opacity: 0.92,
-    fontFamily: "'IBM Plex Sans', sans-serif",
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-};
-
-const heroJitsiTag: React.CSSProperties = {
-    fontSize: 10,
-    fontWeight: 600,
-    background: 'rgba(255,255,255,0.25)',
-    padding: '1px 6px',
-    borderRadius: 4,
-    letterSpacing: 0.3,
+    fontFamily: FONT_BODY,
+    fontWeight: 500,
 };
 
 const heroJoinBtn: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: 6,
-    padding: '10px 20px',
+    gap: 8,
+    padding: '12px 24px',
     background: '#fff',
     color: '#15803d',
     fontSize: 14,
     fontWeight: 700,
-    borderRadius: 8,
+    borderRadius: 10,
     textDecoration: 'none',
     whiteSpace: 'nowrap',
-    fontFamily: "'IBM Plex Sans', sans-serif",
+    fontFamily: FONT_BODY,
     flexShrink: 0,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    transition: 'transform 0.15s, box-shadow 0.15s',
 };
 
-// ── Main card ──
-const mainCard: React.CSSProperties = {
+// ── Subject card ──
+const subjectCard: React.CSSProperties = {
     background: '#fff',
     border: '1px solid #f0f0f0',
-    borderRadius: 14,
-    padding: 22,
-    boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 12,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
 };
 
-const subjectHeader: React.CSSProperties = {
+const subjectAccentLine: React.CSSProperties = {
+    height: 3,
+    background: 'linear-gradient(90deg, #6366F1, #0d9488, #059669)',
+};
+
+const subjectCardInner: React.CSSProperties = {
+    padding: '24px 26px 22px',
+};
+
+const subjectTopRow: React.CSSProperties = {
     display: 'flex',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: 12,
-    marginBottom: 18,
-    paddingBottom: 18,
-    borderBottom: '1px solid #f5f5f5',
+    marginBottom: 22,
 };
 
 const subjectTitle: React.CSSProperties = {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 700,
     color: '#1a2238',
-    fontFamily: "'Bricolage Grotesque', 'IBM Plex Sans', sans-serif",
-    marginBottom: 6,
+    fontFamily: FONT_DISPLAY,
     lineHeight: 1.2,
+    marginBottom: 8,
     wordBreak: 'break-word',
 };
 
-const subjectDate: React.CSSProperties = {
+const subjectDateRow: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 6,
     fontSize: 13,
     color: '#737373',
-    fontFamily: "'IBM Plex Sans', sans-serif",
+    fontFamily: FONT_BODY,
     fontWeight: 500,
 };
 
-const statusPill: React.CSSProperties = {
+const statusChip: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 6,
-    padding: '5px 12px',
-    borderRadius: 999,
-    fontSize: 12,
+    padding: '6px 14px',
+    borderRadius: 6,
+    fontSize: 13,
     fontWeight: 600,
-    fontFamily: "'IBM Plex Sans', sans-serif",
+    fontFamily: FONT_BODY,
     whiteSpace: 'nowrap',
     flexShrink: 0,
 };
 
-const statusDot: React.CSSProperties = {
-    width: 6,
-    height: 6,
-    borderRadius: '50%',
+// ── Timeline ──
+const timelineRow: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 0,
+    padding: '16px 0 4px',
 };
 
-// ── Metrics grid ──
-const metricsGrid: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-    gap: 14,
-};
-
-const metricCell: React.CSSProperties = {
+const timeBlock: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     gap: 12,
-    padding: '12px 14px',
+    padding: '14px 18px',
     background: '#fafaf8',
-    borderRadius: 10,
+    borderRadius: 12,
     border: '1px solid #f5f5f5',
+    flex: 1,
 };
 
-const metricIcon: React.CSSProperties = {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
+const timeBlockIconWrap: React.CSSProperties = {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    background: 'rgba(99,102,241,0.10)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
 };
 
-const metricLabel: React.CSSProperties = {
-    fontSize: 11,
+const timeBlockLabel: React.CSSProperties = {
+    fontSize: 10,
     color: '#9ca3af',
-    fontWeight: 600,
+    fontWeight: 700,
     textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    letterSpacing: 0.8,
     marginBottom: 2,
-    fontFamily: "'IBM Plex Sans', sans-serif",
+    fontFamily: FONT_BODY,
 };
 
-const metricValue: React.CSSProperties = {
-    fontSize: 15,
+const timeBlockValue: React.CSSProperties = {
+    fontSize: 18,
     fontWeight: 700,
     color: '#1a2238',
-    fontFamily: "'Bricolage Grotesque', 'IBM Plex Sans', sans-serif",
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
+    fontFamily: FONT_DISPLAY,
 };
 
-// ── Meeting link box ──
+const timeConnector: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 0,
+    width: 60,
+    flexShrink: 0,
+};
+
+const timeConnectorLine: React.CSSProperties = {
+    flex: 1,
+    height: 2,
+    background: '#e5e7eb',
+};
+
+const timeConnectorDot: React.CSSProperties = {
+    width: 8,
+    height: 8,
+    borderRadius: '50%',
+    background: '#d1d5db',
+    flexShrink: 0,
+};
+
+// ── Meeting link ──
 const meetingLinkBox: React.CSSProperties = {
-    marginTop: 16,
-    padding: '12px 14px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 18,
+    padding: '12px 16px',
     background: 'rgba(99,102,241,0.04)',
-    border: '1px dashed rgba(99,102,241,0.25)',
+    border: '1px solid rgba(99,102,241,0.12)',
     borderRadius: 10,
 };
 
 const meetingLinkLabel: React.CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 6,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 600,
     color: '#6366F1',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-    marginBottom: 4,
-    fontFamily: "'IBM Plex Sans', sans-serif",
+    fontFamily: FONT_BODY,
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
 };
 
 const meetingLinkValue: React.CSSProperties = {
     fontSize: 13,
-    color: '#1a2238',
+    color: '#4338ca',
     fontWeight: 500,
-    textDecoration: 'none',
+    textDecoration: 'underline',
+    textDecorationColor: 'rgba(99,102,241,0.3)',
+    textUnderlineOffset: 3,
     wordBreak: 'break-all',
+    minWidth: 0,
 };
 
-const inlineJitsiTag: React.CSSProperties = {
-    fontSize: 10,
-    fontWeight: 600,
-    color: '#92400e',
-    background: '#fef3c7',
-    padding: '1px 6px',
-    borderRadius: 4,
-    letterSpacing: 0.3,
-    textTransform: 'none',
+// ── Tutor card ──
+const tutorCard: React.CSSProperties = {
+    background: '#fff',
+    border: '1px solid #f0f0f0',
+    borderRadius: 14,
+    padding: '18px 22px',
+    marginBottom: 12,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
 };
 
-// ── Section title ──
-const sectionTitle: React.CSSProperties = {
+const tutorCardInner: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
+    gap: 16,
+};
+
+const tutorAvatarRing: React.CSSProperties = {
+    width: 52,
+    height: 52,
+    borderRadius: '50%',
+    padding: 2,
+    background: 'linear-gradient(135deg, #6366F1, #0d9488)',
+    flexShrink: 0,
+};
+
+const tutorAvatarInner: React.CSSProperties = {
+    width: '100%',
+    height: '100%',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#fff',
+    fontSize: 19,
+    fontWeight: 700,
+    fontFamily: FONT_DISPLAY,
+};
+
+const tutorLabelRow: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+};
+
+const tutorLabel: React.CSSProperties = {
+    fontSize: 10,
+    fontWeight: 700,
+    color: '#9ca3af',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    fontFamily: FONT_BODY,
+};
+
+const tutorNameStyle: React.CSSProperties = {
+    fontSize: 16,
+    fontWeight: 700,
+    color: '#1a2238',
+    fontFamily: FONT_DISPLAY,
+    lineHeight: 1.3,
+};
+
+const tutorBadge: React.CSSProperties = {
+    fontSize: 11,
+    fontWeight: 600,
+    color: '#6366F1',
+    background: 'rgba(99,102,241,0.08)',
+    padding: '5px 12px',
+    borderRadius: 8,
+    fontFamily: FONT_BODY,
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
+};
+
+// ── Action cards ──
+const actionCardBase: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 16,
+    padding: '16px 22px',
+    borderRadius: 14,
+    marginBottom: 12,
+};
+
+const actionCardConfirm: React.CSSProperties = {
+    ...actionCardBase,
+    background: 'linear-gradient(135deg, rgba(217,119,6,0.06), rgba(245,158,11,0.04))',
+    border: '1px solid rgba(217,119,6,0.15)',
+};
+
+const actionCardFeedback: React.CSSProperties = {
+    ...actionCardBase,
+    background: 'rgba(26,34,56,0.03)',
+    border: '1px solid rgba(26,34,56,0.08)',
+};
+
+const actionCardIconWrap: React.CSSProperties = {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    background: 'rgba(217,119,6,0.10)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+};
+
+const actionCardTitle: React.CSSProperties = {
+    fontSize: 14,
+    fontWeight: 700,
+    color: '#1a2238',
+    fontFamily: FONT_DISPLAY,
+    marginBottom: 2,
+};
+
+const actionCardDesc: React.CSSProperties = {
+    fontSize: 12,
+    color: '#737373',
+    fontFamily: FONT_BODY,
+    lineHeight: 1.5,
+};
+
+const actionBtnBase: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    padding: '10px 20px',
+    fontSize: 13,
+    fontWeight: 700,
+    border: 'none',
+    borderRadius: 10,
+    cursor: 'pointer',
+    fontFamily: FONT_BODY,
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
+    color: '#fff',
+    transition: 'transform 0.15s, box-shadow 0.15s',
+};
+
+const actionBtnConfirm: React.CSSProperties = {
+    ...actionBtnBase,
+    background: 'linear-gradient(135deg, #d97706, #f59e0b)',
+    boxShadow: '0 2px 8px rgba(217,119,6,0.25)',
+};
+
+const actionBtnFeedback: React.CSSProperties = {
+    ...actionBtnBase,
+    background: 'linear-gradient(135deg, #1a2238, #374151)',
+    boxShadow: '0 2px 8px rgba(26,34,56,0.2)',
+};
+
+// ── Section card ──
+const sectionCard: React.CSSProperties = {
+    background: '#fff',
+    border: '1px solid #f0f0f0',
+    borderRadius: 14,
+    padding: '22px 24px',
+    marginBottom: 12,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+};
+
+const sectionHeaderRow: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 18,
+    paddingBottom: 14,
+    borderBottom: '1px solid #f5f5f5',
+};
+
+const sectionIconWrap: React.CSSProperties = {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    background: 'rgba(99,102,241,0.10)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+};
+
+const sectionTitleText: React.CSSProperties = {
     fontSize: 15,
     fontWeight: 700,
     color: '#1a2238',
-    marginBottom: 16,
-    fontFamily: "'Bricolage Grotesque', 'IBM Plex Sans', sans-serif",
+    fontFamily: FONT_DISPLAY,
 };
 
-// ── Info block ──
-const infoBlock: React.CSSProperties = {
+// ── Content block ──
+const contentBlock: React.CSSProperties = {
     display: 'flex',
     alignItems: 'flex-start',
     gap: 12,
+    padding: '14px 16px',
+    background: '#fafaf8',
+    borderRadius: 10,
+    border: '1px solid #f5f5f5',
 };
 
-const infoBlockIcon: React.CSSProperties = {
+const contentBlockIcon: React.CSSProperties = {
     width: 32,
     height: 32,
     borderRadius: 8,
@@ -732,141 +1007,47 @@ const infoBlockIcon: React.CSSProperties = {
     flexShrink: 0,
 };
 
-const infoBlockLabel: React.CSSProperties = {
-    fontSize: 11,
-    color: '#9ca3af',
-    fontWeight: 600,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-    marginBottom: 3,
-    fontFamily: "'IBM Plex Sans', sans-serif",
-};
-
-const infoBlockValue: React.CSSProperties = {
-    fontSize: 14,
-    color: '#1a2238',
-    lineHeight: 1.6,
-    whiteSpace: 'pre-wrap',
-    fontFamily: "'IBM Plex Sans', sans-serif",
-};
-
-// ── Tutor card ──
-const tutorCard: React.CSSProperties = {
-    background: '#fff',
-    border: '1px solid #f0f0f0',
-    borderRadius: 14,
-    padding: 18,
-    boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
-};
-
-const tutorCardLabel: React.CSSProperties = {
-    fontSize: 11,
-    color: '#9ca3af',
-    fontWeight: 600,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 12,
-    fontFamily: "'IBM Plex Sans', sans-serif",
-};
-
-const tutorRow: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-};
-
-const tutorAvatar = (name: string | null | undefined): React.CSSProperties => ({
-    width: 48,
-    height: 48,
-    borderRadius: '50%',
-    background: getAvatarBg(name),
-    color: '#fff',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: 18,
-    fontWeight: 700,
-    flexShrink: 0,
-    fontFamily: "'Bricolage Grotesque', 'IBM Plex Sans', sans-serif",
-});
-
-const tutorNameText: React.CSSProperties = {
-    fontSize: 15,
-    fontWeight: 700,
-    color: '#1a2238',
-    fontFamily: "'Bricolage Grotesque', 'IBM Plex Sans', sans-serif",
-    lineHeight: 1.2,
-    marginBottom: 2,
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-};
-
-const tutorSubText: React.CSSProperties = {
-    fontSize: 12,
-    color: '#9ca3af',
-    fontFamily: "'IBM Plex Sans', sans-serif",
-};
-
-// ── Action card ──
-const actionCard: React.CSSProperties = {
-    background: '#fff',
-    border: '1px solid #f0f0f0',
-    borderRadius: 14,
-    padding: 18,
-    boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
-};
-
-const actionCardLabel: React.CSSProperties = {
-    fontSize: 11,
-    color: '#9ca3af',
-    fontWeight: 600,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 6,
-    fontFamily: "'IBM Plex Sans', sans-serif",
-};
-
-const actionCardText: React.CSSProperties = {
-    fontSize: 13,
-    color: '#525252',
-    lineHeight: 1.5,
-    marginBottom: 14,
-    fontFamily: "'IBM Plex Sans', sans-serif",
-};
-
-const primaryActionBtn: React.CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    width: '100%',
-    padding: '11px 16px',
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: 700,
-    border: 'none',
-    borderRadius: 8,
-    cursor: 'pointer',
-    fontFamily: "'IBM Plex Sans', sans-serif",
-};
-
-// ── Report ──
-const reportLabel: React.CSSProperties = {
+const contentBlockLabel: React.CSSProperties = {
     fontSize: 11,
     color: '#9ca3af',
     fontWeight: 600,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
     marginBottom: 4,
-    fontFamily: "'IBM Plex Sans', sans-serif",
+    fontFamily: FONT_BODY,
 };
 
-const reportValue: React.CSSProperties = {
+const contentBlockValue: React.CSSProperties = {
     fontSize: 14,
     color: '#1a2238',
     lineHeight: 1.6,
-    fontFamily: "'IBM Plex Sans', sans-serif",
+    whiteSpace: 'pre-wrap',
+    fontFamily: FONT_BODY,
+};
+
+// ── Report ──
+const reportRowBlock: React.CSSProperties = {
+    padding: '12px 14px',
+    background: '#fafaf8',
+    borderRadius: 10,
+    border: '1px solid #f5f5f5',
+};
+
+const reportLabelStyle: React.CSSProperties = {
+    fontSize: 11,
+    color: '#9ca3af',
+    fontWeight: 600,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginBottom: 4,
+    fontFamily: FONT_BODY,
+};
+
+const reportValueStyle: React.CSSProperties = {
+    fontSize: 14,
+    color: '#1a2238',
+    lineHeight: 1.6,
+    fontFamily: FONT_BODY,
     whiteSpace: 'pre-wrap',
 };
 
@@ -874,19 +1055,24 @@ const ratingRow: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '10px 14px',
-    background: 'rgba(251,191,36,0.08)',
-    border: '1px solid rgba(251,191,36,0.2)',
+    padding: '14px 16px',
+    background: 'rgba(251,191,36,0.06)',
+    border: '1px solid rgba(251,191,36,0.15)',
     borderRadius: 10,
 };
 
-const ratingValue: React.CSSProperties = {
+const ratingStars: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: 4,
-    fontSize: 16,
+    gap: 3,
+};
+
+const ratingNumber: React.CSSProperties = {
+    fontSize: 14,
+    fontWeight: 700,
     color: '#92400e',
-    fontFamily: "'Bricolage Grotesque', 'IBM Plex Sans', sans-serif",
+    fontFamily: FONT_DISPLAY,
+    marginLeft: 8,
 };
 
 // ── Not found ──
@@ -916,7 +1102,7 @@ const notFoundTitle: React.CSSProperties = {
     fontWeight: 700,
     color: '#1a2238',
     marginBottom: 8,
-    fontFamily: "'Bricolage Grotesque', 'IBM Plex Sans', sans-serif",
+    fontFamily: FONT_DISPLAY,
 };
 
 const notFoundSub: React.CSSProperties = {
@@ -939,5 +1125,5 @@ const notFoundBackBtn: React.CSSProperties = {
     border: 'none',
     borderRadius: 8,
     cursor: 'pointer',
-    fontFamily: "'IBM Plex Sans', sans-serif",
+    fontFamily: FONT_BODY,
 };
