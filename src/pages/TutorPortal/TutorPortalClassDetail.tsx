@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getTutorLessons, checkInLesson, checkOutLesson, type LessonResponse } from '../../services/lesson.service';
-import { isJitsiFallbackLink } from '../../services/googleAuth.service';
 import { Tag } from 'antd';
 import { toast } from 'react-toastify';
 import styles from '../../styles/pages/tutor-portal-class-detail.module.css';
@@ -25,12 +24,6 @@ const SearchIcon = () => (
 const MessageIcon = () => (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
         <path d="M1 3.5L7 7.5L13 3.5M1 10.5V3.5C1 2.94772 1.44772 2.5 2 2.5H12C12.5523 2.5 13 2.94772 13 3.5V10.5C13 11.0523 12.5523 11.5 12 11.5H2C1.44772 11.5 1 11.0523 1 10.5Z" strokeLinecap="round" />
-    </svg>
-);
-
-const PlusIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M7 2V12M2 7H12" strokeLinecap="round" />
     </svg>
 );
 
@@ -353,7 +346,6 @@ const TutorPortalClassDetail: React.FC = () => {
                                         <div className={styles.classHeader}>
                                             <h1 className={styles.className}>{classInfo.name}</h1>
                                             <span className={styles.subjectTag}>{classInfo.subject}</span>
-                                            <span className={styles.gradeTag}>{classInfo.grade}</span>
                                         </div>
                                         <p className={styles.nextLesson}>Buổi học tiếp theo: {classInfo.nextLesson}</p>
                                     </>
@@ -361,16 +353,6 @@ const TutorPortalClassDetail: React.FC = () => {
                                     <div>Không tìm thấy dữ liệu</div>
                                 )}
                             </div>
-                        </div>
-                        <div className={styles.headerActions}>
-                            <button className={styles.actionBtn} onClick={() => toast.info('Tính năng đang phát triển')}>
-                                <MessageIcon />
-                                <span>Nhắn tin lớp</span>
-                            </button>
-                            <button className={styles.actionBtn} onClick={() => toast.info('Tính năng đang phát triển')}>
-                                <PlusIcon />
-                                <span>Thêm học sinh</span>
-                            </button>
                         </div>
                     </div>
 
@@ -598,16 +580,6 @@ const TutorPortalClassDetail: React.FC = () => {
                                                                 <div style={{ gridColumn: '1 / -1' }}>
                                                                     <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: 8 }}>
                                                                         <span>Link học online</span>
-                                                                        {isJitsiFallbackLink(lesson.meetingLink) && (
-                                                                            <span style={{
-                                                                                fontSize: '10px', fontWeight: 600,
-                                                                                color: '#92400e', background: '#fef3c7',
-                                                                                padding: '1px 6px', borderRadius: 4,
-                                                                                letterSpacing: 0.3,
-                                                                            }} title="Tutor chưa kết nối Google Calendar. Đang dùng Jitsi làm dự phòng.">
-                                                                                Jitsi (dự phòng)
-                                                                            </span>
-                                                                        )}
                                                                     </div>
                                                                     <a href={lesson.meetingLink} target="_blank" rel="noopener noreferrer"
                                                                         style={{ fontSize: '14px', color: '#1890ff', wordBreak: 'break-all' }}>

@@ -235,8 +235,8 @@ const TutorPortalLayout: React.FC = () => {
     }, []);
 
     const isActive = (path: string, pathname: string) => {
-        if (path === '/tutor-portal/finance') {
-            return pathname.startsWith('/tutor-portal/finance');
+        if (path === '/tutor-portal/finance' || path === '/tutor-portal/classes') {
+            return pathname.startsWith(path);
         }
         return pathname === path;
     };
