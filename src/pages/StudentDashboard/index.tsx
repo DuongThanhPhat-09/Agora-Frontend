@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Spin } from 'antd';
 import dayjs from 'dayjs';
 import {
@@ -12,15 +12,18 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowRight,
+  Video,
 } from 'lucide-react';
 import { getStudentPendingLessons, getStudentCalendar, getStudentBookings, getStudentLessons } from '../../services/student-lesson.service';
 import { getUserInfoFromToken } from '../../services/auth.service';
 import { isZaloMiniApp } from '../../services/zalo-env';
+import { isJitsiFallbackLink } from '../../services/googleAuth.service';
 import styles from './styles.module.css';
 
 const inMiniApp = isZaloMiniApp();
 
 const StudentDashboard = () => {
+  const navigate = useNavigate();
   const [lessons, setLessons] = useState<any[]>([]);         // all lessons
   const [pendingLessons, setPendingLessons] = useState<any[]>([]); // pending only
   const [bookings, setBookings] = useState<any[]>([]);
@@ -97,6 +100,27 @@ const StudentDashboard = () => {
     const d = l.scheduledStartTime || l.scheduledStart;
     return d && dayjs(d).format('YYYY-MM-DD') === today;
   });
+
+  // Upcoming lessons (≤ 14 ngày tới, loại completed/cancelled/no_show)
+  // Sort tăng dần theo scheduledStart, lấy top 5
+  const now = dayjs();
+  const upcomingCutoff = now.add(14, 'day');
+  const upcomingLessons = lessons
+    .filter((l: any) => {
+      const d = l.scheduledStartTime || l.scheduledStart;
+      if (!d) return false;
+      const start = dayjs(d);
+      // Bao gồm cả lesson đang in_progress (đã qua start time một chút) để student không miss
+      if (!start.isBefore(upcomingCutoff)) return false;
+      const s = (l.status || '').toLowerCase();
+      return s !== 'completed' && s !== 'cancelled' && s !== 'cancelled_noshow' && s !== 'no_show';
+    })
+    .sort((a: any, b: any) => {
+      const da = a.scheduledStartTime || a.scheduledStart;
+      const db = b.scheduledStartTime || b.scheduledStart;
+      return dayjs(da).valueOf() - dayjs(db).valueOf();
+    })
+    .slice(0, 5);
 
   // Calendar helpers
   const calendarLessonDates = new Set(
@@ -369,6 +393,68 @@ const StudentDashboard = () => {
             </div>
           </div>
 
+          {/* Upcoming Lessons (next 14 days) */}
+          <div className={styles.scheduleWidget} style={{ marginBottom: 16 }}>
+            <div className={styles.scheduleTitle} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Buổi học sắp tới</span>
+              <Link to="/student-portal/lessons" style={{ fontSize: 12, color: '#6366F1', textDecoration: 'none', fontWeight: 500 }}>
+                Xem tất cả →
+              </Link>
+            </div>
+            <div className={styles.scheduleList}>
+              {upcomingLessons.length === 0 ? (
+                <div className={styles.emptyState}>
+                  Chưa có buổi học sắp tới trong 14 ngày
+                </div>
+              ) : (
+                upcomingLessons.map((lesson: any, idx: number) => {
+                  const startTime = lesson.scheduledStartTime || lesson.scheduledStart;
+                  const endTime = lesson.scheduledEndTime || lesson.scheduledEnd;
+                  const isInProgress = lesson.status === 'in_progress';
+                  const canJoin = lesson.meetingLink && isInProgress;
+                  return (
+                    <div
+                      key={lesson.lessonId || idx}
+                      className={`${styles.scheduleItem} ${isInProgress ? styles.active : ''}`}
+                      onClick={() => lesson.lessonId && navigate(`/student-portal/lessons/${lesson.lessonId}`)}
+                      style={{ cursor: lesson.lessonId ? 'pointer' : 'default' }}
+                    >
+                      <div className={styles.scheduleItemHeader}>
+                        <span className={styles.scheduleItemName}>
+                          {lesson.subjectName || `Buổi #${lesson.lessonId}`}
+                        </span>
+                        <span className={styles.scheduleItemTime}>
+                          {isInProgress
+                            ? 'Đang diễn ra'
+                            : startTime ? dayjs(startTime).format('DD/MM HH:mm') : ''}
+                        </span>
+                      </div>
+                      <div className={styles.scheduleItemTutor}>
+                        {lesson.tutorName || 'Gia sư'}
+                      </div>
+                      <div className={styles.scheduleItemTimeRange}>
+                        <Clock size={12} />
+                        {startTime ? dayjs(startTime).format('HH:mm') : ''} - {endTime ? dayjs(endTime).format('HH:mm') : ''}
+                      </div>
+                      {canJoin && (
+                        <a
+                          href={lesson.meetingLink}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={styles.joinBtn}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Video size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
+                          Tham gia ngay
+                        </a>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
           {/* Today's Schedule */}
           <div className={styles.scheduleWidget}>
             <div className={styles.scheduleTitle}>Lịch hôm nay</div>
@@ -381,19 +467,29 @@ const StudentDashboard = () => {
                 todayLessons.map((lesson: any, idx: number) => {
                   const startTime = lesson.scheduledStartTime || lesson.scheduledStart;
                   const endTime = lesson.scheduledEndTime || lesson.scheduledEnd;
-                  const isNow = startTime && endTime && dayjs().isAfter(dayjs(startTime)) && dayjs().isBefore(dayjs(endTime));
+                  // Time-based "đang trong giờ học" (between scheduledStart và scheduledEnd)
+                  const isWithinTimeWindow = startTime && endTime
+                    && dayjs().isAfter(dayjs(startTime)) && dayjs().isBefore(dayjs(endTime));
+                  // Status-based "tutor đã check-in" — tin cậy hơn vì cover cả 15ph pre-class
+                  const isInProgress = lesson.status === 'in_progress';
+                  // Show nút Join khi tutor đã check-in (có meetingLink) HOẶC đang trong giờ học
+                  const canJoin = lesson.meetingLink && (isInProgress || isWithinTimeWindow);
+                  // Active badge khi đang diễn ra (ưu tiên status)
+                  const isActive = isInProgress || isWithinTimeWindow;
 
                   return (
                     <div
                       key={lesson.lessonId || idx}
-                      className={`${styles.scheduleItem} ${isNow ? styles.active : ''}`}
+                      className={`${styles.scheduleItem} ${isActive ? styles.active : ''}`}
+                      onClick={() => lesson.lessonId && navigate(`/student-portal/lessons/${lesson.lessonId}`)}
+                      style={{ cursor: lesson.lessonId ? 'pointer' : 'default' }}
                     >
                       <div className={styles.scheduleItemHeader}>
                         <span className={styles.scheduleItemName}>
                           {lesson.subjectName || `Buổi #${lesson.lessonId}`}
                         </span>
                         <span className={styles.scheduleItemTime}>
-                          {isNow ? 'Đang diễn ra' : startTime ? dayjs(startTime).format('HH:mm') : ''}
+                          {isActive ? 'Đang diễn ra' : startTime ? dayjs(startTime).format('HH:mm') : ''}
                         </span>
                       </div>
                       <div className={styles.scheduleItemTutor}>
@@ -403,7 +499,7 @@ const StudentDashboard = () => {
                         <Clock size={12} />
                         {startTime ? dayjs(startTime).format('HH:mm') : ''} - {endTime ? dayjs(endTime).format('HH:mm') : ''}
                       </div>
-                      {isNow && lesson.meetingLink && (
+                      {canJoin && (
                         <a
                           href={lesson.meetingLink}
                           target="_blank"
@@ -411,7 +507,17 @@ const StudentDashboard = () => {
                           className={styles.joinBtn}
                           onClick={(e) => e.stopPropagation()}
                         >
+                          <Video size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
                           Tham gia buổi học
+                          {isJitsiFallbackLink(lesson.meetingLink) && (
+                            <span style={{
+                              marginLeft: 6, fontSize: 10, fontWeight: 600,
+                              background: 'rgba(255,255,255,0.25)',
+                              padding: '1px 6px', borderRadius: 4, letterSpacing: 0.3,
+                            }}>
+                              Jitsi
+                            </span>
+                          )}
                         </a>
                       )}
                     </div>

@@ -4,9 +4,24 @@ import { isZaloMiniApp } from '../../services/zalo-env';
 import { getUserInfoFromToken } from '../../services/auth.service';
 import { getStudents } from '../../services/student.service';
 import { getParentBookings } from '../../services/booking.service';
-import { getParentLessons } from '../../services/lesson.service';
+import { getParentCalendar, type CalendarLessonDto } from '../../services/parent-lesson.service';
 import type { LessonResponse } from '../../services/lesson.service';
 import type { BookingResponseDTO } from '../../services/booking.service';
+
+/**
+ * Adapt flat CalendarLessonDto → nested LessonResponse shape mà UI dashboard đang dùng.
+ * `getParentLessons` endpoint không tồn tại ở BE — phải dùng `getParentCalendar` (đã có).
+ */
+const adaptCalendarLesson = (cl: CalendarLessonDto): LessonResponse => ({
+  lessonId: cl.lessonId,
+  scheduledStart: cl.scheduledStart,
+  scheduledEnd: cl.scheduledEnd,
+  status: cl.status,
+  meetingLink: cl.meetingLink,
+  subject: cl.subjectName ? { subjectId: 0, subjectName: cl.subjectName } : undefined,
+  tutor: cl.tutorName ? { tutorId: '', fullName: cl.tutorName } : undefined,
+  student: cl.studentName ? { studentId: '', fullName: cl.studentName } : undefined,
+});
 import { StatCard } from '../../components/shared';
 import styles from './styles.module.css';
 
@@ -193,14 +208,21 @@ const ParentDashboard = () => {
         console.error('Dashboard: failed to fetch students:', err);
       }
 
-      // 4) Lessons (upcoming this week)
+      // 4) Lessons (upcoming this week) — dùng getParentCalendar vì getParentLessons không tồn tại ở BE
       try {
         const now = new Date();
-        const fromDate = now.toISOString().split('T')[0];
-        const lessonsRes = await getParentLessons(1, 20, fromDate);
-        const lessonItems: LessonResponse[] = lessonsRes?.content?.items || [];
+        // Fetch range: hôm nay → 14 ngày tới (đủ cho dashboard + week count)
+        const startDate = now.toISOString().split('T')[0];
+        const endDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const calendarRes = await getParentCalendar(startDate, endDate);
+        const calendarDays = calendarRes?.content || [];
 
-        // Count lessons this week
+        // Flatten + sort tăng dần theo scheduledStart
+        const flatLessons: CalendarLessonDto[] = calendarDays
+          .flatMap(d => d.lessons || [])
+          .sort((a, b) => new Date(a.scheduledStart).getTime() - new Date(b.scheduledStart).getTime());
+
+        // Count lessons this week (Mon → Sun)
         const dayOfWeek = now.getDay();
         const mondayDate = new Date(now);
         mondayDate.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
@@ -208,21 +230,26 @@ const ParentDashboard = () => {
         const sundayDate = new Date(mondayDate);
         sundayDate.setDate(mondayDate.getDate() + 7);
 
-        const thisWeekLessons = lessonItems.filter(l => {
+        const thisWeekLessons = flatLessons.filter(l => {
           const d = new Date(l.scheduledStart);
           return d >= mondayDate && d < sundayDate;
         });
         setWeekLessonCount(thisWeekLessons.length);
 
-        // Upcoming lessons (not completed/cancelled)
-        const upcoming = lessonItems.filter(l =>
-          !['Completed', 'Cancelled'].includes(l.status || '')
-        );
+        // Upcoming lessons (loại completed/cancelled) — match cả lowercase từ BE
+        const upcomingRaw = flatLessons.filter(l => {
+          const s = (l.status || '').toLowerCase();
+          return s !== 'completed' && s !== 'cancelled' && s !== 'cancelled_noshow' && s !== 'no_show';
+        });
+
+        const upcoming = upcomingRaw.map(adaptCalendarLesson);
         setUpcomingLessons(upcoming.slice(0, 5));
 
-        // Next lesson
-        if (upcoming.length > 0) {
-          setNextLesson(upcoming[0]);
+        // Next lesson = upcoming đầu tiên có scheduledStart >= now (sort đã đảm bảo thứ tự)
+        const nextLessonRaw = upcomingRaw.find(l => new Date(l.scheduledStart).getTime() >= now.getTime())
+          ?? upcomingRaw[0]; // fallback: lesson đang chạy (status=in_progress)
+        if (nextLessonRaw) {
+          setNextLesson(adaptCalendarLesson(nextLessonRaw));
         }
       } catch (err) {
         console.error('Dashboard: failed to fetch lessons:', err);
@@ -376,7 +403,7 @@ const ParentDashboard = () => {
                     </span>
                     <button
                       className={styles.lessonViewBtn}
-                      onClick={() => navigate(`/parent-portal/lessons`)}
+                      onClick={() => navigate(`/parent-portal/lessons/${lesson.lessonId}`)}
                     >
                       Xem
                     </button>
@@ -413,7 +440,7 @@ const ParentDashboard = () => {
                       <span className={styles.sessionInfoLabel}>Học sinh</span>
                       <span className={styles.sessionInfoValue}>{nextLesson.student?.fullName || '—'}</span>
                     </div>
-                    <button className={styles.sessionBtn} onClick={() => navigate('/parent-portal/lessons')}>
+                    <button className={styles.sessionBtn} onClick={() => navigate(`/parent-portal/lessons/${nextLesson.lessonId}`)}>
                       Xem chi tiết
                     </button>
                   </>

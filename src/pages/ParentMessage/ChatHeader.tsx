@@ -6,7 +6,6 @@ import type { BookingResponseDTO } from '../../services/booking.service';
 interface ChatHeaderProps {
     selectedChannelId: number | null;
     onLeaveChannel: () => void;
-    connectionState: string;
     channel?: ChatChannel | null;
     booking?: BookingResponseDTO | null;
     onBack?: () => void;
@@ -16,7 +15,7 @@ interface ChatHeaderProps {
     onSearchChange?: (query: string) => void;
 }
 
-const ChatHeader = ({ selectedChannelId: _selectedChannelId, onLeaveChannel: _onLeaveChannel, connectionState, channel, onBack, isSearchOpen, onSearchToggle, searchQuery, onSearchChange }: ChatHeaderProps) => {
+const ChatHeader = ({ selectedChannelId: _selectedChannelId, onLeaveChannel: _onLeaveChannel, channel, onBack, isSearchOpen, onSearchToggle, searchQuery, onSearchChange }: ChatHeaderProps) => {
     if (!channel) return null;
 
     const isBookingRequest = channel.status === 'pending_tutor';
@@ -39,11 +38,6 @@ const ChatHeader = ({ selectedChannelId: _selectedChannelId, onLeaveChannel: _on
                                 {(channel.otherUserName || '?').charAt(0).toUpperCase()}
                             </div>
                         )}
-                        <span 
-                            className={styles.statusDot} 
-                            style={{ backgroundColor: connectionState === 'connected' ? '#10b981' : '#a3a3a3' }}
-                            title={connectionState === 'connected' ? 'Trực tuyến' : 'Ngoại tuyến'}
-                        />
                     </div>
                     <div className={styles.chatHeaderText}>
                         <span className={styles.chatName}>{channel.otherUserName}</span>

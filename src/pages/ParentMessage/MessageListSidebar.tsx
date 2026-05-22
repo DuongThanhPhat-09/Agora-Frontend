@@ -102,7 +102,7 @@ const MessageListSidebar = ({ onChannelSelect, onChannelObjectSelect, selectedCh
             </p>
           </div>
         ) : (
-          filteredChannels.map((channel, idx) => (
+          filteredChannels.map((channel) => (
             <div key={channel.channelId} onClick={() => handleChannelClick(channel)}>
               <MessageInfoItem
                 active={selectedChannelId === channel.channelId}
@@ -113,7 +113,6 @@ const MessageListSidebar = ({ onChannelSelect, onChannelObjectSelect, selectedCh
                 session={channel.bookingId ? `Buổi #${channel.bookingId}` : 'Tư vấn'}
                 status={channel.status}
                 timestamp={formatTimestamp(channel.lastMessageAt)}
-                isOnline={idx < 2} /* Mock data: first 2 users appear online */
               />
             </div>
           ))
