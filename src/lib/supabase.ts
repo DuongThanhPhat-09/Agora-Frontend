@@ -4,7 +4,9 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Thiếu biến môi trường Supabase! Hãy kiểm tra file .env");
+  if (import.meta.env.VITE_USE_MOCK !== 'true') {
+    throw new Error("Thiếu biến môi trường Supabase! Hãy kiểm tra file .env");
+  }
 }
 
 // Public anon client — safe to ship to the browser. Used for Supabase Auth
@@ -14,4 +16,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Row Level Security (private bucket uploads, auth.admin.*, cross-user reads,
 // etc.) MUST run on the backend, where the service-role key stays in env vars
 // and never reaches the bundle.
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = (
+  supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null
+) as ReturnType<typeof createClient>;

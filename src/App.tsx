@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+
+const MockDemoBar = import.meta.env.VITE_USE_MOCK === 'true'
+  ? lazy(() => import('./mocks/MockDemoBar'))
+  : null;
 import { isZaloMiniApp } from './services/zalo-env';
 import { DeeplinkHandler } from './components/DeeplinkHandler/DeeplinkHandler';
 
@@ -25,6 +29,7 @@ import './styles/toastify.css';
 // Public
 const HomePage = lazy(() => import('./pages/Home/HomePage'));
 const TutorSearchPage = lazy(() => import('./pages/TutorSearch/TutorSearchPage'));
+const TutorDetailPage = lazy(() => import('./pages/TutorDetail/TutorDetailPage'));
 const LoginPage = lazy(() => import('./pages/Login/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/Register/RegisterPage'));
 const ResetPasswordPage = lazy(() => import('./pages/Login/ResetPasswordPage'));
@@ -162,6 +167,7 @@ function App() {
 
   return (
     <div>
+      {MockDemoBar && <Suspense fallback={null}><MockDemoBar /></Suspense>}
       <SessionExpiredModal
         isOpen={showSessionExpired}
         onClose={() => setShowSessionExpired(false)}
@@ -189,7 +195,10 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/tutor-search" element={<TutorSearchPage />} />
           <Route path="/tutor-detail" element={<Navigate to="/" replace />} />
-          <Route path="/tutor-detail/:id" element={<FallbackRedirect />} />
+          <Route
+            path="/tutor-detail/:id"
+            element={import.meta.env.VITE_USE_MOCK === 'true' ? <TutorDetailPage /> : <FallbackRedirect />}
+          />
 
           {/* Admin + Tutor Portal — không có trong Zalo Mini App */}
           {!inMiniApp && (

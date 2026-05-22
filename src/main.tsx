@@ -1,3 +1,5 @@
+// PHẢI import mockSetup đầu tiên — patch axios.create trước khi service nào khởi tạo
+import "./mocks/mockSetup";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";

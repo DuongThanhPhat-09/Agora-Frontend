@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:mock": "vite --mode mock",
     "dev:zalo": "vite --mode zalo",
     "build": "tsc -b && vite build",
     "build:zalo": "tsc -b && vite build --mode zalo && node scripts/zalo-post-build.mjs",
