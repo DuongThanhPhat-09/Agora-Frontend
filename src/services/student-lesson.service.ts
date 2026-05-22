@@ -47,7 +47,7 @@ export const getStudentLessons = async (params: {
  */
 export const getStudentPendingLessons = async (): Promise<ApiResponse<PendingLessonDto[]>> => {
     try {
-        const response = await api.get('/studentlesson/pending', {
+        const response = await api.get('/student/lessons/pending', {
             headers: getAuthHeaders(),
         });
         return response.data;
@@ -64,7 +64,7 @@ export const getStudentLessonDetail = async (
     lessonId: number
 ): Promise<ApiResponse<LessonDetailDto>> => {
     try {
-        const response = await api.get(`/studentlesson/${lessonId}`, {
+        const response = await api.get(`/student/lessons/${lessonId}`, {
             headers: getAuthHeaders(),
         });
         return response.data;
@@ -81,7 +81,7 @@ export const confirmStudentLesson = async (
     lessonId: number
 ): Promise<ApiResponse<SettlementResultDto>> => {
     try {
-        const response = await api.put(`/studentlesson/${lessonId}/confirm`, {}, {
+        const response = await api.put(`/student/lessons/${lessonId}/confirm`, {}, {
             headers: getAuthHeaders(),
         });
         return response.data;
@@ -92,7 +92,12 @@ export const confirmStudentLesson = async (
 };
 
 /**
- * Get student calendar view
+ * Get student calendar view.
+ *
+ * NOTE: BE chưa có endpoint `/api/student/lessons/calendar` (chỉ tutor + parent có).
+ * Tạm gọi path consistent với pattern — sẽ trả 404 cho đến khi BE add endpoint
+ * tương tự ParentLessonController.GetCalendar / TutorLessonController.GetCalendar.
+ * Caller (StudentDashboard) đã wrap trong try/catch nên không crash UI.
  */
 export const getStudentCalendar = async (
     startDate?: string,
@@ -103,7 +108,7 @@ export const getStudentCalendar = async (
         if (startDate) params.startDate = startDate;
         if (endDate) params.endDate = endDate;
 
-        const response = await api.get('/studentlesson/calendar', {
+        const response = await api.get('/student/lessons/calendar', {
             headers: getAuthHeaders(),
             params,
         });

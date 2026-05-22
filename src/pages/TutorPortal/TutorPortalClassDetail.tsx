@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getTutorLessons, /* checkInLesson, checkOutLesson, */ type LessonResponse } from '../../services/lesson.service';
+import { getTutorLessons, checkInLesson, checkOutLesson, type LessonResponse } from '../../services/lesson.service';
+import { isJitsiFallbackLink } from '../../services/googleAuth.service';
 import { Tag } from 'antd';
 import { toast } from 'react-toastify';
 import styles from '../../styles/pages/tutor-portal-class-detail.module.css';
@@ -97,8 +98,8 @@ const TutorPortalClassDetail: React.FC = () => {
     // Lesson management state
     const [activeLessonId, setActiveLessonId] = useState<number | null>(null);
     const [showReportForm, setShowReportForm] = useState(false);
-    // const [checkingIn, setCheckingIn] = useState(false);
-    // const [checkingOut, setCheckingOut] = useState(false);
+    const [checkingInLessonId, setCheckingInLessonId] = useState<number | null>(null);
+    const [checkingOutLessonId, setCheckingOutLessonId] = useState<number | null>(null);
 
     // Real data from API
     const [lessons, setLessons] = useState<LessonResponse[]>([]);
@@ -204,42 +205,66 @@ const TutorPortalClassDetail: React.FC = () => {
     };
 
     // === Lesson Management Functions ===
-    // MVP Phase 1: Ẩn Check-in/Check-out
-    /*
+
+    /**
+     * Tutor được phép check-in trong cửa sổ ±15 phút quanh giờ bắt đầu.
+     * BE enforce cùng rule (LessonService.CheckInAsync). FE check trước để
+     * disable UI sớm, tránh round-trip nếu rõ ràng ngoài range.
+     */
     const canCheckIn = (lesson: LessonResponse): boolean => {
         if (lesson.status !== 'scheduled') return false;
-        const now = new Date();
-        const start = new Date(lesson.scheduledStart);
-        const diffMinutes = (start.getTime() - now.getTime()) / (1000 * 60);
-        return diffMinutes <= 15 && diffMinutes >= -15;
+        const now = Date.now();
+        const start = new Date(lesson.scheduledStart).getTime();
+        const diffMinutes = Math.abs(now - start) / (1000 * 60);
+        return diffMinutes <= 15;
     };
 
-    const handleCheckIn = async (lessonId: number) => {
+    /**
+     * Click "Vào lớp": gọi check-in → BE tạo Meet link → mở tab Meet.
+     * Nếu lesson đã in_progress mà có meetingLink (vd tutor lỡ đóng tab) → re-open thẳng.
+     */
+    const handleEnterLesson = async (lesson: LessonResponse) => {
+        // Case re-join: lesson đang chạy, đã có link → mở thẳng, không gọi check-in lại
+        if (lesson.status === 'in_progress' && lesson.meetingLink) {
+            window.open(lesson.meetingLink, '_blank', 'noopener,noreferrer');
+            return;
+        }
+
         try {
-            setCheckingIn(true);
-            await checkInLesson(lessonId);
-            toast.success('Check-in thành công!');
+            setCheckingInLessonId(lesson.lessonId);
+            const response = await checkInLesson(lesson.lessonId);
+            const meetingLink = response.content?.meetingLink;
+
+            if (meetingLink) {
+                window.open(meetingLink, '_blank', 'noopener,noreferrer');
+                toast.success('Check-in thành công! Đang mở lớp học…');
+            } else {
+                // teachingMode = offline thì không có link — vẫn check-in OK.
+                toast.success('Check-in thành công!');
+            }
             await fetchClassData();
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Không thể check-in. Vui lòng thử lại.');
+        } catch (error: unknown) {
+            const e = error as { response?: { data?: { message?: string } } };
+            const message: string = e.response?.data?.message || 'Không thể check-in. Vui lòng thử lại.';
+            toast.error(message);
         } finally {
-            setCheckingIn(false);
+            setCheckingInLessonId(null);
         }
     };
 
     const handleCheckOut = async (lessonId: number) => {
         try {
-            setCheckingOut(true);
+            setCheckingOutLessonId(lessonId);
             await checkOutLesson(lessonId);
             toast.success('Check-out thành công!');
             await fetchClassData();
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Không thể check-out. Vui lòng thử lại.');
+        } catch (error: unknown) {
+            const e = error as { response?: { data?: { message?: string } } };
+            toast.error(e.response?.data?.message || 'Không thể check-out. Vui lòng thử lại.');
         } finally {
-            setCheckingOut(false);
+            setCheckingOutLessonId(null);
         }
     };
-    */
 
     const handleReportSuccess = async () => {
         setShowReportForm(false);
@@ -460,40 +485,56 @@ const TutorPortalClassDetail: React.FC = () => {
                                                             {statusInfo.text}
                                                         </Tag>
 
-                                                        {/* Action Buttons */}
-                                                        {/* MVP Phase 1: Ẩn tính năng Check-in */}
-                                                        {/* {lesson.status === 'scheduled' && canCheckIn(lesson) && (
+                                                        {/* "Vào lớp" button — gọi check-in + auto mở Meet link */}
+                                                        {lesson.status === 'scheduled' && canCheckIn(lesson) && (
                                                             <button
-                                                                onClick={(e) => { e.stopPropagation(); handleCheckIn(lesson.lessonId); }}
-                                                                disabled={checkingIn}
+                                                                onClick={(e) => { e.stopPropagation(); handleEnterLesson(lesson); }}
+                                                                disabled={checkingInLessonId === lesson.lessonId}
                                                                 style={{
                                                                     padding: '6px 16px', borderRadius: '8px',
-                                                                    background: '#52c41a', color: '#fff',
+                                                                    background: '#16a34a', color: '#fff',
                                                                     border: 'none', cursor: 'pointer',
                                                                     fontSize: '13px', fontWeight: 600,
-                                                                    opacity: checkingIn ? 0.6 : 1,
+                                                                    opacity: checkingInLessonId === lesson.lessonId ? 0.6 : 1,
+                                                                    display: 'inline-flex', alignItems: 'center', gap: 6,
                                                                 }}
                                                             >
-                                                                {checkingIn ? 'Đang xử lý...' : 'Check-in'}
+                                                                {checkingInLessonId === lesson.lessonId ? 'Đang xử lý...' : '▶ Vào lớp'}
                                                             </button>
-                                                        )} */}
+                                                        )}
 
-                                                        {/* MVP Phase 1: Ẩn tính năng Check-out */}
-                                                        {/* {lesson.status === 'in_progress' && !lesson.checkOutTime && (
+                                                        {/* Re-join button cho lesson đang in_progress mà chưa check-out */}
+                                                        {lesson.status === 'in_progress' && lesson.meetingLink && !lesson.checkOutTime && (
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleEnterLesson(lesson); }}
+                                                                style={{
+                                                                    padding: '6px 16px', borderRadius: '8px',
+                                                                    background: '#16a34a', color: '#fff',
+                                                                    border: 'none', cursor: 'pointer',
+                                                                    fontSize: '13px', fontWeight: 600,
+                                                                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                                                                }}
+                                                            >
+                                                                ▶ Vào lại lớp
+                                                            </button>
+                                                        )}
+
+                                                        {/* Check-out button */}
+                                                        {lesson.status === 'in_progress' && !lesson.checkOutTime && (
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); handleCheckOut(lesson.lessonId); }}
-                                                                disabled={checkingOut}
+                                                                disabled={checkingOutLessonId === lesson.lessonId}
                                                                 style={{
                                                                     padding: '6px 16px', borderRadius: '8px',
                                                                     background: '#faad14', color: '#fff',
                                                                     border: 'none', cursor: 'pointer',
                                                                     fontSize: '13px', fontWeight: 600,
-                                                                    opacity: checkingOut ? 0.6 : 1,
+                                                                    opacity: checkingOutLessonId === lesson.lessonId ? 0.6 : 1,
                                                                 }}
                                                             >
-                                                                {checkingOut ? 'Đang xử lý...' : 'Check-out'}
+                                                                {checkingOutLessonId === lesson.lessonId ? 'Đang xử lý...' : 'Check-out'}
                                                             </button>
-                                                        )} */}
+                                                        )}
 
                                                         {/* MVP Phase 2: Cho phép nộp báo cáo mà không cần Check-in/Check-out */}
                                                         {(lesson.status === 'in_progress' || lesson.status === 'scheduled') && (
@@ -555,9 +596,21 @@ const TutorPortalClassDetail: React.FC = () => {
                                                             )}
                                                             {lesson.meetingLink && (
                                                                 <div style={{ gridColumn: '1 / -1' }}>
-                                                                    <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Link học online</div>
+                                                                    <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                                        <span>Link học online</span>
+                                                                        {isJitsiFallbackLink(lesson.meetingLink) && (
+                                                                            <span style={{
+                                                                                fontSize: '10px', fontWeight: 600,
+                                                                                color: '#92400e', background: '#fef3c7',
+                                                                                padding: '1px 6px', borderRadius: 4,
+                                                                                letterSpacing: 0.3,
+                                                                            }} title="Tutor chưa kết nối Google Calendar. Đang dùng Jitsi làm dự phòng.">
+                                                                                Jitsi (dự phòng)
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                     <a href={lesson.meetingLink} target="_blank" rel="noopener noreferrer"
-                                                                        style={{ fontSize: '14px', color: '#1890ff' }}>
+                                                                        style={{ fontSize: '14px', color: '#1890ff', wordBreak: 'break-all' }}>
                                                                         {lesson.meetingLink}
                                                                     </a>
                                                                 </div>
@@ -601,8 +654,7 @@ const TutorPortalClassDetail: React.FC = () => {
                                                             </div>
                                                         )}
 
-                                                        {/* Check-in hint for scheduled lessons */}
-                                                        {/* MVP Phase 1: Ẩn 
+                                                        {/* Check-in hint for scheduled lessons ngoài cửa sổ 15ph */}
                                                         {lesson.status === 'scheduled' && !canCheckIn(lesson) && (
                                                             <div style={{
                                                                 marginTop: '16px', padding: '12px 16px',
@@ -611,7 +663,7 @@ const TutorPortalClassDetail: React.FC = () => {
                                                             }}>
                                                                 Check-in chỉ khả dụng trong vòng 15 phút trước và sau giờ bắt đầu buổi học.
                                                             </div>
-                                                        )} */}
+                                                        )}
                                                     </div>
                                                 )}
                                             </div>

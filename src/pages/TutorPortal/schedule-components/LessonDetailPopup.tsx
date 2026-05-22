@@ -4,6 +4,7 @@ import { Spin } from "antd";
 import { CloseOutlined } from "@ant-design/icons";
 import styles from "../../../styles/pages/tutor-portal-schedule.module.css";
 import { getLessonStatusInfo } from "./utils";
+import { isJitsiFallbackLink } from "../../../services/googleAuth.service";
 import type { LessonDetailDto } from "../../../services/lesson.service";
 
 interface Props {
@@ -84,8 +85,40 @@ const LessonDetailPopup = forwardRef<HTMLDivElement, Props>(({
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 Tham gia Meet ↗
+                                {isJitsiFallbackLink(detail.meetingLink) && (
+                                    <span style={{
+                                        marginLeft: 6, fontSize: 10, fontWeight: 600,
+                                        color: '#92400e', background: '#fef3c7',
+                                        padding: '1px 5px', borderRadius: 3, letterSpacing: 0.3,
+                                    }}>
+                                        Jitsi
+                                    </span>
+                                )}
                             </a>
                         </div>
+                    )}
+                    {/* Prominent Vào lớp button khi lesson đang chạy */}
+                    {detail.status === 'in_progress' && detail.meetingLink && (
+                        <a
+                            href={detail.meetingLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                                display: 'block',
+                                textAlign: 'center',
+                                background: '#16a34a',
+                                color: '#fff',
+                                padding: '8px 16px',
+                                borderRadius: 6,
+                                fontSize: 13,
+                                fontWeight: 700,
+                                textDecoration: 'none',
+                                marginTop: 8,
+                            }}
+                        >
+                            ▶ Vào lớp ngay
+                        </a>
                     )}
                     {detail.bookingId && (
                         <button

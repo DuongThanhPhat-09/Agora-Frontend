@@ -18,6 +18,16 @@ export interface NotificationDTO {
     userid: string;
     title: string;
     message: string;
+    /**
+     * Notification type — e.g. 'lesson_started', 'lesson_report_submitted', 'booking_new'.
+     * Optional cho đến khi BE chuẩn hoá: hiện tại chưa phải mọi notification đều có field này.
+     */
+    type?: string | null;
+    /**
+     * ID của entity liên quan (lessonId, bookingId, warningId…) — dùng để deep-link.
+     * Optional vì BE NotificationRequest hiện chưa truyền field này khi tạo notification.
+     */
+    referenceid?: string | null;
     isread: boolean | null;
     createdat: string | null;
     username?: string;

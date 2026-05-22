@@ -31,6 +31,7 @@ class SignalRService {
   // ChatArea (vốn dùng single-slot `onMessageReceived`). Khi message tới, cả handler
   // ở `messageHandlers` (ChatArea) lẫn mọi subscriber ở đây đều được gọi.
   private chatMessageSubscribers: Set<(message: any) => void> = new Set();
+  private notificationSubscribers: Set<(notification: any) => void> = new Set();
 
   // ==================== CONNECT / DISCONNECT ====================
 
@@ -247,6 +248,18 @@ class SignalRService {
     this.notificationConnection?.off('ReceiveNotification');
   }
 
+  /**
+   * Multi-subscriber API cho notifications — dùng khi page-level hook cần lắng nghe
+   * notification cụ thể (vd. "Buổi học đã bắt đầu" để refresh lesson) mà không
+   * clobber single-slot handler đang được Layout dùng cho global toast/badge.
+   *
+   * Trả về cleanup function — gọi để unsubscribe.
+   */
+  subscribeToNotifications(handler: (notification: any) => void): () => void {
+    this.notificationSubscribers.add(handler);
+    return () => { this.notificationSubscribers.delete(handler); };
+  }
+
   onNotificationCountUpdated(handler: (count: number) => void): void {
     this.notificationHandlers.set('NotificationCountUpdated', handler);
     if (this.notificationConnection) {
@@ -396,6 +409,10 @@ class SignalRService {
       console.log('🔔 Notification received:', notification);
       const handler = this.notificationHandlers.get('ReceiveNotification');
       if (handler) handler(notification);
+      // Notify multi-subscribers (page-level lesson listener, ...)
+      this.notificationSubscribers.forEach((fn) => {
+        try { fn(notification); } catch (err) { console.error('notification subscriber failed:', err); }
+      });
     });
 
     this.notificationConnection.on('NotificationCountUpdated', (count: number) => {
