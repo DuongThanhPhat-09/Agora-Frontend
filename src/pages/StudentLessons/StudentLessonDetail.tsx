@@ -2,9 +2,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-    ArrowLeft, Clock, BookOpen, AlertCircle, Video,
+    ArrowLeft, BookOpen, AlertCircle, Video,
     Calendar as CalendarIcon, FileText, ClipboardCheck, Star,
-    User, ChevronRight, PlayCircle, StopCircle,
+    User, PlayCircle, StopCircle,
 } from 'lucide-react';
 import dayjs from 'dayjs';
 import { getStudentLessonDetail, confirmStudentLesson } from '../../services/student-lesson.service';
@@ -44,28 +44,6 @@ const formatLongDate = (iso: string | null | undefined): string => {
 const formatTime = (iso: string | null | undefined): string => {
     if (!iso) return '--:--';
     return dayjs(iso).format('HH:mm');
-};
-
-const getInitial = (name: string | null | undefined): string => {
-    if (!name) return '?';
-    const parts = name.trim().split(/\s+/);
-    return (parts[parts.length - 1]?.[0] ?? '?').toUpperCase();
-};
-
-const getAvatarGradient = (name: string | null | undefined): string => {
-    const gradients = [
-        'linear-gradient(135deg, #6366F1, #8B5CF6)',
-        'linear-gradient(135deg, #0d9488, #06b6d4)',
-        'linear-gradient(135deg, #d97706, #f59e0b)',
-        'linear-gradient(135deg, #059669, #10b981)',
-        'linear-gradient(135deg, #7c3aed, #a78bfa)',
-        'linear-gradient(135deg, #0891b2, #22d3ee)',
-        'linear-gradient(135deg, #db2777, #f472b6)',
-    ];
-    if (!name) return gradients[0];
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) & 0xffff;
-    return gradients[hash % gradients.length];
 };
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -514,16 +492,6 @@ const backBtnStyle: React.CSSProperties = {
     transition: 'color 0.2s',
 };
 
-const breadcrumbCurrent: React.CSSProperties = {
-    fontSize: 13,
-    fontWeight: 600,
-    color: '#1a2238',
-    fontFamily: FONT_BODY,
-    background: 'rgba(99,102,241,0.08)',
-    padding: '2px 10px',
-    borderRadius: 6,
-};
-
 // ── Hero ──
 const heroCard: React.CSSProperties = {
     position: 'relative',
@@ -645,11 +613,6 @@ const subjectCard: React.CSSProperties = {
     overflow: 'hidden',
     marginBottom: 12,
     boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-};
-
-const subjectAccentLine: React.CSSProperties = {
-    height: 3,
-    background: 'linear-gradient(90deg, #6366F1, #0d9488, #059669)',
 };
 
 const subjectCardInner: React.CSSProperties = {
@@ -812,28 +775,6 @@ const tutorCardInner: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     gap: 16,
-};
-
-const tutorAvatarRing: React.CSSProperties = {
-    width: 52,
-    height: 52,
-    borderRadius: '50%',
-    padding: 2,
-    background: 'linear-gradient(135deg, #6366F1, #0d9488)',
-    flexShrink: 0,
-};
-
-const tutorAvatarInner: React.CSSProperties = {
-    width: '100%',
-    height: '100%',
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: '#fff',
-    fontSize: 19,
-    fontWeight: 700,
-    fontFamily: FONT_DISPLAY,
 };
 
 const tutorLabelRow: React.CSSProperties = {

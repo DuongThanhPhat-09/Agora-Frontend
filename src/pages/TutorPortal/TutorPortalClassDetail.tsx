@@ -27,12 +27,6 @@ const MessageIcon = () => (
     </svg>
 );
 
-const PlusIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M7 2V12M2 7H12" strokeLinecap="round" />
-    </svg>
-);
-
 const ExportIcon = () => (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
         <path d="M7 10V2M7 2L4 5M7 2L10 5M2 12H12" strokeLinecap="round" strokeLinejoin="round" />
