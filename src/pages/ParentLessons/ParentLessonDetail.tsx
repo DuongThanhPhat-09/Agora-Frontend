@@ -3,8 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { isZaloMiniApp } from '../../services/zalo-env';
 
 const inMiniApp = isZaloMiniApp();
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Video } from 'lucide-react';
 import { getParentLessonDetail } from '../../services/parent-lesson.service';
+import { isJitsiFallbackLink } from '../../services/googleAuth.service';
+import { useLessonStartedListener } from '../../hooks/useLessonStartedListener';
 import { Spin, Tag, Button } from 'antd';
 import { toast } from 'react-toastify';
 import CountdownTimer from './components/CountdownTimer';
@@ -57,6 +59,9 @@ const ParentLessonDetail: React.FC = () => {
   useEffect(() => {
     if (id) fetchLesson();
   }, [id]);
+
+  // Tutor check-in → notification "Buổi học đã bắt đầu" → tự refetch để render banner Join
+  useLessonStartedListener(() => { if (id) fetchLesson(); });
 
   const handleActionSuccess = () => {
     setShowConfirmModal(false);
@@ -140,6 +145,71 @@ const ParentLessonDetail: React.FC = () => {
         </div>
       )}
 
+      {/* Join Banner — chỉ hiện khi tutor đã check-in & có link */}
+      {lesson.status === 'in_progress' && lesson.meetingLink && (
+        <div style={{
+          background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
+          color: '#fff',
+          borderRadius: 12,
+          padding: '20px 24px',
+          marginBottom: 20,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16,
+          flexWrap: 'wrap',
+          boxShadow: '0 6px 20px rgba(22,163,74,0.25)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: '50%',
+              background: 'rgba(255,255,255,0.2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <Video size={22} color="#fff" />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 2 }}>
+                Buổi học đã bắt đầu
+              </div>
+              <div style={{ fontSize: 13, opacity: 0.9, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <span>Gia sư đang chờ trong lớp</span>
+                {isJitsiFallbackLink(lesson.meetingLink) && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 600,
+                    background: 'rgba(255,255,255,0.25)',
+                    padding: '1px 8px', borderRadius: 4, letterSpacing: 0.3,
+                  }}>
+                    Jitsi (dự phòng)
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <a
+            href={lesson.meetingLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              background: '#fff',
+              color: '#15803d',
+              padding: '10px 22px',
+              borderRadius: 8,
+              fontSize: 14,
+              fontWeight: 700,
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            ▶ Tham gia ngay
+          </a>
+        </div>
+      )}
+
       {/* Lesson Info Card */}
       <div style={{
         background: '#fff', borderRadius: '12px', padding: '24px',
@@ -169,9 +239,20 @@ const ParentLessonDetail: React.FC = () => {
           )}
           {lesson.meetingLink && (
             <div style={{ gridColumn: '1 / -1' }}>
-              <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Link học online</div>
+              <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span>Link học online</span>
+                {isJitsiFallbackLink(lesson.meetingLink) && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 600,
+                    color: '#92400e', background: '#fef3c7',
+                    padding: '1px 6px', borderRadius: 4, letterSpacing: 0.3,
+                  }}>
+                    Jitsi (dự phòng)
+                  </span>
+                )}
+              </div>
               <a href={lesson.meetingLink} target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: '14px', color: '#1890ff' }}>
+                style={{ fontSize: '14px', color: '#1890ff', wordBreak: 'break-all' }}>
                 {lesson.meetingLink}
               </a>
             </div>

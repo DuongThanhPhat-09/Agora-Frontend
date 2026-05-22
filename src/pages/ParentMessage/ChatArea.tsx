@@ -322,7 +322,6 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
       <ChatHeader
         selectedChannelId={selectedChannelId}
         onLeaveChannel={handleLeaveChannel}
-        connectionState={connectionState}
         channel={selectedChannel}
         booking={booking}
         onBack={onBack}

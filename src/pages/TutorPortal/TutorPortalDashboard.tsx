@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import styles from '../../styles/pages/tutor-portal-dashboard.module.css';
-import { getTutorDashboardStats, getTutorCalendar, type TutorDashboardStats, type CalendarDay, type CalendarLesson } from '../../services/lesson.service';
+import { getTutorDashboardStats, getTutorCalendar, checkInLesson, type TutorDashboardStats, type CalendarDay, type CalendarLesson } from '../../services/lesson.service';
 import { getTutorFeedbacks, type FeedbackDto } from '../../services/feedback.service';
 import { getCurrentUser } from '../../services/auth.service';
 import { StatCard } from '../../components/shared';
@@ -254,6 +255,47 @@ const TutorPortalDashboard: React.FC = () => {
             })
             .flatMap(day => day.lessons || [])
             .sort((a, b) => new Date(a.scheduledStart).getTime() - new Date(b.scheduledStart).getTime());
+    };
+
+    // ── Check-in / Vào lớp helpers (shared với ClassDetail) ──
+    const [checkingInLessonId, setCheckingInLessonId] = useState<number | null>(null);
+
+    const canCheckIn = (lesson: CalendarLesson): boolean => {
+        if (lesson.status !== 'scheduled') return false;
+        const diffMinutes = Math.abs(Date.now() - new Date(lesson.scheduledStart).getTime()) / (1000 * 60);
+        return diffMinutes <= 15;
+    };
+
+    const handleEnterLesson = async (lesson: CalendarLesson) => {
+        // Re-join nếu lesson đang chạy & đã có link
+        if (lesson.status === 'in_progress' && lesson.meetingLink) {
+            window.open(lesson.meetingLink, '_blank', 'noopener,noreferrer');
+            return;
+        }
+
+        try {
+            setCheckingInLessonId(lesson.lessonId);
+            const response = await checkInLesson(lesson.lessonId);
+            const link = response.content?.meetingLink;
+            if (link) {
+                window.open(link, '_blank', 'noopener,noreferrer');
+                toast.success('Check-in thành công! Đang mở lớp học…');
+            } else {
+                toast.success('Check-in thành công!');
+            }
+            // Refetch calendar — lesson đã đổi sang in_progress + có meetingLink
+            try {
+                const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+                const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+                const calendarResponse = await getTutorCalendar(firstDay.toISOString(), lastDay.toISOString());
+                if (calendarResponse.content) setCalendarData(calendarResponse.content);
+            } catch { /* non-critical */ }
+        } catch (error: unknown) {
+            const e = error as { response?: { data?: { message?: string } } };
+            toast.error(e.response?.data?.message || 'Không thể check-in. Vui lòng thử lại.');
+        } finally {
+            setCheckingInLessonId(null);
+        }
     };
 
     const formatTime = (dateString: string) => {
@@ -559,9 +601,23 @@ const TutorPortalDashboard: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className={styles.lessonActions}>
-                                            {lesson.meetingLink && (
-                                                <button className={styles.primaryBtn} onClick={() => window.open(lesson.meetingLink!, '_blank')}>
-                                                    Vào lớp
+                                            {/* Scheduled & trong cửa sổ 15ph → nút Vào lớp (gọi check-in) */}
+                                            {canCheckIn(lesson) && (
+                                                <button
+                                                    className={styles.primaryBtn}
+                                                    onClick={() => handleEnterLesson(lesson)}
+                                                    disabled={checkingInLessonId === lesson.lessonId}
+                                                >
+                                                    {checkingInLessonId === lesson.lessonId ? 'Đang xử lý…' : '▶ Vào lớp'}
+                                                </button>
+                                            )}
+                                            {/* In-progress & đã có link → nút Vào lại lớp (re-open) */}
+                                            {lesson.status === 'in_progress' && lesson.meetingLink && (
+                                                <button
+                                                    className={styles.primaryBtn}
+                                                    onClick={() => handleEnterLesson(lesson)}
+                                                >
+                                                    ▶ Vào lại lớp
                                                 </button>
                                             )}
                                         </div>
