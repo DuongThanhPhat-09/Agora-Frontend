@@ -4,11 +4,6 @@ import axios from 'axios';
 import { getCurrentUser } from './auth.service';
 import { setupAuthInterceptor } from './apiClient';
 import type {
-  // Dashboard
-  DashboardMetrics,
-  RevenueChartData,
-  UserGrowthData,
-  RecentActivity,
   // Vetting
   // TutorForReview,
   TutorDetailForReview,
@@ -76,75 +71,8 @@ setupAuthInterceptor(api);
 // ============================================
 // DASHBOARD APIs (ADM-01)
 // ============================================
-
-/**
- * Get dashboard metrics (8 KPIs)
- * Total Users, Pending Tutors, Active Bookings, Open Disputes,
- * Total GMV, Net Revenue, Escrow Balance, Pending Withdrawals
- */
-export const getDashboardMetrics = async (): Promise<DashboardMetrics> => {
-  try {
-    const { data } = await api.get('/admin/dashboard/metrics');
-    return data;
-  } catch (error) {
-    console.error('getDashboardMetrics error:', error);
-    throw error;
-  }
-};
-
-/**
- * Get revenue chart data (line chart)
- * @param days - Number of days to fetch (default: 30)
- */
-export const getRevenueChart = async (
-  days: number = 30
-): Promise<RevenueChartData[]> => {
-  try {
-    const { data } = await api.get('/admin/dashboard/revenue-chart', {
-      params: { days },
-    });
-    return data;
-  } catch (error) {
-    console.error('getRevenueChart error:', error);
-    throw error;
-  }
-};
-
-/**
- * Get user growth chart data (bar chart)
- * @param months - Number of months to fetch (default: 6)
- */
-export const getUserGrowthChart = async (
-  months: number = 6
-): Promise<UserGrowthData[]> => {
-  try {
-    const { data } = await api.get('/admin/dashboard/user-growth', {
-      params: { months },
-    });
-    return data;
-  } catch (error) {
-    console.error('getUserGrowthChart error:', error);
-    throw error;
-  }
-};
-
-/**
- * Get recent activities feed
- * @param limit - Number of activities to fetch (default: 10)
- */
-export const getRecentActivities = async (
-  limit: number = 10
-): Promise<RecentActivity[]> => {
-  try {
-    const { data } = await api.get('/admin/dashboard/activities', {
-      params: { limit },
-    });
-    return data;
-  } catch (error) {
-    console.error('getRecentActivities error:', error);
-    throw error;
-  }
-};
+// Dashboard endpoints live in services/adminDashboard.service.ts (split into
+// /stats, /users, /tutor-performance, /disputes — matches BE refactor).
 
 // ============================================
 // VETTING APIs (ADM-02)
