@@ -26,7 +26,24 @@ dist-ssr
 
 # Environment variables
 .env
+.env.*
+!.env.*.example
 .claude/
 /.vs
 .vercel
 .env*.local
+
+# Backup files
+*.bak
+
+# Lint / type-check / git command output dumps
+eslint_*.json
+eslint_*.txt
+lint_output*.txt
+tsc_output.txt
+git_diff.txt
+git-status-output.txt
+
+# Ad-hoc debug / test scratch files
+debug-*.js
+test_*.html
