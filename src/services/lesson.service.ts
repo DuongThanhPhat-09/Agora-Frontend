@@ -92,6 +92,7 @@ export interface PagedList<T> {
 
 export interface UpcomingLesson {
   lessonId: number;
+  bookingId: number;
   scheduledStart: string;
   scheduledEnd: string;
   studentName: string | null;

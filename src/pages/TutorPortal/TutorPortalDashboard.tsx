@@ -543,7 +543,7 @@ const TutorPortalDashboard: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <button className={styles.outlineBtn} onClick={() => navigate(`/tutor-portal/classes/${lesson.lessonId}`)}>
+                                <button className={styles.outlineBtn} onClick={() => navigate(`/tutor-portal/classes/${lesson.bookingId}`)}>
                                     Chi tiết
                                 </button>
                             </div>
