@@ -7,52 +7,159 @@
 // Based on: admin-portal-spec.md
 
 // ============================================
-// DASHBOARD TYPES (ADM-01)
+// DASHBOARD TYPES (ADM-01) — NEW (mirrors BE DTOs in MV.DomainLayer/DTO/ResponseModel/Admin)
 // ============================================
 
-export interface DashboardMetrics {
+// --- GET /api/admin/dashboard/stats ---
+export interface DashboardPlatformOverview {
   totalUsers: number;
-  pendingTutors: number;
+  totalActiveTutors: number;
+  totalParents: number;
+  totalStudents: number;
+  pendingTutorApprovals: number;
+  suspendedUsers: number;
+}
+
+export interface DashboardBookingSummary {
   activeBookings: number;
-  openDisputes: number;
-  totalGMV: number; // Gross Merchandise Value
-  netRevenue: number; // Platform revenue after fees
-  escrowBalance: number;
+  completedBookings: number;
+  cancelledBookings: number;
+  gmvThisMonth: number;
+  platformRevenueThisMonth: number;
+}
+
+export interface DashboardLessonSummary {
+  lessonsToday: number;
+  completionRatePercent: number | null;
+  noShowRatePercent: number | null;
+}
+
+export interface DashboardPendingActions {
   pendingWithdrawals: number;
-  // Allow additional/lowercase properties from API responses
-  [key: string]: any;
+  pendingWithdrawalAmount: number;
+  openDisputes: number;
+  pendingWarnings: number;
 }
 
-export interface RevenueChartData {
-  date: string; // ISO date format
-  amount: number;
-  [key: string]: any;
+export interface AdminDashboardStats {
+  platformOverview: DashboardPlatformOverview;
+  bookingSummary: DashboardBookingSummary;
+  lessonSummary: DashboardLessonSummary;
+  pendingActions: DashboardPendingActions;
 }
 
-export interface UserGrowthData {
-  month: string; // 'Jan 2024', 'Feb 2024', etc.
-  students: number;
-  tutors: number;
+// --- GET /api/admin/dashboard/users ---
+export interface UserStatsByRole {
+  totalTutors: number;
+  totalParents: number;
+  totalStudents: number;
+  totalStaff: number;
 }
 
-export type ActivityType =
-  | 'tutor_approved'
-  | 'tutor_rejected'
-  | 'dispute_resolved'
-  | 'withdrawal_processed'
-  | 'user_blocked'
-  | 'user_unblocked';
+export interface UserStatsTutorFunnel {
+  draft: number;
+  pendingApproval: number;
+  active: number;
+  rejected: number;
+  publicTutors: number;
+}
 
-export interface RecentActivity {
-  activityId: string;
-  activityType: ActivityType;
-  description: string;
-  timestamp: string; // ISO datetime
-  userId?: string;
-  userName?: string;
-  userAvatar?: string;
-  // Allow additional/lowercase properties from API responses
-  [key: string]: any;
+export interface UserStatsGrowth {
+  newTutors: number;
+  newParents: number;
+  newStudents: number;
+  newUsersThisWeek: number;
+  newUsersThisMonth: number;
+}
+
+export interface UserStatsModeration {
+  activeSuspensions: number;
+  totalWarnings: number;
+  usersWithWarnings: number;
+}
+
+export interface AdminUserStats {
+  byRole: UserStatsByRole;
+  tutorFunnel: UserStatsTutorFunnel;
+  growth: UserStatsGrowth;
+  moderation: UserStatsModeration;
+  filterFrom: string | null;
+  filterTo: string | null;
+}
+
+// --- GET /api/admin/dashboard/tutor-performance ---
+export interface TutorPerformanceItem {
+  tutorId: string;
+  fullName: string;
+  avatarUrl: string | null;
+  averageRating: number | null;
+  totalFeedbacks: number;
+  lessonsCompleted: number;
+  lessonsCancelled: number;
+  noShows: number;
+  completionRatePercent: number | null;
+  totalRevenue: number;
+  subscriptionType: string | null;
+}
+
+export interface RatingDistributionItem {
+  rating: number;
+  count: number;
+}
+
+export interface TutorFeedbackSummary {
+  totalFeedbacks: number;
+  averageRating: number | null;
+  ratingDistribution: RatingDistributionItem[];
+  parentSatisfactionRate: number | null;
+}
+
+export interface AdminTutorPerformance {
+  platformAverageRating: number | null;
+  platformAvgCompletionRate: number | null;
+  topByRating: TutorPerformanceItem[];
+  topByLessonsCompleted: TutorPerformanceItem[];
+  topByRevenue: TutorPerformanceItem[];
+  feedbackSummary: TutorFeedbackSummary;
+  filterFrom: string | null;
+  filterTo: string | null;
+}
+
+// --- GET /api/admin/dashboard/disputes ---
+export interface DisputeStatsOverview {
+  totalDisputes: number;
+  pending: number;
+  investigating: number;
+  resolved: number;
+  closed: number;
+  resolutionRatePercent: number | null;
+  avgResolutionDays: number | null;
+}
+
+export interface DisputeStatsFinancial {
+  totalRefundAmount: number;
+  refundsThisPeriod: number;
+  refundAmountThisPeriod: number;
+}
+
+export interface DisputeTypeCount {
+  type: string;
+  count: number;
+}
+
+export interface DisputeTrendItem {
+  month: string;
+  count: number;
+  refundAmount: number;
+}
+
+export interface AdminDisputeStats {
+  overview: DisputeStatsOverview;
+  financial: DisputeStatsFinancial;
+  byType: DisputeTypeCount[];
+  trend: DisputeTrendItem[];
+  filterFrom: string | null;
+  filterTo: string | null;
 }
 
 // ============================================
