@@ -6,8 +6,24 @@ import styles from '../components/shared/PortalLayout/PortalLayout.module.css';
 import { getTourStatus, completeTour } from '../services/auth.service';
 import TutorTour, { type TourStep } from '../components/TutorTour/TutorTour';
 import { useUnreadMessageBadge } from '../hooks/useUnreadMessageBadge';
+import { useUnreadBadgesByTab } from '../hooks/useUnreadBadgesByTab';
 
 const MESSAGES_PATH = '/tutor-portal/messages';
+
+// Map sidebar path → notification types thuộc tab đó. Đồng bộ với BE
+// `MV.DomainLayer/Constants/NotificationType.cs`. Tin nhắn không vào đây
+// (đã có `useUnreadMessageBadge` đếm chat unread riêng).
+const NOTIFICATION_TYPES_BY_PATH: Record<string, string[]> = {
+    '/tutor-portal/bookings': ['booking_new', 'booking_accepted', 'booking_declined'],
+    '/tutor-portal/schedule': [
+        'lesson_reminder',
+        'lesson_checkin',
+        'lesson_confirmed',
+        'lesson_no_show',
+        'lesson_report',
+    ],
+    '/tutor-portal/finance': ['payment_success'],
+};
 
 // ─── Tutor-specific SVG Icons ───
 
@@ -178,12 +194,19 @@ const TutorPortalLayout: React.FC = () => {
 
     // Tin nhắn unread badge — fetch + SignalR real-time + auto-clear khi vào /messages.
     const unreadMessageCount = useUnreadMessageBadge(MESSAGES_PATH);
+    // Notification badges per-tab — group unread noti theo `type` → map sang path sidebar.
+    const badgesByPath = useUnreadBadgesByTab(NOTIFICATION_TYPES_BY_PATH);
+
     const navItems = useMemo<NavItem[]>(
         () =>
-            baseNavItems.map((item) =>
-                item.path === MESSAGES_PATH ? { ...item, badge: unreadMessageCount } : item,
-            ),
-        [unreadMessageCount],
+            baseNavItems.map((item) => {
+                if (item.path === MESSAGES_PATH) {
+                    return { ...item, badge: unreadMessageCount };
+                }
+                const count = badgesByPath[item.path];
+                return count ? { ...item, badge: count } : item;
+            }),
+        [unreadMessageCount, badgesByPath],
     );
 
     // Show tour prompt only on first visit to dashboard
