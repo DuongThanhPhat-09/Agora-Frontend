@@ -50,6 +50,7 @@ const AllPayoutRequestsPage = lazy(() => import('./pages/AdminPayout/AllRequests
 const FraudLogsPage = lazy(() => import('./pages/AdminPayout/FraudLogs/FraudLogsPage'));
 
 // Tutor Portal pages
+const TutorOnboarding = lazy(() => import('./pages/TutorOnboarding'));
 const TutorPortalProfile = lazy(() => import('./pages/TutorPortal/TutorPortalProfile'));
 const TutorPortalDashboard = lazy(() => import('./pages/TutorPortal/TutorPortalDashboard'));
 const TutorPortalSchedule = lazy(() => import('./pages/TutorPortal/TutorPortalSchedule'));
@@ -228,6 +229,7 @@ function App() {
                 </ProtectedRoute>
               }>
                 <Route index element={<Navigate to="/tutor-portal/dashboard" replace />} />
+                <Route path="onboarding" element={<TutorOnboarding />} />
                 <Route path="dashboard" element={<TutorPortalDashboard />} />
                 <Route path="profile" element={<TutorPortalProfile />} />
                 <Route path="schedule" element={<TutorPortalSchedule />} />
