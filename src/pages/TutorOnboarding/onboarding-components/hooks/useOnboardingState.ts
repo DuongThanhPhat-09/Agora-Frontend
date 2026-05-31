@@ -1,131 +1,171 @@
 import { useState, useCallback } from 'react';
-import type { OnboardingState, OnboardingStep, OnboardingSubject, Combo } from '../types';
-import { HOURS } from '../constants';
+import { hasAvailabilityForDuration, isSessionWithinAvailability } from '../availability-utils';
+import { HOURS, formatHour } from '../constants';
+import type { OnboardingState, OnboardingStep, SubjectRecord, Combo } from '../types';
 
-const slotKey = (dayOfWeek: number, startHour: number) => `${dayOfWeek}-${startHour}`;
+const clampStep = (n: number): OnboardingStep => Math.min(3, Math.max(1, n)) as OnboardingStep;
 
-const createSubject = (subjectId: number, subjectName: string): OnboardingSubject => ({
-    subjectId,
-    subjectName,
-    hourlyRate: null,
-});
-
-const clampStep = (n: number): OnboardingStep => Math.min(4, Math.max(1, n)) as OnboardingStep;
+const newId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const availabilityId = (dayOfWeek: number, startHour: number) => `${dayOfWeek}-${startHour}`;
 
 export function useOnboardingState() {
-    const [state, setState] = useState<OnboardingState>({
-        subjects: [],
-        availability: [],
-        combos: [],
-        currentStep: 1,
+  const [state, setState] = useState<OnboardingState>({
+    subjectRecords: [],
+    availability: [],
+    combos: [],
+    currentStep: 1,
+  });
+  // ── Step navigation ──
+  const goToStep = useCallback((step: OnboardingStep) => {
+    setState((p) => ({ ...p, currentStep: step }));
+  }, []);
+  const goNext = useCallback(() => {
+    setState((p) => ({ ...p, currentStep: clampStep(p.currentStep + 1) }));
+  }, []);
+  const goBack = useCallback(() => {
+    setState((p) => ({ ...p, currentStep: clampStep(p.currentStep - 1) }));
+  }, []);
+
+  // ── B1: subject records ──
+  // Thêm 1 record (môn, khối, giá). Trả false nếu đã tồn tại (môn, khối).
+  const addSubjectRecord = useCallback(
+    (input: { subjectId: number; subjectName: string; gradeLevel: string; hourlyRate: number }): boolean => {
+      let added = false;
+      setState((prev) => {
+        const dup = prev.subjectRecords.some(
+          (r) => r.subjectId === input.subjectId && r.gradeLevel === input.gradeLevel,
+        );
+        if (dup) return prev;
+        added = true;
+        return {
+          ...prev,
+          subjectRecords: [...prev.subjectRecords, { id: newId(), ...input }],
+        };
+      });
+      return added;
+    },
+    [],
+  );
+
+  const updateSubjectRecord = useCallback((id: string, patch: Partial<Omit<SubjectRecord, 'id'>>) => {
+    setState((prev) => ({
+      ...prev,
+      subjectRecords: prev.subjectRecords.map((r) => (r.id === id ? { ...r, ...patch } : r)),
+    }));
+  }, []);
+
+  const removeSubjectRecord = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      subjectRecords: prev.subjectRecords.filter((r) => r.id !== id),
+    }));
+  }, []);
+
+  // ── B2: lịch rảnh demo theo từng ô một giờ ──
+  const setAvailable = useCallback((dayOfWeek: number, startHour: number, isAvailable: boolean) => {
+    setState((prev) => {
+      const id = availabilityId(dayOfWeek, startHour);
+      const exists = prev.availability.some((slot) => slot.id === id);
+      if (isAvailable && !exists) {
+        return {
+          ...prev,
+          availability: [
+            ...prev.availability,
+            {
+              id,
+              dayOfWeek,
+              startTime: formatHour(startHour),
+              endTime: formatHour(startHour + 1),
+            },
+          ],
+        };
+      }
+      if (!isAvailable && exists) {
+        return {
+          ...prev,
+          availability: prev.availability.filter((slot) => slot.id !== id),
+        };
+      }
+      return prev;
     });
+  }, []);
 
-    // ── Step navigation ──
-    const goToStep = useCallback((step: OnboardingStep) => {
-        setState((prev) => ({ ...prev, currentStep: step }));
-    }, []);
-    const goNext = useCallback(() => {
-        setState((prev) => ({ ...prev, currentStep: clampStep(prev.currentStep + 1) }));
-    }, []);
-    const goBack = useCallback(() => {
-        setState((prev) => ({ ...prev, currentStep: clampStep(prev.currentStep - 1) }));
-    }, []);
+  const toggleAvailabilityDay = useCallback((dayOfWeek: number) => {
+    setState((prev) => {
+      const selectedHours = new Set(
+        prev.availability
+          .filter((slot) => slot.dayOfWeek === dayOfWeek)
+          .map((slot) => Number(slot.startTime.slice(0, 2))),
+      );
+      const isFullDay = HOURS.every((hour) => selectedHours.has(hour));
+      if (isFullDay) {
+        return {
+          ...prev,
+          availability: prev.availability.filter((slot) => slot.dayOfWeek !== dayOfWeek),
+        };
+      }
 
-    // ── B1: subjects ──
-    const toggleSubject = useCallback((subjectId: number, subjectName: string) => {
-        setState((prev) => {
-            const exists = prev.subjects.some((s) => s.subjectId === subjectId);
-            if (exists) {
-                // Combo không ràng buộc môn nữa (phụ huynh chọn lúc booking) → giữ nguyên.
-                return {
-                    ...prev,
-                    subjects: prev.subjects.filter((s) => s.subjectId !== subjectId),
-                };
-            }
-            return { ...prev, subjects: [...prev.subjects, createSubject(subjectId, subjectName)] };
-        });
-    }, []);
+      const additions = HOURS.filter((hour) => !selectedHours.has(hour)).map((hour) => ({
+        id: availabilityId(dayOfWeek, hour),
+        dayOfWeek,
+        startTime: formatHour(hour),
+        endTime: formatHour(hour + 1),
+      }));
+      return {
+        ...prev,
+        availability: [...prev.availability, ...additions],
+      };
+    });
+  }, []);
 
-    // ── B2: giá/giờ + nhận booking (per môn) ──
-    const setSubjectHourlyRate = useCallback((subjectId: number, rate: number | null) => {
-        setState((prev) => ({
-            ...prev,
-            subjects: prev.subjects.map((s) => (s.subjectId !== subjectId ? s : { ...s, hourlyRate: rate })),
-        }));
-    }, []);
+  const clearAvailability = useCallback(() => {
+    setState((prev) => ({ ...prev, availability: [] }));
+  }, []);
 
-    // ── B3: lịch rảnh (chung cho tutor) ──
-    const setAvailable = useCallback((dayOfWeek: number, startHour: number, on: boolean) => {
-        setState((prev) => {
-            const id = slotKey(dayOfWeek, startHour);
-            const exists = prev.availability.some((sl) => sl.id === id);
-            if (on && !exists) {
-                return { ...prev, availability: [...prev.availability, { id, dayOfWeek, startHour }] };
-            }
-            if (!on && exists) {
-                return { ...prev, availability: prev.availability.filter((sl) => sl.id !== id) };
-            }
-            return prev;
-        });
-    }, []);
+  // ── B3: combos (state-only — không call API) ──
+  const addCombo = useCallback((combo: Combo) => {
+    setState((prev) => ({ ...prev, combos: [...prev.combos, combo] }));
+  }, []);
+  const updateCombo = useCallback((id: string, next: Combo) => {
+    setState((prev) => ({
+      ...prev,
+      combos: prev.combos.map((c) => (c.id === id ? next : c)),
+    }));
+  }, []);
+  const removeCombo = useCallback((id: string) => {
+    setState((prev) => ({ ...prev, combos: prev.combos.filter((c) => c.id !== id) }));
+  }, []);
 
-    // Toggle cả ngày: đã đủ tất cả giờ → bỏ; chưa đủ → thêm các giờ còn thiếu.
-    const toggleWholeDay = useCallback((dayOfWeek: number) => {
-        setState((prev) => {
-            const present = new Set(
-                prev.availability.filter((sl) => sl.dayOfWeek === dayOfWeek).map((sl) => sl.startHour),
-            );
-            const allSelected = HOURS.every((h) => present.has(h));
-            if (allSelected) {
-                return { ...prev, availability: prev.availability.filter((sl) => sl.dayOfWeek !== dayOfWeek) };
-            }
-            const additions = HOURS.filter((h) => !present.has(h)).map((h) => ({
-                id: slotKey(dayOfWeek, h),
-                dayOfWeek,
-                startHour: h,
-            }));
-            return { ...prev, availability: [...prev.availability, ...additions] };
-        });
-    }, []);
+  // ── Derived ──
+  const canProceedStep1 = state.subjectRecords.length > 0;
+  const canProceedStep2 = state.availability.length > 0;
+  const combosMatchAvailability = state.combos.every(
+    (combo) =>
+      (combo.type === 'flex' && hasAvailabilityForDuration(combo.hoursPerSession, state.availability)) ||
+      (combo.type === 'fixed' &&
+        combo.sessions.every((session) => isSessionWithinAvailability(session, state.availability))),
+  );
+  const canFinish = canProceedStep1 && canProceedStep2 && combosMatchAvailability; // B3 combo optional
 
-    // ── B4: combos ──
-    const addCombo = useCallback((combo: Combo) => {
-        setState((prev) => ({ ...prev, combos: [...prev.combos, combo] }));
-    }, []);
-
-    const updateCombo = useCallback((id: string, next: Combo) => {
-        setState((prev) => ({ ...prev, combos: prev.combos.map((c) => (c.id === id ? next : c)) }));
-    }, []);
-
-    const removeCombo = useCallback((id: string) => {
-        setState((prev) => ({ ...prev, combos: prev.combos.filter((c) => c.id !== id) }));
-    }, []);
-
-    // ── Derived ──
-    const canProceedStep1 = state.subjects.length > 0;
-    const canProceedStep2 =
-        state.subjects.length > 0 && state.subjects.every((s) => s.hourlyRate != null && s.hourlyRate > 0);
-    const canProceedStep3 = state.availability.length > 0;
-    // B4 combo là khuyến khích, không bắt buộc.
-    const canFinish = canProceedStep1 && canProceedStep2 && canProceedStep3;
-
-    return {
-        state,
-        canProceedStep1,
-        canProceedStep2,
-        canProceedStep3,
-        canFinish,
-        goToStep,
-        goNext,
-        goBack,
-        toggleSubject,
-        setSubjectHourlyRate,
-        setAvailable,
-        toggleWholeDay,
-        addCombo,
-        updateCombo,
-        removeCombo,
-    };
+  return {
+    state,
+    canProceedStep1,
+    canProceedStep2,
+    combosMatchAvailability,
+    canFinish,
+    goToStep,
+    goNext,
+    goBack,
+    addSubjectRecord,
+    updateSubjectRecord,
+    removeSubjectRecord,
+    setAvailable,
+    toggleAvailabilityDay,
+    clearAvailability,
+    addCombo,
+    updateCombo,
+    removeCombo,
+  };
 }
 
 export type UseOnboardingState = ReturnType<typeof useOnboardingState>;

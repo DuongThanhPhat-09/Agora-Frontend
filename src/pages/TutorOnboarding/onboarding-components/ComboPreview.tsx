@@ -1,71 +1,108 @@
 import React from 'react';
+import { CalendarOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import styles from '../styles.module.css';
 import HourSlotGrid from './HourSlotGrid';
-import type { AvailabilitySlot, Combo } from './types';
+import { isHourFullyAvailable } from './availability-utils';
+import type { Combo, TutorAvailabilitySlot } from './types';
 
 interface ComboPreviewProps {
-    combo: Combo;
-    availability: AvailabilitySlot[];
+  combo: Combo;
+  availability: TutorAvailabilitySlot[];
 }
 
-// Lịch mô phỏng combo — hiển thị trực quan cho tutor lúc đang tạo combo.
-// Fixed: tô các session combo + làm mờ các giờ rảnh còn lại (bối cảnh).
-// Flex: highlight lịch rảnh để cho thấy "phụ huynh sẽ chọn N buổi/tuần từ đây".
 const ComboPreview: React.FC<ComboPreviewProps> = ({ combo, availability }) => {
-    const availSet = new Set(availability.map((s) => s.id));
-
-    // Map key ô → (sessionIdx, isStart) cho combo cố định
-    const comboCells = new Map<string, { sessionIdx: number; isStart: boolean }>();
-    if (combo.type === 'fixed') {
-        combo.sessions.forEach((s, idx) => {
-            for (let i = 0; i < s.durationHours; i++) {
-                comboCells.set(`${s.dayOfWeek}-${s.startHour + i}`, {
-                    sessionIdx: idx,
-                    isStart: i === 0,
-                });
-            }
-        });
-    }
-
-    const renderCell = (dayOfWeek: number, hour: number) => {
-        const key = `${dayOfWeek}-${hour}`;
-        const isAvail = availSet.has(key);
-
-        if (combo.type === 'fixed') {
-            const inCombo = comboCells.get(key);
-            if (inCombo) {
-                return (
-                    <div className={`${styles.cell} ${styles.cellStatic} ${styles.comboPreviewSelected}`}>
-                        {inCombo.isStart && <span className={styles.previewLabel}>{inCombo.sessionIdx + 1}</span>}
-                    </div>
-                );
-            }
-            return (
-                <div
-                    className={`${styles.cell} ${styles.cellStatic} ${isAvail ? styles.comboPreviewAvail : ''}`}
-                />
-            );
-        }
-        // flex: tô các ô rảnh — đó là "khung phụ huynh có thể chọn"
-        return (
-            <div className={`${styles.cell} ${styles.cellStatic} ${isAvail ? styles.available : ''}`} />
-        );
-    };
-
-    const title =
-        combo.type === 'fixed'
-            ? combo.sessions.length === 0
-                ? 'Lịch combo — chưa có buổi nào'
-                : `Lịch combo (${combo.sessions.length} buổi / tuần)`
-            : `Phụ huynh chọn ${combo.sessionsPerWeek} buổi/tuần × ${combo.hoursPerSession}h trong lịch rảnh sau`;
-
+  if (combo.type === 'flex') {
     return (
-        <div className={styles.comboPreview}>
-            <h4 className={styles.comboPreviewTitle}>Lịch mô phỏng</h4>
-            <p className={styles.comboPreviewSubtitle}>{title}</p>
-            <HourSlotGrid renderCell={renderCell} />
+      <div className={styles.comboPreview}>
+        <div className={styles.comboPreviewHead}>
+          <span className={styles.comboPreviewIcon}>
+            <CalendarOutlined />
+          </span>
+          <div>
+            <h4 className={styles.comboPreviewTitle}>Tóm tắt combo</h4>
+            <p className={styles.comboPreviewSubtitle}>Lịch linh hoạt theo nhu cầu phụ huynh</p>
+          </div>
         </div>
+        <div className={styles.comboPreviewStats}>
+          <div>
+            <strong>{combo.sessionsPerWeek}</strong>
+            <span>buổi / tuần</span>
+          </div>
+          <div>
+            <strong>{combo.sessionsPerMonth}</strong>
+            <span>buổi / tháng</span>
+          </div>
+          <div>
+            <strong>{combo.hoursPerSession}h</strong>
+            <span>mỗi buổi</span>
+          </div>
+        </div>
+        <p className={styles.comboPreviewNote}>
+          Phụ huynh sẽ chủ động chọn trong {availability.length} khung giờ rảnh bạn đã thiết lập.
+        </p>
+      </div>
     );
+  }
+
+  const comboCells = new Map<string, { sessionIdx: number; isStart: boolean }>();
+  combo.sessions.forEach((session, index) => {
+    for (let offset = 0; offset < session.durationHours; offset++) {
+      comboCells.set(`${session.dayOfWeek}-${session.startHour + offset}`, {
+        sessionIdx: index,
+        isStart: offset === 0,
+      });
+    }
+  });
+
+  const renderCell = (dayOfWeek: number, hour: number) => {
+    const inCombo = comboCells.get(`${dayOfWeek}-${hour}`);
+    if (inCombo) {
+      return (
+        <div className={`${styles.cell} ${styles.cellStatic} ${styles.comboPreviewSelected}`}>
+          {inCombo.isStart && <span className={styles.previewLabel}>{inCombo.sessionIdx + 1}</span>}
+        </div>
+      );
+    }
+    if (isHourFullyAvailable(dayOfWeek, hour, availability)) {
+      return <div className={`${styles.cell} ${styles.cellStatic} ${styles.comboPreviewAvail}`} />;
+    }
+    return <div className={`${styles.cell} ${styles.cellStatic}`} />;
+  };
+
+  const totalHours = combo.sessions.reduce((sum, session) => sum + session.durationHours, 0);
+
+  return (
+    <div className={styles.comboPreview}>
+      <div className={styles.comboPreviewHead}>
+        <span className={styles.comboPreviewIcon}>
+          <CalendarOutlined />
+        </span>
+        <div>
+          <h4 className={styles.comboPreviewTitle}>Lịch tuần mô phỏng</h4>
+          <p className={styles.comboPreviewSubtitle}>
+            {combo.sessions.length === 0
+              ? 'Thêm buổi học để xem lịch'
+              : `${combo.sessions.length} buổi · ${totalHours} giờ mỗi tuần`}
+          </p>
+        </div>
+      </div>
+      <div className={styles.comboPreviewLegend}>
+        <span>
+          <i className={styles.comboPreviewAvailableDot} />
+          Lịch rảnh
+        </span>
+        <span>
+          <i />
+          Buổi học trong combo
+        </span>
+        <span>
+          <ClockCircleOutlined />
+          06:00 - 22:00
+        </span>
+      </div>
+      <HourSlotGrid renderCell={renderCell} />
+    </div>
+  );
 };
 
 export default ComboPreview;

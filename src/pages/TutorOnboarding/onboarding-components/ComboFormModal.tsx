@@ -1,279 +1,442 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Modal, Radio, Select, Input, InputNumber, Button } from 'antd';
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import React, { useMemo, useState } from 'react';
+import { Input, InputNumber, Modal, Select } from 'antd';
+import {
+  CalendarOutlined,
+  ClockCircleOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  ThunderboltOutlined,
+} from '@ant-design/icons';
 import styles from '../styles.module.css';
 import ComboPreview from './ComboPreview';
-import { DAY_COLUMNS, formatHour } from './constants';
-import type { AvailabilitySlot, Combo, FixedCombo, FlexCombo } from '../onboarding-components/types';
+import {
+  findFirstAvailableSession,
+  getAvailableDurations,
+  getAvailableStartHours,
+  hasAvailabilityForDuration,
+  isSessionWithinAvailability,
+} from './availability-utils';
+import { DAY_COLUMNS, END_HOUR, formatHour } from './constants';
+import type { Combo, ComboSessionSlot, FixedCombo, FlexCombo, TutorAvailabilitySlot } from './types';
 
 interface ComboFormModalProps {
-    open: boolean;
-    onClose: () => void;
-    onSave: (combo: Combo) => void;
-    initial: Combo | null;
-    availability: AvailabilitySlot[];
+  open: boolean;
+  onClose: () => void;
+  onSave: (combo: Combo) => void;
+  initial: Combo | null;
+  availability: TutorAvailabilitySlot[];
 }
 
 const newComboId = () => `combo-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
 const defaultFixed = (): FixedCombo => ({
-    id: newComboId(),
-    type: 'fixed',
-    name: '',
-    sessions: [],
+  id: newComboId(),
+  type: 'fixed',
+  name: '',
+  sessions: [],
 });
 
 const defaultFlex = (): FlexCombo => ({
-    id: newComboId(),
-    type: 'flex',
-    name: '',
-    sessionsPerWeek: 2,
-    sessionsPerMonth: 8,
-    hoursPerSession: 1.5,
-    description: '',
+  id: newComboId(),
+  type: 'flex',
+  name: '',
+  sessionsPerWeek: 2,
+  sessionsPerMonth: 8,
+  hoursPerSession: 1.5,
+  description: '',
 });
 
+const sessionsOverlap = (sessions: FixedCombo['sessions'], targetIndex?: number) =>
+  sessions.some((session, index) =>
+    sessions.some((other, otherIndex) => {
+      if (index === otherIndex) return false;
+      if (targetIndex != null && index !== targetIndex && otherIndex !== targetIndex) return false;
+      return (
+        session.dayOfWeek === other.dayOfWeek &&
+        session.startHour < other.startHour + other.durationHours &&
+        other.startHour < session.startHour + session.durationHours
+      );
+    }),
+  );
+
 const ComboFormModal: React.FC<ComboFormModalProps> = ({ open, onClose, onSave, initial, availability }) => {
-    const [combo, setCombo] = useState<Combo>(() => initial ?? defaultFixed());
+  const [combo, setCombo] = useState<Combo>(() => initial ?? defaultFixed());
 
-    useEffect(() => {
-        if (open) setCombo(initial ?? defaultFixed());
-    }, [open, initial]);
+  const fixedHasOverlap = useMemo(() => combo.type === 'fixed' && sessionsOverlap(combo.sessions), [combo]);
+  const fixedHasOutOfRange = useMemo(
+    () =>
+      combo.type === 'fixed' && combo.sessions.some((session) => session.startHour + session.durationHours > END_HOUR),
+    [combo],
+  );
+  const fixedHasOutsideAvailability = useMemo(
+    () =>
+      combo.type === 'fixed' && combo.sessions.some((session) => !isSessionWithinAvailability(session, availability)),
+    [availability, combo],
+  );
+  const nextAvailableSession = useMemo(
+    () => (combo.type === 'fixed' ? findFirstAvailableSession(availability, combo.sessions) : null),
+    [availability, combo],
+  );
+  const flexHasNoAvailableSlot = useMemo(
+    () => combo.type === 'flex' && !hasAvailabilityForDuration(combo.hoursPerSession, availability),
+    [availability, combo],
+  );
+  const availableDayOptions = useMemo(
+    () =>
+      DAY_COLUMNS.filter((column) => getAvailableStartHours(column.dayOfWeek, availability).length > 0).map(
+        (column) => ({
+          value: column.dayOfWeek,
+          label: column.full,
+        }),
+      ),
+    [availability],
+  );
 
-    const { availByDay, availSet, availableDays } = useMemo(() => {
-        const map = new Map<number, number[]>();
-        availability.forEach((sl) => {
-            const arr = map.get(sl.dayOfWeek) ?? [];
-            arr.push(sl.startHour);
-            map.set(sl.dayOfWeek, arr.sort((a, b) => a - b));
-        });
-        const set = new Set(availability.map((sl) => sl.id));
-        const days = DAY_COLUMNS.filter((c) => map.has(c.dayOfWeek));
-        return { availByDay: map, availSet: set, availableDays: days };
-    }, [availability]);
-
-    const maxDuration = (day: number, start: number) => {
-        let n = 0;
-        while (n < 4 && availSet.has(`${day}-${start + n}`)) n++;
-        return Math.max(1, n);
-    };
-
-    const isValid = (() => {
-        if (!combo.name.trim()) return false;
-        if (combo.type === 'fixed') {
-            if (combo.sessions.length === 0) return false;
-            return combo.sessions.every((s) => {
-                for (let i = 0; i < s.durationHours; i++) {
-                    if (!availSet.has(`${s.dayOfWeek}-${s.startHour + i}`)) return false;
-                }
-                return true;
-            });
-        }
-        return (
-            combo.sessionsPerWeek > 0 &&
-            combo.sessionsPerMonth > 0 &&
-            combo.hoursPerSession > 0 &&
-            combo.description.trim().length > 0
-        );
-    })();
-
-    const handleTypeChange = (type: 'fixed' | 'flex') => {
-        if (type === combo.type) return;
-        setCombo(type === 'fixed' ? defaultFixed() : defaultFlex());
-    };
-
-    // Fixed combo session helpers — guard bằng discriminator để TS narrow combo.
-    const addSession = () => {
-        if (combo.type !== 'fixed') return;
-        const day = availableDays[0]?.dayOfWeek ?? 1;
-        const startHour = availByDay.get(day)?.[0] ?? 6;
-        setCombo({
-            ...combo,
-            sessions: [...combo.sessions, { dayOfWeek: day, startHour, durationHours: 1 }],
-        });
-    };
-    const updateSession = (i: number, patch: Partial<FixedCombo['sessions'][number]>) => {
-        if (combo.type !== 'fixed') return;
-        setCombo({
-            ...combo,
-            sessions: combo.sessions.map((s, idx) => (idx === i ? { ...s, ...patch } : s)),
-        });
-    };
-    const removeSession = (i: number) => {
-        if (combo.type !== 'fixed') return;
-        setCombo({ ...combo, sessions: combo.sessions.filter((_, idx) => idx !== i) });
-    };
-
+  const isValid = (() => {
+    if (!combo.name.trim()) return false;
+    if (combo.type === 'fixed') {
+      return (
+        combo.sessions.length > 0 &&
+        combo.sessions.every((session) => session.durationHours > 0) &&
+        !fixedHasOverlap &&
+        !fixedHasOutOfRange &&
+        !fixedHasOutsideAvailability
+      );
+    }
     return (
-        <Modal
-            open={open}
-            onCancel={onClose}
-            onOk={() => onSave(combo)}
-            okText={initial ? 'Cập nhật combo' : 'Tạo combo'}
-            cancelText="Hủy"
-            okButtonProps={{ disabled: !isValid }}
-            title={initial ? 'Sửa combo' : 'Tạo combo học'}
-            width={620}
-            destroyOnClose
-        >
-            <div className={styles.comboForm}>
-                <div className={styles.comboFormField}>
-                    <Radio.Group value={combo.type} onChange={(e) => handleTypeChange(e.target.value)}>
-                        <Radio value="fixed">Combo cố định</Radio>
-                        <Radio value="flex">Combo linh hoạt</Radio>
-                    </Radio.Group>
+      combo.sessionsPerWeek > 0 &&
+      combo.sessionsPerMonth > 0 &&
+      combo.hoursPerSession > 0 &&
+      !flexHasNoAvailableSlot &&
+      combo.description.trim().length > 0
+    );
+  })();
+
+  const handleTypeChange = (type: 'fixed' | 'flex') => {
+    if (type === combo.type) return;
+    const next = type === 'fixed' ? defaultFixed() : defaultFlex();
+    setCombo({ ...next, name: combo.name });
+  };
+
+  const addSession = () => {
+    if (combo.type !== 'fixed' || !nextAvailableSession) return;
+    setCombo({
+      ...combo,
+      sessions: [...combo.sessions, nextAvailableSession],
+    });
+  };
+
+  const normalizeSession = (session: ComboSessionSlot): ComboSessionSlot => {
+    const availableStartHours = getAvailableStartHours(session.dayOfWeek, availability);
+    const startHour = availableStartHours.includes(session.startHour)
+      ? session.startHour
+      : (availableStartHours[0] ?? session.startHour);
+    const availableDurations = getAvailableDurations(session.dayOfWeek, startHour, availability);
+
+    return {
+      ...session,
+      startHour,
+      durationHours: availableDurations.includes(session.durationHours)
+        ? session.durationHours
+        : (availableDurations[0] ?? session.durationHours),
+    };
+  };
+
+  const updateSession = (index: number, patch: Partial<FixedCombo['sessions'][number]>) => {
+    if (combo.type !== 'fixed') return;
+    setCombo({
+      ...combo,
+      sessions: combo.sessions.map((session, sessionIndex) => {
+        if (sessionIndex !== index) return session;
+        const next = { ...session, ...patch };
+        return normalizeSession({
+          ...next,
+          durationHours: Math.min(next.durationHours, END_HOUR - next.startHour),
+        });
+      }),
+    });
+  };
+  const removeSession = (index: number) => {
+    if (combo.type !== 'fixed') return;
+    setCombo({ ...combo, sessions: combo.sessions.filter((_, sessionIndex) => sessionIndex !== index) });
+  };
+
+  return (
+    <Modal
+      className={styles.comboModal}
+      open={open}
+      onCancel={onClose}
+      onOk={() => onSave(combo)}
+      okText={initial ? 'Cập nhật combo' : 'Tạo combo'}
+      cancelText="Hủy"
+      okButtonProps={{ disabled: !isValid }}
+      title={
+        <div className={styles.comboModalTitle}>
+          <span className={styles.comboModalEyebrow}>{initial ? 'Chỉnh sửa gói học' : 'Combo mới'}</span>
+          <strong>{initial ? 'Cập nhật combo' : 'Tạo combo học'}</strong>
+          <span>Thiết lập khung lịch để phụ huynh có thể chọn và đặt lịch nhanh hơn.</span>
+        </div>
+      }
+      width={920}
+      destroyOnClose
+    >
+      <div className={styles.comboForm}>
+        <div className={styles.comboTypeGrid}>
+          <button
+            type="button"
+            className={`${styles.comboTypeOption} ${combo.type === 'fixed' ? styles.activeComboType : ''}`}
+            onClick={() => handleTypeChange('fixed')}
+            aria-pressed={combo.type === 'fixed'}
+          >
+            <span className={styles.comboTypeIcon}>
+              <CalendarOutlined />
+            </span>
+            <span>
+              <strong>Lịch cố định</strong>
+              <small>Chọn chính xác thứ, giờ bắt đầu và thời lượng mỗi buổi.</small>
+            </span>
+          </button>
+          <button
+            type="button"
+            className={`${styles.comboTypeOption} ${combo.type === 'flex' ? styles.activeComboType : ''}`}
+            onClick={() => handleTypeChange('flex')}
+            aria-pressed={combo.type === 'flex'}
+          >
+            <span className={styles.comboTypeIcon}>
+              <ThunderboltOutlined />
+            </span>
+            <span>
+              <strong>Lịch linh hoạt</strong>
+              <small>Đặt số buổi và để phụ huynh tự thống nhất khung giờ phù hợp.</small>
+            </span>
+          </button>
+        </div>
+
+        <div className={styles.comboBuilderLayout}>
+          <div className={styles.comboBuilderMain}>
+            <section className={styles.comboBuilderSection}>
+              <div className={styles.comboBuilderSectionHead}>
+                <div>
+                  <span className={styles.comboBuilderStep}>01</span>
+                  <h4>Thông tin combo</h4>
+                </div>
+              </div>
+              <label className={styles.comboFormField}>
+                <span className={styles.comboFormLabel}>Tên combo</span>
+                <Input
+                  value={combo.name}
+                  onChange={(event) => setCombo({ ...combo, name: event.target.value } as Combo)}
+                  placeholder="Ví dụ: Combo 8 buổi tối Thứ 2 và Thứ 4"
+                  size="large"
+                />
+              </label>
+              <div className={styles.comboFormHint}>
+                Giá combo sẽ được tính theo môn và khối lớp mà phụ huynh chọn khi đặt lịch.
+              </div>
+            </section>
+
+            {combo.type === 'fixed' ? (
+              <section className={styles.comboBuilderSection}>
+                <div className={styles.comboBuilderSectionHead}>
+                  <div>
+                    <span className={styles.comboBuilderStep}>02</span>
+                    <h4>Lịch học lặp lại hàng tuần</h4>
+                    <p>Thêm từng buổi học giống như thêm sự kiện vào lịch.</p>
+                  </div>
+                  {combo.sessions.length > 0 && (
+                    <span className={styles.comboSessionCount}>{combo.sessions.length} buổi</span>
+                  )}
                 </div>
 
-                <div className={styles.comboFormField}>
-                    <label className={styles.comboFormLabel}>Tên combo</label>
-                    <Input
-                        value={combo.name}
-                        onChange={(e) => setCombo({ ...combo, name: e.target.value } as Combo)}
-                        placeholder="vd: Combo 8 buổi/tháng — tối T2/T4/T6"
-                    />
-                </div>
-
-                <div className={styles.comboFormHint}>
-                    Combo là khung lịch dùng chung. Phụ huynh sẽ chọn môn học trong các môn bạn dạy ở bước đặt lịch — giá
-                    sẽ được tính theo giá/giờ của môn đó.
-                </div>
-
-                {combo.type === 'fixed' ? (
-                    <div className={styles.comboFormField}>
-                        <label className={styles.comboFormLabel}>
-                            Buổi cố định trong tuần — chọn từ lịch rảnh
-                        </label>
-                        {availableDays.length === 0 ? (
-                            <div className={styles.comboFormHint}>
-                                Chưa có lịch rảnh. Quay lại bước 3 để đánh dấu khung giờ trước.
-                            </div>
-                        ) : (
-                            <div className={styles.sessionList}>
-                                {combo.sessions.map((sess, i) => {
-                                    const dayHours = availByDay.get(sess.dayOfWeek) ?? [];
-                                    const md = maxDuration(sess.dayOfWeek, sess.startHour);
-                                    return (
-                                        <div key={i} className={styles.sessionRow}>
-                                            <Select
-                                                size="small"
-                                                value={sess.dayOfWeek}
-                                                onChange={(v) => {
-                                                    const firstHour = availByDay.get(v)?.[0] ?? 6;
-                                                    updateSession(i, {
-                                                        dayOfWeek: v,
-                                                        startHour: firstHour,
-                                                        durationHours: 1,
-                                                    });
-                                                }}
-                                                options={availableDays.map((c) => ({
-                                                    value: c.dayOfWeek,
-                                                    label: c.full,
-                                                }))}
-                                                style={{ minWidth: 110 }}
-                                            />
-                                            <Select
-                                                size="small"
-                                                value={sess.startHour}
-                                                onChange={(v) => {
-                                                    const newMax = maxDuration(sess.dayOfWeek, v);
-                                                    updateSession(i, {
-                                                        startHour: v,
-                                                        durationHours: Math.min(sess.durationHours, newMax),
-                                                    });
-                                                }}
-                                                options={dayHours.map((h) => ({
-                                                    value: h,
-                                                    label: formatHour(h),
-                                                }))}
-                                                style={{ minWidth: 90 }}
-                                            />
-                                            <Select
-                                                size="small"
-                                                value={sess.durationHours}
-                                                onChange={(v) => updateSession(i, { durationHours: v })}
-                                                options={Array.from({ length: md }, (_, k) => ({
-                                                    value: k + 1,
-                                                    label: `${k + 1} giờ`,
-                                                }))}
-                                                style={{ minWidth: 80 }}
-                                            />
-                                            <Button
-                                                size="small"
-                                                danger
-                                                icon={<DeleteOutlined />}
-                                                onClick={() => removeSession(i)}
-                                            />
-                                        </div>
-                                    );
-                                })}
-                                <Button
-                                    size="small"
-                                    icon={<PlusOutlined />}
-                                    onClick={addSession}
-                                    style={{ alignSelf: 'flex-start' }}
-                                >
-                                    Thêm buổi
-                                </Button>
-                            </div>
-                        )}
-                    </div>
+                {combo.sessions.length === 0 ? (
+                  <div className={styles.sessionEmptyState}>
+                    <CalendarOutlined />
+                    <strong>Chưa có buổi học nào</strong>
+                    <span>Thêm buổi đầu tiên để bắt đầu tạo lịch combo.</span>
+                    <button
+                      type="button"
+                      className={styles.sessionAddBtn}
+                      onClick={addSession}
+                      disabled={!nextAvailableSession}
+                    >
+                      <PlusOutlined />
+                      <span>Thêm buổi học</span>
+                    </button>
+                  </div>
                 ) : (
-                    <>
-                        <div className={styles.comboFormRow}>
-                            <div className={styles.comboFormField}>
-                                <label className={styles.comboFormLabel}>Số buổi / tuần</label>
-                                <InputNumber
-                                    value={combo.sessionsPerWeek}
-                                    min={1}
-                                    max={7}
-                                    onChange={(v) =>
-                                        setCombo({ ...combo, sessionsPerWeek: (v as number) ?? 1 } as Combo)
-                                    }
-                                    style={{ width: '100%' }}
-                                />
-                            </div>
-                            <div className={styles.comboFormField}>
-                                <label className={styles.comboFormLabel}>Số buổi / tháng</label>
-                                <InputNumber
-                                    value={combo.sessionsPerMonth}
-                                    min={1}
-                                    max={31}
-                                    onChange={(v) =>
-                                        setCombo({ ...combo, sessionsPerMonth: (v as number) ?? 1 } as Combo)
-                                    }
-                                    style={{ width: '100%' }}
-                                />
-                            </div>
-                            <div className={styles.comboFormField}>
-                                <label className={styles.comboFormLabel}>Số giờ / buổi</label>
-                                <InputNumber
-                                    value={combo.hoursPerSession}
-                                    min={0.5}
-                                    max={8}
-                                    step={0.5}
-                                    onChange={(v) =>
-                                        setCombo({ ...combo, hoursPerSession: (v as number) ?? 1 } as Combo)
-                                    }
-                                    style={{ width: '100%' }}
-                                />
-                            </div>
+                  <div className={styles.sessionList}>
+                    {combo.sessions.map((session, index) => {
+                      const hasConflict = sessionsOverlap(combo.sessions, index);
+
+                      return (
+                        <div
+                          key={index}
+                          className={`${styles.sessionRow} ${hasConflict ? styles.sessionRowError : ''}`}
+                        >
+                          <span className={styles.sessionIndex}>{index + 1}</span>
+                          <div className={styles.sessionControlGrid}>
+                            <label>
+                              <span>Ngày học</span>
+                              <Select
+                                value={session.dayOfWeek}
+                                onChange={(value) => updateSession(index, { dayOfWeek: value })}
+                                options={availableDayOptions}
+                                style={{ width: '100%' }}
+                              />
+                            </label>
+                            <label>
+                              <span>Bắt đầu</span>
+                              <Select
+                                value={session.startHour}
+                                onChange={(value) => updateSession(index, { startHour: value })}
+                                options={getAvailableStartHours(session.dayOfWeek, availability).map((hour) => ({
+                                  value: hour,
+                                  label: formatHour(hour),
+                                }))}
+                                style={{ width: '100%' }}
+                              />
+                            </label>
+                            <label>
+                              <span>Thời lượng</span>
+                              <Select
+                                value={session.durationHours}
+                                onChange={(value) => updateSession(index, { durationHours: value })}
+                                options={getAvailableDurations(session.dayOfWeek, session.startHour, availability).map(
+                                  (duration) => ({
+                                    value: duration,
+                                    label: `${duration} giờ`,
+                                  }),
+                                )}
+                                style={{ width: '100%' }}
+                              />
+                            </label>
+                          </div>
+                          <button
+                            type="button"
+                            className={styles.sessionRemoveBtn}
+                            onClick={() => removeSession(index)}
+                            aria-label={`Xóa buổi ${index + 1}`}
+                            title="Xóa buổi học"
+                          >
+                            <DeleteOutlined />
+                          </button>
                         </div>
-                        <div className={styles.comboFormField}>
-                            <label className={styles.comboFormLabel}>Mô tả gói</label>
-                            <Input.TextArea
-                                rows={3}
-                                value={combo.description}
-                                onChange={(e) => setCombo({ ...combo, description: e.target.value } as Combo)}
-                                placeholder="vd: Phụ huynh tự chọn lịch theo số buổi/tuần. Ưu tiên cuối tuần buổi tối..."
-                            />
-                        </div>
-                    </>
+                      );
+                    })}
+                    <button
+                      type="button"
+                      className={styles.sessionAddBtn}
+                      onClick={addSession}
+                      disabled={!nextAvailableSession}
+                    >
+                      <PlusOutlined />
+                      <span>Thêm buổi học</span>
+                    </button>
+                  </div>
                 )}
 
-                <ComboPreview combo={combo} availability={availability} />
-            </div>
-        </Modal>
-    );
+                {!nextAvailableSession && (
+                  <div className={styles.comboAvailabilityHint}>
+                    Không còn khung giờ rảnh phù hợp để thêm buổi học mới.
+                  </div>
+                )}
+
+                {(fixedHasOverlap || fixedHasOutOfRange || fixedHasOutsideAvailability) && (
+                  <div className={styles.comboValidationWarn}>
+                    <ClockCircleOutlined />
+                    <span>
+                      Các buổi học đang bị trùng nhau, vượt quá khung giờ cho phép hoặc nằm ngoài lịch rảnh đã thiết
+                      lập. Hãy điều chỉnh trước khi lưu combo.
+                    </span>
+                  </div>
+                )}
+              </section>
+            ) : (
+              <section className={styles.comboBuilderSection}>
+                <div className={styles.comboBuilderSectionHead}>
+                  <div>
+                    <span className={styles.comboBuilderStep}>02</span>
+                    <h4>Thiết lập nhịp độ học</h4>
+                    <p>Đặt số buổi và thời lượng để phụ huynh chủ động sắp xếp lịch.</p>
+                  </div>
+                </div>
+                <div className={styles.comboFormRow}>
+                  <label className={styles.comboFormField}>
+                    <span className={styles.comboFormLabel}>Số buổi / tuần</span>
+                    <InputNumber
+                      value={combo.sessionsPerWeek}
+                      min={1}
+                      max={7}
+                      onChange={(value) =>
+                        setCombo({
+                          ...combo,
+                          sessionsPerWeek: (value as number) ?? 1,
+                        } as Combo)
+                      }
+                      style={{ width: '100%' }}
+                      size="large"
+                    />
+                  </label>
+                  <label className={styles.comboFormField}>
+                    <span className={styles.comboFormLabel}>Số buổi / tháng</span>
+                    <InputNumber
+                      value={combo.sessionsPerMonth}
+                      min={1}
+                      max={31}
+                      onChange={(value) =>
+                        setCombo({
+                          ...combo,
+                          sessionsPerMonth: (value as number) ?? 1,
+                        } as Combo)
+                      }
+                      style={{ width: '100%' }}
+                      size="large"
+                    />
+                  </label>
+                  <label className={styles.comboFormField}>
+                    <span className={styles.comboFormLabel}>Số giờ / buổi</span>
+                    <InputNumber
+                      value={combo.hoursPerSession}
+                      min={0.5}
+                      max={8}
+                      step={0.5}
+                      onChange={(value) =>
+                        setCombo({
+                          ...combo,
+                          hoursPerSession: (value as number) ?? 1,
+                        } as Combo)
+                      }
+                      style={{ width: '100%' }}
+                      size="large"
+                    />
+                  </label>
+                </div>
+                <label className={styles.comboFormField}>
+                  <span className={styles.comboFormLabel}>Mô tả gói</span>
+                  <Input.TextArea
+                    rows={4}
+                    value={combo.description}
+                    onChange={(event) => setCombo({ ...combo, description: event.target.value } as Combo)}
+                    placeholder="Ví dụ: Phụ huynh tự chọn lịch theo số buổi mỗi tuần. Ưu tiên cuối tuần hoặc buổi tối..."
+                  />
+                </label>
+                {flexHasNoAvailableSlot && (
+                  <div className={styles.comboValidationWarn}>
+                    <ClockCircleOutlined />
+                    <span>Không có khung giờ rảnh nào đủ dài cho thời lượng mỗi buổi đã chọn.</span>
+                  </div>
+                )}
+              </section>
+            )}
+          </div>
+
+          <aside className={styles.comboPreviewPanel}>
+            <ComboPreview combo={combo} availability={availability} />
+          </aside>
+        </div>
+      </div>
+    </Modal>
+  );
 };
 
 export default ComboFormModal;
