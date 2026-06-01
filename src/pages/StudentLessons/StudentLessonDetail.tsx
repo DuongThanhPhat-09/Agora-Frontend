@@ -11,6 +11,8 @@ import { getStudentLessonDetail, confirmStudentLesson } from '../../services/stu
 import { useLessonStartedListener } from '../../hooks/useLessonStartedListener';
 import type { LessonDetailDto } from '../../services/lesson.service';
 import { message as antMessage, Spin, Modal } from 'antd';
+import { getTRTCRoomInfo, type TRTCRoomInfo } from '../../services/trtc.service';
+import VideoRoom from '../../components/VideoRoom/VideoRoom';
 import CreateFeedbackModal from '../ParentLessons/components/CreateFeedbackModal';
 import s from '../StudentPages.module.css';
 
@@ -55,6 +57,19 @@ const StudentLessonDetail = () => {
     const [confirming, setConfirming] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [trtcRoomInfo, setTrtcRoomInfo] = useState<TRTCRoomInfo | null>(null);
+
+    const handleJoinRoom = async () => {
+        if (!lessonId) return;
+        try {
+            antMessage.loading({ content: 'Đang kết nối phòng học...', key: 'joinRoom' });
+            const roomInfo = await getTRTCRoomInfo(parseInt(lessonId));
+            setTrtcRoomInfo(roomInfo);
+            antMessage.destroy('joinRoom');
+        } catch (error: any) {
+            antMessage.error({ content: error.response?.data?.message || 'Không thể vào phòng học.', key: 'joinRoom' });
+        }
+    };
 
     const fetchDetail = useCallback(async () => {
         if (!lessonId) return;
@@ -141,6 +156,12 @@ const StudentLessonDetail = () => {
 
     return (
         <div className={s.page}>
+            {trtcRoomInfo && (
+                <VideoRoom
+                    roomInfo={trtcRoomInfo}
+                    onLeave={() => setTrtcRoomInfo(null)}
+                />
+            )}
             {/* Top Bar */}
             <div className={s.topBar}>
                 <div className={s.topBarLeft}>
@@ -177,14 +198,12 @@ const StudentLessonDetail = () => {
                                     </div>
                                 </div>
                             </div>
-                            <a
-                                href={lesson.meetingLink!}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                            <button
+                                onClick={handleJoinRoom}
                                 style={heroJoinBtn}
                             >
                                 <Video size={16} /> Tham gia ngay
-                            </a>
+                            </button>
                         </div>
                     </div>
                 )}
@@ -237,15 +256,10 @@ const StudentLessonDetail = () => {
                         {lesson.meetingLink && !canJoin && (
                             <div style={meetingLinkBox}>
                                 <Video size={14} style={{ color: '#6366F1', flexShrink: 0 }} />
-                                <span style={meetingLinkLabel}>Link buổi học:</span>
-                                <a
-                                    href={lesson.meetingLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={meetingLinkValue}
-                                >
+                                <span style={meetingLinkLabel}>Room ID (Tencent RTC):</span>
+                                <span style={{ ...meetingLinkValue, textDecoration: 'none' }}>
                                     {lesson.meetingLink}
-                                </a>
+                                </span>
                             </div>
                         )}
                     </div>

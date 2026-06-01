@@ -9,6 +9,8 @@ import { getBookingById, type BookingResponseDTO } from '../../services/booking.
 import { signalRService } from '../../services/signalr.service';
 import { toast } from 'react-toastify';
 import PaymentModal from '../../components/PaymentModal/PaymentModal';
+import VideoRoom from '../../components/VideoRoom/VideoRoom';
+import { getTRTCRoomInfo, type TRTCRoomInfo } from '../../services/trtc.service';
 
 interface ChatAreaProps {
   selectedChannelId: number | null;
@@ -30,6 +32,7 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [trtcRoomInfo, setTrtcRoomInfo] = useState<TRTCRoomInfo | null>(null);
 
   // Use refs to avoid stale closures in SignalR callback
   const selectedChannelIdRef = useRef<number | null>(selectedChannelId);
@@ -306,6 +309,16 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
     loadMessages({ page: 1, pageSize: 50 });
   };
 
+  const handleJoinRoom = async (roomId: string) => {
+    try {
+      toast.info('Đang kết nối phòng học...');
+      const roomInfo = await getTRTCRoomInfo(Number(roomId));
+      setTrtcRoomInfo(roomInfo);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Không thể vào phòng học.');
+    }
+  };
+
   // Nếu không có channel nào được chọn, hiển thị empty state
   if (!selectedChannelId) {
     return (
@@ -319,6 +332,12 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
 
   return (
     <section className={styles.chatArea}>
+      {trtcRoomInfo && (
+        <VideoRoom
+          roomInfo={trtcRoomInfo}
+          onLeave={() => setTrtcRoomInfo(null)}
+        />
+      )}
       <ChatHeader
         selectedChannelId={selectedChannelId}
         onLeaveChannel={handleLeaveChannel}
@@ -342,6 +361,7 @@ const ChatArea = ({ selectedChannelId, currentUserId, selectedChannel, isTutor =
             isTutor={isTutor}
             onProceedToPayment={handleProceedToPayment}
             isOtherTyping={isOtherTyping}
+            onJoinRoom={handleJoinRoom}
           />
         </div>
       </div>

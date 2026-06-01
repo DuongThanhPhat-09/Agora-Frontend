@@ -40,6 +40,8 @@ import { getMyAvailability, deleteAvailability } from "../../services/availabili
 import type { AvailabilitySlot } from "../../services/availability.service";
 import { getTutorCalendar, getTutorLessonDetail } from "../../services/lesson.service";
 import type { CalendarDay, CalendarLesson, LessonDetailDto } from "../../services/lesson.service";
+import { getTRTCRoomInfo, type TRTCRoomInfo } from '../../services/trtc.service';
+import VideoRoom from '../../components/VideoRoom/VideoRoom';
 
 dayjs.extend(weekday);
 dayjs.extend(isoWeek);
@@ -73,6 +75,7 @@ const TutorPortalSchedule: React.FC = () => {
     const [lessonPopupPosition, setLessonPopupPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
     const [showLessonPopup, setShowLessonPopup] = useState(false);
     const lessonPopupRef = useRef<HTMLDivElement>(null);
+    const [trtcRoomInfo, setTrtcRoomInfo] = useState<TRTCRoomInfo | null>(null);
 
     const lessons: CalendarLesson[] = useMemo(() => {
         return calendarData.flatMap(day => day.lessons || []);
@@ -285,7 +288,7 @@ const TutorPortalSchedule: React.FC = () => {
         e.stopPropagation();
         const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
         const popupWidth = 340;
-        const popupHeight = 320;
+        const popupHeight = 450;
         let x = rect.right + 8;
         let y = rect.top;
         if (x + popupWidth > window.innerWidth) x = rect.left - popupWidth - 8;
@@ -320,6 +323,17 @@ const TutorPortalSchedule: React.FC = () => {
         }
     }, [selectedLessonDetail, navigate]);
 
+    const handleJoinRoom = async () => {
+        if (!selectedLessonDetail) return;
+        try {
+            toast.info('Đang kết nối phòng học...');
+            const roomInfo = await getTRTCRoomInfo(selectedLessonDetail.lessonId);
+            setTrtcRoomInfo(roomInfo);
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Không thể vào phòng học.');
+        }
+    };
+
     // Close popup on outside click
     useEffect(() => {
         if (!showLessonPopup) return;
@@ -339,6 +353,12 @@ const TutorPortalSchedule: React.FC = () => {
 
     return (
         <div className={styles.schedulePage}>
+            {trtcRoomInfo && (
+                <VideoRoom
+                    roomInfo={trtcRoomInfo}
+                    onLeave={() => setTrtcRoomInfo(null)}
+                />
+            )}
             <MobileHeader
                 currentDate={currentDate}
                 activeTab={activeTab}
@@ -491,6 +511,7 @@ const TutorPortalSchedule: React.FC = () => {
                     detail={selectedLessonDetail}
                     onClose={handleCloseLessonPopup}
                     onNavigateToClassDetail={handleNavigateToClassDetail}
+                    onJoinRoom={handleJoinRoom}
                 />
             )}
 

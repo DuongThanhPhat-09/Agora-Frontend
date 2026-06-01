@@ -17,13 +17,16 @@ interface ChatMessagesAreaProps {
   isTutor?: boolean;
   onProceedToPayment?: (bookingId: number) => void;
   isOtherTyping?: boolean;
+  onJoinRoom?: (roomId: string) => void;
 }
 
-/** Renders a meet_link message as a clickable card */
-const MeetLinkCard = ({ message }: { message: ChatMessage }) => {
+const MeetLinkCard = ({ message, onJoinRoom }: { message: ChatMessage, onJoinRoom?: (roomId: string) => void }) => {
   // Extract meeting link from content
   const linkMatch = message.content.match(/https?:\/\/[^\s]+/);
+  const roomMatch = message.content.match(/(?:Room ID:|Link tham gia:|RoomID)\s*(\d+)/i);
+  
   const meetLink = linkMatch?.[0] || '';
+  const roomId = roomMatch?.[1] || '';
 
   return (
     <div className={styles.systemMessageContainer}>
@@ -58,6 +61,27 @@ const MeetLinkCard = ({ message }: { message: ChatMessage }) => {
             <Video size={14} />
             Tham gia buổi học
           </a>
+        )}
+        {!meetLink && roomId && (
+          <button
+            onClick={() => onJoinRoom?.(roomId)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              borderRadius: '6px',
+              background: '#1a73e8',
+              color: '#fff',
+              fontSize: '12px',
+              fontWeight: 600,
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            <Video size={14} />
+            Vào lớp học (TRTC)
+          </button>
         )}
       </div>
     </div>
@@ -106,7 +130,8 @@ const ChatMessagesArea = ({
   loadMessages,
   isTutor = false,
   onProceedToPayment,
-  isOtherTyping = false
+  isOtherTyping = false,
+  onJoinRoom
 }: ChatMessagesAreaProps) => {
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
@@ -214,7 +239,7 @@ const ChatMessagesArea = ({
 
           // Meet link card
           if (msg.messageType === 'meet_link') {
-            return <MeetLinkCard key={msg.messageId || index} message={msg} />;
+            return <MeetLinkCard key={msg.messageId || index} message={msg} onJoinRoom={onJoinRoom} />;
           }
 
           // Booking accepted/declined system cards

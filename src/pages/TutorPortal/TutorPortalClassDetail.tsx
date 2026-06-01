@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getTutorLessons, checkInLesson, checkOutLesson, type LessonResponse } from '../../services/lesson.service';
+import { getTRTCRoomInfo, type TRTCRoomInfo } from '../../services/trtc.service';
+import VideoRoom from '../../components/VideoRoom/VideoRoom';
 import { Tag } from 'antd';
 import { toast } from 'react-toastify';
 import styles from '../../styles/pages/tutor-portal-class-detail.module.css';
@@ -93,6 +95,9 @@ const TutorPortalClassDetail: React.FC = () => {
     const [showReportForm, setShowReportForm] = useState(false);
     const [checkingInLessonId, setCheckingInLessonId] = useState<number | null>(null);
     const [checkingOutLessonId, setCheckingOutLessonId] = useState<number | null>(null);
+
+    // Video call state
+    const [trtcRoomInfo, setTrtcRoomInfo] = useState<TRTCRoomInfo | null>(null);
 
     // Real data from API
     const [lessons, setLessons] = useState<LessonResponse[]>([]);
@@ -212,36 +217,26 @@ const TutorPortalClassDetail: React.FC = () => {
         return diffMinutes <= 15;
     };
 
-    /**
-     * Click "Vào lớp": gọi check-in → BE tạo Meet link → mở tab Meet.
-     * Nếu lesson đã in_progress mà có meetingLink (vd tutor lỡ đóng tab) → re-open thẳng.
-     */
-    const handleEnterLesson = async (lesson: LessonResponse) => {
-        // Case re-join: lesson đang chạy, đã có link → mở thẳng, không gọi check-in lại
-        if (lesson.status === 'in_progress' && lesson.meetingLink) {
-            window.open(lesson.meetingLink, '_blank', 'noopener,noreferrer');
-            return;
-        }
-
+    const handleCheckInOnly = async (lesson: LessonResponse) => {
         try {
             setCheckingInLessonId(lesson.lessonId);
-            const response = await checkInLesson(lesson.lessonId);
-            const meetingLink = response.content?.meetingLink;
-
-            if (meetingLink) {
-                window.open(meetingLink, '_blank', 'noopener,noreferrer');
-                toast.success('Check-in thành công! Đang mở lớp học…');
-            } else {
-                // teachingMode = offline thì không có link — vẫn check-in OK.
-                toast.success('Check-in thành công!');
-            }
+            await checkInLesson(lesson.lessonId);
+            toast.success('Check-in thành công!');
             await fetchClassData();
-        } catch (error: unknown) {
-            const e = error as { response?: { data?: { message?: string } } };
-            const message: string = e.response?.data?.message || 'Không thể check-in. Vui lòng thử lại.';
-            toast.error(message);
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Không thể check-in. Vui lòng thử lại.');
         } finally {
             setCheckingInLessonId(null);
+        }
+    };
+
+    const handleEnterLessonOnly = async (lesson: LessonResponse) => {
+        try {
+            const roomInfo = await getTRTCRoomInfo(lesson.lessonId);
+            setTrtcRoomInfo(roomInfo);
+            toast.success('Đang mở phòng học...');
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Không thể vào lớp. Vui lòng thử lại.');
         }
     };
 
@@ -330,6 +325,14 @@ const TutorPortalClassDetail: React.FC = () => {
 
     return (
         <div className={styles.classDetail}>
+            {/* Video Room Overlay — fullscreen khi đang trong lớp học */}
+            {trtcRoomInfo && (
+                <VideoRoom
+                    roomInfo={trtcRoomInfo}
+                    onLeave={() => setTrtcRoomInfo(null)}
+                />
+            )}
+
             <div className={`${styles.mainContent} ${isSidebarOpen ? styles.withSidebar : ''}`}>
                 {/* Header */}
                 <div className={styles.header}>
@@ -467,10 +470,10 @@ const TutorPortalClassDetail: React.FC = () => {
                                                             {statusInfo.text}
                                                         </Tag>
 
-                                                        {/* "Vào lớp" button — gọi check-in + auto mở Meet link */}
+                                                        {/* Nút Check-in riêng biệt */}
                                                         {lesson.status === 'scheduled' && canCheckIn(lesson) && (
                                                             <button
-                                                                onClick={(e) => { e.stopPropagation(); handleEnterLesson(lesson); }}
+                                                                onClick={(e) => { e.stopPropagation(); handleCheckInOnly(lesson); }}
                                                                 disabled={checkingInLessonId === lesson.lessonId}
                                                                 style={{
                                                                     padding: '6px 16px', borderRadius: '8px',
@@ -481,23 +484,23 @@ const TutorPortalClassDetail: React.FC = () => {
                                                                     display: 'inline-flex', alignItems: 'center', gap: 6,
                                                                 }}
                                                             >
-                                                                {checkingInLessonId === lesson.lessonId ? 'Đang xử lý...' : '▶ Vào lớp'}
+                                                                {checkingInLessonId === lesson.lessonId ? 'Đang xử lý...' : 'Check-in'}
                                                             </button>
                                                         )}
 
-                                                        {/* Re-join button cho lesson đang in_progress mà chưa check-out */}
-                                                        {lesson.status === 'in_progress' && lesson.meetingLink && !lesson.checkOutTime && (
+                                                        {/* Nút Vào lớp học (chỉ hiển thị sau khi Check-in) */}
+                                                        {lesson.status === 'in_progress' && !lesson.checkOutTime && (
                                                             <button
-                                                                onClick={(e) => { e.stopPropagation(); handleEnterLesson(lesson); }}
+                                                                onClick={(e) => { e.stopPropagation(); handleEnterLessonOnly(lesson); }}
                                                                 style={{
                                                                     padding: '6px 16px', borderRadius: '8px',
-                                                                    background: '#16a34a', color: '#fff',
+                                                                    background: '#1a73e8', color: '#fff',
                                                                     border: 'none', cursor: 'pointer',
                                                                     fontSize: '13px', fontWeight: 600,
                                                                     display: 'inline-flex', alignItems: 'center', gap: 6,
                                                                 }}
                                                             >
-                                                                ▶ Vào lại lớp
+                                                                ▶ Vào lớp học
                                                             </button>
                                                         )}
 
@@ -579,12 +582,11 @@ const TutorPortalClassDetail: React.FC = () => {
                                                             {lesson.meetingLink && (
                                                                 <div style={{ gridColumn: '1 / -1' }}>
                                                                     <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                                        <span>Link học online</span>
+                                                                        <span>Phòng học trực tuyến (TRTC Room ID)</span>
                                                                     </div>
-                                                                    <a href={lesson.meetingLink} target="_blank" rel="noopener noreferrer"
-                                                                        style={{ fontSize: '14px', color: '#1890ff', wordBreak: 'break-all' }}>
+                                                                    <div style={{ fontSize: '14px', color: '#1890ff', fontWeight: 500 }}>
                                                                         {lesson.meetingLink}
-                                                                    </a>
+                                                                    </div>
                                                                 </div>
                                                             )}
                                                             {lesson.lessonContent && (

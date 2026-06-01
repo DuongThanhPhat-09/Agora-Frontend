@@ -5,7 +5,9 @@ import { Clock, ChevronLeft, ChevronRight, Video, BookOpen } from 'lucide-react'
 import dayjs from 'dayjs';
 import { Spin } from 'antd';
 import { getStudentLessons } from '../../services/student-lesson.service';
-import { isJitsiFallbackLink } from '../../services/googleAuth.service';
+import { getTRTCRoomInfo, type TRTCRoomInfo } from '../../services/trtc.service';
+import { toast } from 'react-toastify';
+import VideoRoom from '../../components/VideoRoom/VideoRoom';
 import s from '../StudentPages.module.css';
 
 // ── Tabs ─────────────────────────────────────────────────────────────────
@@ -72,7 +74,18 @@ const StudentLessons = () => {
     const [activeTab, setActiveTab] = useState('');
     const [page, setPage] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
+    const [trtcRoomInfo, setTrtcRoomInfo] = useState<TRTCRoomInfo | null>(null);
     const pageSize = 10;
+
+    const handleJoinRoom = async (lessonId: number) => {
+        try {
+            toast.info('Đang kết nối phòng học...');
+            const roomInfo = await getTRTCRoomInfo(lessonId);
+            setTrtcRoomInfo(roomInfo);
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || 'Không thể vào phòng học.');
+        }
+    };
 
     useEffect(() => {
         fetchLessons(activeTab, page);
@@ -148,6 +161,12 @@ const StudentLessons = () => {
 
     return (
         <div className={s.page}>
+            {trtcRoomInfo && (
+                <VideoRoom
+                    roomInfo={trtcRoomInfo}
+                    onLeave={() => setTrtcRoomInfo(null)}
+                />
+            )}
             {/* Top Bar */}
             <div className={s.topBar}>
                 <div className={s.topBarLeft}>
@@ -165,7 +184,7 @@ const StudentLessons = () => {
             {/* Main Content */}
             <div className={s.mainContent}>
                 {/* Hero "Đang diễn ra" — compact version */}
-                {activeLesson && <ActiveLessonHero lesson={activeLesson} navigate={navigate} />}
+                {activeLesson && <ActiveLessonHero lesson={activeLesson} navigate={navigate} onJoin={() => handleJoinRoom(activeLesson.lessonId)} />}
 
                 <div className={s.contentPanel}>
                     {/* Tabs */}
@@ -220,6 +239,7 @@ const StudentLessons = () => {
                                                     lesson.lessonId &&
                                                     navigate(`/student-portal/lessons/${lesson.lessonId}`)
                                                 }
+                                                onJoin={() => handleJoinRoom(lesson.lessonId)}
                                             />
                                         ))}
                                     </div>
@@ -260,12 +280,11 @@ export default StudentLessons;
 // ─────────────────────────────────────────────────────────────────────────
 // Hero card — compact single-row layout
 // ─────────────────────────────────────────────────────────────────────────
-const ActiveLessonHero = ({ lesson, navigate }: { lesson: any; navigate: (path: string) => void }) => {
+const ActiveLessonHero = ({ lesson, navigate, onJoin }: { lesson: any; navigate: (path: string) => void; onJoin: () => void }) => {
     const startIso = lesson.scheduledStartTime || lesson.scheduledStart;
     const endIso = lesson.scheduledEndTime || lesson.scheduledEnd;
     const startTime = startIso ? dayjs(startIso).format('HH:mm') : '';
     const endTime = endIso ? dayjs(endIso).format('HH:mm') : '';
-    const isJitsi = isJitsiFallbackLink(lesson.meetingLink);
 
     return (
         <div
@@ -289,17 +308,16 @@ const ActiveLessonHero = ({ lesson, navigate }: { lesson: any; navigate: (path: 
                 </div>
             </div>
 
-            <a
-                href={lesson.meetingLink}
-                target="_blank"
-                rel="noreferrer"
+            <button
                 style={heroJoinBtn}
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onJoin();
+                }}
             >
                 <Video size={14} />
                 Tham gia
-                {isJitsi && <span style={heroJitsiTag}>Jitsi</span>}
-            </a>
+            </button>
         </div>
     );
 };
@@ -307,7 +325,7 @@ const ActiveLessonHero = ({ lesson, navigate }: { lesson: any; navigate: (path: 
 // ─────────────────────────────────────────────────────────────────────────
 // Lesson row — compact, single-line
 // ─────────────────────────────────────────────────────────────────────────
-const LessonRow = ({ lesson, onClick }: { lesson: any; onClick: () => void }) => {
+const LessonRow = ({ lesson, onClick, onJoin }: { lesson: any; onClick: () => void; onJoin: () => void }) => {
     const [hover, setHover] = useState(false);
     const status = getStatus(lesson.status);
     const startIso = lesson.scheduledStartTime || lesson.scheduledStart;
@@ -352,16 +370,16 @@ const LessonRow = ({ lesson, onClick }: { lesson: any; onClick: () => void }) =>
                     {status.label}
                 </span>
                 {canJoin && (
-                    <a
-                        href={lesson.meetingLink}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        style={joinPill}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onJoin();
+                        }}
+                        style={{ ...joinPill, border: 'none', cursor: 'pointer' }}
                     >
                         <Video size={11} />
                         Vào lớp
-                    </a>
+                    </button>
                 )}
                 <ChevronRight
                     size={14}

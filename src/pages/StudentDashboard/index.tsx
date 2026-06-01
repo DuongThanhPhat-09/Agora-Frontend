@@ -17,7 +17,9 @@ import {
 import { getStudentPendingLessons, getStudentCalendar, getStudentBookings, getStudentLessons } from '../../services/student-lesson.service';
 import { getUserInfoFromToken } from '../../services/auth.service';
 import { isZaloMiniApp } from '../../services/zalo-env';
-import { isJitsiFallbackLink } from '../../services/googleAuth.service';
+import { getTRTCRoomInfo, type TRTCRoomInfo } from '../../services/trtc.service';
+import VideoRoom from '../../components/VideoRoom/VideoRoom';
+import { toast } from 'react-toastify';
 import styles from './styles.module.css';
 
 const inMiniApp = isZaloMiniApp();
@@ -33,6 +35,17 @@ const StudentDashboard = () => {
 
   const userInfo = getUserInfoFromToken();
   const userName = userInfo?.fullname || userInfo?.email?.split('@')[0] || 'bạn';
+  const [trtcRoomInfo, setTrtcRoomInfo] = useState<TRTCRoomInfo | null>(null);
+
+  const handleJoinRoom = async (lessonId: number) => {
+    try {
+      toast.info('Đang kết nối phòng học...');
+      const roomInfo = await getTRTCRoomInfo(lessonId);
+      setTrtcRoomInfo(roomInfo);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Không thể vào phòng học.');
+    }
+  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -170,6 +183,12 @@ const StudentDashboard = () => {
 
   return (
     <div className={styles.page}>
+      {trtcRoomInfo && (
+        <VideoRoom
+          roomInfo={trtcRoomInfo}
+          onLeave={() => setTrtcRoomInfo(null)}
+        />
+      )}
       <div className={styles.dashboardGrid}>
         {/* ===== LEFT: MAIN CONTENT ===== */}
         <div className={styles.mainContent}>
@@ -437,16 +456,16 @@ const StudentDashboard = () => {
                         {startTime ? dayjs(startTime).format('HH:mm') : ''} - {endTime ? dayjs(endTime).format('HH:mm') : ''}
                       </div>
                       {canJoin && (
-                        <a
-                          href={lesson.meetingLink}
-                          target="_blank"
-                          rel="noreferrer"
+                        <button
                           className={styles.joinBtn}
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleJoinRoom(lesson.lessonId);
+                          }}
                         >
                           <Video size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
                           Tham gia ngay
-                        </a>
+                        </button>
                       )}
                     </div>
                   );
@@ -500,25 +519,16 @@ const StudentDashboard = () => {
                         {startTime ? dayjs(startTime).format('HH:mm') : ''} - {endTime ? dayjs(endTime).format('HH:mm') : ''}
                       </div>
                       {canJoin && (
-                        <a
-                          href={lesson.meetingLink}
-                          target="_blank"
-                          rel="noreferrer"
+                        <button
                           className={styles.joinBtn}
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleJoinRoom(lesson.lessonId);
+                          }}
                         >
                           <Video size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
                           Tham gia buổi học
-                          {isJitsiFallbackLink(lesson.meetingLink) && (
-                            <span style={{
-                              marginLeft: 6, fontSize: 10, fontWeight: 600,
-                              background: 'rgba(255,255,255,0.25)',
-                              padding: '1px 6px', borderRadius: 4, letterSpacing: 0.3,
-                            }}>
-                              Jitsi
-                            </span>
-                          )}
-                        </a>
+                        </button>
                       )}
                     </div>
                   );

@@ -13,6 +13,7 @@ interface Props {
     detail: LessonDetailDto | null;
     onClose: () => void;
     onNavigateToClassDetail: () => void;
+    onJoinRoom?: () => void;
 }
 
 const LessonDetailPopup = forwardRef<HTMLDivElement, Props>(({
@@ -21,6 +22,7 @@ const LessonDetailPopup = forwardRef<HTMLDivElement, Props>(({
     detail,
     onClose,
     onNavigateToClassDetail,
+    onJoinRoom,
 }, ref) => {
     return (
         <div
@@ -76,36 +78,26 @@ const LessonDetailPopup = forwardRef<HTMLDivElement, Props>(({
                     )}
                     {detail.meetingLink && (
                         <div className={styles.lessonPopupRow}>
-                            <span className={styles.lessonPopupLabel}>Link học</span>
-                            <a
-                                href={detail.meetingLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                            <span className={styles.lessonPopupLabel}>Phòng học</span>
+                            <span
                                 className={styles.lessonPopupLink}
+                                style={{ color: '#16a34a', fontWeight: 600, cursor: 'default', textDecoration: 'none' }}
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                Tham gia Meet ↗
-                                {isJitsiFallbackLink(detail.meetingLink) && (
-                                    <span style={{
-                                        marginLeft: 6, fontSize: 10, fontWeight: 600,
-                                        color: '#92400e', background: '#fef3c7',
-                                        padding: '1px 5px', borderRadius: 3, letterSpacing: 0.3,
-                                    }}>
-                                        Jitsi
-                                    </span>
-                                )}
-                            </a>
+                                TRTC ID: {detail.meetingLink}
+                            </span>
                         </div>
                     )}
                     {/* Prominent Vào lớp button khi lesson đang chạy */}
                     {detail.status === 'in_progress' && detail.meetingLink && (
-                        <a
-                            href={detail.meetingLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (onJoinRoom) onJoinRoom();
+                            }}
                             style={{
                                 display: 'block',
+                                width: '100%',
                                 textAlign: 'center',
                                 background: '#16a34a',
                                 color: '#fff',
@@ -113,12 +105,13 @@ const LessonDetailPopup = forwardRef<HTMLDivElement, Props>(({
                                 borderRadius: 6,
                                 fontSize: 13,
                                 fontWeight: 700,
-                                textDecoration: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
                                 marginTop: 8,
                             }}
                         >
                             ▶ Vào lớp ngay
-                        </a>
+                        </button>
                     )}
                     {detail.bookingId && (
                         <button

@@ -2213,11 +2213,13 @@
 .lessonPopup {
     position: fixed;
     width: 340px;
+    max-height: calc(100vh - 24px);
     background: #fff;
     border-radius: 14px;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.05);
     z-index: 1000;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     animation: lessonPopupIn 0.2s ease-out;
 }
 

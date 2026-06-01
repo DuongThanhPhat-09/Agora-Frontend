@@ -3,7 +3,7 @@
 import axios from "axios";
 import { storageAdapter } from "./storage.adapter";
 
-const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5166') + '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 const USER_LOCAL_STORAGE_KEY = "TUTORA_user_data";
 
 const api = axios.create({
@@ -103,8 +103,8 @@ export const logout = async () => {
   const refreshToken = user?.refreshToken;
   if (refreshToken) {
     try {
-      const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5166') + '/api';
-      await api.post(`${API_BASE_URL}/token/revoke`, { refreshToken }, {
+      const CURRENT_API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+      await api.post(`${CURRENT_API_BASE_URL}/token/revoke`, { refreshToken }, {
         headers: { Authorization: `Bearer ${user?.accessToken}` }
       });
     } catch { /* best effort - vẫn logout dù server lỗi */ }

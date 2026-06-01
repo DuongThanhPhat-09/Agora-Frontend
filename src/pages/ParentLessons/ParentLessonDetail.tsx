@@ -15,6 +15,8 @@ import CreateDisputeForm from './components/CreateDisputeForm';
 import ReportNoShowModal from './components/ReportNoShowModal';
 import NoShowActionModal from './components/NoShowActionModal';
 import CreateFeedbackModal from './components/CreateFeedbackModal';
+import { getTRTCRoomInfo, type TRTCRoomInfo } from '../../services/trtc.service';
+import VideoRoom from '../../components/VideoRoom/VideoRoom';
 
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -42,6 +44,18 @@ const ParentLessonDetail: React.FC = () => {
   const [showNoShowModal, setShowNoShowModal] = useState(false);
   const [showNoShowActionModal, setShowNoShowActionModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [trtcRoomInfo, setTrtcRoomInfo] = useState<TRTCRoomInfo | null>(null);
+
+  const handleJoinRoom = async () => {
+    if (!id) return;
+    try {
+      const roomInfo = await getTRTCRoomInfo(id);
+      setTrtcRoomInfo(roomInfo);
+      toast.success('Đang mở phòng học...');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Không thể vào lớp. Vui lòng thử lại.');
+    }
+  };
 
 
   const fetchLesson = async () => {
@@ -106,6 +120,12 @@ const ParentLessonDetail: React.FC = () => {
 
   return (
     <div style={{ padding: inMiniApp ? '12px' : '24px', maxWidth: inMiniApp ? 'none' : '900px', margin: '0 auto' }}>
+      {trtcRoomInfo && (
+        <VideoRoom
+          roomInfo={trtcRoomInfo}
+          onLeave={() => setTrtcRoomInfo(null)}
+        />
+      )}
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
         <button
@@ -187,10 +207,8 @@ const ParentLessonDetail: React.FC = () => {
               </div>
             </div>
           </div>
-          <a
-            href={lesson.meetingLink}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={handleJoinRoom}
             style={{
               background: '#fff',
               color: '#15803d',
@@ -198,7 +216,8 @@ const ParentLessonDetail: React.FC = () => {
               borderRadius: 8,
               fontSize: 14,
               fontWeight: 700,
-              textDecoration: 'none',
+              border: 'none',
+              cursor: 'pointer',
               whiteSpace: 'nowrap',
               display: 'inline-flex',
               alignItems: 'center',
@@ -206,7 +225,7 @@ const ParentLessonDetail: React.FC = () => {
             }}
           >
             ▶ Tham gia ngay
-          </a>
+          </button>
         </div>
       )}
 
@@ -240,21 +259,11 @@ const ParentLessonDetail: React.FC = () => {
           {lesson.meetingLink && (
             <div style={{ gridColumn: '1 / -1' }}>
               <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span>Link học online</span>
-                {isJitsiFallbackLink(lesson.meetingLink) && (
-                  <span style={{
-                    fontSize: 10, fontWeight: 600,
-                    color: '#92400e', background: '#fef3c7',
-                    padding: '1px 6px', borderRadius: 4, letterSpacing: 0.3,
-                  }}>
-                    Jitsi (dự phòng)
-                  </span>
-                )}
+                <span>Room ID (Tencent RTC)</span>
               </div>
-              <a href={lesson.meetingLink} target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: '14px', color: '#1890ff', wordBreak: 'break-all' }}>
+              <div style={{ fontSize: '14px', color: '#1890ff' }}>
                 {lesson.meetingLink}
-              </a>
+              </div>
             </div>
           )}
         </div>

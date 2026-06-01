@@ -28,6 +28,7 @@
     "react-router-dom": "^7.12.0",
     "react-toastify": "^11.0.5",
     "recharts": "^3.7.0",
+    "trtc-sdk-v5": "^5.17.1",
     "zmp-sdk": "^2.51.1"
   },
   "devDependencies": {

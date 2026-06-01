@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { getTRTCRoomInfo, type TRTCRoomInfo } from '../../services/trtc.service';
+import VideoRoom from '../../components/VideoRoom/VideoRoom';
 import styles from '../../styles/pages/tutor-portal-dashboard.module.css';
 import { getTutorDashboardStats, getTutorCalendar, checkInLesson, type TutorDashboardStats, type CalendarDay, type CalendarLesson } from '../../services/lesson.service';
 import { getTutorFeedbacks, type FeedbackDto } from '../../services/feedback.service';
@@ -112,7 +114,7 @@ const TutorPortalDashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [recentFeedbacks, setRecentFeedbacks] = useState<FeedbackDto[]>([]);
     const [replyModal, setReplyModal] = useState<{ open: boolean; feedback: FeedbackDto | null }>({ open: false, feedback: null });
-
+    const [trtcRoomInfo, setTrtcRoomInfo] = useState<TRTCRoomInfo | null>(null);
 
     // Fetch dashboard data
     useEffect(() => {
@@ -269,7 +271,13 @@ const TutorPortalDashboard: React.FC = () => {
     const handleEnterLesson = async (lesson: CalendarLesson) => {
         // Re-join nếu lesson đang chạy & đã có link
         if (lesson.status === 'in_progress' && lesson.meetingLink) {
-            window.open(lesson.meetingLink, '_blank', 'noopener,noreferrer');
+            try {
+                toast.info('Đang kết nối phòng học...');
+                const roomInfo = await getTRTCRoomInfo(lesson.lessonId);
+                setTrtcRoomInfo(roomInfo);
+            } catch (error: any) {
+                toast.error(error.response?.data?.message || 'Không thể vào phòng học.');
+            }
             return;
         }
 
@@ -278,8 +286,13 @@ const TutorPortalDashboard: React.FC = () => {
             const response = await checkInLesson(lesson.lessonId);
             const link = response.content?.meetingLink;
             if (link) {
-                window.open(link, '_blank', 'noopener,noreferrer');
-                toast.success('Check-in thành công! Đang mở lớp học…');
+                try {
+                    const roomInfo = await getTRTCRoomInfo(lesson.lessonId);
+                    setTrtcRoomInfo(roomInfo);
+                    toast.success('Check-in thành công! Đang mở lớp học…');
+                } catch (error: any) {
+                    toast.error('Check-in thành công nhưng không thể lấy thông tin phòng học.');
+                }
             } else {
                 toast.success('Check-in thành công!');
             }
@@ -339,6 +352,12 @@ const TutorPortalDashboard: React.FC = () => {
 
     return (
         <div className={styles.dashboard}>
+            {trtcRoomInfo && (
+                <VideoRoom
+                    roomInfo={trtcRoomInfo}
+                    onLeave={() => setTrtcRoomInfo(null)}
+                />
+            )}
             {/* Header */}
             <div className={styles.header}>
                 <h1 className={styles.title}>Bảng điều khiển</h1>
