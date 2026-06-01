@@ -25,6 +25,12 @@ interface ComboFormModalProps {
   onSave: (combo: Combo) => void;
   initial: Combo | null;
   availability: TutorAvailabilitySlot[];
+  // Các combo khác đã có (đã loại bỏ combo đang edit) — dùng để cảnh báo trùng giờ giữa các combo.
+  existingCombos: Combo[];
+}
+
+export interface ExternalBusyInfo {
+  comboName: string;
 }
 
 const newComboId = () => `combo-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -59,8 +65,44 @@ const sessionsOverlap = (sessions: FixedCombo['sessions'], targetIndex?: number)
     }),
   );
 
-const ComboFormModal: React.FC<ComboFormModalProps> = ({ open, onClose, onSave, initial, availability }) => {
+const ComboFormModal: React.FC<ComboFormModalProps> = ({
+  open,
+  onClose,
+  onSave,
+  initial,
+  availability,
+  existingCombos,
+}) => {
   const [combo, setCombo] = useState<Combo>(() => initial ?? defaultFixed());
+
+  // Map (dayOfWeek-hour) → combo khác đang chiếm khung giờ này (chỉ tính combo cố định).
+  const externalBusyCells = useMemo(() => {
+    const map = new Map<string, ExternalBusyInfo>();
+    existingCombos.forEach((other) => {
+      if (other.type !== 'fixed') return;
+      other.sessions.forEach((session) => {
+        for (let h = session.startHour; h < session.startHour + session.durationHours; h += 1) {
+          map.set(`${session.dayOfWeek}-${h}`, { comboName: other.name || 'Combo khác' });
+        }
+      });
+    });
+    return map;
+  }, [existingCombos]);
+
+  // Trả về thông tin combo khác đang chặn session này (nếu có).
+  const findExternalConflict = (session: ComboSessionSlot): ExternalBusyInfo | null => {
+    for (let h = session.startHour; h < session.startHour + session.durationHours; h += 1) {
+      const hit = externalBusyCells.get(`${session.dayOfWeek}-${h}`);
+      if (hit) return hit;
+    }
+    return null;
+  };
+
+  const fixedHasExternalConflict = useMemo(
+    () => combo.type === 'fixed' && combo.sessions.some((session) => findExternalConflict(session) !== null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [combo, externalBusyCells],
+  );
 
   const fixedHasOverlap = useMemo(() => combo.type === 'fixed' && sessionsOverlap(combo.sessions), [combo]);
   const fixedHasOutOfRange = useMemo(
@@ -100,7 +142,8 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({ open, onClose, onSave, 
         combo.sessions.every((session) => session.durationHours > 0) &&
         !fixedHasOverlap &&
         !fixedHasOutOfRange &&
-        !fixedHasOutsideAvailability
+        !fixedHasOutsideAvailability &&
+        !fixedHasExternalConflict
       );
     }
     return (
@@ -266,7 +309,9 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({ open, onClose, onSave, 
                 ) : (
                   <div className={styles.sessionList}>
                     {combo.sessions.map((session, index) => {
-                      const hasConflict = sessionsOverlap(combo.sessions, index);
+                      const internalConflict = sessionsOverlap(combo.sessions, index);
+                      const externalConflict = findExternalConflict(session);
+                      const hasConflict = internalConflict || externalConflict !== null;
 
                       return (
                         <div
@@ -320,6 +365,19 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({ open, onClose, onSave, 
                           >
                             <DeleteOutlined />
                           </button>
+                          {externalConflict && (
+                            <div
+                              style={{
+                                gridColumn: '2 / 3',
+                                fontSize: 11.5,
+                                fontWeight: 600,
+                                color: '#631b1b',
+                                lineHeight: 1.4,
+                              }}
+                            >
+                              Trùng giờ với combo "{externalConflict.comboName}". Hãy chọn khung giờ khác.
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -347,6 +405,16 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({ open, onClose, onSave, 
                     <span>
                       Các buổi học đang bị trùng nhau, vượt quá khung giờ cho phép hoặc nằm ngoài lịch rảnh đã thiết
                       lập. Hãy điều chỉnh trước khi lưu combo.
+                    </span>
+                  </div>
+                )}
+
+                {fixedHasExternalConflict && (
+                  <div className={styles.comboValidationWarn}>
+                    <ClockCircleOutlined />
+                    <span>
+                      Một số buổi học đang trùng giờ với combo khác bạn đã tạo trước đó. Hãy đổi khung giờ để tránh
+                      đặt 2 lớp cùng lúc.
                     </span>
                   </div>
                 )}
@@ -431,7 +499,7 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({ open, onClose, onSave, 
           </div>
 
           <aside className={styles.comboPreviewPanel}>
-            <ComboPreview combo={combo} availability={availability} />
+            <ComboPreview combo={combo} availability={availability} externalBusyCells={externalBusyCells} />
           </aside>
         </div>
       </div>

@@ -25,6 +25,7 @@ import './styles/toastify.css';
 // Public
 const HomePage = lazy(() => import('./pages/Home/HomePage'));
 const TutorSearchPage = lazy(() => import('./pages/TutorSearch/TutorSearchPage'));
+const ParentBookingDemo = lazy(() => import('./pages/ParentBookingDemo'));
 const LoginPage = lazy(() => import('./pages/Login/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/Register/RegisterPage'));
 const ResetPasswordPage = lazy(() => import('./pages/Login/ResetPasswordPage'));
@@ -114,6 +115,7 @@ const FallbackRedirect = () => {
 function App() {
   const location = useLocation();
   const [showSessionExpired, setShowSessionExpired] = useState(false);
+  const isDemoRoute = location.pathname.startsWith('/demo/');
 
   // Detect Supabase recovery hash and redirect to /reset-password
   useEffect(() => {
@@ -152,14 +154,17 @@ function App() {
 
   // Check token expiry khi route thay đổi
   useEffect(() => {
+    if (isDemoRoute) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     checkTokenExpiry();
-  }, [location.pathname, checkTokenExpiry]);
+  }, [location.pathname, checkTokenExpiry, isDemoRoute]);
 
   // Check token expiry định kỳ mỗi 30 giây
   useEffect(() => {
+    if (isDemoRoute) return;
     const interval = setInterval(checkTokenExpiry, 30000);
     return () => clearInterval(interval);
-  }, [checkTokenExpiry]);
+  }, [checkTokenExpiry, isDemoRoute]);
 
   return (
     <div>
@@ -189,6 +194,8 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/tutor-search" element={<TutorSearchPage />} />
+          <Route path="/demo/parent-booking" element={<ParentBookingDemo />} />
+          <Route path="/demo/parent-booking/tutor/:tutorId" element={<ParentBookingDemo />} />
           <Route path="/tutor-detail" element={<Navigate to="/" replace />} />
           <Route path="/tutor-detail/:id" element={<FallbackRedirect />} />
 

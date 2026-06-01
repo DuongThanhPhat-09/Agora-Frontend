@@ -187,6 +187,7 @@ const ComboManager: React.FC<ComboManagerProps> = ({ combos, availability, onAdd
           onSave={handleSave}
           initial={editing}
           availability={availability}
+          existingCombos={editing ? combos.filter((c) => c.id !== editing.id) : combos}
         />
       )}
     </>

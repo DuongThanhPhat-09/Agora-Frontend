@@ -2227,6 +2227,37 @@
   background: rgba(61, 74, 62, 0.06);
 }
 
+/* Ô đã bị combo khác chiếm — đỏ mờ, không tương tác */
+.comboPreviewBusy {
+  border-style: dashed;
+  border-color: rgba(99, 27, 27, 0.4);
+  background: rgba(99, 27, 27, 0.1);
+}
+
+/* Ô xung đột: combo hiện tại VÀ combo khác cùng claim — đỏ đậm cảnh báo */
+.comboPreviewConflict {
+  border-style: solid;
+  border-color: #631b1b;
+  background: #631b1b;
+  box-shadow: 0 0 0 1px rgba(99, 27, 27, 0.3) inset;
+}
+
+.comboPreviewConflict .previewLabel {
+  color: #fff;
+  font-weight: 800;
+}
+
+/* Dot trong legend */
+.comboPreviewLegend .comboPreviewBusyDot {
+  border: 1px dashed rgba(99, 27, 27, 0.55);
+  background: rgba(99, 27, 27, 0.12);
+}
+
+.comboPreviewLegend .comboPreviewConflictDot {
+  border: 1px solid #631b1b;
+  background: #631b1b;
+}
+
 /* ── Recap (trang kết quả) ── */
 .recapList {
   display: flex;
