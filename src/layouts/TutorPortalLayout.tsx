@@ -79,6 +79,7 @@ const BookingIcon = () => (
     </svg>
 );
 
+
 const AccountIcon = () => (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
         <circle cx="9" cy="5.5" r="3" />
