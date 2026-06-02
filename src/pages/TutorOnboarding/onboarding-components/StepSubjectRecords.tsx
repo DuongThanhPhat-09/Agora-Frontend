@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Select, Button, Popconfirm } from 'antd';
-import { BookOutlined, BulbOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { BulbOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import styles from '../styles.module.css';
 import { SUBJECTS, GRADE_LEVELS, formatPrice } from './constants';
@@ -55,12 +55,6 @@ const StepSubjectRecords: React.FC<StepSubjectRecordsProps> = ({ onboarding }) =
           <span className={styles.subjectRecordsEyebrow}>Bước bắt buộc</span>
           <h2 className={styles.stepHeading}>Môn học & giá theo khối lớp</h2>
           <p className={styles.subjectRecordsIntroText}>Thêm từng môn và khối lớp để thiết lập mức giá/giờ phù hợp.</p>
-        </div>
-        <div className={styles.subjectRecordsRule}>
-          <span className={styles.subjectRecordsRuleIcon}>
-            <BookOutlined />
-          </span>
-          <strong>1 dòng = 1 mức giá</strong>
         </div>
       </section>
 

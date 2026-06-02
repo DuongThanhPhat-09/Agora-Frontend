@@ -844,37 +844,6 @@
   line-height: 1.6;
 }
 
-.subjectRecordsRule {
-  display: flex;
-  width: auto;
-  align-items: center;
-  flex-shrink: 0;
-  box-sizing: border-box;
-  gap: 8px;
-  padding: 9px 11px;
-  border: 1px solid rgba(61, 74, 62, 0.14);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.7);
-}
-
-.subjectRecordsRuleIcon {
-  display: grid;
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-  place-items: center;
-  border-radius: 50%;
-  background: rgba(61, 74, 62, 0.12);
-  color: #3d4a3e;
-  font-size: 13px;
-}
-
-.subjectRecordsRule strong {
-  color: #1a2238;
-  font-size: 12.5px;
-  white-space: nowrap;
-}
-
 .subjectRecordsExample {
   display: flex;
   align-items: center;
@@ -2307,7 +2276,6 @@
 
   .comboIntroBadge,
   .comboPrimaryAction,
-  .subjectRecordsRule,
   .availabilityCountBadge {
     width: 100%;
   }
