@@ -4,7 +4,8 @@ import { isZaloMiniApp } from './services/zalo-env';
 import { DeeplinkHandler } from './components/DeeplinkHandler/DeeplinkHandler';
 
 // --- Static imports (layouts, infrastructure, always-needed components) ---
-import AdminLayout from './layouts/AdminLayout';
+// Admin layout đã chuyển sang repo riêng `tutora-admin-frontend` (xem plan
+// t-i-mu-n-t-ch-resource-shimmering-wren.md). User-facing repo chỉ giữ 3 portal.
 import TutorPortalLayout from './layouts/TutorPortalLayout';
 import ParentLayout from './layouts/ParentLayout';
 import StudentLayout from './layouts/StudentLayout';
@@ -35,20 +36,7 @@ const NotFoundPage = lazy(() => import('./pages/Error/NotFoundPage'));
 const UnauthorizedPage = lazy(() => import('./pages/Error/UnauthorizedPage'));
 const ForbiddenPage = lazy(() => import('./pages/Error/ForbiddenPage'));
 
-// Admin pages
-const AdminDashboardPage = lazy(() => import('./pages/AdminDashboard/AdminDashboardPageEnhanced'));
-const UserManagementPage = lazy(() => import('./pages/AdminUserManagement/UserManagementPage'));
-const AdminVettingPage = lazy(() => import('./pages/AdminVetting/AdminVettingPage'));
-const AdminBookingsPage = lazy(() => import('./pages/AdminBookings/AdminBookingsPage'));
-const AdminBookingDetailPage = lazy(() => import('./pages/AdminBookings/AdminBookingDetailPage'));
-const AdminFinancialsPage = lazy(() => import('./pages/AdminFinancials/AdminFinancialsPage'));
-const AdminSettingsPage = lazy(() => import('./pages/AdminSettings/AdminSettingsPage'));
-const AdminWarningsPage = lazy(() => import('./pages/AdminWarnings/AdminWarningsPage'));
-const PayoutOverviewPage = lazy(() => import('./pages/AdminPayout/PayoutOverview/PayoutOverviewPage'));
-const PayoutDetailPage = lazy(() => import('./pages/AdminPayout/PayoutDetail/PayoutDetailPage'));
-const PendingReviewPage = lazy(() => import('./pages/AdminPayout/PendingReview/PendingReviewPage'));
-const AllPayoutRequestsPage = lazy(() => import('./pages/AdminPayout/AllRequests/AllPayoutRequestsPage'));
-const FraudLogsPage = lazy(() => import('./pages/AdminPayout/FraudLogs/FraudLogsPage'));
+// Admin pages — moved to tutora-admin-frontend repo.
 
 // Tutor Portal pages
 const TutorOnboarding = lazy(() => import('./pages/TutorOnboarding'));
@@ -199,36 +187,9 @@ function App() {
           <Route path="/tutor-detail" element={<Navigate to="/" replace />} />
           <Route path="/tutor-detail/:id" element={<FallbackRedirect />} />
 
-          {/* Admin + Tutor Portal — không có trong Zalo Mini App */}
+          {/* Tutor Portal — không có trong Zalo Mini App */}
           {!inMiniApp && (
             <>
-              {/* Admin Layout - PROTECTED */}
-              <Route
-                path="/admin-portal"
-                element={
-                  <ProtectedRoute allowedRoles={["Admin"]}>
-                    <AdminLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<Navigate to="/admin-portal/dashboard" replace />} />
-                <Route path="dashboard" element={<AdminDashboardPage />} />
-                <Route path="users" element={<UserManagementPage />} />
-                <Route path="vetting" element={<AdminVettingPage />} />
-                <Route path="bookings" element={<AdminBookingsPage />} />
-                <Route path="bookings/:id" element={<AdminBookingDetailPage />} />
-                <Route path="financials" element={<AdminFinancialsPage />} />
-                <Route path="warnings" element={<AdminWarningsPage />} />
-                <Route path="settings" element={<AdminSettingsPage />} />
-                <Route path="notifications" element={<NotificationsPage />} />
-                <Route path="payouts" element={<PayoutOverviewPage />} />
-                <Route path="payouts/history" element={<AllPayoutRequestsPage />} />
-                <Route path="payouts/:id" element={<PayoutDetailPage />} />
-                <Route path="payout/review" element={<PendingReviewPage />} />
-                <Route path="payout/review/:id" element={<div className="p-6">Payout Request Detail Page (Coming Soon)</div>} />
-                <Route path="payout/fraud-logs" element={<FraudLogsPage />} />
-              </Route>
-
               {/* Tutor Portal - PROTECTED */}
               <Route path="/tutor-portal" element={
                 <ProtectedRoute allowedRoles={["Tutor"]}>

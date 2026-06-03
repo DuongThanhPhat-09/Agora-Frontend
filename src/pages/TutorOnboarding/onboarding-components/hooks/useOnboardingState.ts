@@ -1,12 +1,18 @@
 import { useState, useCallback } from 'react';
 import { hasAvailabilityForDuration, isSessionWithinAvailability } from '../availability-utils';
-import { HOURS, formatHour } from '../constants';
+import { HALF_HOUR_STEPS, formatHourMinute, minutesOf } from '../constants';
 import type { OnboardingState, OnboardingStep, SubjectRecord, Combo } from '../types';
 
 const clampStep = (n: number): OnboardingStep => Math.min(3, Math.max(1, n)) as OnboardingStep;
 
 const newId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-const availabilityId = (dayOfWeek: number, startHour: number) => `${dayOfWeek}-${startHour}`;
+const availabilityId = (dayOfWeek: number, hour: number, minute: number) => `${dayOfWeek}-${hour}-${minute}`;
+
+// Tính endTime sau khi cộng 30 phút (bằng phút) → "HH:mm".
+const addHalfHour = (hour: number, minute: number) => {
+  const total = minutesOf(hour, minute) + 30;
+  return formatHourMinute(Math.floor(total / 60), (total % 60) as 0 | 30);
+};
 
 export function useOnboardingState() {
   const [state, setState] = useState<OnboardingState>({
@@ -61,43 +67,50 @@ export function useOnboardingState() {
     }));
   }, []);
 
-  // ── B2: lịch rảnh demo theo từng ô một giờ ──
-  const setAvailable = useCallback((dayOfWeek: number, startHour: number, isAvailable: boolean) => {
-    setState((prev) => {
-      const id = availabilityId(dayOfWeek, startHour);
-      const exists = prev.availability.some((slot) => slot.id === id);
-      if (isAvailable && !exists) {
-        return {
-          ...prev,
-          availability: [
-            ...prev.availability,
-            {
-              id,
-              dayOfWeek,
-              startTime: formatHour(startHour),
-              endTime: formatHour(startHour + 1),
-            },
-          ],
-        };
-      }
-      if (!isAvailable && exists) {
-        return {
-          ...prev,
-          availability: prev.availability.filter((slot) => slot.id !== id),
-        };
-      }
-      return prev;
-    });
-  }, []);
+  // ── B2: lịch rảnh demo theo ô 30 phút ──
+  const setAvailable = useCallback(
+    (dayOfWeek: number, hour: number, minute: 0 | 30, isAvailable: boolean) => {
+      setState((prev) => {
+        const id = availabilityId(dayOfWeek, hour, minute);
+        const exists = prev.availability.some((slot) => slot.id === id);
+        if (isAvailable && !exists) {
+          return {
+            ...prev,
+            availability: [
+              ...prev.availability,
+              {
+                id,
+                dayOfWeek,
+                startTime: formatHourMinute(hour, minute),
+                endTime: addHalfHour(hour, minute),
+              },
+            ],
+          };
+        }
+        if (!isAvailable && exists) {
+          return {
+            ...prev,
+            availability: prev.availability.filter((slot) => slot.id !== id),
+          };
+        }
+        return prev;
+      });
+    },
+    [],
+  );
 
   const toggleAvailabilityDay = useCallback((dayOfWeek: number) => {
     setState((prev) => {
-      const selectedHours = new Set(
+      // Set chứa key "hour-minute" của ô đã chọn cho ngày này.
+      const selectedKeys = new Set(
         prev.availability
           .filter((slot) => slot.dayOfWeek === dayOfWeek)
-          .map((slot) => Number(slot.startTime.slice(0, 2))),
+          .map((slot) => {
+            const [h, m] = slot.startTime.split(':').map(Number);
+            return `${h}-${m || 0}`;
+          }),
       );
-      const isFullDay = HOURS.every((hour) => selectedHours.has(hour));
+      const isFullDay = HALF_HOUR_STEPS.every(({ hour, minute }) => selectedKeys.has(`${hour}-${minute}`));
       if (isFullDay) {
         return {
           ...prev,
@@ -105,11 +118,13 @@ export function useOnboardingState() {
         };
       }
 
-      const additions = HOURS.filter((hour) => !selectedHours.has(hour)).map((hour) => ({
-        id: availabilityId(dayOfWeek, hour),
+      const additions = HALF_HOUR_STEPS.filter(
+        ({ hour, minute }) => !selectedKeys.has(`${hour}-${minute}`),
+      ).map(({ hour, minute }) => ({
+        id: availabilityId(dayOfWeek, hour, minute),
         dayOfWeek,
-        startTime: formatHour(hour),
-        endTime: formatHour(hour + 1),
+        startTime: formatHourMinute(hour, minute),
+        endTime: addHalfHour(hour, minute),
       }));
       return {
         ...prev,

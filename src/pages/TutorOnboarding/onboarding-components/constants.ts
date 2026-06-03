@@ -39,15 +39,40 @@ export const DAY_COLUMNS = [
   { dayOfWeek: 0, label: 'CN', full: 'Chủ Nhật' },
 ];
 
-// Khung giờ lưới: 06:00 → 22:00 (giống ảnh PickleBOO). Block bắt đầu ở 6..21.
+// Khung giờ lưới: 06:00 → 22:00. Block bắt đầu ở 06:00..21:30 (mỗi ô 30 phút).
 export const START_HOUR = 6;
 export const END_HOUR = 22;
+
+// Giờ tròn — giữ cho code legacy chưa migrate.
 export const HOURS: number[] = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
+
+// Mốc 30 phút — dùng cho grid availability và combo session.
+export interface HalfHourStep {
+  hour: number;
+  minute: 0 | 30;
+}
+export const HALF_HOUR_STEPS: HalfHourStep[] = HOURS.flatMap((hour) => [
+  { hour, minute: 0 as const },
+  { hour, minute: 30 as const },
+]);
+
+// Quy đổi (giờ, phút) → số phút trong ngày. Dùng cho overlap math.
+export const minutesOf = (hour: number, minute: number) => hour * 60 + minute;
 
 const pad = (n: number) => n.toString().padStart(2, '0');
 
 export const formatHourBlock = (hour: number) => `${pad(hour)}:00 - ${pad(hour + 1)}:00`;
 
+// Format giờ tròn. Giữ chữ ký 1 tham số để không phá call site cũ.
 export const formatHour = (hour: number) => `${pad(hour)}:00`;
+
+// Format theo "HH:mm". Dùng cho slot 30 phút.
+export const formatHourMinute = (hour: number, minute: number) => `${pad(hour)}:${pad(minute)}`;
+
+// Parse "HH:mm" → { hour, minute }. Helper khi đọc startTime/endTime từ TutorAvailabilitySlot.
+export const parseTime = (time: string): { hour: number; minute: number } => {
+  const [h, m] = time.split(':').map(Number);
+  return { hour: h, minute: m || 0 };
+};
 
 export const formatPrice = (value: number) => new Intl.NumberFormat('vi-VN').format(value);

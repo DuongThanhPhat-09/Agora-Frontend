@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Select, Button, Popconfirm } from 'antd';
-import { BookOutlined, BulbOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, PlusOutlined, WarningOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import styles from '../styles.module.css';
 import { SUBJECTS, GRADE_LEVELS, formatPrice } from './constants';
@@ -10,6 +10,9 @@ import PriceInput from './PriceInput';
 interface StepSubjectRecordsProps {
   onboarding: UseOnboardingState;
 }
+
+// Ngưỡng cảnh báo giá: tutor thường không cao quá 1tr/giờ. > 2tr coi như nhập nhầm.
+const PRICE_WARN_HIGH = 2_000_000;
 
 const StepSubjectRecords: React.FC<StepSubjectRecordsProps> = ({ onboarding }) => {
   const { state, addSubjectRecord, removeSubjectRecord } = onboarding;
@@ -22,12 +25,9 @@ const StepSubjectRecords: React.FC<StepSubjectRecordsProps> = ({ onboarding }) =
     () => (subjectId == null ? '' : (SUBJECTS.find((s) => s.id === subjectId)?.name ?? '')),
     [subjectId],
   );
-  const gradeName = useMemo(
-    () => (gradeLevel == null ? '' : (GRADE_LEVELS.find((g) => g.value === gradeLevel)?.label ?? '')),
-    [gradeLevel],
-  );
 
   const canAdd = subjectId != null && gradeLevel != null && hourlyRate != null && hourlyRate > 0;
+  const isPriceTooHigh = hourlyRate != null && hourlyRate > PRICE_WARN_HIGH;
 
   const handleAdd = () => {
     if (!canAdd) return;
@@ -41,11 +41,10 @@ const StepSubjectRecords: React.FC<StepSubjectRecordsProps> = ({ onboarding }) =
       toast.warning('Đã có record cho cặp môn-khối này. Hãy xoá rồi thêm lại nếu muốn đổi giá.');
       return;
     }
-    // reset form
     setSubjectId(null);
     setGradeLevel(null);
     setHourlyRate(200000);
-    toast.success('Đã thêm 1 record');
+    toast.success('Đã thêm 1 cấu hình');
   };
 
   return (
@@ -54,141 +53,107 @@ const StepSubjectRecords: React.FC<StepSubjectRecordsProps> = ({ onboarding }) =
         <div className={styles.subjectRecordsIntroMain}>
           <span className={styles.subjectRecordsEyebrow}>Bước bắt buộc</span>
           <h2 className={styles.stepHeading}>Môn học & giá theo khối lớp</h2>
-          <p className={styles.subjectRecordsIntroText}>Thêm từng môn và khối lớp để thiết lập mức giá/giờ phù hợp.</p>
-        </div>
-        <div className={styles.subjectRecordsRule}>
-          <span className={styles.subjectRecordsRuleIcon}>
-            <BookOutlined />
-          </span>
-          <strong>1 dòng = 1 mức giá</strong>
         </div>
       </section>
 
-      <div className={styles.subjectRecordsExample}>
-        <BulbOutlined />
-        <span>
-          <strong>Ví dụ:</strong> Toán Lớp 10 — 200.000đ/giờ, Toán Lớp 11 — 250.000đ/giờ.
-        </span>
-      </div>
-
-      {/* Form thêm record */}
-      <div className={styles.recordForm}>
-        <div className={styles.recordFormHead}>
-          <div>
-            <h3 className={styles.recordFormTitle}>Thêm cấu hình giảng dạy</h3>
-            <p className={styles.recordFormSubtitle}>
-              Chọn môn và khối lớp trước, sau đó đặt mức giá phù hợp cho một giờ học.
-            </p>
-          </div>
-          <span className={styles.recordFormStep}>Cấu hình mới</span>
-        </div>
-
-        <div className={styles.recordSelectGrid}>
-          <label className={styles.recordField}>
-            <span className={styles.recordFieldLabel}>1. Môn học</span>
-            <Select
-              placeholder="Chọn môn bạn giảng dạy"
-              value={subjectId}
-              onChange={(v) => setSubjectId(v)}
-              options={SUBJECTS.map((s) => ({ value: s.id, label: s.name }))}
-              style={{ width: '100%' }}
-            />
-          </label>
-          <label className={styles.recordField}>
-            <span className={styles.recordFieldLabel}>2. Khối lớp</span>
-            <Select
-              placeholder="Chọn khối lớp"
-              value={gradeLevel}
-              onChange={(v) => setGradeLevel(v)}
-              options={GRADE_LEVELS.map((g) => ({ value: g.value, label: g.label }))}
-              style={{ width: '100%' }}
-            />
-          </label>
-        </div>
-
-        <div className={styles.recordPricingSection}>
-          <div className={styles.recordPricingHead}>
-            <div>
-              <span className={styles.recordFieldLabel}>3. Giá cho mỗi giờ học</span>
-              <p className={styles.recordPricingHint}>
-                Kéo thanh trượt hoặc chọn nhanh một mức giá phổ biến. Bạn vẫn có thể nhập số chính xác.
-              </p>
+      {/* 2-column layout: form bên trái, list cấu hình đã thêm bên phải */}
+      <div className={styles.recordsLayout}>
+        <div className={styles.recordsMain}>
+          <div className={styles.recordForm}>
+            <div className={styles.recordFormHead}>
+              <h3 className={styles.recordFormTitle}>Thêm cấu hình giảng dạy</h3>
+              <span className={styles.recordFormStep}>Cấu hình mới</span>
             </div>
-            <span className={styles.recordPricingUnit}>VND / giờ</span>
+
+            <div className={styles.recordSelectGrid}>
+              <label className={styles.recordField}>
+                <span className={styles.recordFieldLabel}>1. Môn học</span>
+                <Select
+                  placeholder="Chọn môn bạn giảng dạy"
+                  value={subjectId}
+                  onChange={(v) => setSubjectId(v)}
+                  options={SUBJECTS.map((s) => ({ value: s.id, label: s.name }))}
+                  style={{ width: '100%' }}
+                />
+              </label>
+              <label className={styles.recordField}>
+                <span className={styles.recordFieldLabel}>2. Khối lớp</span>
+                <Select
+                  placeholder="Chọn khối lớp"
+                  value={gradeLevel}
+                  onChange={(v) => setGradeLevel(v)}
+                  options={GRADE_LEVELS.map((g) => ({ value: g.value, label: g.label }))}
+                  style={{ width: '100%' }}
+                />
+              </label>
+            </div>
+
+            <div className={styles.recordPricingSection}>
+              <div className={styles.recordPricingHead}>
+                <span className={styles.recordFieldLabel}>3. Giá cho mỗi giờ học</span>
+              </div>
+              <PriceInput
+                value={hourlyRate}
+                onChange={setHourlyRate}
+                presets={[100_000, 150_000, 200_000, 250_000, 300_000, 400_000, 500_000]}
+              />
+              {isPriceTooHigh && (
+                <div className={styles.recordPriceWarn}>
+                  <WarningOutlined />
+                  <span>
+                    Mức giá <strong>{formatPrice(hourlyRate ?? 0)}đ/giờ</strong> khá cao so với mặt bằng chung. Hãy
+                    kiểm tra lại trước khi lưu.
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className={styles.recordFormActions} style={{ justifyContent: 'flex-end' }}>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleAdd}
+                disabled={!canAdd}
+                className={styles.recordAddBtn}
+              >
+                Thêm cấu hình
+              </Button>
+            </div>
           </div>
-          <PriceInput
-            value={hourlyRate}
-            onChange={setHourlyRate}
-            min={50000}
-            max={2000000}
-            step={10000}
-            presets={[100000, 150000, 200000, 300000, 500000]}
-          />
         </div>
 
-        <div className={styles.recordFormActions}>
-          <div className={styles.recordDraft}>
-            <span className={styles.recordDraftLabel}>Cấu hình sắp thêm</span>
-            <strong>
-              {subjectName || 'Chưa chọn môn'} · {gradeName || 'Chưa chọn khối'} · {formatPrice(hourlyRate ?? 0)}đ/giờ
-            </strong>
+        <aside className={styles.recordsAside}>
+          <div className={styles.recordsAsideHead}>
+            <h3 className={styles.recordsSectionTitle}>Cấu hình đã thêm</h3>
+            <span className={styles.recordsCount}>{state.subjectRecords.length}</span>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleAdd}
-            disabled={!canAdd}
-            className={styles.recordAddBtn}
-          >
-            Thêm cấu hình
-          </Button>
-        </div>
-      </div>
 
-      {/* List records */}
-      {state.subjectRecords.length === 0 ? (
-        <div className={styles.empty}>Chưa có record nào — thêm dòng đầu tiên ở trên.</div>
-      ) : (
-        <div className={styles.recordsSection}>
-          <div className={styles.recordsSectionHead}>
-            <div>
-              <h3 className={styles.recordsSectionTitle}>Cấu hình đã thêm</h3>
-              <p className={styles.recordsSectionSubtitle}>
-                Mỗi cấu hình sẽ được dùng để tính giá khi phụ huynh đặt lịch.
-              </p>
-            </div>
-            <span className={styles.recordsCount}>{state.subjectRecords.length} cấu hình</span>
-          </div>
-          <div className={styles.recordsTable}>
-            <div className={`${styles.recordsRow} ${styles.recordsHead}`}>
-              <span>Môn</span>
-              <span>Khối lớp</span>
-              <span>Giá / giờ</span>
-              <span />
-            </div>
-            {state.subjectRecords.map((r) => (
-              <div key={r.id} className={styles.recordsRow}>
-                <span className={styles.recordSubject}>{r.subjectName}</span>
-                <span className={styles.recordGrade}>
-                  {GRADE_LEVELS.find((g) => g.value === r.gradeLevel)?.label ?? r.gradeLevel}
-                </span>
-                <span className={styles.recordRate}>{formatPrice(r.hourlyRate)}đ</span>
-                <span className={styles.recordAction}>
+          {state.subjectRecords.length === 0 ? (
+            <div className={styles.recordsAsideEmpty}>Chưa có cấu hình nào.</div>
+          ) : (
+            <ul className={styles.recordsAsideList}>
+              {state.subjectRecords.map((r) => (
+                <li key={r.id} className={styles.recordsAsideItem}>
+                  <div className={styles.recordsAsideItemMain}>
+                    <strong>{r.subjectName}</strong>
+                    <span>{GRADE_LEVELS.find((g) => g.value === r.gradeLevel)?.label ?? r.gradeLevel}</span>
+                  </div>
+                  <div className={styles.recordsAsideItemPrice}>{formatPrice(r.hourlyRate)}đ</div>
                   <Popconfirm
-                    title="Xoá record này?"
+                    title="Xoá cấu hình này?"
                     onConfirm={() => removeSubjectRecord(r.id)}
                     okText="Xoá"
                     cancelText="Huỷ"
                     okButtonProps={{ danger: true }}
                   >
-                    <Button size="small" danger icon={<DeleteOutlined />} />
+                    <Button size="small" danger type="text" icon={<DeleteOutlined />} />
                   </Popconfirm>
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </aside>
+      </div>
     </div>
   );
 };
