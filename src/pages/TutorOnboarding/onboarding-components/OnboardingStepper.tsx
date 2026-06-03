@@ -5,7 +5,7 @@ import type { OnboardingStep } from './types';
 const STEPS: { step: OnboardingStep; label: string }[] = [
   { step: 1, label: 'Môn & giá' },
   { step: 2, label: 'Lịch rảnh' },
-  { step: 3, label: 'Combo' },
+  { step: 3, label: 'Gói lịch học' },
 ];
 
 interface OnboardingStepperProps {

@@ -5,18 +5,18 @@ import {
   ClockCircleOutlined,
   DeleteOutlined,
   PlusOutlined,
-  ThunderboltOutlined,
+  SwapOutlined,
 } from '@ant-design/icons';
 import styles from '../styles.module.css';
 import ComboPreview from './ComboPreview';
 import {
   findFirstAvailableSession,
   getAvailableDurations,
-  getAvailableStartHours,
+  getAvailableStartTimes,
   hasAvailabilityForDuration,
   isSessionWithinAvailability,
 } from './availability-utils';
-import { DAY_COLUMNS, END_HOUR, formatHour } from './constants';
+import { DAY_COLUMNS, END_HOUR, formatHourMinute, minutesOf } from './constants';
 import type { Combo, ComboSessionSlot, FixedCombo, FlexCombo, TutorAvailabilitySlot } from './types';
 
 interface ComboFormModalProps {
@@ -25,7 +25,7 @@ interface ComboFormModalProps {
   onSave: (combo: Combo) => void;
   initial: Combo | null;
   availability: TutorAvailabilitySlot[];
-  // Các combo khác đã có (đã loại bỏ combo đang edit) — dùng để cảnh báo trùng giờ giữa các combo.
+  // Các gói khác đã có (đã loại bỏ gói đang edit) — dùng để cảnh báo trùng giờ giữa các gói.
   existingCombos: Combo[];
 }
 
@@ -52,16 +52,25 @@ const defaultFlex = (): FlexCombo => ({
   description: '',
 });
 
+// Helper: encode (hour, minute) → "h:m" string cho Select option (Antd Select không
+// nhận object value tốt). Decode khi onChange.
+const encodeStart = (hour: number, minute: 0 | 30) => `${hour}:${minute}`;
+const decodeStart = (raw: string): { hour: number; minute: 0 | 30 } => {
+  const [h, m] = raw.split(':').map(Number);
+  return { hour: h, minute: (m === 30 ? 30 : 0) as 0 | 30 };
+};
+
 const sessionsOverlap = (sessions: FixedCombo['sessions'], targetIndex?: number) =>
   sessions.some((session, index) =>
     sessions.some((other, otherIndex) => {
       if (index === otherIndex) return false;
       if (targetIndex != null && index !== targetIndex && otherIndex !== targetIndex) return false;
-      return (
-        session.dayOfWeek === other.dayOfWeek &&
-        session.startHour < other.startHour + other.durationHours &&
-        other.startHour < session.startHour + session.durationHours
-      );
+      if (session.dayOfWeek !== other.dayOfWeek) return false;
+      const sStart = minutesOf(session.startHour, session.startMinute);
+      const sEnd = sStart + session.durationHours * 60;
+      const oStart = minutesOf(other.startHour, other.startMinute);
+      const oEnd = oStart + other.durationHours * 60;
+      return sStart < oEnd && oStart < sEnd;
     }),
   );
 
@@ -75,24 +84,32 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({
 }) => {
   const [combo, setCombo] = useState<Combo>(() => initial ?? defaultFixed());
 
-  // Map (dayOfWeek-hour) → combo khác đang chiếm khung giờ này (chỉ tính combo cố định).
+  // Map "dayOfWeek-hour-minute" (30-phút granularity) → gói khác đang chiếm khung này.
   const externalBusyCells = useMemo(() => {
     const map = new Map<string, ExternalBusyInfo>();
     existingCombos.forEach((other) => {
       if (other.type !== 'fixed') return;
       other.sessions.forEach((session) => {
-        for (let h = session.startHour; h < session.startHour + session.durationHours; h += 1) {
-          map.set(`${session.dayOfWeek}-${h}`, { comboName: other.name || 'Combo khác' });
+        const startMin = minutesOf(session.startHour, session.startMinute);
+        const endMin = startMin + session.durationHours * 60;
+        for (let cur = startMin; cur < endMin; cur += 30) {
+          const h = Math.floor(cur / 60);
+          const m = cur % 60;
+          map.set(`${session.dayOfWeek}-${h}-${m}`, { comboName: other.name || 'Gói khác' });
         }
       });
     });
     return map;
   }, [existingCombos]);
 
-  // Trả về thông tin combo khác đang chặn session này (nếu có).
+  // Trả về thông tin gói khác đang chặn session này (nếu có).
   const findExternalConflict = (session: ComboSessionSlot): ExternalBusyInfo | null => {
-    for (let h = session.startHour; h < session.startHour + session.durationHours; h += 1) {
-      const hit = externalBusyCells.get(`${session.dayOfWeek}-${h}`);
+    const startMin = minutesOf(session.startHour, session.startMinute);
+    const endMin = startMin + session.durationHours * 60;
+    for (let cur = startMin; cur < endMin; cur += 30) {
+      const h = Math.floor(cur / 60);
+      const m = cur % 60;
+      const hit = externalBusyCells.get(`${session.dayOfWeek}-${h}-${m}`);
       if (hit) return hit;
     }
     return null;
@@ -107,7 +124,10 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({
   const fixedHasOverlap = useMemo(() => combo.type === 'fixed' && sessionsOverlap(combo.sessions), [combo]);
   const fixedHasOutOfRange = useMemo(
     () =>
-      combo.type === 'fixed' && combo.sessions.some((session) => session.startHour + session.durationHours > END_HOUR),
+      combo.type === 'fixed' &&
+      combo.sessions.some(
+        (session) => minutesOf(session.startHour, session.startMinute) + session.durationHours * 60 > END_HOUR * 60,
+      ),
     [combo],
   );
   const fixedHasOutsideAvailability = useMemo(
@@ -125,7 +145,7 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({
   );
   const availableDayOptions = useMemo(
     () =>
-      DAY_COLUMNS.filter((column) => getAvailableStartHours(column.dayOfWeek, availability).length > 0).map(
+      DAY_COLUMNS.filter((column) => getAvailableStartTimes(column.dayOfWeek, availability).length > 0).map(
         (column) => ({
           value: column.dayOfWeek,
           label: column.full,
@@ -170,31 +190,36 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({
   };
 
   const normalizeSession = (session: ComboSessionSlot): ComboSessionSlot => {
-    const availableStartHours = getAvailableStartHours(session.dayOfWeek, availability);
-    const startHour = availableStartHours.includes(session.startHour)
-      ? session.startHour
-      : (availableStartHours[0] ?? session.startHour);
-    const availableDurations = getAvailableDurations(session.dayOfWeek, startHour, availability);
+    const startTimes = getAvailableStartTimes(session.dayOfWeek, availability);
+    const matchesCurrent = startTimes.some(
+      (st) => st.hour === session.startHour && st.minute === session.startMinute,
+    );
+    const start = matchesCurrent
+      ? { hour: session.startHour, minute: session.startMinute }
+      : (startTimes[0] ?? { hour: session.startHour, minute: session.startMinute });
+    const durations = getAvailableDurations(session.dayOfWeek, start.hour, start.minute, availability);
 
     return {
       ...session,
-      startHour,
-      durationHours: availableDurations.includes(session.durationHours)
-        ? session.durationHours
-        : (availableDurations[0] ?? session.durationHours),
+      startHour: start.hour,
+      startMinute: start.minute,
+      durationHours: durations.includes(session.durationHours) ? session.durationHours : (durations[0] ?? session.durationHours),
     };
   };
 
-  const updateSession = (index: number, patch: Partial<FixedCombo['sessions'][number]>) => {
+  const updateSession = (index: number, patch: Partial<ComboSessionSlot>) => {
     if (combo.type !== 'fixed') return;
     setCombo({
       ...combo,
       sessions: combo.sessions.map((session, sessionIndex) => {
         if (sessionIndex !== index) return session;
         const next = { ...session, ...patch };
+        // Clamp duration để không vượt END_HOUR.
+        const startTotal = minutesOf(next.startHour, next.startMinute);
+        const maxDurationHours = (END_HOUR * 60 - startTotal) / 60;
         return normalizeSession({
           ...next,
-          durationHours: Math.min(next.durationHours, END_HOUR - next.startHour),
+          durationHours: Math.min(next.durationHours, maxDurationHours),
         });
       }),
     });
@@ -210,14 +235,13 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({
       open={open}
       onCancel={onClose}
       onOk={() => onSave(combo)}
-      okText={initial ? 'Cập nhật combo' : 'Tạo combo'}
+      okText={initial ? 'Cập nhật gói' : 'Tạo gói'}
       cancelText="Hủy"
       okButtonProps={{ disabled: !isValid }}
       title={
         <div className={styles.comboModalTitle}>
-          <span className={styles.comboModalEyebrow}>{initial ? 'Chỉnh sửa gói học' : 'Combo mới'}</span>
-          <strong>{initial ? 'Cập nhật combo' : 'Tạo combo học'}</strong>
-          <span>Thiết lập khung lịch để phụ huynh có thể chọn và đặt lịch nhanh hơn.</span>
+          <span className={styles.comboModalEyebrow}>{initial ? 'Chỉnh sửa gói lịch học' : 'Gói lịch học mới'}</span>
+          <strong>{initial ? 'Cập nhật gói lịch học' : 'Tạo gói lịch học'}</strong>
         </div>
       }
       width={920}
@@ -246,7 +270,7 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({
             aria-pressed={combo.type === 'flex'}
           >
             <span className={styles.comboTypeIcon}>
-              <ThunderboltOutlined />
+              <SwapOutlined />
             </span>
             <span>
               <strong>Lịch linh hoạt</strong>
@@ -261,20 +285,20 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({
               <div className={styles.comboBuilderSectionHead}>
                 <div>
                   <span className={styles.comboBuilderStep}>01</span>
-                  <h4>Thông tin combo</h4>
+                  <h4>Thông tin gói</h4>
                 </div>
               </div>
               <label className={styles.comboFormField}>
-                <span className={styles.comboFormLabel}>Tên combo</span>
+                <span className={styles.comboFormLabel}>Tên gói</span>
                 <Input
                   value={combo.name}
                   onChange={(event) => setCombo({ ...combo, name: event.target.value } as Combo)}
-                  placeholder="Ví dụ: Combo 8 buổi tối Thứ 2 và Thứ 4"
+                  placeholder="Ví dụ: Gói 8 buổi tối Thứ 2 và Thứ 4"
                   size="large"
                 />
               </label>
               <div className={styles.comboFormHint}>
-                Giá combo sẽ được tính theo môn và khối lớp mà phụ huynh chọn khi đặt lịch.
+                Giá gói sẽ được tính theo môn và khối lớp mà phụ huynh chọn khi đặt lịch.
               </div>
             </section>
 
@@ -284,7 +308,6 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({
                   <div>
                     <span className={styles.comboBuilderStep}>02</span>
                     <h4>Lịch học lặp lại hàng tuần</h4>
-                    <p>Thêm từng buổi học giống như thêm sự kiện vào lịch.</p>
                   </div>
                   {combo.sessions.length > 0 && (
                     <span className={styles.comboSessionCount}>{combo.sessions.length} buổi</span>
@@ -295,7 +318,7 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({
                   <div className={styles.sessionEmptyState}>
                     <CalendarOutlined />
                     <strong>Chưa có buổi học nào</strong>
-                    <span>Thêm buổi đầu tiên để bắt đầu tạo lịch combo.</span>
+                    <span>Thêm buổi đầu tiên để bắt đầu tạo gói lịch học.</span>
                     <button
                       type="button"
                       className={styles.sessionAddBtn}
@@ -332,12 +355,17 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({
                             <label>
                               <span>Bắt đầu</span>
                               <Select
-                                value={session.startHour}
-                                onChange={(value) => updateSession(index, { startHour: value })}
-                                options={getAvailableStartHours(session.dayOfWeek, availability).map((hour) => ({
-                                  value: hour,
-                                  label: formatHour(hour),
-                                }))}
+                                value={encodeStart(session.startHour, session.startMinute)}
+                                onChange={(value) => {
+                                  const { hour, minute } = decodeStart(value);
+                                  updateSession(index, { startHour: hour, startMinute: minute });
+                                }}
+                                options={getAvailableStartTimes(session.dayOfWeek, availability).map(
+                                  ({ hour, minute }) => ({
+                                    value: encodeStart(hour, minute),
+                                    label: formatHourMinute(hour, minute),
+                                  }),
+                                )}
                                 style={{ width: '100%' }}
                               />
                             </label>
@@ -346,12 +374,15 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({
                               <Select
                                 value={session.durationHours}
                                 onChange={(value) => updateSession(index, { durationHours: value })}
-                                options={getAvailableDurations(session.dayOfWeek, session.startHour, availability).map(
-                                  (duration) => ({
-                                    value: duration,
-                                    label: `${duration} giờ`,
-                                  }),
-                                )}
+                                options={getAvailableDurations(
+                                  session.dayOfWeek,
+                                  session.startHour,
+                                  session.startMinute,
+                                  availability,
+                                ).map((duration) => ({
+                                  value: duration,
+                                  label: duration < 1 ? `${duration * 60} phút` : `${duration} giờ`,
+                                }))}
                                 style={{ width: '100%' }}
                               />
                             </label>
@@ -375,7 +406,7 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({
                                 lineHeight: 1.4,
                               }}
                             >
-                              Trùng giờ với combo "{externalConflict.comboName}". Hãy chọn khung giờ khác.
+                              Trùng giờ với gói "{externalConflict.comboName}". Hãy chọn khung giờ khác.
                             </div>
                           )}
                         </div>
@@ -404,7 +435,7 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({
                     <ClockCircleOutlined />
                     <span>
                       Các buổi học đang bị trùng nhau, vượt quá khung giờ cho phép hoặc nằm ngoài lịch rảnh đã thiết
-                      lập. Hãy điều chỉnh trước khi lưu combo.
+                      lập. Hãy điều chỉnh trước khi lưu gói.
                     </span>
                   </div>
                 )}
@@ -413,7 +444,7 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({
                   <div className={styles.comboValidationWarn}>
                     <ClockCircleOutlined />
                     <span>
-                      Một số buổi học đang trùng giờ với combo khác bạn đã tạo trước đó. Hãy đổi khung giờ để tránh
+                      Một số buổi học đang trùng giờ với gói khác bạn đã tạo trước đó. Hãy đổi khung giờ để tránh
                       đặt 2 lớp cùng lúc.
                     </span>
                   </div>
