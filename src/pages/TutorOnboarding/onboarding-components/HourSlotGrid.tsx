@@ -1,19 +1,25 @@
 import React from 'react';
 import styles from '../styles.module.css';
-import { DAY_COLUMNS, HOURS, formatHour } from './constants';
+import { DAY_COLUMNS, HALF_HOUR_STEPS, formatHourMinute } from './constants';
 
 interface HourSlotGridProps {
-  // Render the inner content/handlers of a single cell (day × hour).
-  renderCell: (dayOfWeek: number, hour: number) => React.ReactNode;
-  // Optional per-day quick action shown under each day header (e.g. "Cả ngày").
+  // Render nội dung/handler của 1 ô (day × half-hour).
+  renderCell: (dayOfWeek: number, hour: number, minute: 0 | 30) => React.ReactNode;
+  // Action nhanh dưới header ngày (vd "Cả ngày").
   wholeDayLabel?: string;
   onWholeDayClick?: (dayOfWeek: number) => void;
+  // Cho phép ẩn label phút (chỉ show giờ tròn) để grid gọn hơn — preview hoặc thumbnail.
+  hideHalfHourLabels?: boolean;
 }
 
-// Presentational layout shared by Step 2 (chọn khung giờ rảnh) and
-// Step 3 (đặt giá). Lưới ngày × giờ, bước 1 giờ. Cell appearance/behaviour
-// is delegated to the parent via `renderCell`.
-const HourSlotGrid: React.FC<HourSlotGridProps> = ({ renderCell, wholeDayLabel, onWholeDayClick }) => {
+// Lưới ngày × giờ bước 30 phút. Cell appearance/behaviour do parent quyết định
+// qua renderCell. Dùng ở Step Availability + Step Combo + Summary preview.
+const HourSlotGrid: React.FC<HourSlotGridProps> = ({
+  renderCell,
+  wholeDayLabel,
+  onWholeDayClick,
+  hideHalfHourLabels = false,
+}) => {
   return (
     <div className={styles.gridCard}>
       <div className={styles.grid}>
@@ -30,15 +36,20 @@ const HourSlotGrid: React.FC<HourSlotGridProps> = ({ renderCell, wholeDayLabel, 
           </div>
         ))}
 
-        {/* Body rows: one per hour */}
-        {HOURS.map((hour) => (
-          <React.Fragment key={`row-${hour}`}>
-            <div className={styles.rowTime}>{formatHour(hour)}</div>
-            {DAY_COLUMNS.map((col) => (
-              <React.Fragment key={`cell-${col.dayOfWeek}-${hour}`}>{renderCell(col.dayOfWeek, hour)}</React.Fragment>
-            ))}
-          </React.Fragment>
-        ))}
+        {/* Body rows: 1 row / 30 phút */}
+        {HALF_HOUR_STEPS.map(({ hour, minute }) => {
+          const label = hideHalfHourLabels && minute === 30 ? '' : formatHourMinute(hour, minute);
+          return (
+            <React.Fragment key={`row-${hour}-${minute}`}>
+              <div className={styles.rowTime}>{label}</div>
+              {DAY_COLUMNS.map((col) => (
+                <React.Fragment key={`cell-${col.dayOfWeek}-${hour}-${minute}`}>
+                  {renderCell(col.dayOfWeek, hour, minute)}
+                </React.Fragment>
+              ))}
+            </React.Fragment>
+          );
+        })}
       </div>
     </div>
   );

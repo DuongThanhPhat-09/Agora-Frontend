@@ -6,7 +6,6 @@ import {
   DeleteOutlined,
   EditOutlined,
   PlusOutlined,
-  ThunderboltOutlined,
 } from '@ant-design/icons';
 import styles from '../styles.module.css';
 import ComboFormModal from './ComboFormModal';
@@ -48,14 +47,11 @@ const ComboManager: React.FC<ComboManagerProps> = ({ combos, availability, onAdd
     <>
       <section className={styles.comboManager}>
         <div className={styles.comboManagerHead}>
-          <div>
-            <h3 className={styles.comboManagerTitle}>Combo của bạn</h3>
-            <p className={styles.comboManagerSubtitle}>Tạo một hoặc nhiều gói để phụ huynh dễ chọn lịch học phù hợp.</p>
-          </div>
+          <h3 className={styles.comboManagerTitle}>Gói lịch học của bạn</h3>
           {combos.length > 0 && (
             <button type="button" className={styles.comboPrimaryAction} onClick={openCreate}>
               <PlusOutlined />
-              <span>Thêm combo</span>
+              <span>Thêm gói</span>
             </button>
           )}
         </div>
@@ -65,21 +61,9 @@ const ComboManager: React.FC<ComboManagerProps> = ({ combos, availability, onAdd
             <div className={styles.comboEmptyIcon}>
               <CalendarOutlined />
             </div>
-            <h3>Chưa có combo học</h3>
-            <p>Tạo combo đầu tiên để phụ huynh có thể chọn lịch phù hợp khi đặt học.</p>
-            <div className={styles.comboEmptyModes}>
-              <span>
-                <CalendarOutlined />
-                Cố định theo tuần
-              </span>
-              <span>
-                <ThunderboltOutlined />
-                Linh hoạt theo số buổi
-              </span>
-            </div>
             <button type="button" className={styles.comboPrimaryAction} onClick={openCreate}>
               <PlusOutlined />
-              <span>Tạo combo đầu tiên</span>
+              <span>Tạo gói lịch học</span>
             </button>
           </div>
         ) : (
@@ -104,12 +88,12 @@ const ComboManager: React.FC<ComboManagerProps> = ({ combos, availability, onAdd
                         className={styles.iconBtn}
                         onClick={() => openEdit(combo)}
                         aria-label={`Sửa ${combo.name}`}
-                        title="Sửa combo"
+                        title="Sửa gói lịch học"
                       >
                         <EditOutlined />
                       </button>
                       <Popconfirm
-                        title="Xóa combo này?"
+                        title="Xóa gói lịch học này?"
                         onConfirm={() => onRemove(combo.id)}
                         okText="Xóa"
                         cancelText="Hủy"
@@ -119,7 +103,7 @@ const ComboManager: React.FC<ComboManagerProps> = ({ combos, availability, onAdd
                           type="button"
                           className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
                           aria-label={`Xóa ${combo.name}`}
-                          title="Xóa combo"
+                          title="Xóa gói lịch học"
                         >
                           <DeleteOutlined />
                         </button>
@@ -170,7 +154,7 @@ const ComboManager: React.FC<ComboManagerProps> = ({ combos, availability, onAdd
               <span className={styles.comboAddIcon}>
                 <PlusOutlined />
               </span>
-              <strong>Thêm combo khác</strong>
+              <strong>Thêm gói lịch học khác</strong>
               <span>Mở thêm lựa chọn lịch học cho phụ huynh</span>
             </button>
           </div>

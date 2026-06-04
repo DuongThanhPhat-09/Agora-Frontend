@@ -15,14 +15,17 @@ import {
   Clock3,
   GraduationCap,
   Heart,
+  MousePointerClick,
+  PackageCheck,
   Play,
+  Repeat2,
   RotateCcw,
+  Route,
   ShieldCheck,
+  SlidersHorizontal,
   Star,
-  UserRound,
   UsersRound,
   X,
-  Zap,
 } from 'lucide-react';
 import Header from '../../components/Header';
 import {
@@ -38,10 +41,11 @@ import {
 import styles from './styles.module.css';
 
 type BookingStep = 1 | 2 | 3 | 4;
+type BookingMode = 'availability' | 'package';
 
 const STEPS: { id: BookingStep; label: string }[] = [
   { id: 1, label: 'Học sinh & môn' },
-  { id: 2, label: 'Hình thức' },
+  { id: 2, label: 'Cách đặt' },
   { id: 3, label: 'Lịch học' },
   { id: 4, label: 'Xác nhận' },
 ];
@@ -97,11 +101,6 @@ const formatShortDate = (date: Date) =>
     month: '2-digit',
   });
 
-const getWeekStart = (date: Date) => {
-  const daysFromMonday = (date.getDay() + 6) % 7;
-  return addDays(date, -daysFromMonday);
-};
-
 const formatWeekday = (date: Date) => DAY_NAMES[(date.getDay() + 6) % 7];
 
 const formatPrice = (amount: number) =>
@@ -116,6 +115,10 @@ const formatGradeRange = (grades: number[]) => {
   const last = grades[grades.length - 1];
   return first === last ? `Lớp ${first}` : `Lớp ${first} - ${last}`;
 };
+
+const formatPackageName = (name: string) => name.replace(/^Combo\b/i, 'Gói');
+
+const formatPackageType = (type: TutorCombo['type']) => (type === 'fixed' ? 'Gói cố định' : 'Gói linh hoạt');
 
 const getSlotKey = (slot: Pick<BookingSlot, 'date' | 'startTime'>) => `${slot.date}-${slot.startTime}`;
 
@@ -378,6 +381,7 @@ const ParentBookingDemo = () => {
   const [step, setStep] = useState<BookingStep>(1);
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [selectedChildId, setSelectedChildId] = useState('');
+  const [selectedBookingMode, setSelectedBookingMode] = useState<BookingMode | ''>('');
   const [selectedComboId, setSelectedComboId] = useState('');
   const [selectedSlots, setSelectedSlots] = useState<BookingSlot[]>([]);
   const [visibleWeekIndex, setVisibleWeekIndex] = useState(0);
@@ -393,25 +397,17 @@ const ParentBookingDemo = () => {
   const selectedSubject = selectedTutor?.subjects.find((subject) => subject.id === selectedSubjectId);
   const selectedChild = CHILDREN.find((child) => child.id === selectedChildId);
   const selectedCombo = selectedTutor?.combos.find((combo) => combo.id === selectedComboId);
+  const isAvailabilityMode = selectedBookingMode === 'availability';
+  const isPackageMode = selectedBookingMode === 'package';
+  const isFixedPackage = isPackageMode && selectedCombo?.type === 'fixed';
+  const isFlexPackage = isPackageMode && selectedCombo?.type === 'flex';
+  const scheduleChoiceLabel = isAvailabilityMode
+    ? 'Tự chọn lịch rảnh'
+    : selectedCombo
+      ? formatPackageName(selectedCombo.name)
+      : 'Gói dịch vụ';
   const selectedBookingStart = selectedSlots.length ? fromDateKey(selectedSlots[0].date) : null;
   const selectedBookingValidityEnd = selectedBookingStart ? getBookingValidityEnd(selectedBookingStart) : null;
-  const selectedScheduleWeeks = useMemo(() => {
-    const grouped = sortSlots(selectedSlots).reduce<Record<string, BookingSlot[]>>((current, slot) => {
-      const weekKey = toDateKey(getWeekStart(fromDateKey(slot.date)));
-      current[weekKey] = [...(current[weekKey] ?? []), slot];
-      return current;
-    }, {});
-
-    return Object.entries(grouped).map(([weekKey, slots]) => {
-      const weekStart = fromDateKey(weekKey);
-      return {
-        weekKey,
-        weekStart,
-        weekEnd: addDays(weekStart, 6),
-        slots,
-      };
-    });
-  }, [selectedSlots]);
   const gradeMatches = Boolean(
     selectedSubject && selectedChild && selectedSubject.grades.includes(selectedChild.grade),
   );
@@ -437,6 +433,7 @@ const ParentBookingDemo = () => {
     setStep(1);
     setSelectedSubjectId('');
     setSelectedChildId('');
+    setSelectedBookingMode('');
     setSelectedComboId('');
     setSelectedSlots([]);
     setVisibleWeekIndex(0);
@@ -479,6 +476,7 @@ const ParentBookingDemo = () => {
   const selectSubject = (subjectId: string) => {
     setSelectedSubjectId(subjectId);
     setSelectedChildId('');
+    setSelectedBookingMode('');
     setSelectedComboId('');
     setSelectedSlots([]);
     setVisibleWeekIndex(0);
@@ -486,19 +484,28 @@ const ParentBookingDemo = () => {
 
   const selectChild = (childId: string) => {
     setSelectedChildId(childId);
+    setSelectedBookingMode('');
+    setSelectedComboId('');
+    setSelectedSlots([]);
+    setVisibleWeekIndex(0);
+  };
+
+  const selectBookingMode = (mode: BookingMode) => {
+    setSelectedBookingMode(mode);
     setSelectedComboId('');
     setSelectedSlots([]);
     setVisibleWeekIndex(0);
   };
 
   const selectCombo = (combo: TutorCombo) => {
+    setSelectedBookingMode('package');
     setSelectedComboId(combo.id);
     setVisibleWeekIndex(0);
     setSelectedSlots(combo.type === 'fixed' ? buildFixedSchedule(combo, firstWeekStart, bookingDeadline) : []);
   };
 
-  const toggleFlexSlot = (slot: BookingSlot) => {
-    if (selectedCombo?.type !== 'flex') return;
+  const toggleScheduleSlot = (slot: BookingSlot) => {
+    if (!isAvailabilityMode && !isFlexPackage) return;
 
     const key = getSlotKey(slot);
     const exists = selectedSlots.some((selectedSlot) => getSlotKey(selectedSlot) === key);
@@ -506,7 +513,7 @@ const ParentBookingDemo = () => {
       setSelectedSlots((current) => current.filter((selectedSlot) => getSlotKey(selectedSlot) !== key));
       return;
     }
-    if (selectedSlots.length >= selectedCombo.sessionsPerMonth) return;
+    if (isFlexPackage && selectedCombo && selectedSlots.length >= selectedCombo.sessionsPerMonth) return;
     const nextSlots = sortSlots([...selectedSlots, slot]);
     const validityEnd = getBookingValidityEnd(fromDateKey(nextSlots[0].date));
     if (
@@ -521,8 +528,11 @@ const ParentBookingDemo = () => {
 
   const canContinue = () => {
     if (step === 1) return Boolean(selectedSubject && selectedChild && gradeMatches);
-    if (step === 2) return Boolean(selectedCombo);
-    if (step === 3) return Boolean(selectedCombo && selectedSlots.length === expectedSessions);
+    if (step === 2) return isAvailabilityMode || Boolean(isPackageMode && selectedCombo);
+    if (step === 3) {
+      if (isAvailabilityMode) return selectedSlots.length > 0;
+      return Boolean(selectedCombo && selectedSlots.length === expectedSessions);
+    }
     return true;
   };
 
@@ -568,9 +578,9 @@ const ParentBookingDemo = () => {
                 <span className={styles.successIcon}>
                   <CheckCircle2 size={42} />
                 </span>
-                <span className={styles.eyebrow}>Tạo booking thành công</span>
+                <span className={styles.eyebrow}>Gửi yêu cầu thành công</span>
                 <h2>Yêu cầu đặt lịch đã được gửi</h2>
-                <p>Dữ liệu booking chỉ được lưu tạm trong state frontend để phục vụ demo.</p>
+                <p>Gia sư sẽ xem lịch học và phản hồi cho phụ huynh trong thời gian sớm nhất.</p>
                 <div className={styles.bookingCode}>
                   <span>Mã booking</span>
                   <strong>{createdBookingId}</strong>
@@ -618,17 +628,6 @@ const ParentBookingDemo = () => {
                   ))}
                 </nav>
 
-                <div className={styles.bookingPolicyBar}>
-                  <CalendarRange size={17} />
-                  <div>
-                    <strong>Mỗi booking có hiệu lực 1 tháng.</strong>
-                    <span>
-                      Yêu cầu tạo ngày {formatFullDate(today)} chỉ được chọn lịch học đến hết{' '}
-                      <b>{formatFullDate(bookingDeadline)}</b>.
-                    </span>
-                  </div>
-                </div>
-
                 <div className={styles.modalBody}>
                   {step === 1 && (
                     <>
@@ -639,7 +638,6 @@ const ParentBookingDemo = () => {
                         <div>
                           <span className={styles.eyebrow}>Bước 01</span>
                           <h2>Chọn môn học và trẻ</h2>
-                          <p>Hệ thống sẽ kiểm tra khối lớp ngay sau khi bạn chọn hồ sơ trẻ.</p>
                         </div>
                       </div>
 
@@ -690,51 +688,12 @@ const ParentBookingDemo = () => {
                         {!selectedSubject && <p className={styles.inlineHint}>Hãy chọn môn học trước khi chọn trẻ.</p>}
                       </section>
 
-                      {selectedChild && selectedSubject && (
-                        <section className={styles.childDetail}>
-                          <div className={styles.childDetailHead}>
-                            <div>
-                              <span className={styles.childAvatarLarge}>{selectedChild.initials}</span>
-                              <div>
-                                <span className={styles.eyebrow}>Hồ sơ trẻ đã chọn</span>
-                                <h3>{selectedChild.name}</h3>
-                                <p>
-                                  Lớp {selectedChild.grade} · {selectedChild.school}
-                                </p>
-                              </div>
-                            </div>
-                            <span className={gradeMatches ? styles.matchBadge : styles.mismatchBadge}>
-                              {gradeMatches ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
-                              {gradeMatches ? 'Khối lớp phù hợp' : 'Khối lớp chưa phù hợp'}
-                            </span>
-                          </div>
-                          <div className={styles.childDetailGrid}>
-                            <div>
-                              <span>Ngày sinh</span>
-                              <strong>{selectedChild.dateOfBirth}</strong>
-                            </div>
-                            <div>
-                              <span>Mục tiêu học tập</span>
-                              <strong>{selectedChild.learningGoal}</strong>
-                            </div>
-                            <div>
-                              <span>Lưu ý cho gia sư</span>
-                              <strong>{selectedChild.note}</strong>
-                            </div>
-                          </div>
-                        </section>
-                      )}
-
                       {selectedChild && selectedSubject && !gradeMatches && (
                         <div className={styles.warningBox}>
                           <AlertTriangle size={19} />
                           <div>
-                            <strong>Không thể tiếp tục với lựa chọn này</strong>
-                            <p>
-                              {selectedTutor.name} nhận dạy {selectedSubject.name} cho{' '}
-                              {formatGradeRange(selectedSubject.grades)}, trong khi {selectedChild.name} đang học lớp{' '}
-                              {selectedChild.grade}.
-                            </p>
+                            <strong>Khối lớp chưa phù hợp</strong>
+                            <p>Hãy đổi học sinh hoặc chọn môn khác để tiếp tục.</p>
                           </div>
                         </div>
                       )}
@@ -745,54 +704,94 @@ const ParentBookingDemo = () => {
                     <>
                       <div className={styles.sectionHeading}>
                         <span className={styles.headingIcon}>
-                          <Zap size={20} />
+                          <Route size={20} />
                         </span>
                         <div>
                           <span className={styles.eyebrow}>Bước 02</span>
-                          <h2>Chọn hình thức học</h2>
-                          <p>Chọn combo cố định hoặc combo linh hoạt theo lịch gia đình.</p>
+                          <h2>Chọn cách đặt lịch</h2>
                         </div>
                       </div>
 
-                      <div className={styles.comboGrid}>
-                        {selectedTutor.combos.map((combo) => {
-                          const isSelected = combo.id === selectedComboId;
-                          return (
-                            <button
-                              key={combo.id}
-                              type="button"
-                              className={`${styles.comboCard} ${isSelected ? styles.selectedCard : ''}`}
-                              onClick={() => selectCombo(combo)}
-                            >
-                              <span className={`${styles.comboIcon} ${combo.type === 'flex' ? styles.flexIcon : ''}`}>
-                                {combo.type === 'fixed' ? <CalendarDays size={18} /> : <Zap size={18} />}
-                              </span>
-                              <span className={styles.comboType}>
-                                {combo.type === 'fixed' ? 'Combo cố định' : 'Combo linh hoạt'}
-                              </span>
-                              <h3>{combo.name}</h3>
-                              <p>{combo.description}</p>
-                              <div className={styles.comboMeta}>
-                                <span>
-                                  <BookOpen size={14} />
-                                  {combo.sessionsPerMonth} buổi / tháng
-                                </span>
-                                <span>
-                                  <Clock3 size={14} />
-                                  {combo.type === 'fixed'
-                                    ? `${combo.sessions[0]?.durationHours ?? 0} giờ / buổi`
-                                    : `${combo.hoursPerSession} giờ / buổi`}
-                                </span>
-                              </div>
-                              <small>{isSelected ? 'Đã chọn' : 'Chọn combo'}</small>
-                            </button>
-                          );
-                        })}
+                      <div className={styles.bookingModeGrid}>
+                        <button
+                          type="button"
+                          className={`${styles.bookingModeCard} ${isAvailabilityMode ? styles.selectedCard : ''}`}
+                          onClick={() => selectBookingMode('availability')}
+                        >
+                          <span className={`${styles.bookingModeIcon} ${styles.availabilityModeIcon}`}>
+                            <MousePointerClick size={20} />
+                          </span>
+                          <span className={styles.comboType}>Theo lịch rảnh</span>
+                          <h3>Tự chọn lịch rảnh</h3>
+                          <p>Phụ huynh chọn trực tiếp các khung giờ còn trống của gia sư.</p>
+                          <small>{isAvailabilityMode ? 'Đã chọn' : 'Chọn cách này'}</small>
+                        </button>
+
+                        <button
+                          type="button"
+                          className={`${styles.bookingModeCard} ${isPackageMode ? styles.selectedCard : ''}`}
+                          onClick={() => selectBookingMode('package')}
+                        >
+                          <span className={`${styles.bookingModeIcon} ${styles.packageModeIcon}`}>
+                            <PackageCheck size={20} />
+                          </span>
+                          <span className={styles.comboType}>Theo gói dịch vụ</span>
+                          <h3>Chọn gói dịch vụ</h3>
+                          <p>Chọn gói cố định hoặc gói linh hoạt theo nhịp học của gia đình.</p>
+                          <small>{isPackageMode ? 'Đang chọn gói' : 'Xem các gói'}</small>
+                        </button>
                       </div>
+
+                      {isPackageMode && (
+                        <section className={styles.packagePanel}>
+                          <div className={styles.packagePanelHead}>
+                            <span className={styles.eyebrow}>Gói dịch vụ</span>
+                            <h3>Chọn gói học phù hợp</h3>
+                          </div>
+
+                          <div className={styles.comboGrid}>
+                            {selectedTutor.combos.map((combo) => {
+                              const isSelected = combo.id === selectedComboId;
+                              return (
+                                <button
+                                  key={combo.id}
+                                  type="button"
+                                  className={`${styles.comboCard} ${isSelected ? styles.selectedCard : ''}`}
+                                  onClick={() => selectCombo(combo)}
+                                >
+                                  <span
+                                    className={`${styles.comboIcon} ${
+                                      combo.type === 'fixed' ? styles.fixedPackageIcon : styles.flexPackageIcon
+                                    }`}
+                                  >
+                                    {combo.type === 'fixed' ? <Repeat2 size={18} /> : <SlidersHorizontal size={18} />}
+                                  </span>
+                                  <span className={styles.comboType}>{formatPackageType(combo.type)}</span>
+                                  <h3>{formatPackageName(combo.name)}</h3>
+                                  <p>{combo.description}</p>
+                                  <div className={styles.comboMeta}>
+                                    <span>
+                                      <BookOpen size={14} />
+                                      {combo.sessionsPerMonth} buổi / tháng
+                                    </span>
+                                    <span>
+                                      <Clock3 size={14} />
+                                      {combo.type === 'fixed'
+                                        ? `${combo.sessions[0]?.durationHours ?? 0} giờ / buổi`
+                                        : `${combo.hoursPerSession} giờ / buổi`}
+                                    </span>
+                                  </div>
+                                  <small>{isSelected ? 'Đã chọn' : 'Chọn gói'}</small>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </section>
+                      )}
                     </>
                   )}
 
-                  {step === 3 && selectedCombo && (
+                  {step === 3 && (isAvailabilityMode || selectedCombo) && (
                     <>
                       <div className={styles.sectionHeading}>
                         <span className={styles.headingIcon}>
@@ -802,9 +801,11 @@ const ParentBookingDemo = () => {
                           <span className={styles.eyebrow}>Bước 03</span>
                           <h2>Chọn lịch học</h2>
                           <p>
-                            {selectedCombo.type === 'fixed'
-                              ? 'Lịch cố định đã được tự động điền theo combo.'
-                              : `Đã chọn ${selectedSlots.length}/${selectedCombo.sessionsPerMonth} buổi từ lịch trống.`}
+                            {isAvailabilityMode
+                              ? `Đã chọn ${selectedSlots.length} buổi từ lịch rảnh.`
+                              : isFixedPackage
+                                ? 'Lịch học đã được tự động điền theo gói cố định.'
+                                : `Đã chọn ${selectedSlots.length}/${selectedCombo?.sessionsPerMonth ?? 0} buổi từ lịch rảnh.`}
                           </p>
                         </div>
                       </div>
@@ -812,13 +813,8 @@ const ParentBookingDemo = () => {
                       <section className={styles.calendarSection}>
                         <div className={styles.calendarHeading}>
                           <div>
-                            <span className={styles.eyebrow}>Lịch trống của gia sư</span>
-                            <h3>{selectedCombo.name}</h3>
-                            <p className={styles.calendarLimit}>
-                              {selectedBookingStart && selectedBookingValidityEnd
-                                ? `Hiệu lực dự kiến: ${formatFullDate(selectedBookingStart)} - ${formatFullDate(selectedBookingValidityEnd)}`
-                                : 'Hiệu lực một tháng sẽ được tính từ buổi học đầu tiên bạn chọn.'}
-                            </p>
+                            <span className={styles.eyebrow}>Lịch rảnh của gia sư</span>
+                            <h3>{scheduleChoiceLabel}</h3>
                           </div>
                           <div className={styles.calendarControls}>
                             <button
@@ -923,8 +919,8 @@ const ParentBookingDemo = () => {
                                               ? styles.slotAvailable
                                               : styles.slotUnavailable
                                         }`}
-                                        disabled={!isAvailable || selectedCombo.type === 'fixed'}
-                                        onClick={() => bookingSlot && toggleFlexSlot(bookingSlot)}
+                                        disabled={!isAvailable || isFixedPackage}
+                                        onClick={() => bookingSlot && toggleScheduleSlot(bookingSlot)}
                                         aria-label={`${formatDate(dateKey)} lúc ${time}`}
                                       >
                                         {isSelected ? (
@@ -946,17 +942,11 @@ const ParentBookingDemo = () => {
                           </div>
                         </div>
 
-                        {selectedCombo.type === 'flex' && selectedSlots.length < selectedCombo.sessionsPerMonth && (
-                          <div className={styles.calendarTip}>
-                            <Zap size={16} />
-                            Còn {selectedCombo.sessionsPerMonth - selectedSlots.length} buổi cần chọn.
-                          </div>
-                        )}
                       </section>
                     </>
                   )}
 
-                  {step === 4 && selectedSubject && selectedChild && selectedCombo && (
+                  {step === 4 && selectedSubject && selectedChild && (isAvailabilityMode || selectedCombo) && (
                     <>
                       <div className={styles.sectionHeading}>
                         <span className={styles.headingIcon}>
@@ -964,89 +954,56 @@ const ParentBookingDemo = () => {
                         </span>
                         <div>
                           <span className={styles.eyebrow}>Bước 04</span>
-                          <h2>Xác nhận yêu cầu booking</h2>
-                          <p>Kiểm tra thông tin trước khi gửi yêu cầu đến gia sư.</p>
+                          <h2>Xác nhận đặt lịch</h2>
+                          <p>Xem lại lịch học và học phí trước khi gửi yêu cầu.</p>
                         </div>
                       </div>
 
                       <div className={styles.confirmLayout}>
-                        <div>
-                          <section className={styles.reviewGrid}>
+                        <div className={styles.confirmMain}>
+                          <section className={styles.reviewHero}>
+                            <span className={styles.reviewHeroAvatar}>{selectedTutor.initials}</span>
                             <div>
-                              <UserRound size={17} />
-                              <span>Gia sư</span>
-                              <strong>{selectedTutor.name}</strong>
-                            </div>
-                            <div>
-                              <GraduationCap size={17} />
-                              <span>Học sinh & môn</span>
-                              <strong>
-                                {selectedChild.name} · {selectedSubject.name}
-                              </strong>
-                            </div>
-                            <div>
-                              <CalendarDays size={17} />
-                              <span>Combo</span>
-                              <strong>{selectedCombo.name}</strong>
+                              <span className={styles.eyebrow}>Sẵn sàng gửi yêu cầu</span>
+                              <h3>
+                                {selectedSubject.name} với {selectedTutor.name}
+                              </h3>
+                              <p>
+                                {selectedChild.name} · {scheduleChoiceLabel}
+                              </p>
                             </div>
                           </section>
+
                           <section className={styles.scheduleReview}>
                             <div className={styles.scheduleReviewHead}>
                               <div>
                                 <span className={styles.eyebrow}>Lịch học đã chọn</span>
-                                <strong>Lịch học theo tuần</strong>
+                                <strong>{selectedSlots.length} buổi học</strong>
                               </div>
-                              <small>
-                                {selectedSlots.length} buổi · {selectedScheduleWeeks.length} tuần
-                              </small>
+                              <small>{chosenHours} giờ</small>
                             </div>
-                            <div className={styles.weekScheduleGrid}>
-                              {selectedScheduleWeeks.map((week, weekIndex) => (
-                                <article key={week.weekKey} className={styles.weekScheduleCard}>
-                                  <header>
-                                    <span>Tuần {String(weekIndex + 1).padStart(2, '0')}</span>
-                                    <div>
+                            <div className={styles.lessonReviewList}>
+                              {sortSlots(selectedSlots).map((slot) => {
+                                const slotDate = fromDateKey(slot.date);
+                                return (
+                                  <div key={getSlotKey(slot)} className={styles.lessonReviewRow}>
+                                    <CalendarDays size={14} />
+                                    <span>
                                       <strong>
-                                        {formatShortDate(week.weekStart)} - {formatShortDate(week.weekEnd)}
+                                        {formatWeekday(slotDate)}, {formatShortDate(slotDate)}
                                       </strong>
-                                      <small>{week.slots.length} buổi học</small>
-                                    </div>
-                                  </header>
-                                  <div className={styles.weekLessonList}>
-                                    {week.slots.map((slot) => {
-                                      const slotDate = fromDateKey(slot.date);
-                                      return (
-                                        <div key={getSlotKey(slot)} className={styles.weekLesson}>
-                                          <CalendarDays size={14} />
-                                          <span>
-                                            <strong>{formatWeekday(slotDate)}</strong>
-                                            <small>{formatShortDate(slotDate)}</small>
-                                          </span>
-                                          <b>{slot.startTime}</b>
-                                        </div>
-                                      );
-                                    })}
+                                      <small>{slot.durationHours} giờ</small>
+                                    </span>
+                                    <b>{slot.startTime}</b>
                                   </div>
-                                </article>
-                              ))}
-                            </div>
-                          </section>
-                          <section className={styles.bookingTermSummary}>
-                            <CalendarRange size={17} />
-                            <div>
-                              <span>Hiệu lực booking</span>
-                              <strong>
-                                {selectedBookingStart && selectedBookingValidityEnd
-                                  ? `${formatFullDate(selectedBookingStart)} - ${formatFullDate(selectedBookingValidityEnd)}`
-                                  : '1 tháng kể từ buổi học đầu tiên'}
-                              </strong>
-                              <small>Không thể đặt buổi học sau ngày {formatFullDate(bookingDeadline)}.</small>
+                                );
+                              })}
                             </div>
                           </section>
                         </div>
 
                         <aside className={styles.priceSummary}>
-                          <span className={styles.eyebrow}>Tóm tắt học phí</span>
+                          <span className={styles.eyebrow}>Học phí dự kiến</span>
                           <div>
                             <span>Học phí</span>
                             <strong>{formatPrice(subtotal)}</strong>
@@ -1059,12 +1016,8 @@ const ParentBookingDemo = () => {
                             <span>Tổng cộng</span>
                             <strong>{formatPrice(total)}</strong>
                           </div>
+                          <small className={styles.priceSummaryNote}>Gia sư xác nhận lịch trước khi thanh toán.</small>
                         </aside>
-                      </div>
-
-                      <div className={styles.noticeBox}>
-                        <ShieldCheck size={18} />
-                        Dữ liệu chỉ được tạo trong state frontend và không gửi lên server.
                       </div>
                     </>
                   )}
@@ -1082,7 +1035,7 @@ const ParentBookingDemo = () => {
                     </button>
                   ) : (
                     <button type="button" className={styles.primaryButton} onClick={createBooking}>
-                      Gửi yêu cầu booking
+                      Gửi yêu cầu
                       <ArrowRight size={16} />
                     </button>
                   )}

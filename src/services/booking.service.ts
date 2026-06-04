@@ -173,10 +173,10 @@ export const cancelBooking = async (bookingId: number, reason?: string): Promise
     }
 };
 
-/** GET /api/bookings — Get list of parent bookings (BE differentiates by JWT role) */
+/** GET /api/parent/bookings — Get list of parent bookings (BE differentiates by JWT role) */
 export const getParentBookings = async (params: { page?: number; pageSize?: number; status?: string }): Promise<ApiResponse<{ items: BookingResponseDTO[], totalCount: number }>> => {
     try {
-        const response = await api.get('/bookings', {
+        const response = await api.get('/parent/bookings', {
             headers: getAuthHeaders(),
             params,
         });

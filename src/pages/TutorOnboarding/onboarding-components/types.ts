@@ -1,6 +1,10 @@
 // Models for the tutor onboarding flow.
 // Luồng 3 bước: setup môn-khối-giá → lịch rảnh → tạo combo.
 
+// Combo types được share với parent booking flow — đặt ở src/types/combo.types.ts.
+export type { Combo, ComboSessionSlot, FixedCombo, FlexCombo } from '../../../types/combo.types';
+import type { Combo } from '../../../types/combo.types';
+
 export type OnboardingStep = 1 | 2 | 3;
 
 // B1: 1 record = (môn, khối lớp, giá). Tutor có thể thêm nhiều record;
@@ -13,40 +17,13 @@ export interface SubjectRecord {
   hourlyRate: number; // VND/giờ
 }
 
-// B2: Lịch rảnh demo lưu trong state onboarding, theo từng ô một giờ.
+// B2: Lịch rảnh demo lưu trong state onboarding, theo ô 30 phút.
 export interface TutorAvailabilitySlot {
   id: string;
   dayOfWeek: number; // Backend format: 0=CN..6=T7
-  startTime: string; // HH:mm
+  startTime: string; // HH:mm — hỗ trợ :00 và :30
   endTime: string; // HH:mm
 }
-
-// B3: Combo — khung lịch dùng chung, phụ huynh chọn môn lúc booking.
-export interface ComboSessionSlot {
-  dayOfWeek: number;
-  startHour: number;
-  durationHours: number; // 1..4
-}
-
-interface BaseCombo {
-  id: string;
-  name: string;
-}
-
-export interface FixedCombo extends BaseCombo {
-  type: 'fixed';
-  sessions: ComboSessionSlot[];
-}
-
-export interface FlexCombo extends BaseCombo {
-  type: 'flex';
-  sessionsPerWeek: number;
-  sessionsPerMonth: number;
-  hoursPerSession: number;
-  description: string;
-}
-
-export type Combo = FixedCombo | FlexCombo;
 
 export interface OnboardingState {
   subjectRecords: SubjectRecord[];
