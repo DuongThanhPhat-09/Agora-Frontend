@@ -42,10 +42,7 @@ const TutorOnboarding: React.FC = () => {
     return null;
   })();
 
-  const footerStatusText =
-    state.currentStep === 3 && !blockingReason && state.combos.length === 0
-      ? 'Bạn có thể hoàn tất ngay; gói lịch học chỉ là lựa chọn gợi ý cho phụ huynh.'
-      : `Bước ${state.currentStep} / 3`;
+  const footerStatusText = `Bước ${state.currentStep} / 3`;
 
   const handleNext = () => {
     if (state.currentStep < 3) {

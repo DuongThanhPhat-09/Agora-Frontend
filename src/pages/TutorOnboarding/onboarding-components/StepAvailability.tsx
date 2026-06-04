@@ -1,8 +1,16 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-import { CheckCircleOutlined, CheckOutlined, DeleteOutlined, DragOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  CheckCircleOutlined,
+  CheckOutlined,
+  DeleteOutlined,
+  DragOutlined,
+  InfoCircleOutlined,
+  PlusOutlined,
+} from '@ant-design/icons';
 import styles from '../styles.module.css';
 import { DAY_COLUMNS, formatHourMinute } from './constants';
 import HourSlotGrid from './HourSlotGrid';
+import BulkAvailabilityModal, { type BulkSlot } from './BulkAvailabilityModal';
 import type { UseOnboardingState } from './hooks/useOnboardingState';
 
 interface StepAvailabilityProps {
@@ -17,6 +25,12 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ onboarding }) => {
   const { state, setAvailable, toggleAvailabilityDay, clearAvailability } = onboarding;
   const paintModeRef = useRef<PaintMode | null>(null);
   const paintedKeysRef = useRef(new Set<string>());
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
+
+  const handleBulkApply = (slots: BulkSlot[]) => {
+    // Cộng dồn: mỗi slot được set true (nếu đã rảnh sẵn thì setAvailable no-op).
+    slots.forEach(({ dayOfWeek, hour, minute }) => setAvailable(dayOfWeek, hour, minute, true));
+  };
 
   // Set chứa key "day-hour-minute" cho ô đã rảnh.
   const availabilityKeys = useMemo(() => {
@@ -151,11 +165,19 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ onboarding }) => {
                     <strong>
                       {selectedDayCount} ngày · {totalHours} giờ
                     </strong>
-                    <small>({state.availability.length} ô 30 phút)</small>
                   </span>
                 </>
               )}
             </div>
+
+            <button
+              type="button"
+              className={styles.availabilityAddBulkBtn}
+              onClick={() => setBulkModalOpen(true)}
+            >
+              <PlusOutlined />
+              Thêm theo khung giờ
+            </button>
 
             <div className={styles.availabilityAsideHints}>
               <div className={styles.availabilityAsideHint}>
@@ -177,6 +199,12 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ onboarding }) => {
           </div>
         </aside>
       </div>
+
+      <BulkAvailabilityModal
+        open={bulkModalOpen}
+        onClose={() => setBulkModalOpen(false)}
+        onApply={handleBulkApply}
+      />
     </div>
   );
 };

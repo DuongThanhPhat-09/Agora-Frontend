@@ -17,15 +17,7 @@ const StepCombos: React.FC<StepCombosProps> = ({ onboarding }) => {
         <div className={styles.comboIntroMain}>
           <span className={styles.comboEyebrow}>Bước gợi ý, không bắt buộc</span>
           <h2 className={styles.stepHeading}>Tạo gói lịch học để phụ huynh chọn nhanh hơn</h2>
-          <p className={styles.comboIntroText}>
-            Sau khi thiết lập lịch rảnh, bạn đã có thể nhận booking từ phụ huynh. Gói lịch học chỉ là lựa chọn
-            được tạo sẵn từ lịch rảnh để phụ huynh dễ chọn hơn.
-          </p>
         </div>
-        <span className={styles.comboIntroBadge}>
-          <InfoCircleOutlined />
-          Có thể bỏ qua
-        </span>
       </div>
 
       <div className={styles.comboRuleNotice}>
@@ -33,8 +25,8 @@ const StepCombos: React.FC<StepCombosProps> = ({ onboarding }) => {
           <InfoCircleOutlined />
         </span>
         <p>
-          <strong>Nếu phụ huynh chọn gói lịch học:</strong> 1 booking = 1 tháng và hệ thống tự động tạo lịch học
-          theo gói trong tháng đó. Nếu không tạo gói, phụ huynh vẫn đặt lịch theo các khung rảnh của bạn.
+          <strong>1 gói = 1 booking tháng</strong>, hệ thống tự tạo lịch theo gói. Phụ huynh vẫn đặt được theo lịch
+          rảnh.
         </p>
       </div>
 
