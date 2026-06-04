@@ -979,6 +979,7 @@
 
 .subjectCard,
 .childCard,
+.bookingModeCard,
 .comboCard {
   border: 1px solid rgba(62, 47, 40, 0.12);
   background: var(--color-white);
@@ -993,6 +994,7 @@
 
 .subjectCard:hover,
 .childCard:hover,
+.bookingModeCard:hover,
 .comboCard:hover {
   border-color: rgba(26, 34, 56, 0.34);
   box-shadow: 0 10px 18px -15px rgba(26, 34, 56, 0.34);
@@ -1190,6 +1192,80 @@
   line-height: 1.55;
 }
 
+.bookingModeGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.bookingModeCard {
+  display: flex;
+  min-height: 178px;
+  flex-direction: column;
+  padding: 17px;
+  border-radius: 14px;
+}
+
+.bookingModeIcon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 11px;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--color-navy);
+  color: var(--color-gold);
+}
+
+.availabilityModeIcon {
+  background: #18233b;
+  color: #e3bb78;
+}
+
+.packageModeIcon {
+  background: #8b6634;
+  color: #fff8ec;
+}
+
+.bookingModeCard h3 {
+  margin: 6px 0 0;
+  color: var(--color-navy);
+  font-size: 16px;
+}
+
+.bookingModeCard p {
+  flex: 1;
+  margin: 6px 0 14px;
+  color: var(--color-navy-60);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.bookingModeCard small {
+  align-self: flex-end;
+  color: #9a6a25;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.packagePanel {
+  margin-top: 13px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(62, 47, 40, 0.08);
+}
+
+.packagePanelHead {
+  margin-bottom: 10px;
+}
+
+.packagePanelHead h3 {
+  margin: 3px 0 0;
+  color: var(--color-navy);
+  font-size: 14px;
+}
+
 .comboCard {
   position: relative;
   display: flex;
@@ -1204,9 +1280,14 @@
   margin-bottom: 10px;
 }
 
-.flexIcon {
-  background: var(--color-green);
-  color: var(--color-white);
+.fixedPackageIcon {
+  background: #3f5145;
+  color: #f7f5ef;
+}
+
+.flexPackageIcon {
+  background: #40566f;
+  color: #f8fbff;
 }
 
 .comboType {
@@ -1454,8 +1535,53 @@
 
 .confirmLayout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 260px;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  align-items: start;
+  gap: 14px;
+}
+
+.confirmMain {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reviewHero {
+  display: flex;
+  align-items: center;
   gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(62, 47, 40, 0.1);
+  border-radius: 12px;
+  background: var(--color-white);
+}
+
+.reviewHeroAvatar {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-navy);
+  color: var(--color-gold);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.reviewHero h3 {
+  margin: 3px 0 2px;
+  color: var(--color-navy);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.reviewHero p {
+  margin: 0;
+  color: var(--color-navy-60);
+  font-size: 11px;
+  line-height: 1.45;
 }
 
 .reviewGrid {
@@ -1484,10 +1610,10 @@
 }
 
 .scheduleReview {
-  margin-top: 10px;
   padding: 12px;
   border: 1px solid rgba(62, 47, 40, 0.1);
-  border-radius: 10px;
+  border-radius: 12px;
+  background: var(--color-white);
 }
 
 .scheduleReviewHead {
@@ -1518,6 +1644,52 @@
   color: var(--color-green);
   font-size: 9px;
   font-weight: 800;
+}
+
+.lessonReviewList {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.lessonReviewRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  background: rgba(242, 240, 228, 0.52);
+}
+
+.lessonReviewRow svg {
+  color: var(--color-green);
+}
+
+.lessonReviewRow span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lessonReviewRow strong {
+  overflow: hidden;
+  color: var(--color-navy);
+  font-size: 11px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lessonReviewRow small {
+  color: var(--color-navy-40);
+  font-size: 9px;
+}
+
+.lessonReviewRow b {
+  color: var(--color-green);
+  font-size: 11px;
 }
 
 .weekScheduleGrid {
@@ -1660,8 +1832,8 @@
 .priceSummary {
   padding: 14px;
   border: 1px solid rgba(62, 47, 40, 0.1);
-  border-radius: 11px;
-  background: rgba(250, 249, 246, 0.74);
+  border-radius: 12px;
+  background: var(--color-white);
 }
 
 .priceSummary div {
@@ -1698,6 +1870,14 @@
 .priceSummary div:last-child strong {
   font-size: 20px;
   letter-spacing: -0.7px;
+}
+
+.priceSummaryNote {
+  display: block;
+  margin-top: 6px;
+  color: var(--color-navy-40);
+  font-size: 10px;
+  line-height: 1.45;
 }
 
 .noticeBox {
@@ -1966,6 +2146,7 @@
 
   .featureGrid,
   .subjectGrid,
+  .bookingModeGrid,
   .comboGrid {
     grid-template-columns: 1fr;
   }

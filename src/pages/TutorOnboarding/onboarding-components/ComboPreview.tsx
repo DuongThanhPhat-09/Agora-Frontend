@@ -2,7 +2,8 @@ import React from 'react';
 import { CalendarOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import styles from '../styles.module.css';
 import HourSlotGrid from './HourSlotGrid';
-import { isHourFullyAvailable } from './availability-utils';
+import { isHalfHourAvailable } from './availability-utils';
+import { minutesOf } from './constants';
 import type { Combo, TutorAvailabilitySlot } from './types';
 
 export interface ExternalBusyInfo {
@@ -12,7 +13,7 @@ export interface ExternalBusyInfo {
 interface ComboPreviewProps {
   combo: Combo;
   availability: TutorAvailabilitySlot[];
-  // (dayOfWeek-hour) → combo khác đang chiếm khung giờ. Map rỗng khi tạo combo đầu tiên.
+  // (dayOfWeek-hour-minute) → gói khác đang chiếm khung giờ. Map rỗng khi tạo gói đầu tiên.
   externalBusyCells?: Map<string, ExternalBusyInfo>;
 }
 
@@ -25,7 +26,7 @@ const ComboPreview: React.FC<ComboPreviewProps> = ({ combo, availability, extern
             <CalendarOutlined />
           </span>
           <div>
-            <h4 className={styles.comboPreviewTitle}>Tóm tắt combo</h4>
+            <h4 className={styles.comboPreviewTitle}>Tóm tắt gói</h4>
             <p className={styles.comboPreviewSubtitle}>Lịch linh hoạt theo nhu cầu phụ huynh</p>
           </div>
         </div>
@@ -44,28 +45,35 @@ const ComboPreview: React.FC<ComboPreviewProps> = ({ combo, availability, extern
           </div>
         </div>
         <p className={styles.comboPreviewNote}>
-          Phụ huynh sẽ chủ động chọn trong {availability.length} khung giờ rảnh bạn đã thiết lập.
+          Phụ huynh sẽ chủ động chọn trong {availability.length} ô 30 phút rảnh bạn đã thiết lập.
         </p>
       </div>
     );
   }
 
+  // Map "day-hour-minute" → { sessionIdx, isStart } cho lưới preview.
   const comboCells = new Map<string, { sessionIdx: number; isStart: boolean }>();
   combo.sessions.forEach((session, index) => {
-    for (let offset = 0; offset < session.durationHours; offset++) {
-      comboCells.set(`${session.dayOfWeek}-${session.startHour + offset}`, {
+    const startMin = minutesOf(session.startHour, session.startMinute);
+    const endMin = startMin + session.durationHours * 60;
+    let isFirst = true;
+    for (let cur = startMin; cur < endMin; cur += 30) {
+      const h = Math.floor(cur / 60);
+      const m = cur % 60;
+      comboCells.set(`${session.dayOfWeek}-${h}-${m}`, {
         sessionIdx: index,
-        isStart: offset === 0,
+        isStart: isFirst,
       });
+      isFirst = false;
     }
   });
 
-  const renderCell = (dayOfWeek: number, hour: number) => {
-    const key = `${dayOfWeek}-${hour}`;
+  const renderCell = (dayOfWeek: number, hour: number, minute: 0 | 30) => {
+    const key = `${dayOfWeek}-${hour}-${minute}`;
     const inCombo = comboCells.get(key);
     const externalBusy = externalBusyCells?.get(key);
 
-    // Xung đột: combo hiện tại VÀ combo khác cùng claim ô này.
+    // Xung đột: gói hiện tại VÀ gói khác cùng claim ô này.
     if (inCombo && externalBusy) {
       return (
         <div
@@ -77,7 +85,7 @@ const ComboPreview: React.FC<ComboPreviewProps> = ({ combo, availability, extern
       );
     }
 
-    // Combo hiện tại đang dùng ô này.
+    // Gói hiện tại đang dùng ô này.
     if (inCombo) {
       return (
         <div className={`${styles.cell} ${styles.cellStatic} ${styles.comboPreviewSelected}`}>
@@ -86,7 +94,7 @@ const ComboPreview: React.FC<ComboPreviewProps> = ({ combo, availability, extern
       );
     }
 
-    // Combo khác đang chiếm (không xung đột vì combo hiện tại không dùng giờ này, nhưng vẫn show để tutor biết).
+    // Gói khác đang chiếm (không xung đột vì gói hiện tại không dùng giờ này, nhưng vẫn show).
     if (externalBusy) {
       return (
         <div
@@ -97,7 +105,7 @@ const ComboPreview: React.FC<ComboPreviewProps> = ({ combo, availability, extern
     }
 
     // Ô rảnh — nền nhạt.
-    if (isHourFullyAvailable(dayOfWeek, hour, availability)) {
+    if (isHalfHourAvailable(dayOfWeek, hour, minute, availability)) {
       return <div className={`${styles.cell} ${styles.cellStatic} ${styles.comboPreviewAvail}`} />;
     }
     return <div className={`${styles.cell} ${styles.cellStatic}`} />;
@@ -128,13 +136,13 @@ const ComboPreview: React.FC<ComboPreviewProps> = ({ combo, availability, extern
         </span>
         <span>
           <i />
-          Buổi học trong combo
+          Buổi học trong gói
         </span>
         {hasExternal && (
           <>
             <span>
               <i className={styles.comboPreviewBusyDot} />
-              Combo khác
+              Gói khác
             </span>
             <span>
               <i className={styles.comboPreviewConflictDot} />
@@ -147,7 +155,7 @@ const ComboPreview: React.FC<ComboPreviewProps> = ({ combo, availability, extern
           06:00 - 22:00
         </span>
       </div>
-      <HourSlotGrid renderCell={renderCell} />
+      <HourSlotGrid renderCell={renderCell} hideHalfHourLabels />
     </div>
   );
 };

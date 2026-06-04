@@ -50,6 +50,8 @@ export function useBookingForm({ isOpen, tutorId, onClose, tutorTeachingMode }: 
         // If tutor only teaches one mode, pre-select it so the student
         // can't accidentally submit a mismatched request (BE will 400).
         teachingMode: lockedMode ?? "online",
+        bookingMode: "schedule", // mặc định: parent pick slot tự do
+        comboId: null,
         startDate: new Date().toISOString().split("T")[0],
         schedule: [],
         locationCity: "",

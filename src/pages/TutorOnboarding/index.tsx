@@ -37,10 +37,12 @@ const TutorOnboarding: React.FC = () => {
       return 'Cần thêm ít nhất 1 khung giờ rảnh để tiếp tục.';
     }
     if (!combosMatchAvailability) {
-      return 'Có combo cố định không còn nằm trong lịch rảnh. Hãy cập nhật combo trước khi hoàn tất.';
+      return 'Có gói lịch học cố định không còn nằm trong lịch rảnh. Hãy cập nhật gói trước khi hoàn tất.';
     }
     return null;
   })();
+
+  const footerStatusText = `Bước ${state.currentStep} / 3`;
 
   const handleNext = () => {
     if (state.currentStep < 3) {
@@ -72,9 +74,10 @@ const TutorOnboarding: React.FC = () => {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h1 className={styles.headerTitle}>Thiết lập môn học, lịch rảnh & combo</h1>
+        <h1 className={styles.headerTitle}>Thiết lập môn học, lịch rảnh & gói lịch học</h1>
         <p className={styles.headerSubtitle}>
-          Bước 1: cấu hình môn và giá. Bước 2: thiết lập lịch rảnh. Bước 3: tạo combo học (tùy chọn).
+          Bước 1: cấu hình môn và giá. Bước 2: thiết lập lịch rảnh để nhận booking. Bước 3: tạo gói lịch học gợi ý,
+          không bắt buộc.
         </p>
         <OnboardingStepper currentStep={state.currentStep} onStepClick={goToStep} isStepEnabled={isStepEnabled} />
       </div>
@@ -87,11 +90,7 @@ const TutorOnboarding: React.FC = () => {
 
       <div className={styles.footer}>
         <div className={styles.footerInfo}>
-          {blockingReason ? (
-            <span className={styles.footerWarn}>{blockingReason}</span>
-          ) : (
-            `Bước ${state.currentStep} / 3`
-          )}
+          {blockingReason ? <span className={styles.footerWarn}>{blockingReason}</span> : footerStatusText}
         </div>
         <div className={styles.footerBtns}>
           {state.currentStep > 1 && (
