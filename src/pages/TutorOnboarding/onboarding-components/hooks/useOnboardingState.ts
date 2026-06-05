@@ -35,7 +35,14 @@ export function useOnboardingState() {
   // ── B1: subject records ──
   // Thêm 1 record (môn, khối, giá). Trả false nếu đã tồn tại (môn, khối).
   const addSubjectRecord = useCallback(
-    (input: { subjectId: number; subjectName: string; gradeLevel: string; hourlyRate: number }): boolean => {
+    (input: {
+      subjectId: number;
+      subjectName: string;
+      gradeLevel: string;
+      hourlyRate: number;
+      hoursPerSession: number;
+      sessionsPerWeek: number;
+    }): boolean => {
       let added = false;
       setState((prev) => {
         const dup = prev.subjectRecords.some(

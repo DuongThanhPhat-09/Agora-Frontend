@@ -15,6 +15,8 @@ export interface SubjectRecord {
   subjectName: string;
   gradeLevel: string; // 'grade_10' v.v.
   hourlyRate: number; // VND/giờ
+  hoursPerSession: number; // số giờ mỗi buổi (gia sư đặt theo môn) — booking dùng để bôi đủ thời lượng
+  sessionsPerWeek: number; // số buổi/tuần đề xuất cho cấu hình này
 }
 
 // B2: Lịch rảnh demo lưu trong state onboarding, theo ô 30 phút.

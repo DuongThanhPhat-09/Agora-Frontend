@@ -300,6 +300,24 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({
               <div className={styles.comboFormHint}>
                 Giá gói sẽ được tính theo môn và khối lớp mà phụ huynh chọn khi đặt lịch.
               </div>
+              <label className={styles.comboFormField}>
+                <span className={styles.comboFormLabel}>
+                  Mô tả gói{' '}
+                  {combo.type === 'fixed' && (
+                    <em style={{ fontWeight: 400, color: '#8a8a8a' }}>(tuỳ chọn)</em>
+                  )}
+                </span>
+                <Input.TextArea
+                  rows={3}
+                  value={combo.description ?? ''}
+                  onChange={(event) => setCombo({ ...combo, description: event.target.value } as Combo)}
+                  placeholder={
+                    combo.type === 'fixed'
+                      ? 'Ví dụ: 2 buổi cố định mỗi tuần, phù hợp duy trì nhịp học đều đặn.'
+                      : 'Ví dụ: Phụ huynh tự chọn lịch theo số buổi mỗi tuần. Ưu tiên cuối tuần hoặc buổi tối...'
+                  }
+                />
+              </label>
             </section>
 
             {combo.type === 'fixed' ? (
@@ -477,22 +495,6 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({
                     />
                   </label>
                   <label className={styles.comboFormField}>
-                    <span className={styles.comboFormLabel}>Số buổi / tháng</span>
-                    <InputNumber
-                      value={combo.sessionsPerMonth}
-                      min={1}
-                      max={31}
-                      onChange={(value) =>
-                        setCombo({
-                          ...combo,
-                          sessionsPerMonth: (value as number) ?? 1,
-                        } as Combo)
-                      }
-                      style={{ width: '100%' }}
-                      size="large"
-                    />
-                  </label>
-                  <label className={styles.comboFormField}>
                     <span className={styles.comboFormLabel}>Số giờ / buổi</span>
                     <InputNumber
                       value={combo.hoursPerSession}
@@ -509,16 +511,26 @@ const ComboFormModal: React.FC<ComboFormModalProps> = ({
                       size="large"
                     />
                   </label>
+                  <label className={styles.comboFormField}>
+                    <span className={styles.comboFormLabel}>Số buổi / tháng</span>
+                    <InputNumber
+                      value={combo.sessionsPerMonth}
+                      min={1}
+                      max={31}
+                      onChange={(value) =>
+                        setCombo({
+                          ...combo,
+                          sessionsPerMonth: (value as number) ?? 1,
+                        } as Combo)
+                      }
+                      style={{ width: '100%' }}
+                      size="large"
+                    />
+                    <span className={styles.comboFormHint}>
+                      Tổng số buổi tối đa/tháng. Phụ huynh chọn lịch theo tuần, hệ thống lặp đến đủ số buổi này rồi dừng.
+                    </span>
+                  </label>
                 </div>
-                <label className={styles.comboFormField}>
-                  <span className={styles.comboFormLabel}>Mô tả gói</span>
-                  <Input.TextArea
-                    rows={4}
-                    value={combo.description}
-                    onChange={(event) => setCombo({ ...combo, description: event.target.value } as Combo)}
-                    placeholder="Ví dụ: Phụ huynh tự chọn lịch theo số buổi mỗi tuần. Ưu tiên cuối tuần hoặc buổi tối..."
-                  />
-                </label>
                 {flexHasNoAvailableSlot && (
                   <div className={styles.comboValidationWarn}>
                     <ClockCircleOutlined />

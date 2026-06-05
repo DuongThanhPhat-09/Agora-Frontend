@@ -10,6 +10,7 @@ import {
 import styles from '../styles.module.css';
 import ComboFormModal from './ComboFormModal';
 import { DAY_COLUMNS, formatHour } from './constants';
+import { getComboSessionsPerWeek } from '../../../types/combo.types';
 import type { Combo, TutorAvailabilitySlot } from './types';
 
 interface ComboManagerProps {
@@ -142,7 +143,10 @@ const ComboManager: React.FC<ComboManagerProps> = ({ combos, availability, onAdd
                   ) : (
                     <div className={styles.comboFlexInfo}>
                       <strong>{combo.sessionsPerMonth} buổi/tháng</strong>
-                      <span> · {combo.hoursPerSession} giờ/buổi</span>
+                      <span>
+                        {' '}
+                        · {getComboSessionsPerWeek(combo)} buổi/tuần · {combo.hoursPerSession} giờ/buổi
+                      </span>
                       <p className={styles.comboDescription}>{combo.description}</p>
                     </div>
                   )}

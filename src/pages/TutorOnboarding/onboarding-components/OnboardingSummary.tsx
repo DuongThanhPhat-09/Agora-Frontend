@@ -1,6 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import styles from '../styles.module.css';
-import { DAY_COLUMNS, GRADE_LEVELS, formatHourMinute, formatPrice, minutesOf, parseTime } from './constants';
+import {
+  DAY_COLUMNS,
+  GRADE_LEVELS,
+  formatHourMinute,
+  formatPrice,
+  formatDuration,
+  minutesOf,
+  parseTime,
+} from './constants';
 import HourSlotGrid from './HourSlotGrid';
 import type { Combo, FixedCombo, FlexCombo, SubjectRecord, TutorAvailabilitySlot } from './types';
 
@@ -70,7 +78,7 @@ const ComboReadOnlyCard: React.FC<{ combo: Combo }> = ({ combo }) => (
     ) : (
       <div className={styles.comboFlexInfo}>
         <div>
-          <strong>{combo.sessionsPerWeek}</strong> buổi/tuần · <strong>{combo.sessionsPerMonth}</strong> buổi/tháng ·{' '}
+          <strong>{combo.sessionsPerMonth}</strong> buổi/tháng · <strong>{combo.sessionsPerWeek}</strong> buổi/tuần ·{' '}
           <strong>{combo.hoursPerSession}</strong> giờ/buổi
         </div>
         <p className={styles.comboDescription}>{combo.description}</p>
@@ -324,8 +332,7 @@ const OnboardingSummary: React.FC<OnboardingSummaryProps> = ({
                         <div key={c.id} className={styles.flexComboChip}>
                           <strong>{c.name}</strong>
                           <span>
-                            {c.sessionsPerWeek} buổi/tuần · {c.hoursPerSession}h/buổi ·{' '}
-                            {c.sessionsPerMonth} buổi/tháng
+                            {c.sessionsPerMonth} buổi/tháng · {c.sessionsPerWeek} buổi/tuần · {c.hoursPerSession}h/buổi
                           </span>
                         </div>
                       ))}
@@ -437,6 +444,8 @@ const OnboardingSummary: React.FC<OnboardingSummaryProps> = ({
                     <div className={`${styles.recordsRow} ${styles.recordsHead}`}>
                       <span>Môn</span>
                       <span>Khối lớp</span>
+                      <span>Giờ / buổi</span>
+                      <span>Buổi / tuần</span>
                       <span>Giá / giờ</span>
                       <span />
                     </div>
@@ -444,6 +453,8 @@ const OnboardingSummary: React.FC<OnboardingSummaryProps> = ({
                       <div key={r.id} className={styles.recordsRow}>
                         <span className={styles.recordSubject}>{r.subjectName}</span>
                         <span>{gradeLabel(r.gradeLevel)}</span>
+                        <span>{formatDuration(r.hoursPerSession)}</span>
+                        <span>{r.sessionsPerWeek} buổi</span>
                         <span className={styles.recordRate}>{formatPrice(r.hourlyRate)}đ</span>
                         <span />
                       </div>
