@@ -3,7 +3,7 @@
 
 // Combo types được share với parent booking flow — đặt ở src/types/combo.types.ts.
 export type { Combo, ComboSessionSlot, FixedCombo, FlexCombo } from '../../../types/combo.types';
-import type { Combo } from '../../../types/combo.types';
+import type { FixedCombo } from '../../../types/combo.types';
 
 export type OnboardingStep = 1 | 2 | 3;
 
@@ -30,6 +30,6 @@ export interface TutorAvailabilitySlot {
 export interface OnboardingState {
   subjectRecords: SubjectRecord[];
   availability: TutorAvailabilitySlot[];
-  combos: Combo[];
+  combos: FixedCombo[];
   currentStep: OnboardingStep;
 }
