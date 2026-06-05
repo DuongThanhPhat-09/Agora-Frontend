@@ -773,6 +773,7 @@
 }
 
 .bookingModal {
+  position: relative;
   display: flex;
   width: min(1120px, 100%);
   max-height: min(870px, calc(100vh - 52px));
@@ -782,6 +783,49 @@
   border-radius: 18px;
   background: var(--color-white);
   box-shadow: 0 30px 80px -24px rgba(0, 0, 0, 0.48);
+}
+
+/* Overlay xác nhận khi đóng modal lúc đang đặt dở (chống mất lựa chọn do lỡ tay). */
+.closeConfirm {
+  position: absolute;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  padding: 26px;
+  place-items: center;
+  background: rgba(15, 20, 31, 0.5);
+  backdrop-filter: blur(3px);
+}
+
+.closeConfirmCard {
+  width: min(390px, 100%);
+  padding: 26px 24px;
+  border-radius: 16px;
+  background: var(--color-white);
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.45);
+  text-align: center;
+}
+
+.closeConfirmCard h3 {
+  margin: 0 0 8px;
+  color: var(--color-navy);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+}
+
+.closeConfirmCard p {
+  margin: 0 0 22px;
+  color: var(--color-navy-60);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.closeConfirmActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
 }
 
 .modalHeader {
@@ -979,6 +1023,7 @@
 
 .subjectCard,
 .childCard,
+.bookingModeCard,
 .comboCard {
   border: 1px solid rgba(62, 47, 40, 0.12);
   background: var(--color-white);
@@ -993,6 +1038,7 @@
 
 .subjectCard:hover,
 .childCard:hover,
+.bookingModeCard:hover,
 .comboCard:hover {
   border-color: rgba(26, 34, 56, 0.34);
   box-shadow: 0 10px 18px -15px rgba(26, 34, 56, 0.34);
@@ -1190,6 +1236,80 @@
   line-height: 1.55;
 }
 
+.bookingModeGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.bookingModeCard {
+  display: flex;
+  min-height: 178px;
+  flex-direction: column;
+  padding: 17px;
+  border-radius: 14px;
+}
+
+.bookingModeIcon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 11px;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--color-navy);
+  color: var(--color-gold);
+}
+
+.availabilityModeIcon {
+  background: #18233b;
+  color: #e3bb78;
+}
+
+.packageModeIcon {
+  background: #8b6634;
+  color: #fff8ec;
+}
+
+.bookingModeCard h3 {
+  margin: 6px 0 0;
+  color: var(--color-navy);
+  font-size: 16px;
+}
+
+.bookingModeCard p {
+  flex: 1;
+  margin: 6px 0 14px;
+  color: var(--color-navy-60);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.bookingModeCard small {
+  align-self: flex-end;
+  color: #9a6a25;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.packagePanel {
+  margin-top: 13px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(62, 47, 40, 0.08);
+}
+
+.packagePanelHead {
+  margin-bottom: 10px;
+}
+
+.packagePanelHead h3 {
+  margin: 3px 0 0;
+  color: var(--color-navy);
+  font-size: 14px;
+}
+
 .comboCard {
   position: relative;
   display: flex;
@@ -1204,9 +1324,14 @@
   margin-bottom: 10px;
 }
 
-.flexIcon {
-  background: var(--color-green);
-  color: var(--color-white);
+.fixedPackageIcon {
+  background: #3f5145;
+  color: #f7f5ef;
+}
+
+.flexPackageIcon {
+  background: #40566f;
+  color: #f8fbff;
 }
 
 .comboType {
@@ -1252,6 +1377,279 @@
   font-weight: 800;
   letter-spacing: 1px;
   text-transform: uppercase;
+}
+
+/* Danh sách gói cố định ở bước 3 (chọn gói trước khi chọn tuần bắt đầu). */
+.comboPickSection {
+  margin-bottom: 18px;
+}
+
+/* Thông tin số giờ/buổi (theo môn) — chế độ Tự chọn lịch rảnh. */
+.durationInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 11px 16px;
+  border: 1px solid rgba(26, 34, 56, 0.1);
+  border-radius: 12px;
+  background: rgba(242, 240, 228, 0.4);
+  color: var(--color-navy);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.durationInfo svg {
+  flex-shrink: 0;
+  color: var(--color-burgundy);
+}
+
+.durationInfo strong {
+  color: var(--color-burgundy);
+}
+
+/* Thiết lập gói (bước 3): trạng thái chọn tuần bắt đầu + cửa sổ booking. */
+.packageSetup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 18px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid rgba(26, 34, 56, 0.1);
+  border-radius: 12px;
+  background: rgba(242, 240, 228, 0.4);
+}
+
+.startDateField {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.startDateField span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--color-navy-60);
+}
+
+.startDateField input {
+  padding: 9px 12px;
+  border: 1px solid rgba(26, 34, 56, 0.18);
+  border-radius: 9px;
+  background: var(--color-white);
+  color: var(--color-navy);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.packageWindowInfo {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-navy);
+  font-size: 12.5px;
+}
+
+.packageWindowInfo strong {
+  color: var(--color-burgundy);
+  font-weight: 700;
+}
+
+.changeWeekBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid rgba(26, 34, 56, 0.18);
+  border-radius: 999px;
+  background: var(--color-white);
+  color: var(--color-navy);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.changeWeekBtn:hover {
+  border-color: var(--color-burgundy);
+  color: var(--color-burgundy);
+}
+
+.noFitNotice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(99, 27, 27, 0.25);
+  border-radius: 10px;
+  background: rgba(99, 27, 27, 0.06);
+  color: #631b1b;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.noFitNotice svg {
+  flex-shrink: 0;
+}
+
+.flexHint {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(26, 34, 56, 0.12);
+  color: var(--color-navy-60);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.flexHint svg {
+  flex-shrink: 0;
+  color: var(--color-burgundy);
+}
+
+/* Layout 2 cột bước 3 (gói): lưới chọn theo tuần | lịch tháng mô phỏng. */
+.scheduleLayout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.scheduleLayout > .calendarSection {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.monthSim {
+  display: flex;
+  width: 290px;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 14px;
+  padding: 15px;
+  border: 1px solid rgba(62, 47, 40, 0.1);
+  border-radius: 14px;
+  background: rgba(250, 249, 246, 0.72);
+}
+
+.monthSimHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-navy);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.monthSimHead svg {
+  color: var(--color-burgundy);
+}
+
+.monthSimEmpty {
+  margin: 0;
+  color: var(--color-navy-60);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.monthSimGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.monthSimTitle {
+  color: var(--color-navy);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.monthSimWeekdays,
+.monthSimDays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.monthSimWeekdays span {
+  text-align: center;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--color-navy-60);
+}
+
+.monthSimBlank {
+  aspect-ratio: 1;
+}
+
+.monthSimDay {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border-radius: 7px;
+  background: rgba(26, 34, 56, 0.04);
+  color: var(--color-navy);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.monthSimDayMuted {
+  background: transparent;
+  color: rgba(26, 34, 56, 0.28);
+}
+
+.monthSimDayActive {
+  background: var(--color-burgundy);
+  color: var(--color-white);
+  font-weight: 800;
+}
+
+.monthSimDot {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--color-white);
+}
+
+.monthSimFooter {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(62, 47, 40, 0.1);
+  color: var(--color-navy-60);
+  font-size: 12px;
+}
+
+.monthSimFooter strong {
+  color: var(--color-burgundy);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .scheduleLayout {
+    flex-direction: column;
+  }
+
+  .monthSim {
+    width: 100%;
+  }
 }
 
 .calendarSection {
@@ -1454,8 +1852,53 @@
 
 .confirmLayout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 260px;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  align-items: start;
+  gap: 14px;
+}
+
+.confirmMain {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reviewHero {
+  display: flex;
+  align-items: center;
   gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(62, 47, 40, 0.1);
+  border-radius: 12px;
+  background: var(--color-white);
+}
+
+.reviewHeroAvatar {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-navy);
+  color: var(--color-gold);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.reviewHero h3 {
+  margin: 3px 0 2px;
+  color: var(--color-navy);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.reviewHero p {
+  margin: 0;
+  color: var(--color-navy-60);
+  font-size: 11px;
+  line-height: 1.45;
 }
 
 .reviewGrid {
@@ -1484,10 +1927,10 @@
 }
 
 .scheduleReview {
-  margin-top: 10px;
   padding: 12px;
   border: 1px solid rgba(62, 47, 40, 0.1);
-  border-radius: 10px;
+  border-radius: 12px;
+  background: var(--color-white);
 }
 
 .scheduleReviewHead {
@@ -1518,6 +1961,52 @@
   color: var(--color-green);
   font-size: 9px;
   font-weight: 800;
+}
+
+.lessonReviewList {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.lessonReviewRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  background: rgba(242, 240, 228, 0.52);
+}
+
+.lessonReviewRow svg {
+  color: var(--color-green);
+}
+
+.lessonReviewRow span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lessonReviewRow strong {
+  overflow: hidden;
+  color: var(--color-navy);
+  font-size: 11px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lessonReviewRow small {
+  color: var(--color-navy-40);
+  font-size: 9px;
+}
+
+.lessonReviewRow b {
+  color: var(--color-green);
+  font-size: 11px;
 }
 
 .weekScheduleGrid {
@@ -1660,8 +2149,8 @@
 .priceSummary {
   padding: 14px;
   border: 1px solid rgba(62, 47, 40, 0.1);
-  border-radius: 11px;
-  background: rgba(250, 249, 246, 0.74);
+  border-radius: 12px;
+  background: var(--color-white);
 }
 
 .priceSummary div {
@@ -1698,6 +2187,14 @@
 .priceSummary div:last-child strong {
   font-size: 20px;
   letter-spacing: -0.7px;
+}
+
+.priceSummaryNote {
+  display: block;
+  margin-top: 6px;
+  color: var(--color-navy-40);
+  font-size: 10px;
+  line-height: 1.45;
 }
 
 .noticeBox {
@@ -1966,6 +2463,7 @@
 
   .featureGrid,
   .subjectGrid,
+  .bookingModeGrid,
   .comboGrid {
     grid-template-columns: 1fr;
   }

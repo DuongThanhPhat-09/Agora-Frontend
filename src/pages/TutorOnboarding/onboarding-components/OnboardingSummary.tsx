@@ -1,6 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import styles from '../styles.module.css';
-import { DAY_COLUMNS, GRADE_LEVELS, formatHourMinute, formatPrice, minutesOf, parseTime } from './constants';
+import {
+  DAY_COLUMNS,
+  GRADE_LEVELS,
+  formatHourMinute,
+  formatPrice,
+  formatDuration,
+  minutesOf,
+  parseTime,
+} from './constants';
 import HourSlotGrid from './HourSlotGrid';
 import type { Combo, FixedCombo, FlexCombo, SubjectRecord, TutorAvailabilitySlot } from './types';
 
@@ -70,7 +78,7 @@ const ComboReadOnlyCard: React.FC<{ combo: Combo }> = ({ combo }) => (
     ) : (
       <div className={styles.comboFlexInfo}>
         <div>
-          <strong>{combo.sessionsPerWeek}</strong> buổi/tuần · <strong>{combo.sessionsPerMonth}</strong> buổi/tháng ·{' '}
+          <strong>{combo.sessionsPerMonth}</strong> buổi/tháng · <strong>{combo.sessionsPerWeek}</strong> buổi/tuần ·{' '}
           <strong>{combo.hoursPerSession}</strong> giờ/buổi
         </div>
         <p className={styles.comboDescription}>{combo.description}</p>
@@ -101,12 +109,10 @@ const OnboardingSummary: React.FC<OnboardingSummaryProps> = ({
       const end = parseTime(slot.endTime);
       return sum + Math.max(0, minutesOf(end.hour, end.minute) - minutesOf(start.hour, start.minute));
     }, 0);
-    const orderedDayLabels = DAY_COLUMNS.filter((day) => daySet.has(day.dayOfWeek)).map((day) => day.label);
 
     return {
       dayCount: daySet.size,
       totalHours: totalMinutes / 60,
-      orderedDayLabels,
       slotCount: availability.length,
     };
   }, [availability]);
@@ -114,6 +120,23 @@ const OnboardingSummary: React.FC<OnboardingSummaryProps> = ({
   // ── Gói lịch học phân loại ──
   const fixedCombos = useMemo(() => combos.filter((c): c is FixedCombo => c.type === 'fixed'), [combos]);
   const flexCombos = useMemo(() => combos.filter((c): c is FlexCombo => c.type === 'flex'), [combos]);
+
+  // ── Set ô 30 phút có lịch rảnh — dùng để render nền xanh cho ô rảnh chưa có gói. ──
+  const availableHourSet = useMemo(() => {
+    const set = new Set<string>();
+    availability.forEach((slot) => {
+      const start = parseTime(slot.startTime);
+      const end = parseTime(slot.endTime);
+      const startMin = minutesOf(start.hour, start.minute);
+      const endMin = minutesOf(end.hour, end.minute);
+      for (let cur = startMin; cur < endMin; cur += 30) {
+        const h = Math.floor(cur / 60);
+        const m = cur % 60;
+        set.add(`${slot.dayOfWeek}-${h}-${m}`);
+      }
+    });
+    return set;
+  }, [availability]);
 
   // ── Lookup map cho lưới: (day-hour-minute) → gói cố định nào đang chiếm ô đó ──
   const comboCellMap = useMemo(() => {
@@ -173,31 +196,46 @@ const OnboardingSummary: React.FC<OnboardingSummaryProps> = ({
   const fixedSessionsCount = scheduleStats.totalFixedSessions;
 
   const renderScheduleCell = (dayOfWeek: number, hour: number, minute: 0 | 30) => {
-    const info = comboCellMap.get(`${dayOfWeek}-${hour}-${minute}`);
-    if (!info) {
-      return <div className={`${styles.cell} ${styles.cellStatic}`} />;
+    const key = `${dayOfWeek}-${hour}-${minute}`;
+    const info = comboCellMap.get(key);
+
+    // Có gói cố định ở ô này → render màu của gói + tên (ưu tiên hơn ô rảnh).
+    if (info) {
+      const color = COMBO_COLORS[info.comboIndex % COMBO_COLORS.length];
+      return (
+        <div
+          className={`${styles.cell} ${styles.cellStatic}`}
+          style={{
+            background: color.bg,
+            borderColor: color.border,
+            borderStyle: 'solid',
+            color: '#fff',
+            padding: '4px 6px',
+            justifyContent: 'center',
+            alignItems: 'flex-start',
+            textAlign: 'left',
+          }}
+          aria-label={`${dayLabel(dayOfWeek)} ${formatHourMinute(hour, minute)} - ${info.combo.name}`}
+        >
+          {info.isStart && (
+            <span style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.15, color: '#fff' }}>{info.combo.name}</span>
+          )}
+        </div>
+      );
     }
-    const color = COMBO_COLORS[info.comboIndex % COMBO_COLORS.length];
-    return (
-      <div
-        className={`${styles.cell} ${styles.cellStatic}`}
-        style={{
-          background: color.bg,
-          borderColor: color.border,
-          borderStyle: 'solid',
-          color: '#fff',
-          padding: '4px 6px',
-          justifyContent: 'center',
-          alignItems: 'flex-start',
-          textAlign: 'left',
-        }}
-        aria-label={`${dayLabel(dayOfWeek)} ${formatHourMinute(hour, minute)} - ${info.combo.name}`}
-      >
-        {info.isStart && (
-          <span style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.15, color: '#fff' }}>{info.combo.name}</span>
-        )}
-      </div>
-    );
+
+    // Không có gói nhưng tutor rảnh → render nền xanh nhạt (đồng bộ với Step 2).
+    if (availableHourSet.has(key)) {
+      return (
+        <div
+          className={`${styles.cell} ${styles.cellStatic} ${styles.available}`}
+          aria-label={`${dayLabel(dayOfWeek)} ${formatHourMinute(hour, minute)} - rảnh`}
+        />
+      );
+    }
+
+    // Không rảnh, không gói → ô trống.
+    return <div className={`${styles.cell} ${styles.cellStatic}`} />;
   };
 
   return (
@@ -220,10 +258,6 @@ const OnboardingSummary: React.FC<OnboardingSummaryProps> = ({
           <div className={styles.summaryHeroMain}>
             <span className={styles.summaryEyebrow}>Sẵn sàng nhận booking</span>
             <h2>Phụ huynh đã có thể đặt lịch theo các khung rảnh của bạn.</h2>
-            <p>
-              Môn học, giá và lịch rảnh là phần bắt buộc đã hoàn tất. Gói lịch học chỉ là lựa chọn gợi ý để phụ huynh
-              chọn nhanh hơn, không ảnh hưởng quyền nhận booking.
-            </p>
           </div>
           <div className={styles.summaryHeroAside}>
             <strong>{combos.length > 0 ? `${combos.length} gói gợi ý` : 'Không cần tạo gói'}</strong>
@@ -237,59 +271,20 @@ const OnboardingSummary: React.FC<OnboardingSummaryProps> = ({
           <div className={styles.summaryMetric}>
             <span>Môn & giá</span>
             <strong>{subjectRecords.length}</strong>
-            <small>
-              {uniqueSubjects} môn ·{' '}
-              {minRate === maxRate ? formatPrice(minRate) : `${formatPrice(minRate)}-${formatPrice(maxRate)}`}đ/giờ
-            </small>
           </div>
           <div className={styles.summaryMetric}>
             <span>Lịch rảnh</span>
             <strong>{formatHourAmount(availabilityStats.totalHours)} giờ</strong>
-            <small>
-              {availabilityStats.dayCount} ngày · {availabilityStats.slotCount} ô 30 phút
-            </small>
           </div>
           <div className={styles.summaryMetric}>
             <span>Gói lịch học</span>
             <strong>{combos.length}</strong>
-            <small>{combos.length > 0 ? 'Lựa chọn đặt nhanh cho phụ huynh' : 'Tùy chọn, có thể bổ sung sau'}</small>
-          </div>
-        </div>
-
-        <div className={styles.summaryChecklist}>
-          <div className={styles.summaryChecklistItem}>
-            <span>✓</span>
-            <div>
-              <strong>Môn học và giá đã sẵn sàng</strong>
-              <small>{subjectRecords.length} cấu hình môn-khối-giá đang hoạt động.</small>
-            </div>
-          </div>
-          <div className={styles.summaryChecklistItem}>
-            <span>✓</span>
-            <div>
-              <strong>Lịch rảnh đã mở nhận booking</strong>
-              <small>
-                {availabilityStats.orderedDayLabels.length > 0
-                  ? `Có lịch vào ${availabilityStats.orderedDayLabels.join(', ')}.`
-                  : 'Chưa có ngày rảnh.'}
-              </small>
-            </div>
-          </div>
-          <div className={`${styles.summaryChecklistItem} ${styles.optionalChecklistItem}`}>
-            <span>i</span>
-            <div>
-              <strong>Gói lịch học là phần tùy chọn</strong>
-              <small>Không tạo gói cũng không chặn phụ huynh gửi booking theo lịch rảnh.</small>
-            </div>
           </div>
         </div>
 
         <section className={styles.summaryDetailPanel}>
           <div className={styles.summarySectionHead}>
-            <div>
-              <h3>Chi tiết thiết lập</h3>
-              <p>Xem lại các cấu hình đã hoàn tất trước khi về Dashboard.</p>
-            </div>
+            <h3>Chi tiết thiết lập</h3>
           </div>
 
           <div className={styles.subjectTabs} role="tablist">
@@ -300,8 +295,8 @@ const OnboardingSummary: React.FC<OnboardingSummaryProps> = ({
               className={`${styles.subjectTab} ${view === 'schedule' ? styles.activeTab : ''}`}
               onClick={() => setView('schedule')}
             >
-              <span>Lịch gói cố định</span>
-              <span className={styles.subjectTabBadge}>{fixedSessionsCount}</span>
+              <span>Lịch tuần</span>
+              <span className={styles.subjectTabBadge}>{availability.length}</span>
             </button>
             <button
               type="button"
@@ -327,111 +322,97 @@ const OnboardingSummary: React.FC<OnboardingSummaryProps> = ({
 
           <div className={styles.summaryTabContent}>
             {view === 'schedule' ? (
-              !scheduleStats.hasAny ? (
-                <div className={styles.summaryEmpty}>
-                  <div className={styles.summaryEmptyIcon}>✓</div>
-                  <strong>Không có gói lịch học nào được tạo</strong>
-                  <p>Đây không phải lỗi thiết lập. Phụ huynh vẫn có thể chọn các khung rảnh của bạn để gửi booking.</p>
-                  <button type="button" className={styles.summaryTextButton} onClick={() => setView('subjects')}>
-                    Xem cấu hình bắt buộc
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div className={styles.statRow}>
-                    <div className={styles.statCard}>
-                      <span className={styles.statLabel}>Gói cố định</span>
-                      <span className={styles.statValue}>{fixedCombos.length}</span>
-                      <span className={styles.statSub}>{scheduleStats.totalFixedSessions} buổi / tuần</span>
-                    </div>
-                    <div className={styles.statCard}>
-                      <span className={styles.statLabel}>Tổng giờ dạy / tuần</span>
-                      <span className={styles.statValue}>{scheduleStats.totalFixedHours}</span>
-                      <span className={styles.statSub}>giờ (gói cố định)</span>
-                    </div>
-                    <div className={styles.statCard}>
-                      <span className={styles.statLabel}>Khung giờ dạy</span>
-                      <span className={styles.statValue}>
-                        {scheduleStats.earliest !== null && scheduleStats.latest !== null
-                          ? `${scheduleStats.earliest}–${scheduleStats.latest}`
-                          : '—'}
-                      </span>
-                      <span className={styles.statSub}>sớm nhất – muộn nhất</span>
+              <>
+                {/* Gói linh hoạt — hiển thị nổi bật ở đầu tab vì không có chỗ trên lưới (không cố định giờ). */}
+                {flexCombos.length > 0 && (
+                  <div className={styles.flexCombosStrip}>
+                    <span className={styles.flexCombosStripLabel}>Gói linh hoạt</span>
+                    <div className={styles.flexCombosList}>
+                      {flexCombos.map((c) => (
+                        <div key={c.id} className={styles.flexComboChip}>
+                          <strong>{c.name}</strong>
+                          <span>
+                            {c.sessionsPerMonth} buổi/tháng · {c.sessionsPerWeek} buổi/tuần · {c.hoursPerSession}h/buổi
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </div>
+                )}
 
-                  {fixedCombos.length > 0 ? (
-                    <>
-                      <h3 className={styles.recapTitle}>Lịch tuần của gói cố định</h3>
-                      <div
+                <h3 className={styles.recapTitle}>Lịch tuần</h3>
+                {/* Legend: lịch rảnh + từng gói cố định */}
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 10,
+                    marginBottom: 12,
+                  }}
+                >
+                  {availability.length > 0 && (
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 7,
+                        padding: '5px 10px',
+                        borderRadius: 999,
+                        background: 'rgba(26, 34, 56, 0.04)',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: '#1a2238',
+                      }}
+                    >
+                      <i
                         style={{
-                          display: 'flex',
-                          flexWrap: 'wrap',
-                          gap: 10,
-                          marginBottom: 12,
+                          display: 'inline-block',
+                          width: 12,
+                          height: 12,
+                          borderRadius: 4,
+                          background: 'rgba(61, 74, 62, 0.18)',
+                          border: '1.5px solid #3d4a3e',
+                        }}
+                      />
+                      Lịch rảnh
+                    </span>
+                  )}
+                  {fixedCombos.map((c, idx) => {
+                    const color = COMBO_COLORS[idx % COMBO_COLORS.length];
+                    return (
+                      <span
+                        key={c.id}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 7,
+                          padding: '5px 10px',
+                          borderRadius: 999,
+                          background: 'rgba(26, 34, 56, 0.04)',
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: '#1a2238',
                         }}
                       >
-                        {fixedCombos.map((c, idx) => {
-                          const color = COMBO_COLORS[idx % COMBO_COLORS.length];
-                          return (
-                            <span
-                              key={c.id}
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 7,
-                                padding: '5px 10px',
-                                borderRadius: 999,
-                                background: 'rgba(26, 34, 56, 0.04)',
-                                fontSize: 12,
-                                fontWeight: 600,
-                                color: '#1a2238',
-                              }}
-                            >
-                              <i
-                                style={{
-                                  display: 'inline-block',
-                                  width: 12,
-                                  height: 12,
-                                  borderRadius: 4,
-                                  background: color.bg,
-                                }}
-                              />
-                              {c.name}
-                              <span style={{ color: 'rgba(62,47,40,0.55)', fontWeight: 500 }}>
-                                · {c.sessions.length} buổi
-                              </span>
-                            </span>
-                          );
-                        })}
-                      </div>
-                      <HourSlotGrid renderCell={renderScheduleCell} />
-                    </>
-                  ) : (
-                    <div className={styles.empty}>Chưa có gói cố định để hiển thị trên lịch tuần.</div>
-                  )}
-
-                  {flexCombos.length > 0 && (
-                    <div style={{ marginTop: 22 }}>
-                      <h3 className={styles.recapTitle}>Gói linh hoạt</h3>
-                      <p style={{ margin: '0 0 10px', fontSize: 12.5, color: 'rgba(62,47,40,0.6)' }}>
-                        Không cố định khung giờ — phụ huynh chọn giờ phù hợp khi đặt lịch.
-                      </p>
-                      <div className={styles.recapList}>
-                        {flexCombos.map((c) => (
-                          <div key={c.id} className={styles.recapRow}>
-                            <strong className={styles.recapRowName}>{c.name}</strong>
-                            <span className={styles.recapRowValue}>
-                              {c.sessionsPerWeek} buổi/tuần · {c.hoursPerSession} giờ/buổi
-                            </span>
-                            <span className={styles.recapRowMeta}>{c.sessionsPerMonth} buổi/tháng</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              )
+                        <i
+                          style={{
+                            display: 'inline-block',
+                            width: 12,
+                            height: 12,
+                            borderRadius: 4,
+                            background: color.bg,
+                          }}
+                        />
+                        {c.name}
+                        <span style={{ color: 'rgba(62,47,40,0.55)', fontWeight: 500 }}>
+                          · {c.sessions.length} buổi
+                        </span>
+                      </span>
+                    );
+                  })}
+                </div>
+                <HourSlotGrid renderCell={renderScheduleCell} />
+              </>
             ) : view === 'subjects' ? (
               <>
                 <div className={styles.statRow}>
@@ -463,6 +444,8 @@ const OnboardingSummary: React.FC<OnboardingSummaryProps> = ({
                     <div className={`${styles.recordsRow} ${styles.recordsHead}`}>
                       <span>Môn</span>
                       <span>Khối lớp</span>
+                      <span>Giờ / buổi</span>
+                      <span>Buổi / tuần</span>
                       <span>Giá / giờ</span>
                       <span />
                     </div>
@@ -470,6 +453,8 @@ const OnboardingSummary: React.FC<OnboardingSummaryProps> = ({
                       <div key={r.id} className={styles.recordsRow}>
                         <span className={styles.recordSubject}>{r.subjectName}</span>
                         <span>{gradeLabel(r.gradeLevel)}</span>
+                        <span>{formatDuration(r.hoursPerSession)}</span>
+                        <span>{r.sessionsPerWeek} buổi</span>
                         <span className={styles.recordRate}>{formatPrice(r.hourlyRate)}đ</span>
                         <span />
                       </div>
@@ -518,11 +503,6 @@ const OnboardingSummary: React.FC<OnboardingSummaryProps> = ({
       </div>
 
       <div className={styles.footer}>
-        <div className={styles.footerInfo}>
-          {combos.length > 0
-            ? 'Gói lịch học đang được lưu trong phiên onboarding này.'
-            : 'Không có gói lịch học nào được tạo; thiết lập lịch rảnh vẫn đủ để nhận booking.'}
-        </div>
         <div className={styles.footerBtns}>
           <button type="button" className={styles.btnGhost} onClick={onBack}>
             Chỉnh sửa lại

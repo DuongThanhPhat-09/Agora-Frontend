@@ -10,6 +10,7 @@ import {
 import styles from '../styles.module.css';
 import ComboFormModal from './ComboFormModal';
 import { DAY_COLUMNS, formatHour } from './constants';
+import { getComboSessionsPerWeek } from '../../../types/combo.types';
 import type { Combo, TutorAvailabilitySlot } from './types';
 
 interface ComboManagerProps {
@@ -47,10 +48,7 @@ const ComboManager: React.FC<ComboManagerProps> = ({ combos, availability, onAdd
     <>
       <section className={styles.comboManager}>
         <div className={styles.comboManagerHead}>
-          <div>
-            <h3 className={styles.comboManagerTitle}>Gói lịch học của bạn</h3>
-            <p className={styles.comboManagerSubtitle}>Tùy chọn này giúp phụ huynh có thêm lựa chọn đặt lịch nhanh.</p>
-          </div>
+          <h3 className={styles.comboManagerTitle}>Gói lịch học của bạn</h3>
           {combos.length > 0 && (
             <button type="button" className={styles.comboPrimaryAction} onClick={openCreate}>
               <PlusOutlined />
@@ -63,20 +61,6 @@ const ComboManager: React.FC<ComboManagerProps> = ({ combos, availability, onAdd
           <div className={styles.comboEmptyState}>
             <div className={styles.comboEmptyIcon}>
               <CalendarOutlined />
-            </div>
-            <h3>Bạn có thể bỏ qua bước này</h3>
-            <p>
-              Lịch rảnh đã đủ để phụ huynh gửi booking. Gói lịch học chỉ giúp bạn đề xuất sẵn các nhịp học phổ biến.
-            </p>
-            <div className={styles.comboEmptyModes}>
-              <span>
-                <CalendarOutlined />
-                Gói cố định
-              </span>
-              <span>
-                <ClockCircleOutlined />
-                Gói linh hoạt
-              </span>
             </div>
             <button type="button" className={styles.comboPrimaryAction} onClick={openCreate}>
               <PlusOutlined />
@@ -159,7 +143,10 @@ const ComboManager: React.FC<ComboManagerProps> = ({ combos, availability, onAdd
                   ) : (
                     <div className={styles.comboFlexInfo}>
                       <strong>{combo.sessionsPerMonth} buổi/tháng</strong>
-                      <span> · {combo.hoursPerSession} giờ/buổi</span>
+                      <span>
+                        {' '}
+                        · {getComboSessionsPerWeek(combo)} buổi/tuần · {combo.hoursPerSession} giờ/buổi
+                      </span>
                       <p className={styles.comboDescription}>{combo.description}</p>
                     </div>
                   )}
