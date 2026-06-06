@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -98,8 +98,6 @@ const formatShortDate = (date: Date) =>
     month: '2-digit',
   });
 
-const formatWeekday = (date: Date) => DAY_NAMES[(date.getDay() + 6) % 7];
-
 const formatPrice = (amount: number) =>
   new Intl.NumberFormat('vi-VN', {
     style: 'currency',
@@ -107,11 +105,7 @@ const formatPrice = (amount: number) =>
     maximumFractionDigits: 0,
   }).format(amount);
 
-const formatGradeRange = (grades: number[]) => {
-  const first = grades[0];
-  const last = grades[grades.length - 1];
-  return first === last ? `Lớp ${first}` : `Lớp ${first} - ${last}`;
-};
+const formatSubjectGrade = (grade: number) => `Lớp ${grade}`;
 
 const formatPackageName = (name: string) => name.replace(/^Combo\b/i, 'Gói');
 
@@ -279,7 +273,7 @@ const TutorBrowse = ({ onViewTutor }: { onViewTutor: (tutorId: string) => void }
                 <BookOpen size={14} />
                 {tutor.subjects.map((subject) => (
                   <span key={subject.id}>
-                    {subject.name}: {formatGradeRange(subject.grades)}
+                    {subject.name}: {formatSubjectGrade(subject.grade)}
                   </span>
                 ))}
               </div>
@@ -374,7 +368,7 @@ const TutorDetail = ({ tutor, onBack, onBooking }: { tutor: Tutor; onBack: () =>
               <strong>Cấp lớp giảng dạy</strong>
               {tutor.subjects.map((subject) => (
                 <span key={subject.id}>
-                  {subject.name}: <b>{formatGradeRange(subject.grades)}</b>
+                  {subject.name}: <b>{formatSubjectGrade(subject.grade)}</b>
                 </span>
               ))}
             </div>
@@ -444,10 +438,12 @@ const MonthSimulation = ({
   slots,
   windowStart,
   windowEnd,
+  variant = 'side',
 }: {
   slots: BookingSlot[];
   windowStart: Date;
   windowEnd: Date;
+  variant?: 'side' | 'confirm';
 }) => {
   const countByDate = new Map<string, number>();
   slots.forEach((slot) => countByDate.set(slot.date, (countByDate.get(slot.date) ?? 0) + 1));
@@ -464,7 +460,7 @@ const MonthSimulation = ({
   const inWindow = (date: Date) => date >= windowStart && date <= windowEnd;
 
   return (
-    <aside className={styles.monthSim}>
+    <aside className={`${styles.monthSim} ${variant === 'confirm' ? styles.monthSimConfirm : ''}`}>
       <div className={styles.monthSimHead}>
         <CalendarRange size={15} />
         <span>Lịch học theo tháng</span>
@@ -474,50 +470,46 @@ const MonthSimulation = ({
         <p className={styles.monthSimEmpty}>Chọn khung giờ bên trái — lịch học sẽ tự phân bổ và hiện ở đây.</p>
       ) : (
         <>
-          {months.map(({ year, month }) => {
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const leadingBlanks = (new Date(year, month, 1).getDay() + 6) % 7; // canh Thứ 2 đầu tuần
-            return (
-              <div key={`${year}-${month}`} className={styles.monthSimGrid}>
-                <div className={styles.monthSimTitle}>
-                  Tháng {month + 1}/{year}
+          <div className={styles.monthSimMonths}>
+            {months.map(({ year, month }) => {
+              const daysInMonth = new Date(year, month + 1, 0).getDate();
+              const leadingBlanks = (new Date(year, month, 1).getDay() + 6) % 7; // canh Thứ 2 đầu tuần
+              return (
+                <div key={`${year}-${month}`} className={styles.monthSimGrid}>
+                  <div className={styles.monthSimTitle}>
+                    Tháng {month + 1}/{year}
+                  </div>
+                  <div className={styles.monthSimWeekdays}>
+                    {WEEKDAY_LABELS.map((label) => (
+                      <span key={label}>{label}</span>
+                    ))}
+                  </div>
+                  <div className={styles.monthSimDays}>
+                    {Array.from({ length: leadingBlanks }, (_, index) => (
+                      <span key={`blank-${index}`} className={styles.monthSimBlank} />
+                    ))}
+                    {Array.from({ length: daysInMonth }, (_, index) => {
+                      const day = index + 1;
+                      const date = new Date(year, month, day);
+                      const count = countByDate.get(toDateKey(date)) ?? 0;
+                      const muted = !inWindow(date);
+                      return (
+                        <span
+                          key={day}
+                          className={`${styles.monthSimDay} ${count > 0 ? styles.monthSimDayActive : ''} ${
+                            muted ? styles.monthSimDayMuted : ''
+                          }`}
+                          title={count > 0 ? `${day}/${month + 1}: ${count} buổi` : undefined}
+                        >
+                          {day}
+                          {count > 0 && <i className={styles.monthSimDot} />}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className={styles.monthSimWeekdays}>
-                  {WEEKDAY_LABELS.map((label) => (
-                    <span key={label}>{label}</span>
-                  ))}
-                </div>
-                <div className={styles.monthSimDays}>
-                  {Array.from({ length: leadingBlanks }, (_, index) => (
-                    <span key={`blank-${index}`} className={styles.monthSimBlank} />
-                  ))}
-                  {Array.from({ length: daysInMonth }, (_, index) => {
-                    const day = index + 1;
-                    const date = new Date(year, month, day);
-                    const count = countByDate.get(toDateKey(date)) ?? 0;
-                    const muted = !inWindow(date);
-                    return (
-                      <span
-                        key={day}
-                        className={`${styles.monthSimDay} ${count > 0 ? styles.monthSimDayActive : ''} ${
-                          muted ? styles.monthSimDayMuted : ''
-                        }`}
-                        title={count > 0 ? `${day}/${month + 1}: ${count} buổi` : undefined}
-                      >
-                        {day}
-                        {count > 0 && <i className={styles.monthSimDot} />}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-          <div className={styles.monthSimFooter}>
-            <strong>{slots.length} buổi</strong>
-            <span>
-              {formatShortDate(windowStart)} – {formatShortDate(windowEnd)}
-            </span>
+              );
+            })}
           </div>
         </>
       )}
@@ -526,6 +518,7 @@ const MonthSimulation = ({
 };
 
 const ParentBookingDemo = () => {
+  const location = useLocation();
   const navigate = useNavigate();
   const { tutorId } = useParams<{ tutorId: string }>();
   const selectedTutor = TUTORS.find((tutor) => tutor.id === tutorId);
@@ -553,6 +546,7 @@ const ParentBookingDemo = () => {
   const selectedSubject = selectedTutor?.subjects.find((subject) => subject.id === selectedSubjectId);
   // Số giờ mỗi buổi = theo MÔN đã chọn (gia sư đặt khi setup môn + giá). Mặc định 1.5 nếu chưa chọn.
   const sessionHours = selectedSubject?.hoursPerSession ?? 1.5;
+  const sessionsPerWeek = selectedSubject?.sessionsPerWeek ?? 1;
   const selectedChild = CHILDREN.find((child) => child.id === selectedChildId);
   const selectedCombo = selectedTutor?.combos.find((combo) => combo.id === selectedComboId);
   const isAvailabilityMode = selectedBookingMode === 'availability';
@@ -571,7 +565,7 @@ const ParentBookingDemo = () => {
   const bookingWindowStart = sortedPicks.length ? fromDateKey(sortedPicks[0].date) : null;
   const bookingWindowEnd = bookingWindowStart ? getBookingValidityEnd(bookingWindowStart) : null;
   const gradeMatches = Boolean(
-    selectedSubject && selectedChild && selectedSubject.grades.includes(selectedChild.grade),
+    selectedSubject && selectedChild && selectedSubject.grade === selectedChild.grade,
   );
   const chosenHours = selectedSlots.reduce((sum, slot) => sum + slot.durationHours, 0);
   const subtotal = chosenHours * (selectedSubject?.hourlyRate ?? 0);
@@ -645,9 +639,14 @@ const ParentBookingDemo = () => {
     };
   }, [showBooking]);
 
+  useEffect(() => {
+    if (!tutorId || !location.pathname.startsWith('/demo/parent-booking/tutor/')) return;
+    navigate(`/demo/parent-booking/${tutorId}`, { replace: true });
+  }, [location.pathname, navigate, tutorId]);
+
   const viewTutor = (nextTutorId: string) => {
     resetBooking();
-    navigate(`/demo/parent-booking/tutor/${nextTutorId}`);
+    navigate(`/demo/parent-booking/${nextTutorId}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -716,6 +715,7 @@ const ParentBookingDemo = () => {
     const covering = pickedWeekSlots.find(
       (p) => p.date === dateKey && slotCoversCell(p.startTime, p.durationHours, cellMin),
     );
+    if (!covering && pickedWeekSlots.length >= sessionsPerWeek) return;
     const next = covering
       ? pickedWeekSlots.filter((p) => p !== covering)
       : [...pickedWeekSlots, { dayOfWeek, startTime, durationHours: sessionHours, date: dateKey }];
@@ -750,6 +750,7 @@ const ParentBookingDemo = () => {
     if (step === 1) return Boolean(selectedSubject && selectedChild && gradeMatches);
     if (step === 2) return isAvailabilityMode || isPackageMode; // chỉ cần chọn cách đặt
     if (step === 3) {
+      if (isAvailabilityMode) return pickedWeekSlots.length === sessionsPerWeek && selectedSlots.length > 0;
       // Cần ≥1 buổi đã sinh: lịch rảnh = đã bấm khung giờ; gói cố định = đã chọn gói + tuần bắt đầu.
       return selectedSlots.length > 0;
     }
@@ -872,12 +873,33 @@ const ParentBookingDemo = () => {
                               }`}
                               onClick={() => selectSubject(subject.id)}
                             >
-                              <BookOpen size={18} />
-                              <strong>{subject.name}</strong>
-                              <span>{formatGradeRange(subject.grades)}</span>
-                              <small>
-                                {formatPrice(subject.hourlyRate)} / giờ · {formatDuration(subject.hoursPerSession)}/buổi
-                              </small>
+                              <div className={styles.subjectCardHead}>
+                                <span className={styles.subjectIcon}>
+                                  <BookOpen size={17} />
+                                </span>
+                                <div>
+                                  <strong>{subject.name}</strong>
+                                  <small>{formatSubjectGrade(subject.grade)}</small>
+                                </div>
+                              </div>
+
+                              <div className={styles.subjectPrice}>
+                                <span>Học phí</span>
+                                <strong>{formatPrice(subject.hourlyRate)} / giờ</strong>
+                              </div>
+
+                              <div className={styles.subjectSetupGrid}>
+                                <span>
+                                  <Clock3 size={14} />
+                                  <b>{formatDuration(subject.hoursPerSession)}</b>
+                                  <small>/ buổi</small>
+                                </span>
+                                <span>
+                                  <CalendarDays size={14} />
+                                  <b>{subject.sessionsPerWeek}</b>
+                                  <small>buổi/tuần</small>
+                                </span>
+                              </div>
                             </button>
                           ))}
                         </div>
@@ -914,7 +936,6 @@ const ParentBookingDemo = () => {
                           <AlertTriangle size={19} />
                           <div>
                             <strong>Khối lớp chưa phù hợp</strong>
-                            <p>Hãy đổi học sinh hoặc chọn môn khác để tiếp tục.</p>
                           </div>
                         </div>
                       )}
@@ -944,7 +965,6 @@ const ParentBookingDemo = () => {
                           </span>
                           <span className={styles.comboType}>Theo lịch rảnh</span>
                           <h3>Tự chọn lịch rảnh</h3>
-                          <p>Chọn khung giờ rảnh của gia sư trong một tuần — hệ thống tự lặp lịch đó suốt 1 tháng.</p>
                           <small>{isAvailabilityMode ? 'Đã chọn' : 'Chọn cách này'}</small>
                         </button>
 
@@ -958,7 +978,6 @@ const ParentBookingDemo = () => {
                           </span>
                           <span className={styles.comboType}>Theo gói cố định</span>
                           <h3>Chọn gói cố định</h3>
-                          <p>Chọn gói lịch học cố định gia sư đã tạo sẵn, rồi chọn tuần bắt đầu.</p>
                           <small>{isPackageMode ? 'Đã chọn' : 'Xem các gói'}</small>
                         </button>
                       </div>
@@ -974,17 +993,6 @@ const ParentBookingDemo = () => {
                         <div>
                           <span className={styles.eyebrow}>Bước 03</span>
                           <h2>{isPackageMode && !selectedCombo ? 'Chọn gói cố định' : 'Chọn lịch học'}</h2>
-                          <p>
-                            {isPackageMode && !selectedCombo
-                              ? 'Chọn một gói lịch học cố định gia sư đã tạo sẵn.'
-                              : selectedSlots.length === 0
-                                ? isPackageMode
-                                  ? 'Bấm vào một buổi của gói trong tuần bạn muốn bắt đầu — tuần đó sẽ khóa, lịch tự lặp 1 tháng.'
-                                  : 'Bấm giờ bắt đầu trên lịch — buổi học dài theo môn đã chọn, lịch tự lặp 1 tháng.'
-                                : `Lịch tự lặp đến hết ${
-                                    bookingWindowEnd ? formatShortDate(bookingWindowEnd) : ''
-                                  } — ${selectedSlots.length} buổi.`}
-                          </p>
                         </div>
                       </div>
 
@@ -1011,17 +1019,24 @@ const ParentBookingDemo = () => {
                                     </span>
                                     <span className={styles.comboType}>{formatPackageType(combo.type)}</span>
                                     <h3>{formatPackageName(combo.name)}</h3>
-                                    <p>{combo.description}</p>
                                     <div className={styles.comboMeta}>
                                       <span>
                                         <BookOpen size={14} />
-                                        {combo.sessions.length} buổi / tuần
+                                        {sessionsPerWeek} buổi / tuần
                                       </span>
                                       <span>
                                         <Clock3 size={14} />
-                                        {combo.sessions[0]?.durationHours ?? 0} giờ / buổi
+                                        {formatDuration(sessionHours)} / buổi
                                       </span>
                                     </div>
+                                    <ul className={styles.comboSessionList}>
+                                      {combo.sessions.map((session, i) => (
+                                        <li key={i}>
+                                          <strong>{DAY_NAMES[toDemoWeekday(session.dayOfWeek) - 1]}</strong>
+                                          <span>{formatSessionTime(session)}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
                                     <small>{isSelected ? 'Đã chọn' : 'Chọn gói'}</small>
                                   </button>
                                 );
@@ -1037,37 +1052,33 @@ const ParentBookingDemo = () => {
                             <section className={styles.durationInfo}>
                               <Clock3 size={15} />
                               <span>
-                                Mỗi buổi <strong>{formatDuration(sessionHours)}</strong> — theo môn{' '}
-                                {selectedSubject.name}. Bấm giờ bắt đầu, hệ thống tự bôi đủ thời lượng.
+                                {selectedSubject.name}: <strong>{formatDuration(sessionHours)}/buổi</strong> ·{' '}
+                                <strong>{sessionsPerWeek} buổi/tuần</strong>. Chọn buổi học đầu tiên để bắt đầu hành
+                                trình học cùng gia sư.
                               </span>
                             </section>
                           )}
 
-                          <section className={styles.packageSetup}>
-                            {sortedPicks.length === 0 ? (
-                              <p className={styles.flexHint}>
-                                <MousePointerClick size={14} />
-                                {isPackageMode
-                                  ? 'Bấm vào một buổi của gói trong tuần bạn muốn bắt đầu. Tuần đó sẽ được khóa và lịch tự lặp đến đúng ngày này tháng sau.'
-                                  : 'Bấm giờ bắt đầu trên lịch — buổi học dài đúng số giờ đã chọn ở trên. Tuần đầu tiên bạn bấm sẽ khóa và lịch tự lặp đến đúng ngày này tháng sau.'}
-                              </p>
-                            ) : (
-                              <>
-                                <div className={styles.packageWindowInfo}>
-                                  <CalendarRange size={15} />
-                                  <span>
-                                    Bắt đầu <strong>{bookingWindowStart && formatFullDate(bookingWindowStart)}</strong>{' '}
-                                    → <strong>{bookingWindowEnd && formatFullDate(bookingWindowEnd)}</strong> ·{' '}
+                          {sortedPicks.length > 0 && (
+                            <section className={styles.packageSetup}>
+                              <div className={styles.packageWindowInfo}>
+                                <CalendarRange size={15} />
+                                <span>
+                                  Bắt đầu <strong>{bookingWindowStart && formatFullDate(bookingWindowStart)}</strong> →{' '}
+                                  <strong>{bookingWindowEnd && formatFullDate(bookingWindowEnd)}</strong> ·{' '}
+                                  {isAvailabilityMode ? (
+                                    <>{selectedSlots.length} buổi dự kiến</>
+                                  ) : (
                                     <strong>{selectedSlots.length} buổi</strong>
-                                  </span>
-                                </div>
-                                <button type="button" className={styles.changeWeekBtn} onClick={clearPicks}>
-                                  <RotateCcw size={14} />
-                                  Đổi tuần khác
-                                </button>
-                              </>
-                            )}
-                          </section>
+                                  )}
+                                </span>
+                              </div>
+                              <button type="button" className={styles.changeWeekBtn} onClick={clearPicks}>
+                                <RotateCcw size={14} />
+                                Đổi tuần khác
+                              </button>
+                            </section>
+                          )}
 
                           <div className={styles.scheduleLayout}>
                             <section className={styles.calendarSection}>
@@ -1174,9 +1185,13 @@ const ParentBookingDemo = () => {
                                                   sessionHours,
                                                 ),
                                             );
+                                            const hasRemainingPick = pickedWeekSlots.length < sessionsPerWeek;
                                             clickable =
                                               isSelected ||
-                                              (fits && !overlaps && (navLocked || date <= bookingDeadline));
+                                              (fits &&
+                                                !overlaps &&
+                                                hasRemainingPick &&
+                                                (navLocked || date <= bookingDeadline));
                                             onCellClick = () => toggleAvailabilityPick(dateKey, dayIndex + 1, time);
                                           } else if (isFixedPackage) {
                                             // Gói cố định: chỉ ô thuộc buổi của gói mới bấm; bấm = chọn cả tuần đó làm tuần bắt đầu.
@@ -1248,7 +1263,6 @@ const ParentBookingDemo = () => {
                         <div>
                           <span className={styles.eyebrow}>Bước 04</span>
                           <h2>Xác nhận đặt lịch</h2>
-                          <p>Xem lại lịch học và học phí trước khi gửi yêu cầu.</p>
                         </div>
                       </div>
 
@@ -1256,63 +1270,57 @@ const ParentBookingDemo = () => {
                         <div className={styles.confirmMain}>
                           <section className={styles.reviewHero}>
                             <span className={styles.reviewHeroAvatar}>{selectedTutor.initials}</span>
-                            <div>
-                              <span className={styles.eyebrow}>Sẵn sàng gửi yêu cầu</span>
+                            <div className={styles.reviewHeroContent}>
+                              <span className={styles.eyebrow}>Tóm tắt đặt lịch</span>
                               <h3>
-                                {selectedSubject.name} với {selectedTutor.name}
+                                {selectedSubject.name} · {selectedChild.name}
                               </h3>
                               <p>
-                                {selectedChild.name} · {scheduleChoiceLabel}
+                                {selectedTutor.name} · {scheduleChoiceLabel}
                               </p>
+                            </div>
+                            <div className={styles.confirmQuickFacts}>
+                              <span>
+                                <b>{selectedSlots.length}</b>
+                                <small>buổi</small>
+                              </span>
+                              <span>
+                                <b>{formatDuration(sessionHours)}</b>
+                                <small>/ buổi</small>
+                              </span>
+                              <span>
+                                <b>{chosenHours}</b>
+                                <small>giờ</small>
+                              </span>
                             </div>
                           </section>
 
-                          <section className={styles.scheduleReview}>
-                            <div className={styles.scheduleReviewHead}>
-                              <div>
-                                <span className={styles.eyebrow}>Lịch học đã chọn</span>
-                                <strong>{selectedSlots.length} buổi học</strong>
-                              </div>
-                              <small>{chosenHours} giờ</small>
-                            </div>
-                            <div className={styles.lessonReviewList}>
-                              {sortSlots(selectedSlots).map((slot) => {
-                                const slotDate = fromDateKey(slot.date);
-                                return (
-                                  <div key={getSlotKey(slot)} className={styles.lessonReviewRow}>
-                                    <CalendarDays size={14} />
-                                    <span>
-                                      <strong>
-                                        {formatWeekday(slotDate)}, {formatShortDate(slotDate)}
-                                      </strong>
-                                      <small>{slot.durationHours} giờ</small>
-                                    </span>
-                                    <b>{slot.startTime}</b>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </section>
+                          <MonthSimulation
+                            slots={selectedSlots}
+                            windowStart={bookingWindowStart ?? today}
+                            windowEnd={bookingWindowEnd ?? today}
+                            variant="confirm"
+                          />
                         </div>
 
                         <aside className={styles.priceSummary}>
-                          <span className={styles.eyebrow}>Học phí dự kiến</span>
-                          <div>
+                          <div className={styles.priceSummaryHead}>
+                            <span className={styles.eyebrow}>Học phí dự kiến</span>
+                            <strong>{formatPrice(total)}</strong>
+                            <small>Tổng thanh toán</small>
+                          </div>
+                          <div className={styles.priceLine}>
                             <span>Học phí · {chosenHours} giờ</span>
                             <strong>{formatPrice(subtotal)}</strong>
                           </div>
-                          <div>
+                          <div className={styles.priceLine}>
                             <span>Phí dịch vụ (5%)</span>
                             <strong>{formatPrice(serviceFee)}</strong>
                           </div>
-                          <div>
-                            <span>Dự kiến thanh toán</span>
-                            <strong>{formatPrice(total)}</strong>
-                          </div>
-                          <small className={styles.priceSummaryNote}>
-                            Giá ước tính. Thanh toán được giữ an toàn qua Escrow và chỉ chuyển cho gia sư sau khi buổi
-                            học hoàn tất. Gia sư xác nhận lịch trước khi bạn thanh toán.
-                          </small>
+                          <p className={styles.priceSummaryNote}>
+                            <ShieldCheck size={14} />
+                            Thanh toán sau khi gia sư xác nhận lịch học.
+                          </p>
                         </aside>
                       </div>
                     </>

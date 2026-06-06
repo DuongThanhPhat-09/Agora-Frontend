@@ -9,11 +9,12 @@ export type TutorCombo = Combo;
 export interface TutorSubject {
   id: string;
   name: string;
-  grades: number[];
+  grade: number;
   hourlyRate: number;
   // Số giờ mỗi buổi của môn (gia sư đặt khi setup môn + giá). Buổi học trong "tự chọn lịch rảnh"
   // tự bôi đúng độ dài này; phụ huynh KHÔNG tự chọn giờ/buổi nữa.
   hoursPerSession: number;
+  sessionsPerWeek: number;
 }
 
 // Lịch rảnh hàng tuần của gia sư (KHÁC combo) — giữ startTime dạng "HH:mm" cho lưới calendar.
@@ -73,8 +74,8 @@ export const TUTORS: Tutor[] = [
     studentCount: 124,
     trialLessonPrice: 50000,
     subjects: [
-      { id: 'math', name: 'Toán', grades: [6, 7, 8, 9], hourlyRate: 220000, hoursPerSession: 1.5 },
-      { id: 'physics', name: 'Vật lý', grades: [8, 9, 10], hourlyRate: 240000, hoursPerSession: 2 },
+      { id: 'math', name: 'Toán', grade: 7, hourlyRate: 220000, hoursPerSession: 1.5, sessionsPerWeek: 2 },
+      { id: 'physics', name: 'Vật lý', grade: 8, hourlyRate: 240000, hoursPerSession: 2, sessionsPerWeek: 2 },
     ],
     availability: [
       { dayOfWeek: 1, startTime: '18:00', durationHours: 1.5 },
@@ -124,8 +125,8 @@ export const TUTORS: Tutor[] = [
     studentCount: 91,
     trialLessonPrice: 40000,
     subjects: [
-      { id: 'english', name: 'Tiếng Anh', grades: [3, 4, 5, 6, 7], hourlyRate: 200000, hoursPerSession: 1.5 },
-      { id: 'vietnamese', name: 'Tiếng Việt', grades: [3, 4, 5], hourlyRate: 180000, hoursPerSession: 1 },
+      { id: 'english', name: 'Tiếng Anh', grade: 7, hourlyRate: 200000, hoursPerSession: 1.5, sessionsPerWeek: 2 },
+      { id: 'vietnamese', name: 'Tiếng Việt', grade: 4, hourlyRate: 180000, hoursPerSession: 1, sessionsPerWeek: 2 },
     ],
     availability: [
       { dayOfWeek: 2, startTime: '18:00', durationHours: 1.5 },
@@ -173,8 +174,8 @@ export const TUTORS: Tutor[] = [
     studentCount: 78,
     trialLessonPrice: 60000,
     subjects: [
-      { id: 'math', name: 'Toán', grades: [10, 11, 12], hourlyRate: 280000, hoursPerSession: 1.5 },
-      { id: 'physics', name: 'Vật lý', grades: [10, 11, 12], hourlyRate: 300000, hoursPerSession: 1.5 },
+      { id: 'math', name: 'Toán', grade: 12, hourlyRate: 280000, hoursPerSession: 1.5, sessionsPerWeek: 2 },
+      { id: 'physics', name: 'Vật lý', grade: 12, hourlyRate: 300000, hoursPerSession: 1.5, sessionsPerWeek: 2 },
     ],
     availability: [
       { dayOfWeek: 1, startTime: '19:30', durationHours: 1.5 },
