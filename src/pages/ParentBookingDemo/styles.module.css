@@ -773,6 +773,7 @@
 }
 
 .bookingModal {
+  position: relative;
   display: flex;
   width: min(1120px, 100%);
   max-height: min(870px, calc(100vh - 52px));
@@ -782,6 +783,49 @@
   border-radius: 18px;
   background: var(--color-white);
   box-shadow: 0 30px 80px -24px rgba(0, 0, 0, 0.48);
+}
+
+/* Overlay xác nhận khi đóng modal lúc đang đặt dở (chống mất lựa chọn do lỡ tay). */
+.closeConfirm {
+  position: absolute;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  padding: 26px;
+  place-items: center;
+  background: rgba(15, 20, 31, 0.5);
+  backdrop-filter: blur(3px);
+}
+
+.closeConfirmCard {
+  width: min(390px, 100%);
+  padding: 26px 24px;
+  border-radius: 16px;
+  background: var(--color-white);
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.45);
+  text-align: center;
+}
+
+.closeConfirmCard h3 {
+  margin: 0 0 8px;
+  color: var(--color-navy);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+}
+
+.closeConfirmCard p {
+  margin: 0 0 22px;
+  color: var(--color-navy-60);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.closeConfirmActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
 }
 
 .modalHeader {
@@ -1005,35 +1049,125 @@
   box-shadow: 0 0 0 3px rgba(212, 180, 131, 0.14);
 }
 
-.subjectCard {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 6px 9px;
-  padding: 12px;
-  border-radius: 11px;
+.subjectCard.selectedCard,
+.childCard.selectedCard,
+.bookingModeCard.selectedCard,
+.comboCard.selectedCard {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px rgba(212, 180, 131, 0.2);
 }
 
-.subjectCard svg {
-  grid-row: span 2;
+.subjectCard {
+  display: flex;
+  min-height: 134px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 13px;
+}
+
+.subjectCardHead {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.subjectIcon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(154, 106, 37, 0.1);
   color: #9a6a25;
 }
 
-.subjectCard strong {
-  font-size: 13px;
+.subjectCardHead div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
 }
 
-.subjectCard span {
-  justify-self: end;
+.subjectCardHead strong {
+  overflow: hidden;
+  color: var(--color-navy);
+  font-size: 15px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subjectCardHead small {
   color: var(--color-navy-60);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.subjectPrice {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.subjectPrice span {
+  color: var(--color-navy-40);
   font-size: 10px;
   font-weight: 700;
 }
 
-.subjectCard small {
+.subjectPrice strong {
   color: #9a6a25;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
+  white-space: nowrap;
+}
+
+.subjectSetupGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: auto;
+}
+
+.subjectSetupGrid > span {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  min-width: 0;
+  align-items: center;
+  gap: 5px;
+  padding: 8px;
+  border-radius: 9px;
+  background: rgba(242, 240, 228, 0.58);
+}
+
+.subjectSetupGrid svg {
+  flex-shrink: 0;
+  color: var(--color-green);
+}
+
+.subjectSetupGrid b {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-navy);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.subjectSetupGrid small {
+  overflow: hidden;
+  color: var(--color-navy-50);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .childGrid {
@@ -1167,23 +1301,35 @@
 }
 
 .warningBox {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin-top: 10px;
-  padding: 11px;
-  border: 1px solid rgba(99, 27, 27, 0.15);
-  border-radius: 10px;
-  background: rgba(99, 27, 27, 0.055);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  margin-top: 12px;
+  padding: 10px 13px;
+  border: 1px solid rgba(99, 27, 27, 0.18);
+  border-radius: 11px;
+  background: rgba(99, 27, 27, 0.045);
   color: var(--color-burgundy);
 }
 
 .warningBox svg {
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
 }
 
+.warningBox div {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+}
+
 .warningBox strong {
+  display: block;
   font-size: 12px;
+  line-height: 1.25;
 }
 
 .warningBox p {
@@ -1200,8 +1346,9 @@
 
 .bookingModeCard {
   display: flex;
-  min-height: 178px;
+  min-height: 132px;
   flex-direction: column;
+  gap: 10px;
   padding: 17px;
   border-radius: 14px;
 }
@@ -1210,7 +1357,7 @@
   display: grid;
   width: 40px;
   height: 40px;
-  margin-bottom: 11px;
+  margin-bottom: 0;
   place-items: center;
   border-radius: 10px;
   background: var(--color-navy);
@@ -1228,20 +1375,13 @@
 }
 
 .bookingModeCard h3 {
-  margin: 6px 0 0;
+  margin: 0;
   color: var(--color-navy);
   font-size: 16px;
 }
 
-.bookingModeCard p {
-  flex: 1;
-  margin: 6px 0 14px;
-  color: var(--color-navy-60);
-  font-size: 11px;
-  line-height: 1.55;
-}
-
 .bookingModeCard small {
+  margin-top: auto;
   align-self: flex-end;
   color: #9a6a25;
   font-size: 9px;
@@ -1270,14 +1410,16 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 15px;
+  gap: 10px;
+  min-height: 200px;
+  padding: 16px 18px;
   border-radius: 14px;
 }
 
 .comboIcon {
-  width: 34px;
-  height: 34px;
-  margin-bottom: 10px;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 0;
 }
 
 .fixedPackageIcon {
@@ -1298,22 +1440,26 @@
   text-transform: uppercase;
 }
 
-.comboCard h3 {
-  margin: 5px 0 0;
-  font-size: 15px;
+.comboCard .comboType {
+  margin-top: 2px;
 }
 
-.comboCard p {
-  min-height: 35px;
-  margin: 5px 0 12px;
-  color: var(--color-navy-60);
-  font-size: 11px;
-  line-height: 1.55;
+.comboCard h3 {
+  margin: 0;
+  color: var(--color-navy);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  line-height: 1.3;
 }
 
 .comboMeta {
   flex-wrap: wrap;
-  gap: 8px 14px;
+  gap: 6px 14px;
+  margin: 2px 0 0;
+  padding: 8px 0;
+  border-top: 1px dashed rgba(26, 34, 56, 0.1);
+  border-bottom: 1px dashed rgba(26, 34, 56, 0.1);
 }
 
 .comboMeta span {
@@ -1325,14 +1471,325 @@
   font-weight: 700;
 }
 
+/* Danh sách buổi trong tuần của gói cố định — hiển thị thứ + giờ bắt đầu. */
+.comboSessionList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.comboSessionList li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: rgba(26, 34, 56, 0.05);
+  color: var(--color-navy);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.comboSessionList li svg {
+  display: none;
+}
+
+.comboSessionList li strong {
+  color: var(--color-navy);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.comboSessionList li span {
+  color: var(--color-navy-60);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+}
+
 .comboCard > small {
+  margin-top: auto;
   align-self: flex-end;
-  margin-top: 13px;
   color: #9a6a25;
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 1px;
   text-transform: uppercase;
+}
+
+/* Danh sách gói cố định ở bước 3 (chọn gói trước khi chọn tuần bắt đầu). */
+.comboPickSection {
+  margin-bottom: 18px;
+}
+
+/* Thông tin số giờ/buổi (theo môn) — chế độ Tự chọn lịch rảnh. */
+.durationInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 11px 16px;
+  border: 1px solid rgba(26, 34, 56, 0.1);
+  border-radius: 12px;
+  background: rgba(242, 240, 228, 0.4);
+  color: var(--color-navy);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.durationInfo svg {
+  flex-shrink: 0;
+  color: var(--color-burgundy);
+}
+
+.durationInfo strong {
+  color: var(--color-burgundy);
+}
+
+/* Thiết lập gói (bước 3): trạng thái chọn tuần bắt đầu + cửa sổ booking. */
+.packageSetup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 18px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid rgba(26, 34, 56, 0.1);
+  border-radius: 12px;
+  background: rgba(242, 240, 228, 0.4);
+}
+
+.startDateField {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.startDateField span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--color-navy-60);
+}
+
+.startDateField input {
+  padding: 9px 12px;
+  border: 1px solid rgba(26, 34, 56, 0.18);
+  border-radius: 9px;
+  background: var(--color-white);
+  color: var(--color-navy);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.packageWindowInfo {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-navy);
+  font-size: 12.5px;
+}
+
+.packageWindowInfo strong {
+  color: var(--color-burgundy);
+  font-weight: 700;
+}
+
+.changeWeekBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid rgba(26, 34, 56, 0.18);
+  border-radius: 999px;
+  background: var(--color-white);
+  color: var(--color-navy);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.changeWeekBtn:hover {
+  border-color: var(--color-burgundy);
+  color: var(--color-burgundy);
+}
+
+.noFitNotice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(99, 27, 27, 0.25);
+  border-radius: 10px;
+  background: rgba(99, 27, 27, 0.06);
+  color: #631b1b;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.noFitNotice svg {
+  flex-shrink: 0;
+}
+
+.flexHint {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(26, 34, 56, 0.12);
+  color: var(--color-navy-60);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.flexHint svg {
+  flex-shrink: 0;
+  color: var(--color-burgundy);
+}
+
+/* Layout 2 cột bước 3 (gói): lưới chọn theo tuần | lịch tháng mô phỏng. */
+.scheduleLayout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.scheduleLayout > .calendarSection {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.monthSim {
+  display: flex;
+  width: 290px;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 14px;
+  padding: 15px;
+  border: 1px solid rgba(62, 47, 40, 0.1);
+  border-radius: 14px;
+  background: rgba(250, 249, 246, 0.72);
+}
+
+.monthSimConfirm {
+  width: 100%;
+  flex-shrink: 1;
+  background: var(--color-white);
+}
+
+.monthSimHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-navy);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.monthSimHead svg {
+  color: var(--color-burgundy);
+}
+
+.monthSimEmpty {
+  margin: 0;
+  color: var(--color-navy-60);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.monthSimMonths {
+  display: grid;
+  gap: 14px;
+}
+
+.monthSimConfirm .monthSimMonths {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.monthSimGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.monthSimTitle {
+  color: var(--color-navy);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.monthSimWeekdays,
+.monthSimDays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.monthSimWeekdays span {
+  text-align: center;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--color-navy-60);
+}
+
+.monthSimBlank {
+  aspect-ratio: 1;
+}
+
+.monthSimDay {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border-radius: 7px;
+  background: rgba(26, 34, 56, 0.04);
+  color: var(--color-navy);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.monthSimDayMuted {
+  background: transparent;
+  color: rgba(26, 34, 56, 0.28);
+}
+
+.monthSimDayActive {
+  background: var(--color-burgundy);
+  color: var(--color-white);
+  font-weight: 800;
+}
+
+.monthSimDot {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--color-white);
+}
+
+@media (max-width: 900px) {
+  .scheduleLayout {
+    flex-direction: column;
+  }
+
+  .monthSim {
+    width: 100%;
+  }
 }
 
 .calendarSection {
@@ -1420,7 +1877,7 @@
 }
 
 .calendarScroller {
-  overflow-x: auto;
+  overflow-x: hidden;
   border: 1px solid rgba(62, 47, 40, 0.08);
   border-radius: 9px;
   background: var(--color-white);
@@ -1428,8 +1885,9 @@
 
 .calendarGrid {
   display: grid;
-  min-width: 720px;
-  grid-template-columns: 62px repeat(7, minmax(82px, 1fr));
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: 62px repeat(7, minmax(0, 1fr));
 }
 
 .calendarRow {
@@ -1535,9 +1993,9 @@
 
 .confirmLayout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
+  grid-template-columns: minmax(0, 1fr) 300px;
   align-items: start;
-  gap: 14px;
+  gap: 12px;
 }
 
 .confirmMain {
@@ -1548,10 +2006,11 @@
 }
 
 .reviewHero {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
-  padding: 14px;
+  padding: 13px;
   border: 1px solid rgba(62, 47, 40, 0.1);
   border-radius: 12px;
   background: var(--color-white);
@@ -1570,6 +2029,10 @@
   font-weight: 800;
 }
 
+.reviewHeroContent {
+  min-width: 0;
+}
+
 .reviewHero h3 {
   margin: 3px 0 2px;
   color: var(--color-navy);
@@ -1582,6 +2045,39 @@
   color: var(--color-navy-60);
   font-size: 11px;
   line-height: 1.45;
+}
+
+.confirmQuickFacts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(58px, 1fr));
+  gap: 6px;
+}
+
+.confirmQuickFacts span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 7px;
+  border-radius: 9px;
+  background: rgba(242, 240, 228, 0.62);
+}
+
+.confirmQuickFacts b {
+  color: var(--color-navy);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.confirmQuickFacts small {
+  color: var(--color-navy-50);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .reviewGrid {
@@ -1618,7 +2114,7 @@
 
 .scheduleReviewHead {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   padding-bottom: 9px;
@@ -1633,7 +2129,7 @@
 
 .scheduleReviewHead strong {
   color: var(--color-navy);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .scheduleReviewHead > small {
@@ -1648,22 +2144,34 @@
 
 .lessonReviewList {
   display: grid;
+  max-height: 310px;
+  overflow-y: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
   margin-top: 10px;
+  padding-right: 2px;
 }
 
 .lessonReviewRow {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 8px;
-  padding: 9px 10px;
+  gap: 7px;
+  padding: 8px 9px;
   border-radius: 9px;
   background: rgba(242, 240, 228, 0.52);
 }
 
-.lessonReviewRow svg {
+.lessonReviewIndex {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--color-white);
   color: var(--color-green);
+  font-size: 9px;
+  font-weight: 800;
 }
 
 .lessonReviewRow span {
@@ -1830,54 +2338,74 @@
 }
 
 .priceSummary {
-  padding: 14px;
+  padding: 13px;
   border: 1px solid rgba(62, 47, 40, 0.1);
   border-radius: 12px;
   background: var(--color-white);
 }
 
-.priceSummary div {
+.priceSummaryHead {
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(62, 47, 40, 0.08);
+}
+
+.priceSummaryHead > strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--color-burgundy);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.7px;
+}
+
+.priceSummaryHead > small {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-navy-50);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.priceLine {
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(62, 47, 40, 0.07);
+  padding: 10px 0 0;
 }
 
-.priceSummary div:last-child {
-  align-items: baseline;
-  border-bottom: 0;
+.priceLine + .priceLine {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(62, 47, 40, 0.07);
 }
 
-.priceSummary span {
+.priceLine span {
   color: var(--color-navy-60);
   font-size: 10px;
 }
 
-.priceSummary strong {
+.priceLine strong {
   color: var(--color-navy);
   font-size: 11px;
   text-align: right;
 }
 
-.priceSummary div:last-child span {
-  color: var(--color-navy);
-  font-weight: 800;
-  letter-spacing: 0.9px;
-  text-transform: uppercase;
-}
-
-.priceSummary div:last-child strong {
-  font-size: 20px;
-  letter-spacing: -0.7px;
-}
-
 .priceSummaryNote {
-  display: block;
-  margin-top: 6px;
-  color: var(--color-navy-40);
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 9px;
+  border-radius: 9px;
+  background: rgba(61, 74, 62, 0.07);
+  color: var(--color-green);
   font-size: 10px;
+  font-weight: 700;
   line-height: 1.45;
+}
+
+.priceSummaryNote svg {
+  flex-shrink: 0;
 }
 
 .noticeBox {
@@ -2082,6 +2610,24 @@
   }
 
   .confirmLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .reviewHero {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .confirmQuickFacts {
+    grid-column: 1 / -1;
+  }
+
+  .lessonReviewList {
+    max-height: none;
+    grid-template-columns: 1fr;
+    padding-right: 0;
+  }
+
+  .monthSimConfirm .monthSimMonths {
     grid-template-columns: 1fr;
   }
 

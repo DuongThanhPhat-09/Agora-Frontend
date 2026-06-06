@@ -1,42 +1,35 @@
 import React, { useState } from 'react';
 import { Popconfirm } from 'antd';
-import {
-  CalendarOutlined,
-  ClockCircleOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  PlusOutlined,
-} from '@ant-design/icons';
+import { CalendarOutlined, ClockCircleOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import styles from '../styles.module.css';
 import ComboFormModal from './ComboFormModal';
 import { DAY_COLUMNS, formatHour } from './constants';
-import type { Combo, TutorAvailabilitySlot } from './types';
+import type { FixedCombo, TutorAvailabilitySlot } from './types';
 
 interface ComboManagerProps {
-  combos: Combo[];
+  combos: FixedCombo[];
   availability: TutorAvailabilitySlot[];
-  onAdd: (combo: Combo) => void;
-  onUpdate: (id: string, combo: Combo) => void;
+  onAdd: (combo: FixedCombo) => void;
+  onUpdate: (id: string, combo: FixedCombo) => void;
   onRemove: (id: string) => void;
 }
 
 const dayLabel = (dow: number) => DAY_COLUMNS.find((c) => c.dayOfWeek === dow)?.full ?? `Ngày ${dow}`;
-const getFixedTotalHours = (combo: Extract<Combo, { type: 'fixed' }>) =>
-  combo.sessions.reduce((sum, session) => sum + session.durationHours, 0);
+const getTotalHours = (combo: FixedCombo) => combo.sessions.reduce((sum, session) => sum + session.durationHours, 0);
 
 const ComboManager: React.FC<ComboManagerProps> = ({ combos, availability, onAdd, onUpdate, onRemove }) => {
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<Combo | null>(null);
+  const [editing, setEditing] = useState<FixedCombo | null>(null);
 
   const openCreate = () => {
     setEditing(null);
     setModalOpen(true);
   };
-  const openEdit = (combo: Combo) => {
+  const openEdit = (combo: FixedCombo) => {
     setEditing(combo);
     setModalOpen(true);
   };
-  const handleSave = (combo: Combo) => {
+  const handleSave = (combo: FixedCombo) => {
     if (editing) onUpdate(editing.id, combo);
     else onAdd(combo);
     setModalOpen(false);
@@ -68,87 +61,67 @@ const ComboManager: React.FC<ComboManagerProps> = ({ combos, availability, onAdd
           </div>
         ) : (
           <div className={styles.comboList}>
-            {combos.map((combo) => {
-              const totalHours =
-                combo.type === 'fixed' ? getFixedTotalHours(combo) : combo.sessionsPerWeek * combo.hoursPerSession;
-
-              return (
-                <div key={combo.id} className={styles.comboCard}>
-                  <div className={styles.comboCardHead}>
-                    <span
-                      className={`${styles.comboTypeBadge} ${
-                        combo.type === 'fixed' ? styles.comboFixed : styles.comboFlex
-                      }`}
+            {combos.map((combo) => (
+              <div key={combo.id} className={styles.comboCard}>
+                <div className={styles.comboCardHead}>
+                  <span className={`${styles.comboTypeBadge} ${styles.comboFixed}`}>Lịch cố định</span>
+                  <div className={styles.comboCardActions}>
+                    <button
+                      type="button"
+                      className={styles.iconBtn}
+                      onClick={() => openEdit(combo)}
+                      aria-label={`Sửa ${combo.name}`}
+                      title="Sửa gói lịch học"
                     >
-                      {combo.type === 'fixed' ? 'Lịch cố định' : 'Lịch linh hoạt'}
-                    </span>
-                    <div className={styles.comboCardActions}>
+                      <EditOutlined />
+                    </button>
+                    <Popconfirm
+                      title="Xóa gói lịch học này?"
+                      onConfirm={() => onRemove(combo.id)}
+                      okText="Xóa"
+                      cancelText="Hủy"
+                      okButtonProps={{ danger: true }}
+                    >
                       <button
                         type="button"
-                        className={styles.iconBtn}
-                        onClick={() => openEdit(combo)}
-                        aria-label={`Sửa ${combo.name}`}
-                        title="Sửa gói lịch học"
+                        className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
+                        aria-label={`Xóa ${combo.name}`}
+                        title="Xóa gói lịch học"
                       >
-                        <EditOutlined />
+                        <DeleteOutlined />
                       </button>
-                      <Popconfirm
-                        title="Xóa gói lịch học này?"
-                        onConfirm={() => onRemove(combo.id)}
-                        okText="Xóa"
-                        cancelText="Hủy"
-                        okButtonProps={{ danger: true }}
-                      >
-                        <button
-                          type="button"
-                          className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
-                          aria-label={`Xóa ${combo.name}`}
-                          title="Xóa gói lịch học"
-                        >
-                          <DeleteOutlined />
-                        </button>
-                      </Popconfirm>
-                    </div>
+                    </Popconfirm>
                   </div>
-
-                  <h4 className={styles.comboName}>{combo.name}</h4>
-
-                  <div className={styles.comboMetaRow}>
-                    <span>
-                      <CalendarOutlined />
-                      <strong>{combo.type === 'fixed' ? combo.sessions.length : combo.sessionsPerWeek}</strong>{' '}
-                      buổi/tuần
-                    </span>
-                    <span>
-                      <ClockCircleOutlined />
-                      <strong>{totalHours}</strong> giờ/tuần
-                    </span>
-                  </div>
-
-                  {combo.type === 'fixed' ? (
-                    <div className={styles.comboScheduleList}>
-                      {combo.sessions.map((session, index) => (
-                        <div key={index} className={styles.comboScheduleItem}>
-                          <span className={styles.comboScheduleIndex}>{index + 1}</span>
-                          <div>
-                            <strong>{dayLabel(session.dayOfWeek)}</strong>
-                            <span>
-                              {formatHour(session.startHour)} - {formatHour(session.startHour + session.durationHours)}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className={styles.comboFlexInfo}>
-                      <strong>{combo.sessionsPerMonth} buổi/tháng</strong>
-                      <span> · {combo.hoursPerSession} giờ/buổi</span>
-                      <p className={styles.comboDescription}>{combo.description}</p>
-                    </div>
-                  )}
                 </div>
-              );
-            })}
+
+                <h4 className={styles.comboName}>{combo.name}</h4>
+
+                <div className={styles.comboMetaRow}>
+                  <span>
+                    <CalendarOutlined />
+                    <strong>{combo.sessions.length}</strong> buổi/tuần
+                  </span>
+                  <span>
+                    <ClockCircleOutlined />
+                    <strong>{getTotalHours(combo)}</strong> giờ/tuần
+                  </span>
+                </div>
+
+                <div className={styles.comboScheduleList}>
+                  {combo.sessions.map((session, index) => (
+                    <div key={index} className={styles.comboScheduleItem}>
+                      <span className={styles.comboScheduleIndex}>{index + 1}</span>
+                      <div>
+                        <strong>{dayLabel(session.dayOfWeek)}</strong>
+                        <span>
+                          {formatHour(session.startHour)} - {formatHour(session.startHour + session.durationHours)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
 
             <button type="button" className={styles.comboAddBtn} onClick={openCreate}>
               <span className={styles.comboAddIcon}>

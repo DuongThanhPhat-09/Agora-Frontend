@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
-import { hasAvailabilityForDuration, isSessionWithinAvailability } from '../availability-utils';
+import { isSessionWithinAvailability } from '../availability-utils';
 import { HALF_HOUR_STEPS, formatHourMinute, minutesOf } from '../constants';
-import type { OnboardingState, OnboardingStep, SubjectRecord, Combo } from '../types';
+import type { OnboardingState, OnboardingStep, SubjectRecord, FixedCombo } from '../types';
 
 const clampStep = (n: number): OnboardingStep => Math.min(3, Math.max(1, n)) as OnboardingStep;
 
@@ -35,7 +35,14 @@ export function useOnboardingState() {
   // ── B1: subject records ──
   // Thêm 1 record (môn, khối, giá). Trả false nếu đã tồn tại (môn, khối).
   const addSubjectRecord = useCallback(
-    (input: { subjectId: number; subjectName: string; gradeLevel: string; hourlyRate: number }): boolean => {
+    (input: {
+      subjectId: number;
+      subjectName: string;
+      gradeLevel: string;
+      hourlyRate: number;
+      hoursPerSession: number;
+      sessionsPerWeek: number;
+    }): boolean => {
       let added = false;
       setState((prev) => {
         const dup = prev.subjectRecords.some(
@@ -138,10 +145,10 @@ export function useOnboardingState() {
   }, []);
 
   // ── B3: combos (state-only — không call API) ──
-  const addCombo = useCallback((combo: Combo) => {
+  const addCombo = useCallback((combo: FixedCombo) => {
     setState((prev) => ({ ...prev, combos: [...prev.combos, combo] }));
   }, []);
-  const updateCombo = useCallback((id: string, next: Combo) => {
+  const updateCombo = useCallback((id: string, next: FixedCombo) => {
     setState((prev) => ({
       ...prev,
       combos: prev.combos.map((c) => (c.id === id ? next : c)),
@@ -154,11 +161,8 @@ export function useOnboardingState() {
   // ── Derived ──
   const canProceedStep1 = state.subjectRecords.length > 0;
   const canProceedStep2 = state.availability.length > 0;
-  const combosMatchAvailability = state.combos.every(
-    (combo) =>
-      (combo.type === 'flex' && hasAvailabilityForDuration(combo.hoursPerSession, state.availability)) ||
-      (combo.type === 'fixed' &&
-        combo.sessions.every((session) => isSessionWithinAvailability(session, state.availability))),
+  const combosMatchAvailability = state.combos.every((combo) =>
+    combo.sessions.every((session) => isSessionWithinAvailability(session, state.availability)),
   );
   const canFinish = canProceedStep1 && canProceedStep2 && combosMatchAvailability; // B3 combo optional
 

@@ -4,53 +4,20 @@ import styles from '../styles.module.css';
 import HourSlotGrid from './HourSlotGrid';
 import { isHalfHourAvailable } from './availability-utils';
 import { minutesOf } from './constants';
-import type { Combo, TutorAvailabilitySlot } from './types';
+import type { FixedCombo, TutorAvailabilitySlot } from './types';
 
 export interface ExternalBusyInfo {
   comboName: string;
 }
 
 interface ComboPreviewProps {
-  combo: Combo;
+  combo: FixedCombo;
   availability: TutorAvailabilitySlot[];
   // (dayOfWeek-hour-minute) → gói khác đang chiếm khung giờ. Map rỗng khi tạo gói đầu tiên.
   externalBusyCells?: Map<string, ExternalBusyInfo>;
 }
 
 const ComboPreview: React.FC<ComboPreviewProps> = ({ combo, availability, externalBusyCells }) => {
-  if (combo.type === 'flex') {
-    return (
-      <div className={styles.comboPreview}>
-        <div className={styles.comboPreviewHead}>
-          <span className={styles.comboPreviewIcon}>
-            <CalendarOutlined />
-          </span>
-          <div>
-            <h4 className={styles.comboPreviewTitle}>Tóm tắt gói</h4>
-            <p className={styles.comboPreviewSubtitle}>Lịch linh hoạt theo nhu cầu phụ huynh</p>
-          </div>
-        </div>
-        <div className={styles.comboPreviewStats}>
-          <div>
-            <strong>{combo.sessionsPerWeek}</strong>
-            <span>buổi / tuần</span>
-          </div>
-          <div>
-            <strong>{combo.sessionsPerMonth}</strong>
-            <span>buổi / tháng</span>
-          </div>
-          <div>
-            <strong>{combo.hoursPerSession}h</strong>
-            <span>mỗi buổi</span>
-          </div>
-        </div>
-        <p className={styles.comboPreviewNote}>
-          Phụ huynh sẽ chủ động chọn trong {availability.length} ô 30 phút rảnh bạn đã thiết lập.
-        </p>
-      </div>
-    );
-  }
-
   // Map "day-hour-minute" → { sessionIdx, isStart } cho lưới preview.
   const comboCells = new Map<string, { sessionIdx: number; isStart: boolean }>();
   combo.sessions.forEach((session, index) => {
