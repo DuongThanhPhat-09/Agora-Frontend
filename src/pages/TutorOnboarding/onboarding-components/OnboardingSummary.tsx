@@ -1,8 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import styles from '../styles.module.css';
-import { DAY_COLUMNS, GRADE_LEVELS, formatHourMinute, formatPrice, minutesOf, parseTime } from './constants';
+import {
+  DAY_COLUMNS,
+  GRADE_LEVELS,
+  formatHourMinute,
+  formatPrice,
+  formatDuration,
+  minutesOf,
+  parseTime,
+} from './constants';
 import HourSlotGrid from './HourSlotGrid';
-import type { Combo, FixedCombo, FlexCombo, SubjectRecord, TutorAvailabilitySlot } from './types';
+import type { FixedCombo, SubjectRecord, TutorAvailabilitySlot } from './types';
 
 // Convert (giờ thập phân, vd 1.5) → "Hh Mm" cho hiển thị end-time.
 const formatEndTime = (startHour: number, startMinute: number, durationHours: number) => {
@@ -15,7 +23,7 @@ const formatEndTime = (startHour: number, startMinute: number, durationHours: nu
 interface OnboardingSummaryProps {
   subjectRecords: SubjectRecord[];
   availability: TutorAvailabilitySlot[];
-  combos: Combo[];
+  combos: FixedCombo[];
   onBack: () => void;
   onFinish: () => void;
 }
@@ -50,32 +58,20 @@ const CheckIcon = () => (
   </svg>
 );
 
-const ComboReadOnlyCard: React.FC<{ combo: Combo }> = ({ combo }) => (
+const ComboReadOnlyCard: React.FC<{ combo: FixedCombo }> = ({ combo }) => (
   <div className={styles.comboCard}>
     <div className={styles.comboCardHead}>
-      <span className={`${styles.comboTypeBadge} ${combo.type === 'fixed' ? styles.comboFixed : styles.comboFlex}`}>
-        {combo.type === 'fixed' ? 'Cố định' : 'Linh hoạt'}
-      </span>
+      <span className={`${styles.comboTypeBadge} ${styles.comboFixed}`}>Cố định</span>
     </div>
     <h4 className={styles.comboName}>{combo.name}</h4>
-    {combo.type === 'fixed' ? (
-      <ul className={styles.comboSessionList}>
-        {combo.sessions.map((s, i) => (
-          <li key={i}>
-            {dayLabel(s.dayOfWeek)} · {formatHourMinute(s.startHour, s.startMinute)}–
-            {formatEndTime(s.startHour, s.startMinute, s.durationHours)} ({s.durationHours} giờ)
-          </li>
-        ))}
-      </ul>
-    ) : (
-      <div className={styles.comboFlexInfo}>
-        <div>
-          <strong>{combo.sessionsPerWeek}</strong> buổi/tuần · <strong>{combo.sessionsPerMonth}</strong> buổi/tháng ·{' '}
-          <strong>{combo.hoursPerSession}</strong> giờ/buổi
-        </div>
-        <p className={styles.comboDescription}>{combo.description}</p>
-      </div>
-    )}
+    <ul className={styles.comboSessionList}>
+      {combo.sessions.map((s, i) => (
+        <li key={i}>
+          {dayLabel(s.dayOfWeek)} · {formatHourMinute(s.startHour, s.startMinute)}–
+          {formatEndTime(s.startHour, s.startMinute, s.durationHours)} ({s.durationHours} giờ)
+        </li>
+      ))}
+    </ul>
   </div>
 );
 
@@ -109,9 +105,8 @@ const OnboardingSummary: React.FC<OnboardingSummaryProps> = ({
     };
   }, [availability]);
 
-  // ── Gói lịch học phân loại ──
-  const fixedCombos = useMemo(() => combos.filter((c): c is FixedCombo => c.type === 'fixed'), [combos]);
-  const flexCombos = useMemo(() => combos.filter((c): c is FlexCombo => c.type === 'flex'), [combos]);
+  // ── Gói lịch học (chỉ còn loại cố định) ──
+  const fixedCombos = combos;
 
   // ── Set ô 30 phút có lịch rảnh — dùng để render nền xanh cho ô rảnh chưa có gói. ──
   const availableHourSet = useMemo(() => {
@@ -315,24 +310,6 @@ const OnboardingSummary: React.FC<OnboardingSummaryProps> = ({
           <div className={styles.summaryTabContent}>
             {view === 'schedule' ? (
               <>
-                {/* Gói linh hoạt — hiển thị nổi bật ở đầu tab vì không có chỗ trên lưới (không cố định giờ). */}
-                {flexCombos.length > 0 && (
-                  <div className={styles.flexCombosStrip}>
-                    <span className={styles.flexCombosStripLabel}>Gói linh hoạt</span>
-                    <div className={styles.flexCombosList}>
-                      {flexCombos.map((c) => (
-                        <div key={c.id} className={styles.flexComboChip}>
-                          <strong>{c.name}</strong>
-                          <span>
-                            {c.sessionsPerWeek} buổi/tuần · {c.hoursPerSession}h/buổi ·{' '}
-                            {c.sessionsPerMonth} buổi/tháng
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 <h3 className={styles.recapTitle}>Lịch tuần</h3>
                 {/* Legend: lịch rảnh + từng gói cố định */}
                 <div
@@ -437,6 +414,8 @@ const OnboardingSummary: React.FC<OnboardingSummaryProps> = ({
                     <div className={`${styles.recordsRow} ${styles.recordsHead}`}>
                       <span>Môn</span>
                       <span>Khối lớp</span>
+                      <span>Giờ / buổi</span>
+                      <span>Buổi / tuần</span>
                       <span>Giá / giờ</span>
                       <span />
                     </div>
@@ -444,6 +423,8 @@ const OnboardingSummary: React.FC<OnboardingSummaryProps> = ({
                       <div key={r.id} className={styles.recordsRow}>
                         <span className={styles.recordSubject}>{r.subjectName}</span>
                         <span>{gradeLabel(r.gradeLevel)}</span>
+                        <span>{formatDuration(r.hoursPerSession)}</span>
+                        <span>{r.sessionsPerWeek} buổi</span>
                         <span className={styles.recordRate}>{formatPrice(r.hourlyRate)}đ</span>
                         <span />
                       </div>
@@ -457,25 +438,19 @@ const OnboardingSummary: React.FC<OnboardingSummaryProps> = ({
                 <strong>Gói lịch học chưa được tạo</strong>
                 <p>
                   Gói lịch học chỉ là lựa chọn giúp phụ huynh đặt nhanh hơn. Bạn có thể bổ sung sau nếu muốn đề xuất các
-                  nhịp học cố định hoặc linh hoạt.
+                  nhịp học cố định.
                 </p>
               </div>
             ) : (
               <>
                 <div className={styles.statRow}>
                   <div className={styles.statCard}>
-                    <span className={styles.statLabel}>Gói cố định</span>
-                    <span className={styles.statValue}>{fixedCombos.length}</span>
-                    <span className={styles.statSub}>{fixedSessionsCount} buổi đã đặt</span>
-                  </div>
-                  <div className={styles.statCard}>
-                    <span className={styles.statLabel}>Gói linh hoạt</span>
-                    <span className={styles.statValue}>{flexCombos.length}</span>
-                    <span className={styles.statSub}>phụ huynh tự đặt giờ</span>
-                  </div>
-                  <div className={styles.statCard}>
-                    <span className={styles.statLabel}>Tổng gói</span>
+                    <span className={styles.statLabel}>Số gói cố định</span>
                     <span className={styles.statValue}>{combos.length}</span>
+                  </div>
+                  <div className={styles.statCard}>
+                    <span className={styles.statLabel}>Tổng buổi / tuần</span>
+                    <span className={styles.statValue}>{fixedSessionsCount}</span>
                   </div>
                 </div>
 

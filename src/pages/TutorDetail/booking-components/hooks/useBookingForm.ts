@@ -155,11 +155,22 @@ export function useBookingForm({ isOpen, tutorId, onClose, tutorTeachingMode }: 
         setSubmitting(true);
         setSubmitError(null);
         try {
+            // TODO(BE blocker — plan Part E): booking model mới yêu cầu
+            // tutorSubjectGradePriceId + packageId (lấy từ endpoint public của gia sư:
+            // giá theo môn/lớp + gói). full-profile hiện CHƯA trả các field này, nên
+            // gate bước gửi cho tới khi BE bổ sung. Khi sẵn sàng, set 2 field này từ UI
+            // và payload bên dưới sẽ chạy như thường.
+            if (!formData.tutorSubjectGradePriceId || !formData.packageId) {
+                setSubmitError('Tính năng đặt lịch đang được cập nhật theo hệ thống mới. Vui lòng quay lại sau.');
+                return;
+            }
+
             const payload: CreateBookingPayload = {
-                studentId: formData.studentId,
+                studentId: formData.studentId || undefined,
                 tutorId: tutorId,
-                subjectId: formData.subjectId,
-                teachingMode: formData.teachingMode,
+                subjectId: formData.subjectId || undefined,
+                tutorSubjectGradePriceId: formData.tutorSubjectGradePriceId,
+                packageId: formData.packageId,
                 startDate: formData.startDate,
                 schedule: formData.schedule.map((s) => ({
                     dayOfWeek: s.dayOfWeek,

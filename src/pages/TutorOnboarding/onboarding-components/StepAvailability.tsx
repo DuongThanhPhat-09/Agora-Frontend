@@ -7,29 +7,66 @@ import {
   InfoCircleOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
+import { toast } from 'react-toastify';
 import styles from '../styles.module.css';
 import { DAY_COLUMNS, formatHourMinute } from './constants';
 import HourSlotGrid from './HourSlotGrid';
 import BulkAvailabilityModal, { type BulkSlot } from './BulkAvailabilityModal';
 import type { UseOnboardingState } from './hooks/useOnboardingState';
+import type { TutorAvailabilitySlot } from './types';
 
 interface StepAvailabilityProps {
   onboarding: UseOnboardingState;
+  onSaveAvailability?: (availability: TutorAvailabilitySlot[]) => Promise<boolean>;
+  saving?: boolean;
 }
 
 type PaintMode = 'add' | 'remove';
 
 const slotKey = (dayOfWeek: number, hour: number, minute: number) => `${dayOfWeek}-${hour}-${minute}`;
+const addHalfHour = (hour: number, minute: 0 | 30) => {
+  const total = hour * 60 + minute + 30;
+  return formatHourMinute(Math.floor(total / 60), (total % 60) as 0 | 30);
+};
 
-const StepAvailability: React.FC<StepAvailabilityProps> = ({ onboarding }) => {
+const StepAvailability: React.FC<StepAvailabilityProps> = ({ onboarding, onSaveAvailability, saving = false }) => {
   const { state, setAvailable, toggleAvailabilityDay, clearAvailability } = onboarding;
   const paintModeRef = useRef<PaintMode | null>(null);
   const paintedKeysRef = useRef(new Set<string>());
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
 
-  const handleBulkApply = (slots: BulkSlot[]) => {
+  const handleBulkApply = async (slots: BulkSlot[]) => {
     // Cộng dồn: mỗi slot được set true (nếu đã rảnh sẵn thì setAvailable no-op).
-    slots.forEach(({ dayOfWeek, hour, minute }) => setAvailable(dayOfWeek, hour, minute, true));
+    const existingKeys = new Set(
+      state.availability.map((slot) => {
+        const [hour, minute] = slot.startTime.split(':').map(Number);
+        return slotKey(slot.dayOfWeek, hour, minute || 0);
+      }),
+    );
+    const additions = slots
+      .filter(({ dayOfWeek, hour, minute }) => !existingKeys.has(slotKey(dayOfWeek, hour, minute)))
+      .map<TutorAvailabilitySlot>(({ dayOfWeek, hour, minute }) => ({
+        id: slotKey(dayOfWeek, hour, minute),
+        dayOfWeek,
+        startTime: formatHourMinute(hour, minute),
+        endTime: addHalfHour(hour, minute),
+      }));
+
+    if (additions.length === 0) {
+      toast.info('Các khung giờ này đã có trong lịch rảnh.');
+      return true;
+    }
+
+    const nextAvailability = [...state.availability, ...additions];
+    const saved = onSaveAvailability ? await onSaveAvailability(nextAvailability) : true;
+    if (!saved) return false;
+
+    additions.forEach(({ dayOfWeek, startTime }) => {
+      const [hour, minute] = startTime.split(':').map(Number);
+      setAvailable(dayOfWeek, hour, (minute || 0) as 0 | 30, true);
+    });
+    toast.success('Đã lưu lịch rảnh');
+    return true;
   };
 
   // Set chứa key "day-hour-minute" cho ô đã rảnh.
@@ -204,6 +241,7 @@ const StepAvailability: React.FC<StepAvailabilityProps> = ({ onboarding }) => {
         open={bulkModalOpen}
         onClose={() => setBulkModalOpen(false)}
         onApply={handleBulkApply}
+        saving={saving}
       />
     </div>
   );

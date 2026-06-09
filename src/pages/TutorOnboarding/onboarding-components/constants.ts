@@ -76,3 +76,11 @@ export const parseTime = (time: string): { hour: number; minute: number } => {
 };
 
 export const formatPrice = (value: number) => new Intl.NumberFormat('vi-VN').format(value);
+
+// Số giờ/buổi → chuỗi hiển thị. Vd 1 → "1 giờ", 1.5 → "1h30", 0.5 → "30 phút".
+export const formatDuration = (hours: number) => {
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  if (h === 0) return `${m} phút`;
+  return m === 0 ? `${h} giờ` : `${h}h${m}`;
+};

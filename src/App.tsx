@@ -183,6 +183,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/tutor-search" element={<TutorSearchPage />} />
           <Route path="/demo/parent-booking" element={<ParentBookingDemo />} />
+          <Route path="/demo/parent-booking/:tutorId" element={<ParentBookingDemo />} />
           <Route path="/demo/parent-booking/tutor/:tutorId" element={<ParentBookingDemo />} />
           <Route path="/tutor-detail" element={<Navigate to="/" replace />} />
           <Route path="/tutor-detail/:id" element={<FallbackRedirect />} />

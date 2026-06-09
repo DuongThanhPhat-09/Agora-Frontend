@@ -3,8 +3,8 @@ import styles from '../styles.module.css';
 import type { OnboardingStep } from './types';
 
 const STEPS: { step: OnboardingStep; label: string }[] = [
-  { step: 1, label: 'Môn & giá' },
-  { step: 2, label: 'Lịch rảnh' },
+  { step: 1, label: 'Lịch rảnh' },
+  { step: 2, label: 'Môn & giá' },
   { step: 3, label: 'Gói lịch học' },
 ];
 

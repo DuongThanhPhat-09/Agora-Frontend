@@ -13,7 +13,8 @@ export interface BulkSlot {
 interface Props {
   open: boolean;
   onClose: () => void;
-  onApply: (slots: BulkSlot[]) => void;
+  onApply: (slots: BulkSlot[]) => boolean | Promise<boolean>;
+  saving?: boolean;
 }
 
 // Tất cả mốc 30 phút từ 06:00 → 22:00 (33 mốc, bao gồm 22:00 cho end time).
@@ -28,18 +29,21 @@ const ALL_HALF_HOUR_TIMES: Array<{ hour: number; minute: 0 | 30 }> = (() => {
 
 const timeKey = (hour: number, minute: 0 | 30) => `${hour}:${minute}`;
 
-const BulkAvailabilityModal: React.FC<Props> = ({ open, onClose, onApply }) => {
+const BulkAvailabilityModal: React.FC<Props> = ({ open, onClose, onApply, saving = false }) => {
   // Khởi tạo không chọn ngày nào — user tự pick mỗi lần mở.
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
-  const [startKey, setStartKey] = useState<string>('8:0');
-  const [endKey, setEndKey] = useState<string>('10:0');
+  const [startKey, setStartKey] = useState<string | null>(null);
+  const [endKey, setEndKey] = useState<string | null>(null);
+  const [applying, setApplying] = useState(false);
+  const isBusy = saving || applying;
 
   // Khi mở lại modal → reset hoàn toàn để tránh state cũ gây bối rối.
   useEffect(() => {
     if (open) {
       setSelectedDays([]);
-      setStartKey('8:0');
-      setEndKey('10:0');
+      setStartKey(null);
+      setEndKey(null);
+      setApplying(false);
     }
   }, [open]);
 
@@ -52,55 +56,68 @@ const BulkAvailabilityModal: React.FC<Props> = ({ open, onClose, onApply }) => {
     [],
   );
 
-  const [startH, startM] = startKey.split(':').map(Number);
-  const startTotal = minutesOf(startH, startM);
+  const startTotal = useMemo(() => {
+    if (!startKey) return null;
+    const [startH, startM] = startKey.split(':').map(Number);
+    return minutesOf(startH, startM);
+  }, [startKey]);
 
   const endOptions = useMemo(
     () =>
-      ALL_HALF_HOUR_TIMES.filter((t) => minutesOf(t.hour, t.minute) > startTotal).map((t) => ({
-        value: timeKey(t.hour, t.minute),
-        label: formatHourMinute(t.hour, t.minute),
-      })),
+      startTotal == null
+        ? []
+        : ALL_HALF_HOUR_TIMES.filter((t) => minutesOf(t.hour, t.minute) > startTotal).map((t) => ({
+            value: timeKey(t.hour, t.minute),
+            label: formatHourMinute(t.hour, t.minute),
+          })),
     [startTotal],
   );
 
-  const [endH, endM] = endKey.split(':').map(Number);
-  const endTotal = minutesOf(endH, endM);
+  const endTotal = useMemo(() => {
+    if (!endKey) return null;
+    const [endH, endM] = endKey.split(':').map(Number);
+    return minutesOf(endH, endM);
+  }, [endKey]);
 
-  // Nếu end ≤ start (vd user vừa đổi start sau end) → snap lên start+30 phút.
+  // Nếu end ≤ start (vd user vừa đổi start sau end) → bỏ chọn end để user tự chọn lại.
   useEffect(() => {
-    if (endTotal <= startTotal) {
-      const next = ALL_HALF_HOUR_TIMES.find((t) => minutesOf(t.hour, t.minute) > startTotal);
-      if (next) setEndKey(timeKey(next.hour, next.minute));
+    if (startTotal != null && endTotal != null && endTotal <= startTotal) {
+      setEndKey(null);
     }
   }, [startTotal, endTotal]);
 
-  const slotsPerDay = Math.max(0, Math.floor((endTotal - startTotal) / 30));
-  const canApply = selectedDays.length > 0 && slotsPerDay > 0;
+  const slotsPerDay =
+    startTotal == null || endTotal == null ? 0 : Math.max(0, Math.floor((endTotal - startTotal) / 30));
+  const canApply = selectedDays.length > 0 && startTotal != null && endTotal != null && slotsPerDay > 0;
 
   const toggleDay = (day: number) => {
     setSelectedDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
   };
 
-  const handleApply = () => {
+  const handleApply = async () => {
     if (!canApply) return;
     const slots: BulkSlot[] = [];
     selectedDays.forEach((day) => {
-      for (let cur = startTotal; cur < endTotal; cur += 30) {
+      for (let cur = startTotal as number; cur < (endTotal as number); cur += 30) {
         const h = Math.floor(cur / 60);
         const m = (cur % 60) as 0 | 30;
         slots.push({ dayOfWeek: day, hour: h, minute: m });
       }
     });
-    onApply(slots);
-    onClose();
+    setApplying(true);
+    try {
+      const shouldClose = await onApply(slots);
+      if (shouldClose) onClose();
+    } finally {
+      setApplying(false);
+    }
   };
 
   return (
     <Modal
       className={styles.bulkAvailModal}
       open={open}
-      onCancel={onClose}
+      onCancel={isBusy ? undefined : onClose}
       title={
         <div className={styles.bulkAvailTitle}>
           <CalendarOutlined />
@@ -108,10 +125,10 @@ const BulkAvailabilityModal: React.FC<Props> = ({ open, onClose, onApply }) => {
         </div>
       }
       footer={[
-        <Button key="cancel" onClick={onClose}>
+        <Button key="cancel" onClick={onClose} disabled={isBusy}>
           Hủy
         </Button>,
-        <Button key="apply" type="primary" onClick={handleApply} disabled={!canApply}>
+        <Button key="apply" type="primary" onClick={handleApply} disabled={!canApply || isBusy} loading={isBusy}>
           Thêm vào lịch
         </Button>,
       ]}
@@ -124,10 +141,10 @@ const BulkAvailabilityModal: React.FC<Props> = ({ open, onClose, onApply }) => {
           <div className={styles.bulkAvailFieldHead}>
             <span className={styles.bulkAvailFieldLabel}>Áp dụng cho ngày</span>
             <div className={styles.bulkAvailQuick}>
-              <button type="button" onClick={() => setSelectedDays(DAY_COLUMNS.map((c) => c.dayOfWeek))}>
+              <button type="button" onClick={() => setSelectedDays(DAY_COLUMNS.map((c) => c.dayOfWeek))} disabled={isBusy}>
                 Cả tuần
               </button>
-              <button type="button" onClick={() => setSelectedDays([])}>
+              <button type="button" onClick={() => setSelectedDays([])} disabled={isBusy}>
                 Bỏ chọn
               </button>
             </div>
@@ -141,6 +158,7 @@ const BulkAvailabilityModal: React.FC<Props> = ({ open, onClose, onApply }) => {
                   type="button"
                   className={`${styles.bulkAvailDay} ${isSelected ? styles.bulkAvailDaySelected : ''}`}
                   onClick={() => toggleDay(col.dayOfWeek)}
+                  disabled={isBusy}
                   aria-pressed={isSelected}
                 >
                   {col.label}
@@ -156,16 +174,32 @@ const BulkAvailabilityModal: React.FC<Props> = ({ open, onClose, onApply }) => {
           <div className={styles.bulkAvailTimeRow}>
             <label className={styles.bulkAvailTimeField}>
               <span>Từ</span>
-              <Select value={startKey} onChange={setStartKey} options={startOptions} style={{ width: '100%' }} />
+              <Select
+                value={startKey ?? undefined}
+                onChange={(value) => {
+                  setStartKey(value);
+                  setEndKey(null);
+                }}
+                options={startOptions}
+                placeholder="Chọn giờ bắt đầu"
+                disabled={isBusy}
+                style={{ width: '100%' }}
+              />
             </label>
             <span className={styles.bulkAvailTimeArrow}>→</span>
             <label className={styles.bulkAvailTimeField}>
               <span>Đến</span>
-              <Select value={endKey} onChange={setEndKey} options={endOptions} style={{ width: '100%' }} />
+              <Select
+                value={endKey ?? undefined}
+                onChange={setEndKey}
+                options={endOptions}
+                placeholder="Chọn giờ kết thúc"
+                disabled={!startKey || isBusy}
+                style={{ width: '100%' }}
+              />
             </label>
           </div>
         </div>
-
       </div>
     </Modal>
   );
