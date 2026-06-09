@@ -21,6 +21,16 @@ export function useOnboardingState() {
     combos: [],
     currentStep: 1,
   });
+  // Nạp dữ liệu đã load từ API (upsert): thay 3 mảng, giữ nguyên currentStep.
+  const hydrate = useCallback((data: Partial<Pick<OnboardingState, 'subjectRecords' | 'availability' | 'combos'>>) => {
+    setState((prev) => ({
+      ...prev,
+      subjectRecords: data.subjectRecords ?? prev.subjectRecords,
+      availability: data.availability ?? prev.availability,
+      combos: data.combos ?? prev.combos,
+    }));
+  }, []);
+
   // ── Step navigation ──
   const goToStep = useCallback((step: OnboardingStep) => {
     setState((p) => ({ ...p, currentStep: step }));
@@ -36,6 +46,7 @@ export function useOnboardingState() {
   // Thêm 1 record (môn, khối, giá). Trả false nếu đã tồn tại (môn, khối).
   const addSubjectRecord = useCallback(
     (input: {
+      id?: string;
       subjectId: number;
       subjectName: string;
       gradeLevel: string;
@@ -52,7 +63,7 @@ export function useOnboardingState() {
         added = true;
         return {
           ...prev,
-          subjectRecords: [...prev.subjectRecords, { id: newId(), ...input }],
+          subjectRecords: [...prev.subjectRecords, { ...input, id: input.id ?? newId() }],
         };
       });
       return added;
@@ -75,36 +86,33 @@ export function useOnboardingState() {
   }, []);
 
   // ── B2: lịch rảnh demo theo ô 30 phút ──
-  const setAvailable = useCallback(
-    (dayOfWeek: number, hour: number, minute: 0 | 30, isAvailable: boolean) => {
-      setState((prev) => {
-        const id = availabilityId(dayOfWeek, hour, minute);
-        const exists = prev.availability.some((slot) => slot.id === id);
-        if (isAvailable && !exists) {
-          return {
-            ...prev,
-            availability: [
-              ...prev.availability,
-              {
-                id,
-                dayOfWeek,
-                startTime: formatHourMinute(hour, minute),
-                endTime: addHalfHour(hour, minute),
-              },
-            ],
-          };
-        }
-        if (!isAvailable && exists) {
-          return {
-            ...prev,
-            availability: prev.availability.filter((slot) => slot.id !== id),
-          };
-        }
-        return prev;
-      });
-    },
-    [],
-  );
+  const setAvailable = useCallback((dayOfWeek: number, hour: number, minute: 0 | 30, isAvailable: boolean) => {
+    setState((prev) => {
+      const id = availabilityId(dayOfWeek, hour, minute);
+      const exists = prev.availability.some((slot) => slot.id === id);
+      if (isAvailable && !exists) {
+        return {
+          ...prev,
+          availability: [
+            ...prev.availability,
+            {
+              id,
+              dayOfWeek,
+              startTime: formatHourMinute(hour, minute),
+              endTime: addHalfHour(hour, minute),
+            },
+          ],
+        };
+      }
+      if (!isAvailable && exists) {
+        return {
+          ...prev,
+          availability: prev.availability.filter((slot) => slot.id !== id),
+        };
+      }
+      return prev;
+    });
+  }, []);
 
   const toggleAvailabilityDay = useCallback((dayOfWeek: number) => {
     setState((prev) => {
@@ -125,14 +133,14 @@ export function useOnboardingState() {
         };
       }
 
-      const additions = HALF_HOUR_STEPS.filter(
-        ({ hour, minute }) => !selectedKeys.has(`${hour}-${minute}`),
-      ).map(({ hour, minute }) => ({
-        id: availabilityId(dayOfWeek, hour, minute),
-        dayOfWeek,
-        startTime: formatHourMinute(hour, minute),
-        endTime: addHalfHour(hour, minute),
-      }));
+      const additions = HALF_HOUR_STEPS.filter(({ hour, minute }) => !selectedKeys.has(`${hour}-${minute}`)).map(
+        ({ hour, minute }) => ({
+          id: availabilityId(dayOfWeek, hour, minute),
+          dayOfWeek,
+          startTime: formatHourMinute(hour, minute),
+          endTime: addHalfHour(hour, minute),
+        }),
+      );
       return {
         ...prev,
         availability: [...prev.availability, ...additions],
@@ -159,19 +167,29 @@ export function useOnboardingState() {
   }, []);
 
   // ── Derived ──
-  const canProceedStep1 = state.subjectRecords.length > 0;
-  const canProceedStep2 = state.availability.length > 0;
+  const canProceedStep1 = state.availability.length > 0;
+  const canProceedStep2 = state.subjectRecords.length > 0;
+  const requiredDurationHours = Math.max(1, ...state.subjectRecords.map((record) => record.hoursPerSession || 0));
+  const requiredSessionsPerWeek = Math.max(1, ...state.subjectRecords.map((record) => record.sessionsPerWeek || 0));
   const combosMatchAvailability = state.combos.every((combo) =>
     combo.sessions.every((session) => isSessionWithinAvailability(session, state.availability)),
   );
-  const canFinish = canProceedStep1 && canProceedStep2 && combosMatchAvailability; // B3 combo optional
+  const combosMatchSubjectRules = state.combos.every(
+    (combo) =>
+      combo.sessions.length > 0 &&
+      combo.sessions.length <= requiredSessionsPerWeek &&
+      combo.sessions.every((session) => session.durationHours > 0 && session.durationHours <= requiredDurationHours),
+  );
+  const canFinish = canProceedStep1 && canProceedStep2 && combosMatchAvailability && combosMatchSubjectRules; // B3 combo optional
 
   return {
     state,
     canProceedStep1,
     canProceedStep2,
     combosMatchAvailability,
+    combosMatchSubjectRules,
     canFinish,
+    hydrate,
     goToStep,
     goNext,
     goBack,

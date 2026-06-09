@@ -31,6 +31,10 @@ export interface BookingFormData {
     locationWard: string;
     locationDetail: string;
     promotionCode: string;
+    // BE blocker (xem plan Part E): booking model mới yêu cầu 2 field này, lấy từ
+    // endpoint public của gia sư (giá theo môn/lớp + gói). full-profile hiện chưa trả.
+    tutorSubjectGradePriceId?: number;
+    packageId?: number;
 }
 
 export type TutorTeachingModeKey = "online" | "offline" | "hybrid" | "both";

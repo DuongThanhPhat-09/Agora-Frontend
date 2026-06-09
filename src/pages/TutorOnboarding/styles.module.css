@@ -595,6 +595,7 @@
 .footer {
   position: sticky;
   bottom: 0;
+  z-index: 30;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1064,7 +1065,7 @@
 .subjectRecordsStep {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .subjectRecordsIntro {
@@ -1120,11 +1121,11 @@
 }
 
 .recordForm {
-  padding: 20px;
+  padding: 22px;
   background: #fff;
   border: 1px solid rgba(26, 34, 56, 0.08);
-  border-radius: 14px;
-  box-shadow: 0 10px 28px rgba(26, 34, 56, 0.05);
+  border-radius: 16px;
+  box-shadow: 0 16px 34px rgba(26, 34, 56, 0.06);
 }
 
 .recordFormHead,
@@ -1167,11 +1168,20 @@
   font-weight: 700;
 }
 
+.recordFormStepActive {
+  background: rgba(217, 164, 65, 0.16);
+  color: #92580f;
+}
+
 .recordSelectGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
-  margin-top: 20px;
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid rgba(26, 34, 56, 0.06);
+  border-radius: 14px;
+  background: rgba(242, 240, 228, 0.26);
 }
 
 .recordField {
@@ -1186,20 +1196,73 @@
   font-weight: 700;
 }
 
-.recordPricingSection {
+.recordSetupGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
   margin-top: 16px;
+}
+
+.recordSetupCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
   padding: 16px;
   border: 1px solid rgba(26, 34, 56, 0.08);
-  border-radius: 12px;
-  background: rgba(242, 240, 228, 0.36);
+  border-radius: 14px;
+  background: rgba(242, 240, 228, 0.32);
+}
+
+.recordSetupCardWide {
+  grid-column: 1 / -1;
+}
+
+.recordSetupHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.recordValueBadge {
+  flex-shrink: 0;
+  max-width: 46%;
+  overflow: hidden;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #fff;
+  color: #1a2238;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recordManualInput {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(26, 34, 56, 0.07);
+}
+
+.recordManualInput > span {
+  color: rgba(62, 47, 40, 0.58);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .recordPricingHead {
   align-items: flex-start;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .recordFormActions {
+  align-items: stretch;
+  justify-content: flex-end;
   margin-top: 18px;
   padding-top: 16px;
   border-top: 1px solid rgba(26, 34, 56, 0.08);
@@ -1220,10 +1283,34 @@
   font-weight: 600;
 }
 
+.recordDraftCard {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  padding: 11px 12px;
+  border: 1px solid rgba(61, 74, 62, 0.14);
+  border-radius: 12px;
+  background: rgba(61, 74, 62, 0.06);
+}
+
+.recordDraftCard strong {
+  color: #1a2238;
+  font-size: 13.5px;
+}
+
+.recordDraftCard small {
+  color: rgba(62, 47, 40, 0.64);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .recordAddBtn {
+  align-self: stretch;
   flex-shrink: 0;
-  min-height: 40px;
-  padding: 0 18px;
+  min-height: 50px;
+  padding: 0 20px;
   border-color: #1a2238 !important;
   background: #1a2238 !important;
   font-weight: 700;
@@ -1232,6 +1319,14 @@
 .recordAddBtn:disabled {
   border-color: rgba(26, 34, 56, 0.12) !important;
   background: rgba(26, 34, 56, 0.12) !important;
+}
+
+.recordCancelBtn {
+  min-height: 50px;
+  padding: 0 18px;
+  border-color: rgba(26, 34, 56, 0.14) !important;
+  color: #1a2238 !important;
+  font-weight: 700;
 }
 
 .recordsSection {
@@ -2150,16 +2245,6 @@
   line-height: 1.45;
 }
 
-.comboSessionCount {
-  flex-shrink: 0;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: rgba(61, 74, 62, 0.1);
-  color: #3d4a3e;
-  font-size: 11px;
-  font-weight: 700;
-}
-
 .sessionList {
   display: flex;
   flex-direction: column;
@@ -2196,7 +2281,7 @@
 
 .sessionControlGrid {
   display: grid;
-  grid-template-columns: 1.15fr 0.8fr 0.85fr;
+  grid-template-columns: 1.1fr 0.9fr;
   gap: 7px;
 }
 
@@ -2610,6 +2695,10 @@
     grid-template-columns: 1fr;
   }
 
+  .recordSetupGrid {
+    grid-template-columns: 1fr;
+  }
+
   .recordFormHead,
   .recordPricingHead,
   .recordFormActions,
@@ -2619,7 +2708,8 @@
     gap: 10px;
   }
 
-  .recordAddBtn {
+  .recordAddBtn,
+  .recordCancelBtn {
     width: 100%;
   }
 
@@ -2688,7 +2778,7 @@
 .recordsLayout {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 .recordsMain {
@@ -2698,11 +2788,12 @@
 .recordsAside {
   background: #fff;
   border: 1px solid rgba(26, 34, 56, 0.08);
-  border-radius: 14px;
-  padding: 14px;
+  border-radius: 16px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
+  box-shadow: 0 14px 30px rgba(26, 34, 56, 0.055);
 }
 
 .recordsAsideHead {
@@ -2727,44 +2818,60 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 10px;
   max-height: 460px;
   overflow-y: auto;
 }
 
 .recordsAsideItem {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 10px;
-  border-radius: 8px;
-  background: rgba(242, 240, 228, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(26, 34, 56, 0.08);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(242, 240, 228, 0.54));
   font-size: 12.5px;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.recordsAsideItemActive {
+  border-color: rgba(217, 164, 65, 0.85);
+  background: linear-gradient(180deg, rgba(255, 249, 235, 0.96), rgba(255, 255, 255, 0.9));
+  box-shadow: 0 0 0 3px rgba(217, 164, 65, 0.12);
 }
 
 .recordsAsideItemActions {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
 }
 
-/* Khi sửa giá inline — ô nhập + nút lưu/huỷ chiếm chỗ cột giá và cột nút. */
-.recordsAsideEdit {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  grid-column: 2 / 4;
+.recordsAsideItemActions :global(.ant-btn) {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
 }
 
 .recordsAsideItem:hover {
-  background: rgba(26, 34, 56, 0.05);
+  border-color: rgba(217, 164, 65, 0.42);
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.recordsAsideCardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .recordsAsideItemMain {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 7px;
   min-width: 0;
 }
 
@@ -2779,11 +2886,68 @@
   font-size: 11.5px;
 }
 
+.recordsAsideTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.recordsAsideTitleRow strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recordsAsideTitleRow span {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(26, 34, 56, 0.06);
+  color: rgba(62, 47, 40, 0.62);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.recordsAsideMetaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.recordsAsideMetaGrid span {
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: rgba(26, 34, 56, 0.045);
+  color: rgba(62, 47, 40, 0.68);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
 .recordsAsideItemPrice {
   font-family: 'Bricolage Grotesque', sans-serif;
   font-weight: 700;
   color: #3d4a3e;
-  font-size: 13px;
+  font-size: 15px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.recordsAsideFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(26, 34, 56, 0.06);
+}
+
+.recordsAsideStatus {
+  margin-right: auto;
+  color: rgba(62, 47, 40, 0.52);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .recordPriceWarn {
@@ -2813,7 +2977,7 @@
     flex: 1;
   }
   .recordsAside {
-    width: 300px;
+    width: 360px;
     flex-shrink: 0;
     position: sticky;
     top: 12px;
@@ -3005,7 +3169,9 @@
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.15s ease;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
 }
 
 .availabilityAddBulkBtn:hover {

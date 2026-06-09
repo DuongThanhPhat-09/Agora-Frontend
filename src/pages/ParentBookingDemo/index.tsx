@@ -37,6 +37,8 @@ import {
   type TutorCombo,
   type WeeklySlot,
 } from './data';
+// Contract booking thật (đối chiếu mapping). Demo CHƯA gửi thật — chờ BE (xem plan Part E).
+import type { CreateBookingPayload } from '../../services/booking.service';
 import styles from './styles.module.css';
 
 type BookingStep = 1 | 2 | 3 | 4;
@@ -769,6 +771,37 @@ const ParentBookingDemo = () => {
 
   const createBooking = () => {
     if (!canContinue()) return;
+
+    // TODO(BE blocker — plan Part E): demo chưa lấy được tutorSubjectGradePriceId &
+    // packageId THẬT (cần endpoint public của gia sư: giá theo môn/lớp + danh sách gói;
+    // full-profile hiện chưa trả). Khi BE sẵn sàng: thay 0 bằng id thật, dùng tutorId/
+    // studentId là GUID thật, rồi gọi createBooking(payload) từ booking.service.
+    // Hiện chỉ build + log payload để kiểm tra mapping và mô phỏng thành công.
+    const dateKeyOf = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const toIsoSlot = (dateKey: string, startTime: string, durationHours: number) => {
+      const [h, m] = startTime.split(':').map(Number);
+      const endMin = h * 60 + m + Math.round(durationHours * 60);
+      const end = `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`;
+      return { scheduledStart: `${dateKey}T${startTime}:00`, scheduledEnd: `${dateKey}T${end}:00` };
+    };
+
+    const payload: CreateBookingPayload = {
+      studentId: selectedChild?.id,
+      tutorId: selectedTutor?.id ?? '',
+      // subjectId mock là chuỗi ('math'); BE dùng số → bỏ qua ở demo.
+      tutorSubjectGradePriceId: 0, // TODO(BE): id giá theo môn/lớp
+      packageId: 0, // TODO(BE): id gói (fixed/flexible)
+      totalSessions: selectedSlots.length,
+      startDate: bookingWindowStart ? `${dateKeyOf(bookingWindowStart)}T00:00:00` : new Date().toISOString(),
+      // availability mode → flexible slots; package mode → BE tự sinh từ fixedSlots.
+      flexibleSlots: isAvailabilityMode
+        ? selectedSlots.map((s) => toIsoSlot(s.date, s.startTime, s.durationHours))
+        : undefined,
+    };
+    // eslint-disable-next-line no-console
+    console.log('[ParentBookingDemo] Booking payload (chờ BE để gửi thật):', payload);
+
     setCreatedBookingId(`DEMO-${String(Date.now()).slice(-6)}`);
   };
 

@@ -52,10 +52,7 @@ export const isHourFullyAvailable = (dayOfWeek: number, hour: number, availabili
 // Trả về các thời điểm bắt đầu (hour, minute) khả dụng cho 1 buổi tối thiểu 30 phút.
 export const getAvailableStartTimes = (dayOfWeek: number, availability: TutorAvailabilitySlot[]): HalfHourStep[] =>
   HALF_HOUR_STEPS.filter(({ hour, minute }) =>
-    isSessionWithinAvailability(
-      { dayOfWeek, startHour: hour, startMinute: minute, durationHours: 0.5 },
-      availability,
-    ),
+    isSessionWithinAvailability({ dayOfWeek, startHour: hour, startMinute: minute, durationHours: 0.5 }, availability),
   );
 
 // Trả về các duration (giờ, bội của 0.5) hợp lệ cho start time đã chọn.
@@ -69,10 +66,7 @@ export const getAvailableDurations = (
   DURATION_CANDIDATES.filter((durationHours) => {
     const endTotalMinutes = minutesOf(startHour, startMinute) + durationHours * 60;
     if (endTotalMinutes > END_HOUR * 60) return false;
-    return isSessionWithinAvailability(
-      { dayOfWeek, startHour, startMinute, durationHours },
-      availability,
-    );
+    return isSessionWithinAvailability({ dayOfWeek, startHour, startMinute, durationHours }, availability);
   });
 
 export const hasAvailabilityForDuration = (durationHours: number, availability: TutorAvailabilitySlot[]) => {
@@ -97,19 +91,19 @@ const sessionsOverlap = (left: ComboSessionSlot, right: ComboSessionSlot) => {
 export const findFirstAvailableSession = (
   availability: TutorAvailabilitySlot[],
   selectedSessions: ComboSessionSlot[] = [],
+  durationHours = 1,
 ): ComboSessionSlot | null => {
   for (const day of DAY_COLUMNS) {
     for (const { hour, minute } of getAvailableStartTimes(day.dayOfWeek, availability)) {
-      const durations = getAvailableDurations(day.dayOfWeek, hour, minute, availability);
-      if (durations.length === 0) continue;
-      // Ưu tiên duration 1h nếu có, nếu không lấy max khả dụng (vẫn ≥ 0.5h).
-      const durationHours = durations.includes(1) ? 1 : durations[0];
       const candidate: ComboSessionSlot = {
         dayOfWeek: day.dayOfWeek,
         startHour: hour,
         startMinute: minute,
         durationHours,
       };
+      const endTotalMinutes = minutesOf(hour, minute) + durationHours * 60;
+      if (endTotalMinutes > END_HOUR * 60) continue;
+      if (!isSessionWithinAvailability(candidate, availability)) continue;
       if (!selectedSessions.some((session) => sessionsOverlap(session, candidate))) return candidate;
     }
   }
