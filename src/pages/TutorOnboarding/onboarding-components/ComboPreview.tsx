@@ -3,7 +3,7 @@ import { CalendarOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import styles from '../styles.module.css';
 import HourSlotGrid from './HourSlotGrid';
 import { isHalfHourAvailable } from './availability-utils';
-import { minutesOf } from './constants';
+import { formatDuration, minutesOf } from './constants';
 import type { FixedCombo, TutorAvailabilitySlot } from './types';
 
 export interface ExternalBusyInfo {
@@ -92,7 +92,7 @@ const ComboPreview: React.FC<ComboPreviewProps> = ({ combo, availability, extern
           <p className={styles.comboPreviewSubtitle}>
             {combo.sessions.length === 0
               ? 'Thêm buổi học để xem lịch'
-              : `${combo.sessions.length} buổi · ${totalHours} giờ mỗi tuần`}
+              : `${combo.sessions.length} buổi · ${formatDuration(totalHours)} mỗi tuần`}
           </p>
         </div>
       </div>

@@ -9,6 +9,9 @@ export { default as ComboManager } from './ComboManager';
 
 export { useOnboardingState } from './hooks/useOnboardingState';
 export type { UseOnboardingState } from './hooks/useOnboardingState';
+export { useOnboardingSync } from './hooks/useOnboardingSync';
+export { useLookups } from './hooks/useLookups';
+export type { SubjectOption, GradeOption } from './hooks/useLookups';
 
 export * from './types';
 export * from './constants';

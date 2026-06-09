@@ -3,12 +3,15 @@ import { InfoCircleOutlined } from '@ant-design/icons';
 import styles from '../styles.module.css';
 import ComboManager from './ComboManager';
 import type { UseOnboardingState } from './hooks/useOnboardingState';
+import type { FixedCombo } from './types';
 
 interface StepCombosProps {
   onboarding: UseOnboardingState;
+  onCreatePackage?: (combo: FixedCombo) => Promise<FixedCombo | null>;
+  onDeactivatePackage?: (comboId: string) => Promise<boolean>;
 }
 
-const StepCombos: React.FC<StepCombosProps> = ({ onboarding }) => {
+const StepCombos: React.FC<StepCombosProps> = ({ onboarding, onCreatePackage, onDeactivatePackage }) => {
   const { state, addCombo, updateCombo, removeCombo } = onboarding;
 
   return (
@@ -33,9 +36,12 @@ const StepCombos: React.FC<StepCombosProps> = ({ onboarding }) => {
       <ComboManager
         combos={state.combos}
         availability={state.availability}
+        subjectRecords={state.subjectRecords}
         onAdd={addCombo}
         onUpdate={updateCombo}
         onRemove={removeCombo}
+        onCreatePackage={onCreatePackage}
+        onDeactivatePackage={onDeactivatePackage}
       />
     </div>
   );
